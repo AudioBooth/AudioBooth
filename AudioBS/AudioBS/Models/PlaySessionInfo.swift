@@ -28,22 +28,28 @@ final class PlaySessionInfo {
 }
 
 extension PlaySessionInfo {
-  var isExpired: Bool {
-    if hasLocalFiles {
-      return false
-    }
+  private func fileURL(for track: AudioTrackInfo) -> URL? {
+    guard let fileName = track.fileName else { return nil }
 
+    let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+      .appendingPathComponent("audiobooks")
+      .appendingPathComponent(libraryItemID)
+      .appendingPathComponent(fileName)
+
+    guard let fileURL, FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+    return fileURL
+  }
+
+  var isExpired: Bool {
+    if isDownloaded { return false }
     return Date().timeIntervalSince(createdAt) > 24 * 60 * 60
   }
 
-  var hasLocalFiles: Bool {
-    guard let tracks = orderedTracks, !tracks.isEmpty else {
-      return false
-    }
+  var isDownloaded: Bool {
+    guard let tracks = orderedTracks, !tracks.isEmpty else { return false }
 
     return tracks.allSatisfy { track in
-      guard let localPath = track.localFilePath else { return false }
-      return FileManager.default.fileExists(atPath: localPath)
+      return fileURL(for: track) != nil
     }
   }
 
@@ -61,10 +67,8 @@ extension PlaySessionInfo {
     if tracks.count == 1 {
       let track = tracks[0]
 
-      if let localPath = track.localFilePath,
-        FileManager.default.fileExists(atPath: localPath)
-      {
-        return URL(fileURLWithPath: localPath)
+      if let fileURL = fileURL(for: track) {
+        return fileURL
       }
 
       let baseURL = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -82,10 +86,8 @@ extension PlaySessionInfo {
     for track in tracks {
       if time >= currentTime && time < currentTime + track.duration {
 
-        if let localPath = track.localFilePath,
-          FileManager.default.fileExists(atPath: localPath)
-        {
-          return URL(fileURLWithPath: localPath)
+        if let fileURL = fileURL(for: track) {
+          return fileURL
         }
 
         let trackOffset = time - currentTime
@@ -103,10 +105,9 @@ extension PlaySessionInfo {
 
   func streamingURL(for trackIndex: Int, serverURL: URL) -> URL? {
     if let track = orderedTracks?.first(where: { $0.index == trackIndex }),
-      let localPath = track.localFilePath,
-      FileManager.default.fileExists(atPath: localPath)
+      let fileURL = self.fileURL(for: track)
     {
-      return URL(fileURLWithPath: localPath)
+      return fileURL
     }
 
     let baseURL = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -147,7 +148,7 @@ extension PlaySessionInfo {
         {
           mergedTracks.append(existingTrack)
         } else {
-          newTrack.localFilePath = existingTrack.localFilePath
+          newTrack.fileName = existingTrack.fileName
           mergedTracks.append(newTrack)
         }
       } else {

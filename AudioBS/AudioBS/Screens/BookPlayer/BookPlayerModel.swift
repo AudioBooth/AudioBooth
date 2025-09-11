@@ -10,6 +10,7 @@ import SwiftUI
 @MainActor
 final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private let audiobookshelf = Audiobookshelf.shared
+  private var userProgressService = UserProgressService.shared
 
   private var player: AVPlayer?
 
@@ -36,6 +37,10 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       playbackProgress: PlaybackProgressViewModel()
     )
 
+    if let progress = userProgressService.progressByBookID[book.id] {
+      self.currentTime = progress.currentTime
+    }
+
     setupDownloadStateBinding()
     onLoad()
   }
@@ -53,7 +58,14 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       playbackProgress: PlaybackProgressViewModel()
     )
 
-    self.currentTime = item.currentTime
+    if let progress = userProgressService.progressByBookID[item.bookID],
+      progress.currentTime > item.currentTime
+    {
+      self.currentTime = progress.currentTime
+    } else {
+      self.currentTime = item.currentTime
+    }
+
     setupDownloadStateBinding()
     onLoad()
   }
@@ -101,7 +113,7 @@ extension BookPlayerModel {
   private func setupSessionInfo() async throws -> PlaySessionInfo {
     var sessionInfo: PlaySessionInfo?
 
-    let hasExistingLocalSession = item?.playSessionInfo.hasLocalFiles == true
+    let hasExistingLocalSession = item?.playSessionInfo.isDownloaded == true
 
     do {
       print("Attempting to fetch fresh session from server...")
@@ -145,7 +157,7 @@ extension BookPlayerModel {
       if let existingItem = item {
         let cachedSessionInfo = existingItem.playSessionInfo
 
-        if cachedSessionInfo.hasLocalFiles {
+        if cachedSessionInfo.isDownloaded {
           print("Using existing session with local files for offline playback")
           sessionInfo = cachedSessionInfo
           let cachedCurrentTime = existingItem.currentTime
@@ -301,23 +313,17 @@ extension BookPlayerModel {
   private func setupDownloadStateBinding() {
     downloadManager.$downloads
       .map { [weak self] downloads in
-        guard let self = self else { return .notDownloaded }
+        guard let item = self?.item else { return .notDownloaded }
 
-        if let managerState = downloads[self.id] {
+        if let managerState = downloads[item.bookID] {
           return managerState
         }
 
-        guard let tracks = self.item?.playSessionInfo.orderedTracks, !tracks.isEmpty else {
-          return .notDownloaded
-        }
-
-        let allTracksDownloaded = tracks.allSatisfy { track in
-          guard let localPath = track.localFilePath else { return false }
-          return FileManager.default.fileExists(atPath: localPath)
-        }
-        return allTracksDownloaded ? .downloaded : .notDownloaded
+        return item.playSessionInfo.isDownloaded ? .downloaded : .notDownloaded
       }
-      .assign(to: \.downloadState, on: self)
+      .sink { [weak self] downloadState in
+        self?.downloadState = downloadState
+      }
       .store(in: &cancellables)
   }
 }

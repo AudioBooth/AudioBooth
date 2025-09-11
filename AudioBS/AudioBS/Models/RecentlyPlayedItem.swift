@@ -126,6 +126,17 @@ extension RecentlyPlayedItem {
     try context.save()
   }
 
+  @MainActor
+  func deleteFiles() throws {
+    cleanupLocalFiles()
+
+    let context = ModelContextProvider.shared.context
+    for track in playSessionInfo.audioTracks ?? [] {
+      track.fileName = nil
+    }
+    try context.save()
+  }
+
   private func cleanupLocalFiles() {
     let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
       .first!

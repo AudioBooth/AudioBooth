@@ -5,15 +5,13 @@ import SwiftUI
 struct RecentRow: View {
   @Bindable var model: Model
 
-  var onDelete: () -> Void
-
   @State private var showingDeleteConfirmation = false
 
   var body: some View {
     Button(action: {
       model.onTapped()
     }) {
-      HStack(spacing: 12) {
+      HStack(spacing: 8) {
         cover
 
         VStack(alignment: .leading, spacing: 16) {
@@ -24,15 +22,15 @@ struct RecentRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer()
-
             Menu(
               content: { contextMenu },
               label: {
                 Image(systemName: "ellipsis")
                   .font(.headline)
                   .foregroundColor(.primary)
-                  .padding(4)
+                  .padding(.vertical, 10)
+                  .padding(.leading, 4)
+                  .contentShape(Rectangle())
               }
             )
           }
@@ -54,7 +52,7 @@ struct RecentRow: View {
     .alert("Remove from continue listening", isPresented: $showingDeleteConfirmation) {
       Button("Cancel", role: .cancel) {}
       Button("Remove", role: .destructive) {
-        onDelete()
+        model.onDeleteTapped(isFileOnly: false)
       }
     } message: {
       Text(
@@ -129,9 +127,15 @@ struct RecentRow: View {
     HStack(spacing: 8) {
       switch model.downloadState {
       case .downloading:
-        ProgressView()
-          .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-          .scaleEffect(0.6)
+        Image(systemName: "internaldrive.fill")
+          .font(.caption)
+          .foregroundColor(.blue)
+          .hidden()
+          .overlay {
+            ProgressView()
+              .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+              .scaleEffect(0.7)
+          }
       case .downloaded:
         Image(systemName: "internaldrive.fill")
           .font(.caption)
@@ -161,7 +165,7 @@ struct RecentRow: View {
       }
     case .downloaded:
       Button(role: .destructive) {
-        model.onDownloadTapped()
+        model.onDeleteTapped(isFileOnly: true)
       } label: {
         Label("Remove from Device", systemImage: "trash")
       }
@@ -171,7 +175,7 @@ struct RecentRow: View {
       if model.downloadState == .downloaded {
         showingDeleteConfirmation = true
       } else {
-        onDelete()
+        model.onDeleteTapped(isFileOnly: false)
       }
     } label: {
       Label("Remove from continue listening", systemImage: "eye.slash")
@@ -208,7 +212,7 @@ extension RecentRow {
 
     @MainActor func onAppear() {}
     @MainActor func onTapped() {}
-    @MainActor func onDeleteTapped() {}
+    @MainActor func onDeleteTapped(isFileOnly: Bool) {}
     @MainActor func onDownloadTapped() {}
 
     init(
@@ -246,7 +250,7 @@ extension RecentRow.Model {
 
 #Preview("RecentRow") {
   ScrollView {
-    RecentRow(model: .mock, onDelete: {})
+    RecentRow(model: .mock)
       .padding()
   }
 }

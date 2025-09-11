@@ -46,7 +46,7 @@ final class DownloadManager: ObservableObject {
       do {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
           .first!
-        let bookDirectory = documentsPath.appendingPathComponent("Downloads")
+        let bookDirectory = documentsPath.appendingPathComponent("audiobooks")
           .appendingPathComponent(bookID)
 
         try FileManager.default.createDirectory(
@@ -76,11 +76,11 @@ final class DownloadManager: ObservableObject {
           print("Content-Type: '\(contentType)' -> .\(fileExtension)")
 
           let trackFile = bookDirectory.appendingPathComponent(
-            "track_\(track.index).\(fileExtension)")
+            "\(track.index).\(fileExtension)")
           try data.write(to: trackFile)
 
           await MainActor.run {
-            track.localFilePath = trackFile.path
+            track.fileName = "\(track.index).\(fileExtension)"
           }
 
           print(
@@ -164,7 +164,7 @@ final class DownloadManager: ObservableObject {
     Task { @MainActor in
       let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         .first!
-      let bookDirectory = documentsPath.appendingPathComponent("Downloads").appendingPathComponent(
+      let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
         bookID)
 
       do {
@@ -174,7 +174,7 @@ final class DownloadManager: ObservableObject {
           let tracks = item.playSessionInfo.orderedTracks
         {
           for track in tracks {
-            track.localFilePath = nil
+            track.fileName = nil
           }
           try item.save()
           print("Successfully updated database to remove download information")
@@ -194,33 +194,18 @@ final class DownloadManager: ObservableObject {
       do {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
           .first!
-        let downloadsDirectory = documentsPath.appendingPathComponent("Downloads")
+        let audiobooksDirectory = documentsPath.appendingPathComponent("audiobooks")
 
-        guard FileManager.default.fileExists(atPath: downloadsDirectory.path) else {
-          print("Downloads directory does not exist, nothing to cleanup")
+        guard FileManager.default.fileExists(atPath: audiobooksDirectory.path) else {
+          print("Audiobooks directory does not exist, nothing to cleanup")
           return
         }
-
-        let allRecentItems = try RecentlyPlayedItem.fetchAll()
-        var validFilePaths = Set<String>()
-
-        for item in allRecentItems {
-          if let tracks = item.playSessionInfo.orderedTracks {
-            for track in tracks {
-              if let localPath = track.localFilePath {
-                validFilePaths.insert(localPath)
-              }
-            }
-          }
-        }
-
-        print("Found \(validFilePaths.count) valid file references to preserve")
 
         var orphanedFilesCount = 0
         var orphanedDirectoriesCount = 0
 
         let downloadDirectories = try FileManager.default.contentsOfDirectory(
-          at: downloadsDirectory, includingPropertiesForKeys: [.isDirectoryKey])
+          at: audiobooksDirectory, includingPropertiesForKeys: [.isDirectoryKey])
 
         for directory in downloadDirectories {
           var isDirectory: ObjCBool = false
@@ -228,24 +213,45 @@ final class DownloadManager: ObservableObject {
 
           if isDirectory.boolValue {
             let bookID = directory.lastPathComponent
-            let filesInDirectory = try FileManager.default.contentsOfDirectory(
-              at: directory, includingPropertiesForKeys: nil)
 
-            var hasValidFiles = false
-            for file in filesInDirectory {
-              if validFilePaths.contains(file.path) {
-                hasValidFiles = true
-              } else {
-                try FileManager.default.removeItem(at: file)
-                orphanedFilesCount += 1
-                print("Removed orphaned file: \(file.lastPathComponent)")
+            guard
+              let item = try? RecentlyPlayedItem.fetch(bookID: bookID),
+              let tracks = item.playSessionInfo.orderedTracks
+            else {
+              try FileManager.default.removeItem(at: directory)
+              orphanedDirectoriesCount += 1
+              print("Removed orphaned directory for unknown book: \(bookID)")
+              continue
+            }
+
+            var expectedFilenames = Set<String>()
+            for track in tracks {
+              if let fileName = track.fileName {
+                expectedFilenames.insert(fileName)
               }
             }
 
-            if !hasValidFiles {
+            let filesInDirectory = try FileManager.default.contentsOfDirectory(
+              at: directory, includingPropertiesForKeys: nil)
+
+            for file in filesInDirectory {
+              let filename = file.lastPathComponent
+
+              if expectedFilenames.contains(filename) {
+                print("Keep file: \(filename)")
+              } else {
+                try FileManager.default.removeItem(at: file)
+                orphanedFilesCount += 1
+                print("Removed orphaned file: \(filename)")
+              }
+            }
+
+            let remainingFiles = try FileManager.default.contentsOfDirectory(
+              at: directory, includingPropertiesForKeys: nil)
+            if remainingFiles.isEmpty {
               try FileManager.default.removeItem(at: directory)
               orphanedDirectoriesCount += 1
-              print("Removed empty orphaned directory: \(bookID)")
+              print("Removed empty directory: \(bookID)")
             }
           }
         }

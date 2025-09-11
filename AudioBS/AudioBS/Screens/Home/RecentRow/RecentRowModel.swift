@@ -5,6 +5,8 @@ import SwiftUI
 
 @MainActor
 final class RecentRowModel: RecentRow.Model {
+  private var userProgressService = UserProgressService.shared
+
   enum Item {
     case recent(RecentlyPlayedItem)
     case book(Book)
@@ -16,6 +18,8 @@ final class RecentRowModel: RecentRow.Model {
   private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
   private var cancellables = Set<AnyCancellable>()
+
+  private var onRemoved: (() -> Void)?
 
   init(recent: RecentlyPlayedItem) {
     self.item = .recent(recent)
@@ -34,21 +38,28 @@ final class RecentRowModel: RecentRow.Model {
     setupDownloadStateBinding()
   }
 
-  init(book: Book, progress: Double?, lastPlayedAt: Date?) {
+  init(book: Book, onRemoved: @escaping () -> Void) {
     self.item = .book(book)
-    self.lastPlayedAt = lastPlayedAt
+
+    let progress = userProgressService.progressByBookID[book.id]
+
+    self.lastPlayedAt = progress.map {
+      Date(timeIntervalSince1970: TimeInterval($0.lastUpdate / 1000))
+    }
 
     super.init(
       id: book.id,
       title: book.title,
       author: book.authorName,
       coverURL: book.coverURL,
-      progress: progress,
+      progress: progress?.progress,
       lastPlayed: lastPlayedAt?.formatted(.relative(presentation: .named)),
-      timeRemaining: Self.formatTimeRemaining(from: book, progress: progress)
+      timeRemaining: Self.formatTimeRemaining(from: book, progress: progress?.progress)
     )
 
     setupDownloadStateBinding()
+
+    self.onRemoved = onRemoved
   }
 
   @MainActor
@@ -72,11 +83,7 @@ final class RecentRowModel: RecentRow.Model {
 
         switch self.item {
         case .recent(let recentItem):
-          guard let tracks = recentItem.playSessionInfo.orderedTracks, !tracks.isEmpty else {
-            return .notDownloaded
-          }
-          let allTracksDownloaded = tracks.allSatisfy { $0.localFilePath != nil }
-          return allTracksDownloaded ? .downloaded : .notDownloaded
+          return recentItem.playSessionInfo.isDownloaded ? .downloaded : .notDownloaded
         case .book:
           return .notDownloaded
         }
@@ -97,6 +104,27 @@ final class RecentRowModel: RecentRow.Model {
         downloadManager.startDownload(for: recentItem)
       case .book(let book):
         downloadManager.startDownload(for: book)
+      }
+    }
+  }
+
+  override func onDeleteTapped(isFileOnly: Bool) {
+    Task {
+      do {
+        if case .recent(let recent) = item {
+          if isFileOnly {
+            try recent.deleteFiles()
+          } else {
+            try recent.delete()
+          }
+        }
+
+        if !isFileOnly, let progress = userProgressService.progressByBookID[id] {
+          try? await Audiobookshelf.shared.sessions.removeFromContinueListening(progress.id)
+          onRemoved?()
+        }
+      } catch {
+        print("Failed to delete item: \(error)")
       }
     }
   }

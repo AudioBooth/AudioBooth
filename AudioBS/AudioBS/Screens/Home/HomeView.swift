@@ -15,14 +15,24 @@ struct HomeView: View {
   }
 
   var body: some View {
-    Group {
-      if model.isLoading && model.sections.isEmpty {
-        ProgressView("Loading...")
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if model.sections.isEmpty && !model.isLoading {
-        emptyState
-      } else {
-        content
+    ScrollView {
+      VStack(spacing: 24) {
+        if !model.recents.isEmpty {
+          recentsContent
+        }
+
+        if model.isLoading && model.sections.isEmpty {
+          ProgressView("Loading...")
+            .frame(maxWidth: .infinity, maxHeight: 200)
+        } else if model.sections.isEmpty && !model.isLoading {
+          if model.recents.isEmpty {
+            emptyState
+          } else {
+            emptyPersonalizedState
+          }
+        } else {
+          personalizedContent
+        }
       }
     }
     .navigationTitle(model.title)
@@ -55,13 +65,17 @@ struct HomeView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
-  private var content: some View {
-    ScrollView {
-      VStack(spacing: 24) {
-        recentsContent
-        personalizedContent
-      }
+  private var emptyPersonalizedState: some View {
+    VStack(spacing: 16) {
+      Text("No additional content available")
+        .font(.title3)
+        .fontWeight(.medium)
+        .foregroundColor(.secondary)
+        .padding(.top, 32)
+
+      Spacer()
     }
+    .frame(maxWidth: .infinity, minHeight: 100)
   }
 
   private var recentsContent: some View {
@@ -73,7 +87,7 @@ struct HomeView: View {
 
       VStack(spacing: 0) {
         ForEach(model.recents, id: \.id) { item in
-          RecentRow(model: item, onDelete: { model.onDelete(item) })
+          RecentRow(model: item)
 
           if item.id != model.recents.last?.id {
             Divider()
@@ -145,8 +159,6 @@ extension HomeView {
 
     @MainActor func onAppear() {}
     @MainActor func refresh() async {}
-
-    @MainActor func onDelete(_ item: RecentRow.Model) {}
 
     init(
       isLoading: Bool = false,

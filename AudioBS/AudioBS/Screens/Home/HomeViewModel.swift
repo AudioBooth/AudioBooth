@@ -8,6 +8,14 @@ final class HomeViewModel: HomeView.Model {
   private var userProgressService = UserProgressService.shared
   private var recentItemsTask: Task<Void, Never>?
 
+  private var recentlyPlayed: [RecentlyPlayedItem] = [] {
+    didSet { refreshRecents() }
+  }
+
+  private var continueListening: [Book] = [] {
+    didSet { refreshRecents() }
+  }
+
   init() {
     super.init()
     setupRecentItemsObservation()
@@ -17,37 +25,27 @@ final class HomeViewModel: HomeView.Model {
     recentItemsTask = Task {
       for await recents in RecentlyPlayedItem.observeAll() {
         guard !Task.isCancelled else { break }
-
-        for recent in recents {
-          if let index = self.recents.firstIndex(where: { $0.id == recent.bookID }) {
-            self.recents[index] = RecentRowModel(recent: recent)
-          } else {
-            self.recents.insert(RecentRowModel(recent: recent), at: 0)
-          }
-        }
+        recentlyPlayed = recents
       }
     }
   }
 
-  private func updateRecentsWithContinueListening(
-    _ serverBooks: [Book], localItems: [RecentlyPlayedItem]
-  ) async {
+  private func refreshRecents() {
     var recents: [RecentRowModel] = []
 
-    var recentsByID = Dictionary(uniqueKeysWithValues: localItems.map { ($0.bookID, $0) })
+    var recentsByID = Dictionary(uniqueKeysWithValues: recentlyPlayed.map { ($0.bookID, $0) })
 
-    for book in serverBooks {
+    for book in continueListening {
       if let recent = recentsByID[book.id] {
         recents.append(RecentRowModel(recent: recent))
         recentsByID.removeValue(forKey: book.id)
       } else {
-        let progress = userProgressService.progressByBookID[book.id]
         recents.append(
           RecentRowModel(
             book: book,
-            progress: progress?.progress,
-            lastPlayedAt: progress.map {
-              Date(timeIntervalSince1970: TimeInterval($0.lastUpdate / 1000))
+            onRemoved: { [weak self] in
+              guard let self else { return }
+              self.continueListening = self.continueListening.filter({ $0.id != book.id })
             }
           )
         )
@@ -55,7 +53,7 @@ final class HomeViewModel: HomeView.Model {
     }
 
     for recent in recentsByID.values {
-      if recent.playSessionInfo.hasLocalFiles || recent.timeListened != 0
+      if recent.playSessionInfo.isDownloaded || recent.timeListened != 0
         || PlayerManager.shared.current?.id == recent.bookID
       {
         recents.append(RecentRowModel(recent: recent))
@@ -90,17 +88,16 @@ final class HomeViewModel: HomeView.Model {
     do {
       async let personalizedTask = Audiobookshelf.shared.libraries.fetchPersonalized()
       async let userProgressTask = userProgressService.refresh()
+      async let syncTask = syncRecentItemsProgress()
 
-      let (personalized, _) = try await (personalizedTask, userProgressTask)
+      let (personalized, _, _) = try await (personalizedTask, userProgressTask, syncTask)
 
       var sections = [Section]()
       for section in personalized {
         switch section.entities {
         case .books(let items):
           if section.id == "continue-listening" {
-            let localItems = try RecentlyPlayedItem.fetchAll()
-            await updateRecentsWithContinueListening(items, localItems: localItems)
-
+            continueListening = items
             continue
           } else {
             let books = items.map({ BookCardModel($0, sortBy: .title) })
@@ -122,20 +119,75 @@ final class HomeViewModel: HomeView.Model {
     isLoading = false
   }
 
-  override func onDelete(_ model: RecentRow.Model) {
-    Task {
+  private func syncRecentItemsProgress() async {
+    do {
+      let recentItems = try RecentlyPlayedItem.fetchAll()
+      let currentBookID = PlayerManager.shared.current?.id
+
+      for item in recentItems {
+        guard item.bookID != currentBookID,
+          item.timeListened > 0
+        else { continue }
+
+        await syncItemProgress(item)
+      }
+    } catch {
+      print("Failed to fetch recent items for sync: \(error)")
+    }
+  }
+
+  private func syncItemProgress(_ item: RecentlyPlayedItem) async {
+    let serverProgress = userProgressService.progressByBookID[item.bookID]
+    let localCurrentTime = item.currentTime
+    let serverCurrentTime = serverProgress?.currentTime ?? 0
+
+    if localCurrentTime > serverCurrentTime {
+      await syncWithSessionRecreation(item)
+    } else {
+      item.timeListened = 0
+      print(
+        "Local progress (\(localCurrentTime)s) <= server progress (\(serverCurrentTime)s) for book \(item.bookID), resetting timeListened"
+      )
+    }
+  }
+
+  private func syncWithSessionRecreation(_ item: RecentlyPlayedItem) async {
+    do {
+      let sessionInfo = item.playSessionInfo
+
       do {
-        if let recentItem = try RecentlyPlayedItem.fetch(bookID: model.id) {
-          try recentItem.delete()
-        }
+        try await Audiobookshelf.shared.sessions.sync(
+          sessionInfo.id,
+          timeListened: item.timeListened,
+          currentTime: item.currentTime
+        )
 
-        if let progress = userProgressService.progressByBookID[model.id] {
-          try? await Audiobookshelf.shared.sessions.removeFromContinueListening(progress.id)
-        }
-
-        recents.removeAll { $0.id == model.id }
+        item.timeListened = 0
+        print("Successfully synced progress for book \(item.bookID)")
       } catch {
-        print("Failed to delete item: \(error)")
+        print("Session sync failed for book \(item.bookID): \(error)")
+
+        do {
+          print("Attempting to recreate session for book \(item.bookID)")
+          let newSession = try await Audiobookshelf.shared.sessions.start(
+            itemID: item.bookID,
+            forceTranscode: false
+          )
+
+          let newSessionInfo = PlaySessionInfo(from: newSession)
+          item.playSessionInfo.merge(with: newSessionInfo)
+
+          try await Audiobookshelf.shared.sessions.sync(
+            newSessionInfo.id,
+            timeListened: item.timeListened,
+            currentTime: item.currentTime
+          )
+
+          item.timeListened = 0
+          print("Successfully recreated session and synced progress for book \(item.bookID)")
+        } catch {
+          print("Failed to recreate session and sync for book \(item.bookID): \(error)")
+        }
       }
     }
   }

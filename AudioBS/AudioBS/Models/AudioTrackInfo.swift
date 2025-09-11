@@ -8,8 +8,7 @@ final class AudioTrackInfo {
   var startOffset: TimeInterval
   var duration: TimeInterval
   var title: String?
-  var contentURL: String?
-  var localFilePath: String?
+  var fileName: String?
   var updatedAt: Date?
 
   init(from track: PlaySession.Track) {
@@ -17,8 +16,7 @@ final class AudioTrackInfo {
     self.startOffset = track.startOffset
     self.duration = track.duration
     self.title = track.title
-    self.contentURL = track.contentUrl
-    self.localFilePath = nil
+    self.fileName = nil
     self.updatedAt = track.updatedAt.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) }
   }
 }
