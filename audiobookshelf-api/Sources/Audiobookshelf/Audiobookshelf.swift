@@ -25,6 +25,11 @@ public final class Audiobookshelf: @unchecked Sendable {
 
     var configuration = ImagePipeline.Configuration.withDataCache
     configuration.dataCachePolicy = .storeAll
+
+    let dataLoader = DataLoader()
+    dataLoader.session.configuration.requestCachePolicy = .returnCacheDataElseLoad
+    configuration.dataLoader = dataLoader
+
     ImagePipeline.shared = ImagePipeline(configuration: configuration)
   }
 
