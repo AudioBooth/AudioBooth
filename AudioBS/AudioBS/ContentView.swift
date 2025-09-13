@@ -8,6 +8,7 @@ struct ContentView: View {
   @AppStorage("audiobookshelf_selected_library") private var libraryData: Data?
 
   @State var miniPlayerHeight: CGFloat = 0.0
+  @State private var isKeyboardVisible = false
 
   private var hasSelectedLibrary: Bool {
     libraryData != nil
@@ -83,11 +84,19 @@ struct ContentView: View {
         .padding(.top, 50)
       }
     }
+    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification))
+    { _ in
+      isKeyboardVisible = true
+    }
+    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification))
+    { _ in
+      isKeyboardVisible = false
+    }
   }
 
   @ViewBuilder
   private var miniPlayer: some View {
-    if let currentPlayer = playerManager.current {
+    if let currentPlayer = playerManager.current, !isKeyboardVisible {
       MiniBookPlayer(player: currentPlayer) {
         playerManager.showFullPlayer()
       }
