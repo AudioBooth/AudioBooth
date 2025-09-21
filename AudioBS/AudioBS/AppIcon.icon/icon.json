@@ -14,7 +14,14 @@
           },
           "image-name" : "headset.png",
           "name" : "headset",
-          "opacity" : 1
+          "opacity" : 0.9,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              1
+            ]
+          }
         },
         {
           "fill" : {
@@ -31,7 +38,14 @@
           },
           "hidden" : false,
           "image-name" : "book.png",
-          "name" : "book"
+          "name" : "book",
+          "position" : {
+            "scale" : 0.95,
+            "translation-in-points" : [
+              0,
+              10
+            ]
+          }
         }
       ],
       "name" : "Group",
