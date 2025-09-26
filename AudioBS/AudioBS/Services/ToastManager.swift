@@ -47,6 +47,39 @@ struct ToastView: View {
   let onDismiss: () -> Void
 
   var body: some View {
+    if #available(iOS 26.0, *) {
+      modernToast
+    } else {
+      legacyToast
+    }
+  }
+
+  @available(iOS 26.0, *)
+  @ViewBuilder
+  private var modernToast: some View {
+    HStack {
+      Image(systemName: iconName)
+        .foregroundColor(iconColor)
+
+      Text(toast.message)
+        .font(.body)
+        .foregroundColor(.primary)
+
+      Spacer()
+
+      Button(action: onDismiss) {
+        Image(systemName: "xmark")
+          .foregroundColor(.secondary)
+          .font(.caption)
+      }
+    }
+    .padding()
+    .glassEffect()
+    .padding(.horizontal)
+  }
+
+  @ViewBuilder
+  private var legacyToast: some View {
     HStack {
       Image(systemName: iconName)
         .foregroundColor(iconColor)
@@ -80,10 +113,14 @@ struct ToastView: View {
   }
 
   private var iconColor: Color {
-    switch toast.type {
-    case .error:
-      return .white
-    case .success:
+    if #available(iOS 26.0, *) {
+      switch toast.type {
+      case .error:
+        return .red
+      case .success:
+        return .green
+      }
+    } else {
       return .white
     }
   }

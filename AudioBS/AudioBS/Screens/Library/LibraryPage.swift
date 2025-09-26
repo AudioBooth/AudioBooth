@@ -15,7 +15,7 @@ struct LibraryPage: View {
   var body: some View {
     if model.isRoot {
       content
-        .searchable(
+        .conditionalSearchable(
           text: $model.search.searchText,
           prompt: "Search books, series, and authors"
         )

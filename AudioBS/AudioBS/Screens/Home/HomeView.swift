@@ -5,6 +5,8 @@ import SwiftUI
 struct HomeView: View {
   @StateModel var model: Model
   @State private var showingDeleteConfirmation = false
+  @State private var showingSettings = false
+  @AppStorage("audiobookshelf_selected_library") private var libraryData: Data?
 
   init(model: Model? = nil) {
     if let model {
@@ -36,7 +38,31 @@ struct HomeView: View {
       }
     }
     .navigationTitle(model.title)
-    .onAppear(perform: model.onAppear)
+    .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button {
+          showingSettings = true
+        } label: {
+          Image(systemName: "gear")
+        }
+      }
+    }
+    .sheet(isPresented: $showingSettings) {
+      NavigationView {
+        SettingsView()
+      }
+    }
+    .onAppear {
+      if libraryData == nil {
+        showingSettings = true
+      }
+      model.onAppear()
+    }
+    .onChange(of: libraryData) { _, _ in
+      Task {
+        await model.refresh()
+      }
+    }
     .refreshable {
       await model.refresh()
     }

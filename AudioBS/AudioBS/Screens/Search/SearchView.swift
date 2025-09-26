@@ -1,6 +1,23 @@
 import Audiobookshelf
 import SwiftUI
 
+struct SearchPage: View {
+  @StateModel var model: SearchView.Model
+
+  init(model: SearchView.Model? = nil) {
+    if let model {
+      self._model = StateModel(wrappedValue: model)
+    } else {
+      self._model = StateModel(mock: .mock, default: SearchViewModel())
+    }
+  }
+
+  var body: some View {
+    SearchView(model: model)
+      .searchable(text: $model.searchText)
+  }
+}
+
 struct SearchView: View {
   @StateModel var model: Model
 

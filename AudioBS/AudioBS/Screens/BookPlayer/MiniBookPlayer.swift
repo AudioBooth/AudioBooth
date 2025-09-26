@@ -1,26 +1,109 @@
 import NukeUI
 import SwiftUI
 
+@available(iOS 26.0, *)
 struct MiniBookPlayer: View {
+  @Environment(\.tabViewBottomAccessoryPlacement) var placement
+
   var player: BookPlayer.Model
   let onTap: () -> Void
 
   var body: some View {
-    if #available(iOS 26.0, *) {
-      content
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
-        .glassEffect()
-        .padding(.horizontal, 21)
-        .padding(.bottom, 12)
-    } else {
-      content
-        .background(.regularMaterial)
-        .contentShape(Rectangle())
-        .onTapGesture {
-          onTap()
-        }
+    content
+      .padding(.vertical, 8)
+      .padding(.horizontal, 12)
+      .contentShape(Rectangle())
+      .onTapGesture(perform: onTap)
+  }
+
+  @ViewBuilder
+  var content: some View {
+    HStack {
+      cover
+
+      VStack(alignment: .leading, spacing: 2) {
+        Text(player.title)
+          .font(.system(size: 14, weight: .medium))
+          .foregroundColor(.primary)
+          .lineLimit(1)
+          .frame(maxWidth: .infinity, alignment: .leading)
+
+        Text(formatTimeRemaining(player.playbackProgress.totalTimeRemaining))
+          .font(.caption)
+          .foregroundColor(.secondary)
+          .fontWeight(.medium)
+      }
+
+      button
     }
+  }
+
+  private var cover: some View {
+    LazyImage(url: player.coverURL) { state in
+      if let image = state.image {
+        image
+          .resizable()
+          .aspectRatio(1, contentMode: .fill)
+      } else {
+        Rectangle()
+          .fill(Color.gray.opacity(0.3))
+          .overlay {
+            Image(systemName: "book.closed")
+              .foregroundColor(.gray)
+              .font(.system(size: 16))
+          }
+      }
+    }
+    .aspectRatio(1, contentMode: .fit)
+    .clipShape(RoundedRectangle(cornerRadius: 12))
+  }
+
+  @ViewBuilder
+  private var button: some View {
+    if placement != .inline {
+      Button(action: player.onTogglePlaybackTapped) {
+        ZStack {
+          Circle()
+            .fill(Color.blue)
+            .aspectRatio(1, contentMode: .fit)
+
+          if player.isLoading {
+            ProgressView()
+              .progressViewStyle(CircularProgressViewStyle(tint: .white))
+              .scaleEffect(0.7)
+          } else {
+            Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+              .font(.system(size: 10))
+              .foregroundColor(.white)
+          }
+        }
+      }
+      .disabled(player.isLoading)
+    }
+  }
+
+  private func formatTimeRemaining(_ duration: TimeInterval) -> String {
+    Duration.seconds(duration).formatted(
+      .units(
+        allowed: [.hours, .minutes],
+        width: .narrow
+      )
+    ) + " remaining"
+  }
+
+}
+
+struct LegacyMiniBookPlayer: View {
+  var player: BookPlayer.Model
+  let onTap: () -> Void
+
+  var body: some View {
+    content
+      .padding(.horizontal, 16)
+      .padding(.vertical, 8)
+      .background(.regularMaterial)
+      .contentShape(Rectangle())
+      .onTapGesture(perform: onTap)
   }
 
   @ViewBuilder
@@ -69,8 +152,6 @@ struct MiniBookPlayer: View {
       }
       .disabled(player.isLoading)
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 8)
   }
 
   private var cover: some View {
@@ -89,7 +170,7 @@ struct MiniBookPlayer: View {
           }
       }
     }
-    .frame(width: 50, height: 50)
+    .aspectRatio(1, contentMode: .fit)
     .clipShape(RoundedRectangle(cornerRadius: 12))
   }
 
@@ -106,7 +187,7 @@ struct MiniBookPlayer: View {
 #Preview {
   VStack {
     Spacer()
-    MiniBookPlayer(player: .mock) {
+    LegacyMiniBookPlayer(player: .mock) {
       print("Tapped mini player")
     }
   }
