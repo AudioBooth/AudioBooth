@@ -158,6 +158,17 @@ struct HomeView: View {
             }
             .padding(.horizontal)
           }
+
+        case .authors(let items):
+          ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 16) {
+              ForEach(items, id: \.id) { author in
+                AuthorCard(model: author)
+                  .frame(width: 100)
+              }
+            }
+            .padding(.horizontal)
+          }
         }
       }
     }
@@ -178,6 +189,7 @@ extension HomeView {
       enum Items {
         case books([BookCard.Model])
         case series([SeriesCard.Model])
+        case authors([AuthorCard.Model])
       }
       let items: Items
     }

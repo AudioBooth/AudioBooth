@@ -72,20 +72,20 @@ struct ContentView: View {
       }
 
       if hasSelectedLibrary {
-        Tab("Library", systemImage: "book", value: .library) {
+        Tab("Library", systemImage: "books.vertical.fill", value: .library) {
           NavigationView {
             LibraryPage()
           }
           .navigationViewStyle(.stack)
         }
 
-        Tab("Series", systemImage: "rectangle.split.3x1", value: .series) {
+        Tab("Series", systemImage: "square.stack.3d.up.fill", value: .series) {
           NavigationView {
             SeriesPage()
           }
         }
 
-        Tab("Authors", systemImage: "person.3", value: .authors) {
+        Tab("Authors", systemImage: "person.crop.rectangle.stack", value: .authors) {
           NavigationView {
             AuthorsPage()
           }
@@ -130,7 +130,7 @@ struct ContentView: View {
         }
         .navigationViewStyle(.stack)
         .tabItem {
-          Image(systemName: "book")
+          Image(systemName: "books.vertical.fill")
           Text("Library")
         }
 
@@ -139,7 +139,7 @@ struct ContentView: View {
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
         .tabItem {
-          Image(systemName: "rectangle.split.3x1")
+          Image(systemName: "square.stack.3d.up.fill")
           Text("Series")
         }
 
@@ -148,7 +148,7 @@ struct ContentView: View {
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
         .tabItem {
-          Image(systemName: "person.3")
+          Image(systemName: "person.crop.rectangle.stack")
           Text("Authors")
         }
       }

@@ -20,6 +20,8 @@ extension Personalized {
     public enum Entities: Codable {
       case books([Book])
       case series([Series])
+      case authors([Author])
+      case unknown
     }
     public let entities: Entities
 
@@ -32,8 +34,11 @@ extension Personalized {
       enum SectionType: String, Decodable {
         case book
         case series
+        case authors
       }
-      let type = try container.decode(SectionType.self, forKey: .type)
+
+      let typeString = try container.decode(String.self, forKey: .type)
+      let type = SectionType(rawValue: typeString)
 
       switch type {
       case .book:
@@ -42,6 +47,11 @@ extension Personalized {
       case .series:
         let series = try container.decode([Series].self, forKey: .entities)
         entities = .series(series)
+      case .authors:
+        let authors = try container.decode([Author].self, forKey: .entities)
+        entities = .authors(authors)
+      case .none:
+        entities = .unknown
       }
     }
 
@@ -61,6 +71,12 @@ extension Personalized {
       case .series(let series):
         try container.encode("series", forKey: .type)
         try container.encode(series, forKey: .entities)
+      case .authors(let authors):
+        try container.encode("authors", forKey: .type)
+        try container.encode(authors, forKey: .entities)
+      case .unknown:
+        try container.encode("unknown", forKey: .type)
+        try container.encode([String](), forKey: .entities)
       }
     }
   }

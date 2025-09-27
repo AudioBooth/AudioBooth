@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Author: Decodable, Sendable {
+public struct Author: Codable, Sendable {
   public let id: String
   public let name: String
   public let description: String?

@@ -131,6 +131,13 @@ final class HomeViewModel: HomeView.Model {
       case .series(let items):
         let series = items.map(SeriesCardModel.init)
         sections.append(.init(title: section.label, items: .series(series)))
+
+      case .authors(let items):
+        let authors = items.map(AuthorCardModel.init)
+        sections.append(.init(title: section.label, items: .authors(authors)))
+
+      case .unknown:
+        continue
       }
     }
 
