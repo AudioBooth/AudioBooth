@@ -41,7 +41,8 @@ struct BookCard: View {
       if let image = state.image {
         image
           .resizable()
-          .aspectRatio(1, contentMode: .fit)
+          .aspectRatio(contentMode: .fit)
+          .frame(maxWidth: .infinity, alignment: .center)
       } else {
         RoundedRectangle(cornerRadius: 8)
           .fill(Color.gray.opacity(0.3))
@@ -58,6 +59,7 @@ struct BookCard: View {
     }
     .clipShape(RoundedRectangle(cornerRadius: 8))
     .shadow(radius: 2)
+    .aspectRatio(1, contentMode: .fit)
   }
 
   var title: some View {

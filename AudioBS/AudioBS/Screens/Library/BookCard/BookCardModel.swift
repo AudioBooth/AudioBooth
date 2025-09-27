@@ -1,5 +1,7 @@
 import Audiobookshelf
 import Foundation
+import SafariServices
+import UIKit
 
 @MainActor
 final class BookCardModel: BookCard.Model {
@@ -64,7 +66,26 @@ final class BookCardModel: BookCard.Model {
 
   @MainActor
   override func onTapped() {
-    playerManager.setCurrent(book)
+    switch book.media {
+    case .audiobook:
+      playerManager.setCurrent(book)
+    case .ebook:
+      openEbookInSafari()
+    }
+  }
+
+  private func openEbookInSafari() {
+    guard let ebookURL = book.ebookURL else { return }
+
+    let safariViewController = SFSafariViewController(url: ebookURL)
+    safariViewController.modalPresentationStyle = .overFullScreen
+
+    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+      let window = windowScene.windows.first,
+      let rootViewController = window.rootViewController
+    {
+      rootViewController.present(safariViewController, animated: true)
+    }
   }
 
   @MainActor
@@ -87,4 +108,5 @@ final class BookCardModel: BookCard.Model {
       }
     }
   }
+
 }
