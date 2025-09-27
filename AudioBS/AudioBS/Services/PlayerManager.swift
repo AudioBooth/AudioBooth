@@ -39,6 +39,9 @@ final class PlayerManager: ObservableObject {
     if book.bookID == current?.id {
       isShowingFullPlayer = true
     } else {
+      if let currentPlayer = current as? BookPlayerModel {
+        currentPlayer.closeSession()
+      }
       current = BookPlayerModel(book)
       UserDefaults.standard.set(book.bookID, forKey: Self.currentBookIDKey)
     }
@@ -48,12 +51,18 @@ final class PlayerManager: ObservableObject {
     if book.id == current?.id {
       isShowingFullPlayer = true
     } else {
+      if let currentPlayer = current as? BookPlayerModel {
+        currentPlayer.closeSession()
+      }
       current = BookPlayerModel(book)
       UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
     }
   }
 
   func clearCurrent() {
+    if let currentPlayer = current as? BookPlayerModel {
+      currentPlayer.closeSession()
+    }
     current = nil
     isShowingFullPlayer = false
     UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)

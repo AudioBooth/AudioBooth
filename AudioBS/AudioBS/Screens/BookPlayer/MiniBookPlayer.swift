@@ -3,17 +3,27 @@ import SwiftUI
 
 @available(iOS 26.0, *)
 struct MiniBookPlayer: View {
+  private var playerManager: PlayerManager { .shared }
+
   @Environment(\.tabViewBottomAccessoryPlacement) var placement
 
   var player: BookPlayer.Model
-  let onTap: () -> Void
 
   var body: some View {
     content
       .padding(.vertical, 8)
       .padding(.horizontal, 12)
       .contentShape(Rectangle())
-      .onTapGesture(perform: onTap)
+      .onTapGesture {
+        playerManager.showFullPlayer()
+      }
+      .contextMenu {
+        Button {
+          playerManager.clearCurrent()
+        } label: {
+          Label("Stop", systemImage: "xmark.circle")
+        }
+      }
   }
 
   @ViewBuilder
@@ -94,8 +104,9 @@ struct MiniBookPlayer: View {
 }
 
 struct LegacyMiniBookPlayer: View {
+  private var playerManager: PlayerManager { .shared }
+
   var player: BookPlayer.Model
-  let onTap: () -> Void
 
   var body: some View {
     content
@@ -103,7 +114,17 @@ struct LegacyMiniBookPlayer: View {
       .padding(.vertical, 8)
       .background(.regularMaterial)
       .contentShape(Rectangle())
-      .onTapGesture(perform: onTap)
+      .onTapGesture {
+        playerManager.showFullPlayer()
+      }
+      .contextMenu {
+        Button {
+          playerManager.clearCurrent()
+        } label: {
+          Label("Stop", systemImage: "xmark.circle")
+        }
+      }
+
   }
 
   @ViewBuilder
@@ -187,8 +208,6 @@ struct LegacyMiniBookPlayer: View {
 #Preview {
   VStack {
     Spacer()
-    LegacyMiniBookPlayer(player: .mock) {
-      print("Tapped mini player")
-    }
+    LegacyMiniBookPlayer(player: .mock)
   }
 }

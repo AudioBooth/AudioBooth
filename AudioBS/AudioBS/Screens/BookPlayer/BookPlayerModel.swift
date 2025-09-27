@@ -111,23 +111,14 @@ extension BookPlayerModel {
   private func setupSessionInfo() async throws -> PlaySessionInfo {
     var sessionInfo: PlaySessionInfo?
 
-    let hasExistingLocalSession = item?.playSessionInfo.isDownloaded == true
-
     do {
       print("Attempting to fetch fresh session from server...")
 
       let audiobookshelfSession: PlaySession
-      if hasExistingLocalSession {
-        audiobookshelfSession = try await audiobookshelf.sessions.start(
-          itemID: id,
-          forceTranscode: false
-        )
-      } else {
-        audiobookshelfSession = try await audiobookshelf.sessions.start(
-          itemID: id,
-          forceTranscode: false
-        )
-      }
+      audiobookshelfSession = try await audiobookshelf.sessions.start(
+        itemID: id,
+        forceTranscode: false
+      )
 
       let newPlaySessionInfo = PlaySessionInfo(from: audiobookshelfSession)
 
@@ -678,6 +669,36 @@ extension BookPlayerModel {
     } catch {
       print("Failed to update recently played progress: \(error)")
       ToastManager.shared.show(error: "Failed to update playback progress")
+    }
+  }
+
+  func closeSession() {
+    guard let sessionInfo = item?.playSessionInfo else {
+      print("Session already closed or no session to close")
+      return
+    }
+
+    Task {
+      if mediaProgress.timeListened > 0 {
+        do {
+          try await audiobookshelf.sessions.sync(
+            sessionInfo.id,
+            timeListened: mediaProgress.timeListened,
+            currentTime: mediaProgress.currentTime
+          )
+
+          mediaProgress.timeListened = 0
+        } catch {
+          print("Failed to sync session progress: \(error)")
+        }
+      }
+
+      do {
+        try await audiobookshelf.sessions.close(sessionInfo.id)
+        print("Successfully closed session: \(sessionInfo.id)")
+      } catch {
+        print("Failed to close session: \(error)")
+      }
     }
   }
 

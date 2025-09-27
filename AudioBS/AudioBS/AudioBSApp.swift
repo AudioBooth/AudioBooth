@@ -1,5 +1,6 @@
 import Audiobookshelf
 import SwiftUI
+import UIKit
 
 @main
 struct AudioBSApp: App {

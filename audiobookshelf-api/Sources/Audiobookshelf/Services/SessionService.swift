@@ -1,10 +1,20 @@
 import Foundation
+import UIKit
 
 public final class SessionService {
   private let audiobookshelf: Audiobookshelf
 
   init(audiobookshelf: Audiobookshelf) {
     self.audiobookshelf = audiobookshelf
+  }
+
+  private static var deviceID: String {
+    guard let deviceID = UserDefaults.standard.string(forKey: "deviceID") else {
+      let deviceID = UUID().uuidString
+      UserDefaults.standard.set(deviceID, forKey: "deviceID")
+      return deviceID
+    }
+    return deviceID
   }
 
   public func start(
@@ -26,6 +36,7 @@ public final class SessionService {
 
       struct DeviceInfo: Codable {
         let clientName: String
+        let clientVersion: String?
         let deviceId: String
       }
 
@@ -36,8 +47,21 @@ public final class SessionService {
           "audio/flac", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/aac", "audio/x-aiff",
           "audio/webm",
         ]
-        self.mediaPlayer = "ios-app"
-        self.deviceInfo = DeviceInfo(clientName: "Abs iOS", deviceId: UUID().uuidString)
+        self.mediaPlayer = "ios"
+
+        var clientVersion: String?
+        if let infoDictionary = Bundle.main.infoDictionary,
+          let version = infoDictionary["CFBundleShortVersionString"] as? String,
+          let build = infoDictionary["CFBundleVersion"] as? String
+        {
+          clientVersion = "\(version) (\(build))"
+        }
+
+        self.deviceInfo = DeviceInfo(
+          clientName: "AudioBS iOS",
+          clientVersion: clientVersion,
+          deviceId: SessionService.deviceID
+        )
       }
     }
 
@@ -85,24 +109,22 @@ public final class SessionService {
     }
   }
 
-  public func stop(_ id: String) async throws {
+  public func close(_ id: String) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Network service not configured. Please login first.")
     }
 
-    struct Response: Codable {}
-
-    let request = NetworkRequest<Response>(
-      path: "/api/session/\(id)",
-      method: .delete
+    let request = NetworkRequest<Data>(
+      path: "/api/session/\(id)/close",
+      method: .post
     )
 
     do {
       _ = try await networkService.send(request)
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to stop play session: \(error.localizedDescription)")
+        "Failed to close play session: \(error.localizedDescription)")
     }
   }
 

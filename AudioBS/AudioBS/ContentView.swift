@@ -102,10 +102,8 @@ struct ContentView: View {
     .tabBarMinimizeBehavior(.onScrollDown)
     .tabViewBottomAccessory {
       if let currentPlayer = playerManager.current, !isKeyboardVisible {
-        MiniBookPlayer(player: currentPlayer) {
-          playerManager.showFullPlayer()
-        }
-        .glassEffect()
+        MiniBookPlayer(player: currentPlayer)
+          .glassEffect()
       }
     }
   }
@@ -160,19 +158,17 @@ struct ContentView: View {
   @ViewBuilder
   private var miniPlayer: some View {
     if let currentPlayer = playerManager.current, !isKeyboardVisible {
-      LegacyMiniBookPlayer(player: currentPlayer) {
-        playerManager.showFullPlayer()
-      }
-      .id(currentPlayer.id)
-      .transition(.move(edge: .bottom))
-      .animation(.easeInOut(duration: 0.3), value: playerManager.hasActivePlayer)
-      .overlay {
-        GeometryReader { geometry in
-          Color.clear.onAppear {
-            miniPlayerHeight = geometry.size.height
+      LegacyMiniBookPlayer(player: currentPlayer)
+        .id(currentPlayer.id)
+        .transition(.move(edge: .bottom))
+        .animation(.easeInOut(duration: 0.3), value: playerManager.hasActivePlayer)
+        .overlay {
+          GeometryReader { geometry in
+            Color.clear.onAppear {
+              miniPlayerHeight = geometry.size.height
+            }
           }
         }
-      }
     }
   }
 
