@@ -1,13 +1,15 @@
 import Audiobookshelf
+import Foundation
 import SwiftUI
 
 @MainActor
 final class SettingsViewModel: SettingsView.Model {
   private let audiobookshelf = Audiobookshelf.shared
+  private var oidcAuthManager: OIDCAuthenticationManager?
 
   init() {
     let isAuthenticated = audiobookshelf.isAuthenticated
-    let serverURL = audiobookshelf.serverURL?.absoluteString ?? ""
+    let serverURL = audiobookshelf.serverURL?.absoluteString ?? "https://audiobooks.dev"
 
     super.init(
       isAuthenticated: isAuthenticated,
@@ -16,6 +18,7 @@ final class SettingsViewModel: SettingsView.Model {
       password: "",
       library: LibrariesViewModel()
     )
+
   }
 
   override func onLoginTapped() {
@@ -49,6 +52,29 @@ final class SettingsViewModel: SettingsView.Model {
 
       isLoading = false
     }
+  }
+
+  override func onOIDCLoginTapped() {
+    guard !serverURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      return
+    }
+
+    let normalizedURL = normalizeServerURL(
+      serverURL.trimmingCharacters(in: .whitespacesAndNewlines))
+    serverURL = normalizedURL
+
+    isLoading = true
+
+    let authManager = OIDCAuthenticationManager(serverURL: normalizedURL)
+    authManager.delegate = self
+    self.oidcAuthManager = authManager
+
+    authManager.start()
+  }
+
+  func showError(_ message: String) {
+    ToastManager.shared.show(error: message)
+    isLoading = false
   }
 
   override func onClearStorageTapped() {
@@ -99,5 +125,22 @@ final class SettingsViewModel: SettingsView.Model {
     } else {
       return "http://" + trimmedURL
     }
+  }
+
+}
+
+extension SettingsViewModel: OIDCAuthenticationDelegate {
+  func oidcAuthenticationDidSucceed() {
+    isAuthenticated = true
+    navigationPath.append("libraries")
+    isLoading = false
+    oidcAuthManager = nil
+    ToastManager.shared.show(success: "Successfully authenticated with SSO")
+  }
+
+  func oidcAuthentication(didFailWithError error: Error) {
+    showError("SSO login failed: \(error.localizedDescription)")
+    isLoading = false
+    oidcAuthManager = nil
   }
 }

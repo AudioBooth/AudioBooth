@@ -75,6 +75,54 @@ public final class AuthenticationService {
     }
   }
 
+  public func loginWithOIDC(
+    serverURL: String, code: String, verifier: String, state: String?, cookies: [HTTPCookie]
+  ) async throws {
+    guard let baseURL = URL(string: serverURL) else {
+      throw Audiobookshelf.AudiobookshelfError.invalidURL
+    }
+
+    let loginService = NetworkService(baseURL: baseURL)
+
+    struct Response: Codable {
+      struct User: Codable {
+        let token: String
+      }
+      let user: User
+    }
+
+    var query: [String: String] = [
+      "code": code,
+      "code_verifier": verifier,
+    ]
+
+    if let state {
+      query["state"] = state
+    }
+
+    let headers = [
+      "Cookie": cookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+    ]
+
+    let request = NetworkRequest<Response>(
+      path: "/auth/openid/callback",
+      method: .get,
+      query: query,
+      headers: headers
+    )
+
+    do {
+      let response = try await loginService.send(request)
+      let token = response.value.user.token
+
+      self.connection = Connection(serverURL: baseURL, token: token)
+      audiobookshelf.setupNetworkService()
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "OIDC login failed: \(error.localizedDescription)")
+    }
+  }
+
   public func logout() {
     connection = nil
     audiobookshelf.libraries.current = nil

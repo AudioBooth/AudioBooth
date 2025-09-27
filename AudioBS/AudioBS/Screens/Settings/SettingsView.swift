@@ -93,29 +93,54 @@ struct SettingsView: View {
 
   @ViewBuilder
   var authentication: some View {
-    Section("Authentication") {
-      TextField("Username", text: $model.username)
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
-
-      SecureField("Password", text: $model.password)
+    Section("Authentication Method") {
+      Picker("Method", selection: $model.authenticationMethod) {
+        Text("Username & Password").tag(SettingsView.Model.AuthenticationMethod.usernamePassword)
+        Text("OIDC (SSO)").tag(SettingsView.Model.AuthenticationMethod.oidc)
+      }
+      .pickerStyle(.segmented)
     }
 
-    Section {
-      Button(action: model.onLoginTapped) {
-        HStack {
-          if model.isLoading {
-            ProgressView()
-              .scaleEffect(0.8)
-          } else {
-            Image(systemName: "person.badge.key")
-          }
-          Text(model.isLoading ? "Logging in..." : "Login")
-        }
+    if model.authenticationMethod == .usernamePassword {
+      Section("Credentials") {
+        TextField("Username", text: $model.username)
+          .autocorrectionDisabled()
+          .textInputAutocapitalization(.never)
+
+        SecureField("Password", text: $model.password)
       }
-      .disabled(
-        model.username.isEmpty || model.password.isEmpty || model.serverURL.isEmpty
-          || model.isLoading)
+
+      Section {
+        Button(action: model.onLoginTapped) {
+          HStack {
+            if model.isLoading {
+              ProgressView()
+                .scaleEffect(0.8)
+            } else {
+              Image(systemName: "person.badge.key")
+            }
+            Text(model.isLoading ? "Logging in..." : "Login")
+          }
+        }
+        .disabled(
+          model.username.isEmpty || model.password.isEmpty || model.serverURL.isEmpty
+            || model.isLoading)
+      }
+    } else {
+      Section {
+        Button(action: model.onOIDCLoginTapped) {
+          HStack {
+            if model.isLoading {
+              ProgressView()
+                .scaleEffect(0.8)
+            } else {
+              Image(systemName: "globe")
+            }
+            Text(model.isLoading ? "Authenticating..." : "Login with SSO")
+          }
+        }
+        .disabled(model.serverURL.isEmpty || model.isLoading)
+      }
     }
   }
 
@@ -166,6 +191,11 @@ struct SettingsView: View {
 
 extension SettingsView {
   @Observable class Model {
+    enum AuthenticationMethod: CaseIterable {
+      case usernamePassword
+      case oidc
+    }
+
     var isLoading: Bool
     var isAuthenticated: Bool
     var isDiscovering: Bool
@@ -175,10 +205,12 @@ extension SettingsView {
     var username: String
     var password: String
     var discoveryPort: String
+    var authenticationMethod: AuthenticationMethod
     var library: LibrariesView.Model
     var discoveredServers: [DiscoveredServer]
 
     @MainActor func onLoginTapped() {}
+    @MainActor func onOIDCLoginTapped() {}
     @MainActor func onLogoutTapped() {}
     @MainActor func onClearStorageTapped() {}
     @MainActor func onDiscoverServersTapped() {}
@@ -192,6 +224,7 @@ extension SettingsView {
       username: String = "",
       password: String = "",
       discoveryPort: String = "13378",
+      authenticationMethod: AuthenticationMethod = .usernamePassword,
       library: LibrariesView.Model,
       discoveredServers: [DiscoveredServer] = []
     ) {
@@ -199,6 +232,7 @@ extension SettingsView {
       self.username = username
       self.password = password
       self.discoveryPort = discoveryPort
+      self.authenticationMethod = authenticationMethod
       self.isAuthenticated = isAuthenticated
       self.isLoading = isLoading
       self.isDiscovering = isDiscovering

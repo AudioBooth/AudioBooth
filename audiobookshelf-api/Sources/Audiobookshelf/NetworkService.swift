@@ -13,16 +13,18 @@ struct NetworkRequest<T: Decodable> {
   let method: HTTPMethod
   let body: (any Encodable)?
   let query: [String: String]?
+  let headers: [String: String]?
   let timeout: TimeInterval?
 
   init(
     path: String, method: HTTPMethod = .get, body: (any Encodable)? = nil,
-    query: [String: String]? = nil, timeout: TimeInterval? = nil
+    query: [String: String]? = nil, headers: [String: String]? = nil, timeout: TimeInterval? = nil
   ) {
     self.path = path
     self.method = method
     self.body = body
     self.query = query
+    self.headers = headers
     self.timeout = timeout
   }
 }
@@ -81,6 +83,12 @@ final class NetworkService {
     var urlRequest = URLRequest(url: url)
     urlRequest.httpMethod = request.method.rawValue
     urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    if let headers = request.headers {
+      for (key, value) in headers {
+        urlRequest.setValue(value, forHTTPHeaderField: key)
+      }
+    }
 
     if let timeout = request.timeout {
       urlRequest.timeoutInterval = timeout
