@@ -6,8 +6,10 @@ final class SpeedPickerSheetViewModel: SpeedPickerSheet.Model {
   let player: AVPlayer
 
   init(player: AVPlayer) {
+    let speed = UserDefaults.standard.float(forKey: "playbackSpeed")
+
     self.player = player
-    super.init()
+    super.init(playbackSpeed: speed > 0 ? speed : 1.0)
   }
 
   override func onSpeedIncrease() {
@@ -23,6 +25,10 @@ final class SpeedPickerSheetViewModel: SpeedPickerSheet.Model {
   override func onSpeedChanged(_ speed: Float) {
     let roundedSpeed = round(speed / 0.05) * 0.05
     playbackSpeed = roundedSpeed
-    player.rate = roundedSpeed
+    UserDefaults.standard.set(playbackSpeed, forKey: "playbackSpeed")
+
+    if player.rate > 0 {
+      player.rate = roundedSpeed
+    }
   }
 }

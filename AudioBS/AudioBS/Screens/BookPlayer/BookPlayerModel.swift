@@ -18,7 +18,9 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private var item: RecentlyPlayedItem?
   private var mediaProgress: MediaProgress
   private var timerSecondsCounter = 0
-  private var lastPlaybackTime: Date?
+
+  private var lastPlaybackAt: Date?
+  private var lastSyncAt = Date()
 
   private let downloadManager = DownloadManager.shared
 
@@ -72,9 +74,9 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
     guard let player = player else { return }
 
     if isPlaying {
-      player.pause()
+      player.rate = 0
     } else {
-      player.play()
+      player.rate = speed.playbackSpeed
     }
   }
 
@@ -463,7 +465,6 @@ extension BookPlayerModel {
 
           if self.timerSecondsCounter % 20 == 0 {
             self.updateRecentlyPlayedProgress()
-            self.syncSessionProgress()
           }
 
           self.updateNowPlayingInfo()
@@ -620,19 +621,25 @@ extension BookPlayerModel {
     let now = Date()
 
     if isNowPlaying && !isPlaying {
-      lastPlaybackTime = now
+      lastPlaybackAt = now
     } else if !isNowPlaying && isPlaying {
-      if let lastTime = lastPlaybackTime {
-        let timeListened = now.timeIntervalSince(lastTime)
+      if let last = lastPlaybackAt {
+        let timeListened = now.timeIntervalSince(last)
         mediaProgress.timeListened += timeListened
         syncSessionProgress()
       }
-      lastPlaybackTime = nil
+      lastPlaybackAt = nil
     }
   }
 
   private func syncSessionProgress() {
     guard let sessionInfo = item?.playSessionInfo else { return }
+
+    let now = Date()
+
+    guard mediaProgress.timeListened >= 20, now.timeIntervalSince(lastSyncAt) >= 10 else { return }
+
+    lastSyncAt = now
 
     Task {
       do {
@@ -653,10 +660,10 @@ extension BookPlayerModel {
     guard let item else { return }
 
     do {
-      if isPlaying, let lastTime = lastPlaybackTime {
+      if isPlaying, let lastTime = lastPlaybackAt {
         let timeListened = Date().timeIntervalSince(lastTime)
         mediaProgress.timeListened += timeListened
-        lastPlaybackTime = Date()
+        lastPlaybackAt = Date()
       }
 
       mediaProgress.lastPlayedAt = Date()
@@ -666,6 +673,8 @@ extension BookPlayerModel {
       }
       try mediaProgress.save()
       try item.save()
+
+      syncSessionProgress()
     } catch {
       print("Failed to update recently played progress: \(error)")
       ToastManager.shared.show(error: "Failed to update playback progress")
