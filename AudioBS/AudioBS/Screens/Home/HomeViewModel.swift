@@ -22,6 +22,31 @@ final class HomeViewModel: HomeView.Model {
     loadCachedContent()
   }
 
+  override func onAppear() {
+    Task {
+      await fetchRemoteContent()
+    }
+  }
+
+  override func refresh() async {
+    await fetchRemoteContent()
+  }
+
+  override func onReset(_ shouldRefresh: Bool) {
+    recentItemsTask?.cancel()
+    recentlyPlayed = []
+    continueListening = []
+    sections = []
+    recents = []
+    isLoading = false
+
+    if shouldRefresh {
+      onAppear()
+    }
+  }
+}
+
+extension HomeViewModel {
   private func setupRecentItemsObservation() {
     recentItemsTask = Task { [weak self] in
       for await recents in RecentlyPlayedItem.observeAll() {
@@ -75,44 +100,6 @@ final class HomeViewModel: HomeView.Model {
     }
   }
 
-  override func onAppear() {
-    Task {
-      await fetchRemoteContent()
-    }
-  }
-
-  override func refresh() async {
-    await fetchRemoteContent()
-  }
-
-  private func loadCachedContent() {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return
-    }
-
-    processSections(personalized.sections)
-  }
-
-  private func fetchRemoteContent() async {
-    if sections.isEmpty {
-      isLoading = true
-    }
-
-    do {
-      async let progressSync: Void = MediaProgress.syncFromAPI()
-      async let recentSync: Void = syncRecentItemsProgress()
-
-      _ = try await (progressSync, recentSync)
-
-      let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
-      processSections(personalized.sections)
-    } catch {
-      print("Failed to fetch personalized content: \(error)")
-    }
-
-    isLoading = false
-  }
-
   private func processSections(_ personalizedSections: [Personalized.Section]) {
     var sections = [Section]()
 
@@ -159,13 +146,42 @@ final class HomeViewModel: HomeView.Model {
     } catch {
     }
   }
+}
+
+extension HomeViewModel {
+  private func loadCachedContent() {
+    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
+      return
+    }
+
+    processSections(personalized.sections)
+  }
+
+  private func fetchRemoteContent() async {
+    if sections.isEmpty {
+      isLoading = true
+    }
+
+    do {
+      async let progressSync: Void = MediaProgress.syncFromAPI()
+      async let recentSync: Void = syncRecentItemsProgress()
+
+      _ = try await (progressSync, recentSync)
+
+      let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
+      processSections(personalized.sections)
+    } catch {
+      print("Failed to fetch personalized content: \(error)")
+    }
+
+    isLoading = false
+  }
 
   private func syncItemProgress(_ item: RecentlyPlayedItem) async {
     guard let localProgress = try? MediaProgress.fetch(bookID: item.bookID) else { return }
 
     if localProgress.timeListened > 0 {
       await syncWithSessionRecreation(item, progress: localProgress)
-    } else {
     }
   }
 
@@ -211,8 +227,7 @@ final class HomeViewModel: HomeView.Model {
             duration: progress.duration,
             progress: progress.progress
           )
-        } catch {
-        }
+        } catch {}
       }
     }
   }

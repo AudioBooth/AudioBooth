@@ -5,6 +5,7 @@ import SwiftUI
 final class SettingsViewModel: SettingsView.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private var oidcAuthManager: OIDCAuthenticationManager?
+  private var playerManager: PlayerManager { .shared }
 
   init() {
     let isAuthenticated = audiobookshelf.isAuthenticated
@@ -107,8 +108,11 @@ final class SettingsViewModel: SettingsView.Model {
   }
 
   override func onLogoutTapped() {
-    audiobookshelf.logout()
+    playerManager.current = nil
+    try? RecentlyPlayedItem.deleteAll()
+    try? MediaProgress.deleteAll()
 
+    audiobookshelf.logout()
     isAuthenticated = false
     username = ""
     password = ""

@@ -58,10 +58,8 @@ struct HomeView: View {
       }
       model.onAppear()
     }
-    .onChange(of: libraryData) { _, _ in
-      Task {
-        await model.refresh()
-      }
+    .onChange(of: libraryData) { _, new in
+      model.onReset(new != nil)
     }
     .refreshable {
       await model.refresh()
@@ -197,6 +195,7 @@ extension HomeView {
 
     func onAppear() {}
     func refresh() async {}
+    func onReset(_ shouldRefresh: Bool) {}
 
     init(
       isLoading: Bool = false,
