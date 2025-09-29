@@ -88,82 +88,22 @@ extension MediaProgress {
 
       fetchData()
 
-      observeWithNotifications(
-        context: context, bookID: bookID, fetchData: fetchData, continuation: continuation)
+      let observer = NotificationCenter.default.addObserver(
+        forName: ModelContext.didSave,
+        object: context,
+        queue: .main
+      ) { _ in
+        fetchData()
+      }
 
       continuation.onTermination = { _ in
+        NotificationCenter.default.removeObserver(observer)
         activeStreams.removeValue(forKey: bookID)
       }
     }
 
     activeStreams[bookID] = stream
     return stream
-  }
-
-  private static func observeWithNotifications(
-    context: ModelContext,
-    bookID: String,
-    fetchData: @escaping () -> Void,
-    continuation: AsyncStream<MediaProgress?>.Continuation
-  ) {
-    let observer = NotificationCenter.default.addObserver(
-      forName: ModelContext.didSave,
-      object: context,
-      queue: .main
-    ) { notification in
-      guard let userInfo = notification.userInfo else {
-        fetchData()
-        return
-      }
-
-      Task.detached {
-        let hasRelevantChanges = await checkForMediaProgressChanges(
-          userInfo: userInfo, bookID: bookID)
-
-        if hasRelevantChanges {
-          Task {
-            fetchData()
-          }
-        }
-      }
-    }
-
-    continuation.onTermination = { _ in
-      NotificationCenter.default.removeObserver(observer)
-    }
-  }
-
-  @MainActor
-  private static func checkForMediaProgressChanges(userInfo: [AnyHashable: Any], bookID: String)
-    async -> Bool
-  {
-    let context = ModelContextProvider.shared.context
-
-    if let insertedIDs = userInfo["inserted"] as? [PersistentIdentifier] {
-      for persistentID in insertedIDs {
-        if persistentID.entityName == "MediaProgress" {
-          if let progress = context.model(for: persistentID) as? MediaProgress,
-            progress.bookID == bookID
-          {
-            return true
-          }
-        }
-      }
-    }
-
-    if let updatedIDs = userInfo["updated"] as? [PersistentIdentifier] {
-      for persistentID in updatedIDs {
-        if persistentID.entityName == "MediaProgress" {
-          if let progress = context.model(for: persistentID) as? MediaProgress,
-            progress.bookID == bookID
-          {
-            return true
-          }
-        }
-      }
-    }
-
-    return false
   }
 
   static func fetch(bookID: String) throws -> MediaProgress? {
