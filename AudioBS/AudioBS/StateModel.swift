@@ -1,11 +1,12 @@
+import Combine
 import SwiftUI
 
 @propertyWrapper
-struct StateModel<T>: DynamicProperty {
-  @State private var model: T
+struct StateModel<T: ObservableObject>: DynamicProperty {
+  @StateObject private var model: T
 
   init(wrappedValue: T) {
-    self._model = State(wrappedValue: wrappedValue)
+    self._model = StateObject(wrappedValue: wrappedValue)
   }
 
   init(mock: T, default: T) {
@@ -21,13 +22,17 @@ struct StateModel<T>: DynamicProperty {
       resolvedModel = `default`
     #endif
 
-    self._model = State(wrappedValue: resolvedModel)
+    self._model = StateObject(wrappedValue: resolvedModel)
   }
 
   var wrappedValue: T {
-    get { model }
-    nonmutating set { model = newValue }
+    model
   }
 
-  var projectedValue: Binding<T> { $model }
+  var projectedValue: Binding<T> {
+    Binding(
+      get: { model },
+      set: { _ in }
+    )
+  }
 }

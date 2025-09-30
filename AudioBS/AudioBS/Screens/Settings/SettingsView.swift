@@ -1,19 +1,13 @@
 import Audiobookshelf
+import Combine
 import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-  @StateModel var model: Model
   @Environment(\.dismiss) var dismiss
   @FocusState private var isServerURLFocused: Bool
 
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: SettingsViewModel())
-    }
-  }
+  @StateObject var model: Model
 
   var body: some View {
     NavigationStack(path: $model.navigationPath) {
@@ -209,7 +203,7 @@ struct SettingsView: View {
 }
 
 extension SettingsView {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     enum AuthenticationMethod: CaseIterable {
       case usernamePassword
       case oidc

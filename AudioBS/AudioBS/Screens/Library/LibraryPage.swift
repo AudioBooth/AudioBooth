@@ -1,16 +1,9 @@
 import Audiobookshelf
+import Combine
 import SwiftUI
 
 struct LibraryPage: View {
-  @StateModel var model: Model
-
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: LibraryPageModel())
-    }
-  }
+  @StateObject var model: Model
 
   var body: some View {
     if model.isRoot {
@@ -121,7 +114,7 @@ struct LibraryPage: View {
 }
 
 extension LibraryPage {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var isLoading: Bool
 
     var isRoot: Bool

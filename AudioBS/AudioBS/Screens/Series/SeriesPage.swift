@@ -1,15 +1,8 @@
+import Combine
 import SwiftUI
 
 struct SeriesPage: View {
-  @StateModel var model: Model
-
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: SeriesPageModel())
-    }
-  }
+  @StateObject var model: Model
 
   var body: some View {
     Group {
@@ -61,7 +54,7 @@ struct SeriesPage: View {
 }
 
 extension SeriesPage {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var isLoading: Bool
 
     var series: [SeriesCard.Model]

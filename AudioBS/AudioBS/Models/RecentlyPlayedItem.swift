@@ -113,7 +113,7 @@ extension RecentlyPlayedItem {
   private func cleanupLocalFiles() {
     let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
       .first!
-    let bookDirectory = documentsPath.appendingPathComponent("Downloads").appendingPathComponent(
+    let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
       bookID)
 
     do {

@@ -52,8 +52,6 @@ final class MediaProgress {
 }
 
 extension MediaProgress {
-  private static var activeStreams: [String: AsyncStream<MediaProgress?>] = [:]
-
   static func fetchAll() throws -> [MediaProgress] {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<MediaProgress>(
@@ -64,10 +62,6 @@ extension MediaProgress {
   }
 
   static func observe(bookID: String) -> AsyncStream<MediaProgress?> {
-    if let existingStream = activeStreams[bookID] {
-      return existingStream
-    }
-
     let stream = AsyncStream { continuation in
       let context = ModelContextProvider.shared.context
       let appStateManager = AppStateManager.shared
@@ -98,11 +92,9 @@ extension MediaProgress {
 
       continuation.onTermination = { _ in
         NotificationCenter.default.removeObserver(observer)
-        activeStreams.removeValue(forKey: bookID)
       }
     }
 
-    activeStreams[bookID] = stream
     return stream
   }
 

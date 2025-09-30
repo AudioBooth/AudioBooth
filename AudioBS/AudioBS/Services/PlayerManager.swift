@@ -11,19 +11,20 @@ final class PlayerManager: ObservableObject {
   private static let currentBookIDKey = "currentBookID"
 
   private init() {
+    Task { @MainActor in
+      await self.restoreLastPlayer()
+    }
+  }
+
+  private func restoreLastPlayer() async {
     guard current == nil,
-      let savedBookID = UserDefaults.standard.string(forKey: Self.currentBookIDKey)
+      let savedBookID = UserDefaults.standard.string(forKey: Self.currentBookIDKey),
+      let recent = try? RecentlyPlayedItem.fetch(bookID: savedBookID)
     else {
       return
     }
 
-    do {
-      if let recent = try RecentlyPlayedItem.fetch(bookID: savedBookID) {
-        setCurrent(recent)
-      }
-    } catch {
-      print("Failed to restore current player: \(error)")
-    }
+    setCurrent(recent)
   }
 
   var hasActivePlayer: Bool {

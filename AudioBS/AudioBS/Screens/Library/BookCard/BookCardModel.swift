@@ -54,6 +54,10 @@ final class BookCardModel: BookCard.Model {
     startObservingProgress()
   }
 
+  isolated deinit {
+    progressObservationTask?.cancel()
+  }
+
   private func startObservingProgress() {
     let id = book.id
     progressObservationTask = Task { [weak self] in

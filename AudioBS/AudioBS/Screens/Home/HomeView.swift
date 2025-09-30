@@ -1,20 +1,13 @@
 import Audiobookshelf
+import Combine
 import SwiftData
 import SwiftUI
 
 struct HomeView: View {
-  @StateModel var model: Model
+  @StateObject var model: Model
   @State private var showingDeleteConfirmation = false
   @State private var showingSettings = false
   @AppStorage("audiobookshelf_selected_library") private var libraryData: Data?
-
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: HomeViewModel())
-    }
-  }
 
   var body: some View {
     ScrollView {
@@ -49,7 +42,7 @@ struct HomeView: View {
     }
     .sheet(isPresented: $showingSettings) {
       NavigationView {
-        SettingsView()
+        SettingsView(model: SettingsViewModel())
       }
     }
     .onAppear {
@@ -174,7 +167,7 @@ struct HomeView: View {
 }
 
 extension HomeView {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var isLoading: Bool
     var isRoot: Bool
     var title: String

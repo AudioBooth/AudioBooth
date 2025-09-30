@@ -1,15 +1,8 @@
+import Combine
 import SwiftUI
 
 struct AuthorsPage: View {
-  @StateModel var model: Model
-
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: AuthorsPageModel())
-    }
-  }
+  @StateObject var model: Model
 
   var body: some View {
     Group {
@@ -62,7 +55,7 @@ struct AuthorsPage: View {
 }
 
 extension AuthorsPage {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var isLoading: Bool
 
     var authors: [AuthorCard.Model]

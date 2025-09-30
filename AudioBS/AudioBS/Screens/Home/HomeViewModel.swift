@@ -33,7 +33,6 @@ final class HomeViewModel: HomeView.Model {
   }
 
   override func onReset(_ shouldRefresh: Bool) {
-    recentItemsTask?.cancel()
     recentlyPlayed = []
     continueListening = []
     sections = []

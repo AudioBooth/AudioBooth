@@ -1,16 +1,9 @@
 import Audiobookshelf
+import Combine
 import SwiftUI
 
 struct SearchPage: View {
-  @StateModel var model: SearchView.Model
-
-  init(model: SearchView.Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: SearchViewModel())
-    }
-  }
+  @StateObject var model: SearchView.Model
 
   var body: some View {
     SearchView(model: model)
@@ -19,15 +12,7 @@ struct SearchPage: View {
 }
 
 struct SearchView: View {
-  @StateModel var model: Model
-
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: SearchViewModel())
-    }
-  }
+  @ObservedObject var model: Model
 
   var body: some View {
     content
@@ -169,7 +154,7 @@ struct SearchView: View {
 }
 
 extension SearchView {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var searchText: String = ""
     var isLoading: Bool = false
     var books: [BookCard.Model] = []

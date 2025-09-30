@@ -21,18 +21,16 @@ final class RecentRowModel: RecentRow.Model {
 
   init(recent: RecentlyPlayedItem) {
     self.item = .recent(recent)
-
-    let progress = try? MediaProgress.fetch(bookID: recent.bookID)
-    self.lastPlayedAt = progress?.lastPlayedAt
+    self.lastPlayedAt = nil
 
     super.init(
       id: recent.bookID,
       title: recent.title,
       author: recent.author,
       coverURL: recent.coverURL,
-      progress: progress?.progress ?? 0,
-      lastPlayed: progress?.lastPlayedAt,
-      timeRemaining: progress.flatMap { Self.formatTimeRemaining(progress: $0) }
+      progress: 0,
+      lastPlayed: nil,
+      timeRemaining: nil
     )
 
     setupDownloadStateBinding()
@@ -41,24 +39,26 @@ final class RecentRowModel: RecentRow.Model {
 
   init(book: Book, onRemoved: @escaping () -> Void) {
     self.item = .book(book)
-
-    let progress = try? MediaProgress.fetch(bookID: book.id)
-    self.lastPlayedAt = progress?.lastPlayedAt
+    self.lastPlayedAt = nil
 
     super.init(
       id: book.id,
       title: book.title,
       author: book.authorName,
       coverURL: book.coverURL,
-      progress: progress?.progress ?? 0,
-      lastPlayed: progress?.lastPlayedAt,
-      timeRemaining: progress.flatMap { Self.formatTimeRemaining(from: book, progress: $0) }
+      progress: 0,
+      lastPlayed: nil,
+      timeRemaining: nil
     )
 
     setupDownloadStateBinding()
     setupProgressObservation()
 
     self.onRemoved = onRemoved
+  }
+
+  isolated deinit {
+    mediaProgressObservation?.cancel()
   }
 
   override func onTapped() {

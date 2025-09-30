@@ -1,17 +1,10 @@
+import Combine
 import SwiftUI
 
 struct LibrariesView: View {
   @Environment(\.dismiss) private var dismiss
 
-  @StateModel var model: Model
-
-  init(model: Model? = nil) {
-    if let model {
-      self._model = StateModel(wrappedValue: model)
-    } else {
-      self._model = StateModel(mock: .mock, default: LibrariesViewModel())
-    }
-  }
+  @StateObject var model: Model
 
   var body: some View {
     NavigationView {
@@ -45,7 +38,7 @@ struct LibrariesView: View {
 }
 
 extension LibrariesView {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     struct Row: Identifiable {
       let id: String
       let name: String

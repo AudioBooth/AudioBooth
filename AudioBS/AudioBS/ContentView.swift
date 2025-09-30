@@ -66,7 +66,7 @@ struct ContentView: View {
     TabView(selection: $selectedTab) {
       Tab("Home", systemImage: "house", value: .home) {
         NavigationView {
-          HomeView()
+          HomeView(model: HomeViewModel())
         }
         .navigationViewStyle(.stack)
       }
@@ -74,26 +74,26 @@ struct ContentView: View {
       if hasSelectedLibrary {
         Tab("Library", systemImage: "books.vertical.fill", value: .library) {
           NavigationView {
-            LibraryPage()
+            LibraryPage(model: LibraryPageModel())
           }
           .navigationViewStyle(.stack)
         }
 
         Tab("Series", systemImage: "square.stack.3d.up.fill", value: .series) {
           NavigationView {
-            SeriesPage()
+            SeriesPage(model: SeriesPageModel())
           }
         }
 
         Tab("Authors", systemImage: "person.crop.rectangle.stack", value: .authors) {
           NavigationView {
-            AuthorsPage()
+            AuthorsPage(model: AuthorsPageModel())
           }
         }
 
         Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
           NavigationView {
-            SearchPage()
+            SearchPage(model: SearchViewModel())
           }
           .navigationViewStyle(.stack)
         }
@@ -112,7 +112,7 @@ struct ContentView: View {
   private var legacyTabView: some View {
     TabView {
       NavigationView {
-        HomeView()
+        HomeView(model: HomeViewModel())
           .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
       }
       .navigationViewStyle(.stack)
@@ -123,7 +123,7 @@ struct ContentView: View {
 
       if hasSelectedLibrary {
         NavigationView {
-          LibraryPage()
+          LibraryPage(model: LibraryPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
         .navigationViewStyle(.stack)
@@ -133,7 +133,7 @@ struct ContentView: View {
         }
 
         NavigationView {
-          SeriesPage()
+          SeriesPage(model: SeriesPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
         .tabItem {
@@ -142,7 +142,7 @@ struct ContentView: View {
         }
 
         NavigationView {
-          AuthorsPage()
+          AuthorsPage(model: AuthorsPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
         .tabItem {

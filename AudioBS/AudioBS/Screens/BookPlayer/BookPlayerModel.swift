@@ -654,25 +654,27 @@ extension BookPlayerModel {
   private func updateRecentlyPlayedProgress() {
     guard let item else { return }
 
-    do {
-      if isPlaying, let lastTime = lastPlaybackAt {
-        let timeListened = Date().timeIntervalSince(lastTime)
-        mediaProgress.timeListened += timeListened
-        lastPlaybackAt = Date()
-      }
+    Task { @MainActor in
+      do {
+        if isPlaying, let lastTime = lastPlaybackAt {
+          let timeListened = Date().timeIntervalSince(lastTime)
+          mediaProgress.timeListened += timeListened
+          lastPlaybackAt = Date()
+        }
 
-      mediaProgress.lastPlayedAt = Date()
-      mediaProgress.lastUpdate = Date()
-      if mediaProgress.duration > 0 {
-        mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
-      }
-      try mediaProgress.save()
-      try item.save()
+        mediaProgress.lastPlayedAt = Date()
+        mediaProgress.lastUpdate = Date()
+        if mediaProgress.duration > 0 {
+          mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
+        }
+        try mediaProgress.save()
+        try item.save()
 
-      syncSessionProgress()
-    } catch {
-      print("Failed to update recently played progress: \(error)")
-      ToastManager.shared.show(error: "Failed to update playback progress")
+        syncSessionProgress()
+      } catch {
+        print("Failed to update recently played progress: \(error)")
+        ToastManager.shared.show(error: "Failed to update playback progress")
+      }
     }
   }
 
