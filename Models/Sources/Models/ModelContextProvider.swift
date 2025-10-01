@@ -1,11 +1,12 @@
 import Foundation
 import SwiftData
 
-final class ModelContextProvider {
-  static let shared = ModelContextProvider()
+@MainActor
+public final class ModelContextProvider {
+  public static let shared = ModelContextProvider()
 
-  let container: ModelContainer
-  let context: ModelContext
+  public let container: ModelContainer
+  public let context: ModelContext
 
   private init() {
     let schema = Schema([RecentlyPlayedItem.self, MediaProgress.self])

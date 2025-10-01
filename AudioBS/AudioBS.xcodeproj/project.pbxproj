@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F50E5E42E8DD9770087A5B6 /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = 3F50E5E32E8DD9770087A5B6 /* Models */; };
+		3F50E5E62E8DD97C0087A5B6 /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = 3F50E5E52E8DD97C0087A5B6 /* Models */; };
 		3F6E94DD2E6395A20039F187 /* Audiobookshelf in Frameworks */ = {isa = PBXBuildFile; productRef = 3F6E94DC2E6395A20039F187 /* Audiobookshelf */; };
 		3FBEA06F2E8CD49400976BA0 /* AudioBS Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3FBEA0832E8CE7D600976BA0 /* Audiobookshelf in Frameworks */ = {isa = PBXBuildFile; productRef = 3FBEA0822E8CE7D600976BA0 /* Audiobookshelf */; };
@@ -37,6 +39,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3F50E5E22E8DD9700087A5B6 /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Models; path = ../Models; sourceTree = "<group>"; };
 		3F75FB462E7139F700F77C1B /* audiobookshelf-api */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "audiobookshelf-api"; path = "../audiobookshelf-api"; sourceTree = SOURCE_ROOT; };
 		3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBS Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,6 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F50E5E62E8DD97C0087A5B6 /* Models in Frameworks */,
 				3FBEA0832E8CE7D600976BA0 /* Audiobookshelf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -81,6 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F50E5E42E8DD9770087A5B6 /* Models in Frameworks */,
 				3F6E94DD2E6395A20039F187 /* Audiobookshelf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -119,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				3F75FB462E7139F700F77C1B /* audiobookshelf-api */,
+				3F50E5E22E8DD9700087A5B6 /* Models */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -144,6 +150,7 @@
 			name = "AudioBS Watch App";
 			packageProductDependencies = (
 				3FBEA0822E8CE7D600976BA0 /* Audiobookshelf */,
+				3F50E5E52E8DD97C0087A5B6 /* Models */,
 			);
 			productName = "AudioBS Mini Watch App";
 			productReference = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */;
@@ -169,6 +176,7 @@
 			name = AudioBS;
 			packageProductDependencies = (
 				3F6E94DC2E6395A20039F187 /* Audiobookshelf */,
+				3F50E5E32E8DD9770087A5B6 /* Models */,
 			);
 			productName = AudiobookshelfDemo;
 			productReference = 3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */;
@@ -553,6 +561,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3F50E5E32E8DD9770087A5B6 /* Models */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Models;
+		};
+		3F50E5E52E8DD97C0087A5B6 /* Models */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Models;
+		};
 		3F6E94DC2E6395A20039F187 /* Audiobookshelf */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Audiobookshelf;

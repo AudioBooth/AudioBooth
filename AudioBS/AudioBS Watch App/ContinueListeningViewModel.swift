@@ -1,8 +1,12 @@
 import Audiobookshelf
 import Combine
 import Foundation
+import Models
+import WatchConnectivity
 
 final class ContinueListeningViewModel: ContinueListeningView.Model {
+  private let connectivityManager = WatchConnectivityManager.shared
+  private let playerManager = PlayerManager.shared
   override func fetch() async {
     isLoading = true
     defer { isLoading = false }
@@ -49,6 +53,28 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
       print("Failed to fetch continue listening: \(error)")
       await MainActor.run {
         self.books = []
+      }
+    }
+  }
+
+  override func playBook(bookID: String) {
+    if WCSession.default.isReachable {
+      print("iPhone is reachable - sending play command to iPhone")
+      connectivityManager.playBook(bookID: bookID)
+    } else {
+      print("iPhone not reachable - playing locally on watch")
+      Task {
+        do {
+          if let recentItem = try RecentlyPlayedItem.fetch(bookID: bookID) {
+            await MainActor.run {
+              playerManager.setCurrent(recentItem)
+            }
+          } else {
+            print("No cached item found for bookID: \(bookID)")
+          }
+        } catch {
+          print("Failed to fetch recently played item: \(error)")
+        }
       }
     }
   }

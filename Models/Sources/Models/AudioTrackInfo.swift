@@ -3,15 +3,15 @@ import Foundation
 import SwiftData
 
 @Model
-final class AudioTrackInfo {
-  var index: Int
-  var startOffset: TimeInterval
-  var duration: TimeInterval
-  var title: String?
-  var fileName: String?
-  var updatedAt: Date?
+public final class AudioTrackInfo {
+  public var index: Int
+  public var startOffset: TimeInterval
+  public var duration: TimeInterval
+  public var title: String?
+  public var fileName: String?
+  public var updatedAt: Date?
 
-  init(from track: PlaySession.Track) {
+  public init(from track: PlaySession.Track) {
     self.index = track.index
     self.startOffset = track.startOffset
     self.duration = track.duration

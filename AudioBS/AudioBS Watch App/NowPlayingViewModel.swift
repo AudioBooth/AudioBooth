@@ -4,6 +4,7 @@ import Foundation
 final class NowPlayingViewModel: NowPlayingView.Model {
   private var cancellables = Set<AnyCancellable>()
   private let connectivityManager = WatchConnectivityManager.shared
+  private let playerManager = PlayerManager.shared
 
   override init(
     isPlaying: Bool = false,
@@ -37,6 +38,57 @@ final class NowPlayingViewModel: NowPlayingView.Model {
   }
 
   private func setupBindings() {
+    playerManager.$current
+      .sink { [weak self] currentPlayer in
+        guard let self = self else { return }
+
+        if let player = currentPlayer {
+          self.setupLocalPlayerBindings(player)
+          self.hasActivePlayer = true
+        } else {
+          self.setupRemotePlayerBindings()
+        }
+      }
+      .store(in: &cancellables)
+  }
+
+  private func setupLocalPlayerBindings(_ player: BookPlayerModel) {
+    cancellables.removeAll()
+
+    player.$isPlaying
+      .assign(to: \.isPlaying, on: self)
+      .store(in: &cancellables)
+
+    player.$progress
+      .assign(to: \.progress, on: self)
+      .store(in: &cancellables)
+
+    player.$current
+      .assign(to: \.current, on: self)
+      .store(in: &cancellables)
+
+    player.$remaining
+      .assign(to: \.remaining, on: self)
+      .store(in: &cancellables)
+
+    player.$total
+      .assign(to: \.total, on: self)
+      .store(in: &cancellables)
+
+    player.$totalTimeRemaining
+      .assign(to: \.totalTimeRemaining, on: self)
+      .store(in: &cancellables)
+
+    bookID = player.id
+    title = player.title
+    author = player.author ?? ""
+    coverURL = player.coverURL
+    playbackSpeed = 1.0
+  }
+
+  private func setupRemotePlayerBindings() {
+    cancellables.removeAll()
+
     connectivityManager.$isPlaying
       .assign(to: \.isPlaying, on: self)
       .store(in: &cancellables)
@@ -87,14 +139,26 @@ final class NowPlayingViewModel: NowPlayingView.Model {
   }
 
   override func togglePlayback() {
-    connectivityManager.togglePlayback()
+    if let player = playerManager.current {
+      player.onTogglePlaybackTapped()
+    } else {
+      connectivityManager.togglePlayback()
+    }
   }
 
   override func skipBackward() {
-    connectivityManager.skipBackward()
+    if let player = playerManager.current {
+      player.onSkipBackwardTapped()
+    } else {
+      connectivityManager.skipBackward()
+    }
   }
 
   override func skipForward() {
-    connectivityManager.skipForward()
+    if let player = playerManager.current {
+      player.onSkipForwardTapped()
+    } else {
+      connectivityManager.skipForward()
+    }
   }
 }

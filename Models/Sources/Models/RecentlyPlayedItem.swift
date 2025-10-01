@@ -1,15 +1,15 @@
-import Foundation
+@preconcurrency import Foundation
 import SwiftData
 
 @Model
-final class RecentlyPlayedItem {
-  @Attribute(.unique) var bookID: String
-  var title: String
-  var author: String?
-  var coverURL: URL?
-  var playSessionInfo: PlaySessionInfo
+public final class RecentlyPlayedItem {
+  @Attribute(.unique) public var bookID: String
+  public var title: String
+  public var author: String?
+  public var coverURL: URL?
+  public var playSessionInfo: PlaySessionInfo
 
-  init(
+  public init(
     bookID: String,
     title: String,
     author: String? = nil,
@@ -24,51 +24,55 @@ final class RecentlyPlayedItem {
   }
 }
 
+@MainActor
 extension RecentlyPlayedItem {
-
-  static func fetchAll() throws -> [RecentlyPlayedItem] {
+  public static func fetchAll() throws -> [RecentlyPlayedItem] {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<RecentlyPlayedItem>()
     return try context.fetch(descriptor)
   }
 
-  static func observeAll() -> AsyncStream<[RecentlyPlayedItem]> {
+  public static func observeAll() -> AsyncStream<[RecentlyPlayedItem]> {
     AsyncStream { continuation in
-      let context = ModelContextProvider.shared.context
-      let appStateManager = AppStateManager.shared
-      let descriptor = FetchDescriptor<RecentlyPlayedItem>()
-      var isProcessingNotification = false
+      Task { @MainActor in
+        let ctx = ModelContextProvider.shared.context
+        let descriptor = FetchDescriptor<RecentlyPlayedItem>()
+        var isProcessingNotification = false
 
-      let fetchData = {
-        guard !appStateManager.isInBackground else { return }
-        do {
-          let items = try context.fetch(descriptor)
-          continuation.yield(items)
-        } catch {
-          continuation.yield([])
+        let fetchData = { @MainActor in
+          do {
+            let items = try ctx.fetch(descriptor)
+            continuation.yield(items)
+          } catch {
+            continuation.yield([])
+          }
         }
-      }
 
-      fetchData()
-
-      let observer = NotificationCenter.default.addObserver(
-        forName: ModelContext.didSave,
-        object: context,
-        queue: .main
-      ) { _ in
-        guard !isProcessingNotification else { return }
-        isProcessingNotification = true
         fetchData()
-        isProcessingNotification = false
-      }
 
-      continuation.onTermination = { _ in
-        NotificationCenter.default.removeObserver(observer)
+        let observer = NotificationCenter.default.addObserver(
+          forName: ModelContext.didSave,
+          object: ctx,
+          queue: .main
+        ) { _ in
+          guard !isProcessingNotification else { return }
+          isProcessingNotification = true
+          Task { @MainActor in
+            fetchData()
+          }
+          isProcessingNotification = false
+        }
+
+        continuation.onTermination = { @Sendable _ in
+          Task { @MainActor in
+            NotificationCenter.default.removeObserver(observer)
+          }
+        }
       }
     }
   }
 
-  static func fetch(bookID: String) throws -> RecentlyPlayedItem? {
+  public static func fetch(bookID: String) throws -> RecentlyPlayedItem? {
     let context = ModelContextProvider.shared.context
     let predicate = #Predicate<RecentlyPlayedItem> { item in
       item.bookID == bookID
@@ -77,7 +81,7 @@ extension RecentlyPlayedItem {
     return try context.fetch(descriptor).first
   }
 
-  func save() throws {
+  public func save() throws {
     let context = ModelContextProvider.shared.context
 
     if let existingItem = try RecentlyPlayedItem.fetch(bookID: self.bookID) {
@@ -92,7 +96,7 @@ extension RecentlyPlayedItem {
     try context.save()
   }
 
-  func delete() throws {
+  public func delete() throws {
     cleanupLocalFiles()
 
     let context = ModelContextProvider.shared.context
@@ -100,7 +104,7 @@ extension RecentlyPlayedItem {
     try context.save()
   }
 
-  func deleteFiles() throws {
+  public func deleteFiles() throws {
     cleanupLocalFiles()
 
     let context = ModelContextProvider.shared.context
@@ -124,7 +128,7 @@ extension RecentlyPlayedItem {
     }
   }
 
-  static func deleteAll() throws {
+  public static func deleteAll() throws {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<RecentlyPlayedItem>()
     let allItems = try context.fetch(descriptor)

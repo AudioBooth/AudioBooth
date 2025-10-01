@@ -284,7 +284,8 @@ struct BookPlayer: View {
 }
 
 extension BookPlayer {
-  @Observable class Model {
+  @Observable
+  class Model {
     let id: String
     let title: String
     let author: String?

@@ -1,5 +1,6 @@
 import Audiobookshelf
 import Foundation
+import Models
 import SafariServices
 import UIKit
 

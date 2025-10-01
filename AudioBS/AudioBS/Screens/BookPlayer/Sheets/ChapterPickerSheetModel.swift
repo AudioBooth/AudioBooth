@@ -1,4 +1,5 @@
 import AVFoundation
+import Models
 import SwiftUI
 
 final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {

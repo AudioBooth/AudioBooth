@@ -2,6 +2,7 @@ import AVFoundation
 import Audiobookshelf
 import Combine
 import Foundation
+import Models
 import SwiftData
 
 final class DownloadManager: ObservableObject {

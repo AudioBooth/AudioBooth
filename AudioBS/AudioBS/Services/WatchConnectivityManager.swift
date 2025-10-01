@@ -1,6 +1,7 @@
 import Audiobookshelf
 import Combine
 import Foundation
+import Models
 import WatchConnectivity
 
 final class WatchConnectivityManager: NSObject, ObservableObject {

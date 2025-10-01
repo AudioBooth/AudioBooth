@@ -25,7 +25,7 @@ struct ContinueListeningView: View {
       VStack {
         ForEach(model.books) { item in
           Button {
-            connectivityManager.playBook(bookID: item.id)
+            model.playBook(bookID: item.id)
           } label: {
             HStack(spacing: 12) {
               if let coverURL = item.coverURL {
@@ -116,6 +116,7 @@ extension ContinueListeningView {
     var isLoading: Bool
 
     func fetch() async {}
+    func playBook(bookID: String) {}
 
     init(books: [BookItem] = [], isLoading: Bool = false) {
       self.books = books

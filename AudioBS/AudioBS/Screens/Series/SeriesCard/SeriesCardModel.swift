@@ -1,4 +1,5 @@
 import Audiobookshelf
+import Models
 import SwiftUI
 
 final class SeriesCardModel: SeriesCard.Model {

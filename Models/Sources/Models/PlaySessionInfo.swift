@@ -3,16 +3,16 @@ import Foundation
 import SwiftData
 
 @Model
-final class PlaySessionInfo {
-  var id: String
-  var createdAt: Date
-  var userId: String
-  var libraryItemID: String
-  var duration: TimeInterval
-  var audioTracks: [AudioTrackInfo]?
-  var chapters: [ChapterInfo]?
+public final class PlaySessionInfo {
+  public var id: String
+  public var createdAt: Date
+  public var userId: String
+  public var libraryItemID: String
+  public var duration: TimeInterval
+  public var audioTracks: [AudioTrackInfo]?
+  public var chapters: [ChapterInfo]?
 
-  init(from session: PlaySession) {
+  public init(from session: PlaySession) {
     self.id = session.id
     self.createdAt = Date()
     self.userId = session.userId
@@ -36,12 +36,12 @@ extension PlaySessionInfo {
     return fileURL
   }
 
-  var isExpired: Bool {
+  public var isExpired: Bool {
     if isDownloaded { return false }
     return Date().timeIntervalSince(createdAt) > 24 * 60 * 60
   }
 
-  var isDownloaded: Bool {
+  public var isDownloaded: Bool {
     guard let tracks = orderedTracks, !tracks.isEmpty else { return false }
 
     return tracks.allSatisfy { track in
@@ -49,15 +49,15 @@ extension PlaySessionInfo {
     }
   }
 
-  var orderedChapters: [ChapterInfo]? {
+  public var orderedChapters: [ChapterInfo]? {
     chapters?.sorted(by: { $0.start < $1.start })
   }
 
-  var orderedTracks: [AudioTrackInfo]? {
+  public var orderedTracks: [AudioTrackInfo]? {
     audioTracks?.sorted(by: { $0.index < $1.index })
   }
 
-  func streamingURL(at time: Double, serverURL: URL) -> URL? {
+  public func streamingURL(at time: Double, serverURL: URL) -> URL? {
     guard let tracks = orderedTracks, !tracks.isEmpty else { return nil }
 
     if tracks.count == 1 {
@@ -99,7 +99,7 @@ extension PlaySessionInfo {
     return nil
   }
 
-  func streamingURL(for trackIndex: Int, serverURL: URL) -> URL? {
+  public func streamingURL(for trackIndex: Int, serverURL: URL) -> URL? {
     if let track = orderedTracks?.first(where: { $0.index == trackIndex }),
       let fileURL = self.fileURL(for: track)
     {
@@ -111,7 +111,7 @@ extension PlaySessionInfo {
     return URL(string: "\(baseURL)\(streamingPath)")
   }
 
-  func streamingURLs(serverURL: URL) -> [URL] {
+  public func streamingURLs(serverURL: URL) -> [URL] {
     guard let tracks = orderedTracks else { return [] }
 
     return tracks.compactMap { track in
@@ -119,7 +119,7 @@ extension PlaySessionInfo {
     }
   }
 
-  func merge(with newSessionInfo: PlaySessionInfo) {
+  public func merge(with newSessionInfo: PlaySessionInfo) {
     self.id = newSessionInfo.id
     self.createdAt = newSessionInfo.createdAt
     self.userId = newSessionInfo.userId

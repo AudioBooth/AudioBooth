@@ -1,5 +1,6 @@
 import Audiobookshelf
 import Combine
+import Models
 import SwiftUI
 
 final class PlayerManager: ObservableObject {

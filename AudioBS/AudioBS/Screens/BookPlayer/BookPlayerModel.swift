@@ -3,6 +3,7 @@ import AVKit
 import Audiobookshelf
 import Combine
 import MediaPlayer
+import Models
 import Nuke
 import SwiftData
 import SwiftUI
