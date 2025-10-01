@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
   @ObservedObject var connectivityManager = WatchConnectivityManager.shared
   @StateObject private var continueListeningModel = ContinueListeningViewModel()
+  @StateObject private var nowPlayingModel = NowPlayingViewModel()
 
   var body: some View {
     NavigationStack {
@@ -12,7 +13,7 @@ struct ContentView: View {
           if connectivityManager.hasActivePlayer {
             ToolbarItem(placement: .topBarTrailing) {
               NavigationLink {
-                NowPlayingView()
+                NowPlayingView(model: nowPlayingModel)
               } label: {
                 Image(systemName: "iphone")
               }

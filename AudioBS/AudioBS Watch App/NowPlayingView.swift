@@ -1,26 +1,32 @@
+import Combine
 import NukeUI
 import SwiftUI
 
 struct NowPlayingView: View {
-  @ObservedObject var connectivityManager = WatchConnectivityManager.shared
+  @StateObject var model: Model
 
   var body: some View {
     ScrollView {
       VStack(spacing: 12) {
-        CoverArtView(coverURL: connectivityManager.coverURL)
+        CoverArtView(coverURL: model.coverURL)
 
-        TitleAuthorView(title: connectivityManager.title, author: connectivityManager.author)
+        TitleAuthorView(title: model.title, author: model.author)
 
-        PlaybackProgressView()
-
-        PlaybackControlsView(
-          isPlaying: connectivityManager.isPlaying,
-          onTogglePlayback: { connectivityManager.togglePlayback() },
-          onSkipBackward: { connectivityManager.skipBackward() },
-          onSkipForward: { connectivityManager.skipForward() }
+        PlaybackProgressView(
+          progress: model.progress,
+          current: model.current,
+          remaining: model.remaining,
+          totalTimeRemaining: model.totalTimeRemaining
         )
 
-        PlaybackSpeedView(playbackSpeed: connectivityManager.playbackSpeed)
+        PlaybackControlsView(
+          isPlaying: model.isPlaying,
+          onTogglePlayback: { model.togglePlayback() },
+          onSkipBackward: { model.skipBackward() },
+          onSkipForward: { model.skipForward() }
+        )
+
+        PlaybackSpeedView(playbackSpeed: model.playbackSpeed)
       }
       .padding()
     }
@@ -75,26 +81,29 @@ extension NowPlayingView {
 
 extension NowPlayingView {
   struct PlaybackProgressView: View {
-    @ObservedObject var connectivityManager = WatchConnectivityManager.shared
+    let progress: Double
+    let current: Double
+    let remaining: Double
+    let totalTimeRemaining: Double
 
     var body: some View {
       VStack(spacing: 4) {
-        ProgressView(value: connectivityManager.progress, total: 1.0)
+        ProgressView(value: progress, total: 1.0)
 
         HStack {
-          Text(formatTime(connectivityManager.current))
+          Text(formatTime(current))
             .font(.caption2)
             .foregroundStyle(.secondary)
 
           Spacer()
 
-          Text("-\(formatTime(connectivityManager.remaining))")
+          Text("-\(formatTime(remaining))")
             .font(.caption2)
             .foregroundStyle(.secondary)
         }
         .monospacedDigit()
 
-        Text(formatTimeRemaining(connectivityManager.totalTimeRemaining))
+        Text(formatTimeRemaining(totalTimeRemaining))
           .font(.caption2)
           .fontWeight(.medium)
       }
@@ -161,6 +170,72 @@ extension NowPlayingView {
   }
 }
 
+extension NowPlayingView {
+  @Observable class Model: ObservableObject {
+    var isPlaying: Bool
+    var progress: Double
+    var current: Double
+    var remaining: Double
+    var total: Double
+    var totalTimeRemaining: Double
+    var bookID: String
+    var title: String
+    var author: String
+    var coverURL: URL?
+    var playbackSpeed: Float
+    var hasActivePlayer: Bool
+
+    func togglePlayback() {}
+    func skipBackward() {}
+    func skipForward() {}
+
+    init(
+      isPlaying: Bool = false,
+      progress: Double = 0,
+      current: Double = 0,
+      remaining: Double = 0,
+      total: Double = 0,
+      totalTimeRemaining: Double = 0,
+      bookID: String = "",
+      title: String = "",
+      author: String = "",
+      coverURL: URL? = nil,
+      playbackSpeed: Float = 1.0,
+      hasActivePlayer: Bool = false
+    ) {
+      self.isPlaying = isPlaying
+      self.progress = progress
+      self.current = current
+      self.remaining = remaining
+      self.total = total
+      self.totalTimeRemaining = totalTimeRemaining
+      self.bookID = bookID
+      self.title = title
+      self.author = author
+      self.coverURL = coverURL
+      self.playbackSpeed = playbackSpeed
+      self.hasActivePlayer = hasActivePlayer
+    }
+  }
+}
+
 #Preview {
-  NowPlayingView()
+  NavigationStack {
+    NowPlayingView(
+      model: NowPlayingView.Model(
+        isPlaying: true,
+        progress: 0.45,
+        current: 1800,
+        remaining: 2200,
+        total: 4000,
+        totalTimeRemaining: 38000,
+        bookID: "1",
+        title: "The Lord of the Rings",
+        author: "J.R.R. Tolkien",
+        coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+        playbackSpeed: 1.2,
+        hasActivePlayer: true
+      )
+    )
+  }
 }
