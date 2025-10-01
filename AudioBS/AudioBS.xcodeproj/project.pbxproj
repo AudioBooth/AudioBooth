@@ -8,10 +8,36 @@
 
 /* Begin PBXBuildFile section */
 		3F6E94DD2E6395A20039F187 /* Audiobookshelf in Frameworks */ = {isa = PBXBuildFile; productRef = 3F6E94DC2E6395A20039F187 /* Audiobookshelf */; };
+		3FBEA06F2E8CD49400976BA0 /* AudioBS Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3FBEA06D2E8CD49400976BA0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3FC8DC662E638F5E00A4B080 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3FBEA0642E8CD49300976BA0;
+			remoteInfo = "AudioBS Mini Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3FBEA0702E8CD49400976BA0 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				3FBEA06F2E8CD49400976BA0 /* AudioBS Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3F75FB462E7139F700F77C1B /* audiobookshelf-api */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "audiobookshelf-api"; path = "../audiobookshelf-api"; sourceTree = SOURCE_ROOT; };
+		3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBS Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -26,6 +52,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "AudioBS Watch App";
+			sourceTree = "<group>";
+		};
 		3FC8DC702E638F5E00A4B080 /* AudioBS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -37,6 +68,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3FBEA0622E8CD49300976BA0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FC8DC6B2E638F5E00A4B080 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -60,6 +98,7 @@
 			children = (
 				3FC8DC702E638F5E00A4B080 /* AudioBS */,
 				3FC8DC822E63904C00A4B080 /* Packages */,
+				3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */,
 				3F6E94DB2E6395A20039F187 /* Frameworks */,
 				3FC8DC6F2E638F5E00A4B080 /* Products */,
 			);
@@ -69,6 +108,7 @@
 			isa = PBXGroup;
 			children = (
 				3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */,
+				3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -84,6 +124,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBS Watch App" */;
+			buildPhases = (
+				3FBEA0612E8CD49300976BA0 /* Sources */,
+				3FBEA0622E8CD49300976BA0 /* Frameworks */,
+				3FBEA0632E8CD49300976BA0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */,
+			);
+			name = "AudioBS Watch App";
+			packageProductDependencies = (
+			);
+			productName = "AudioBS Mini Watch App";
+			productReference = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 		3FC8DC6D2E638F5E00A4B080 /* AudioBS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3FC8DC792E638F5F00A4B080 /* Build configuration list for PBXNativeTarget "AudioBS" */;
@@ -91,10 +153,12 @@
 				3FC8DC6A2E638F5E00A4B080 /* Sources */,
 				3FC8DC6B2E638F5E00A4B080 /* Frameworks */,
 				3FC8DC6C2E638F5E00A4B080 /* Resources */,
+				3FBEA0702E8CD49400976BA0 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3FC8DC702E638F5E00A4B080 /* AudioBS */,
@@ -114,9 +178,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					3FBEA0642E8CD49300976BA0 = {
+						CreatedOnToolsVersion = 26.1;
+					};
 					3FC8DC6D2E638F5E00A4B080 = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -139,11 +206,19 @@
 			projectRoot = "";
 			targets = (
 				3FC8DC6D2E638F5E00A4B080 /* AudioBS */,
+				3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3FBEA0632E8CD49300976BA0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FC8DC6C2E638F5E00A4B080 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -154,6 +229,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3FBEA0612E8CD49300976BA0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FC8DC6A2E638F5E00A4B080 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -163,7 +245,79 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */;
+			targetProxy = 3FBEA06D2E8CD49400976BA0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		3FBEA0712E8CD49400976BA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		3FBEA0722E8CD49400976BA0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
 		3FC8DC772E638F5F00A4B080 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -362,6 +516,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBS Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FBEA0712E8CD49400976BA0 /* Debug */,
+				3FBEA0722E8CD49400976BA0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		3FC8DC692E638F5E00A4B080 /* Build configuration list for PBXProject "AudioBS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
