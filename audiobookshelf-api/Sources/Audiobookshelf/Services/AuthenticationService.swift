@@ -4,7 +4,9 @@ import Nuke
 
 public final class AuthenticationService {
   private let audiobookshelf: Audiobookshelf
-  private let keychain = Keychain(service: "com.yourapp.audiobookshelf")
+  private let keychain = Keychain(
+    service: "me.jgrenier.AudioBS", accessGroup: "7MM2M9KD2W.me.jgrenier.AudioBS"
+  ).synchronizable(true)
 
   enum Keys {
     static let connection = "audiobookshelf_server_connection"
@@ -34,6 +36,22 @@ public final class AuthenticationService {
 
   init(audiobookshelf: Audiobookshelf) {
     self.audiobookshelf = audiobookshelf
+    migrateKeychainIfNeeded()
+  }
+
+  private func migrateKeychainIfNeeded() {
+    guard connection == nil else { return }
+
+    let legacyKeychain = Keychain(service: "com.yourapp.audiobookshelf")
+
+    if let data = try? legacyKeychain.getData(Keys.connection),
+      let legacyConnection = try? JSONDecoder().decode(Connection.self, from: data)
+    {
+      connection = legacyConnection
+      try? legacyKeychain.remove(Keys.connection)
+      print("Migrated keychain from legacy storage")
+      return
+    }
   }
 
   public func login(serverURL: String, username: String, password: String) async throws {
