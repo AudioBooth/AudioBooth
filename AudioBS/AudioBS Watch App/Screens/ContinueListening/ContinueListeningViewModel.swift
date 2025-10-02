@@ -7,6 +7,40 @@ import WatchConnectivity
 final class ContinueListeningViewModel: ContinueListeningView.Model {
   private let connectivityManager = WatchConnectivityManager.shared
   private let playerManager = PlayerManager.shared
+
+  override init(books: [BookItem] = [], isLoading: Bool = false) {
+    super.init(books: books, isLoading: isLoading)
+    loadCachedBooks()
+  }
+
+  private func loadCachedBooks() {
+    do {
+      let recentItems = try RecentlyPlayedItem.fetchAll()
+
+      let items = recentItems.compactMap { item -> BookItem? in
+        guard let mediaProgress = try? MediaProgress.getOrCreate(for: item.bookID) else {
+          return nil
+        }
+
+        let timeRemaining = max(0, item.playSessionInfo.duration - mediaProgress.currentTime)
+
+        return BookItem(
+          id: item.bookID,
+          title: item.title,
+          author: item.author ?? "",
+          coverURL: item.coverURL,
+          timeRemaining: timeRemaining,
+          isDownloaded: item.playSessionInfo.isDownloaded
+        )
+      }
+
+      books = items
+      print("Loaded \(items.count) cached books")
+    } catch {
+      print("Failed to load cached books: \(error)")
+    }
+  }
+
   override func fetch() async {
     isLoading = true
     defer { isLoading = false }
@@ -29,21 +63,31 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
         uniqueKeysWithValues: userData.mediaProgress.map { ($0.libraryItemId, $0) }
       )
 
-      let items = continueListeningBooks.map { book in
-        let timeRemaining: Double
-        if let progress = progressByBookID[book.id] {
-          timeRemaining = max(0, book.duration - progress.currentTime)
-        } else {
-          timeRemaining = book.duration
-        }
+      let items = await MainActor.run {
+        continueListeningBooks.map { book in
+          let timeRemaining: Double
+          if let progress = progressByBookID[book.id] {
+            timeRemaining = max(0, book.duration - progress.currentTime)
+          } else {
+            timeRemaining = book.duration
+          }
 
-        return BookItem(
-          id: book.id,
-          title: book.title,
-          author: book.authorName ?? "",
-          coverURL: book.coverURL,
-          timeRemaining: timeRemaining
-        )
+          let isDownloaded: Bool
+          if let item = try? RecentlyPlayedItem.fetch(bookID: book.id) {
+            isDownloaded = item.playSessionInfo.isDownloaded
+          } else {
+            isDownloaded = false
+          }
+
+          return BookItem(
+            id: book.id,
+            title: book.title,
+            author: book.authorName ?? "",
+            coverURL: book.coverURL,
+            timeRemaining: timeRemaining,
+            isDownloaded: isDownloaded
+          )
+        }
       }
 
       await MainActor.run {
@@ -51,9 +95,6 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
       }
     } catch {
       print("Failed to fetch continue listening: \(error)")
-      await MainActor.run {
-        self.books = []
-      }
     }
   }
 

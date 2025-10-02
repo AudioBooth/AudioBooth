@@ -1,0 +1,84 @@
+import NukeUI
+import SwiftUI
+
+struct Cover: View {
+  let url: URL?
+  let state: DownloadManager.DownloadState
+
+  var body: some View {
+    LazyImage(url: url) { state in
+      if let image = state.image {
+        image
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+      } else {
+        Color.gray
+      }
+    }
+    .opacity(state == .downloaded ? 1.0 : 0.5)
+    .overlay(alignment: .bottomTrailing) {
+      download
+    }
+    .aspectRatio(1, contentMode: .fit)
+    .clipShape(RoundedRectangle(cornerRadius: 6))
+  }
+
+  @ViewBuilder
+  var download: some View {
+    switch state {
+    case .downloaded:
+      EmptyView()
+    case .downloading:
+      ProgressView()
+        .scaleEffect(0.7)
+        .frame(width: 14, height: 14)
+        .foregroundColor(.white)
+        .padding(.trailing, 4)
+        .padding(.bottom, 4)
+        .background {
+          DownloadBackground()
+            .fill(.gray.opacity(0.8))
+        }
+    case .notDownloaded:
+      Image(systemName: "arrow.down.to.line")
+        .font(.system(size: 12, weight: .medium))
+        .frame(width: 14, height: 14)
+        .foregroundColor(.white)
+        .padding(.trailing, 4)
+        .padding(.bottom, 4)
+        .background {
+          DownloadBackground()
+            .fill(.gray.opacity(0.8))
+        }
+    }
+  }
+}
+
+extension Cover {
+  struct DownloadBackground: Shape {
+    func path(in rect: CGRect) -> Path {
+      var path = Path()
+
+      path.move(to: CGPoint(x: rect.maxX, y: rect.minY - rect.maxY))
+      path.addLine(to: CGPoint(x: rect.minX - rect.maxX, y: rect.maxY))
+      path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+      path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+
+      return path
+    }
+  }
+}
+
+#Preview("Cover") {
+  Cover(
+    url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+    state: .downloading
+  )
+  .frame(width: 50, height: 50)
+
+  Cover(
+    url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+    state: .notDownloaded
+  )
+  .frame(width: 50, height: 50)
+}

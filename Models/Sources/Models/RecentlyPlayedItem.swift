@@ -37,7 +37,6 @@ extension RecentlyPlayedItem {
       Task { @MainActor in
         let ctx = ModelContextProvider.shared.context
         let descriptor = FetchDescriptor<RecentlyPlayedItem>()
-        var isProcessingNotification = false
 
         let fetchData = { @MainActor in
           do {
@@ -55,12 +54,9 @@ extension RecentlyPlayedItem {
           object: ctx,
           queue: .main
         ) { _ in
-          guard !isProcessingNotification else { return }
-          isProcessingNotification = true
           Task { @MainActor in
             fetchData()
           }
-          isProcessingNotification = false
         }
 
         continuation.onTermination = { @Sendable _ in

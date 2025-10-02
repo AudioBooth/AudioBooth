@@ -1,8 +1,10 @@
+import Audiobookshelf
 import SwiftUI
 
 @main
 struct AudioBSWatch: App {
   init() {
+    _ = Audiobookshelf.shared
     _ = WatchConnectivityManager.shared
   }
 

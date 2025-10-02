@@ -11,7 +11,18 @@ struct PlayerView: View {
 
   var body: some View {
     VStack(spacing: 6) {
-      cover
+      Button(action: {
+        if model.downloadState != .downloaded {
+          model.onDownloadTapped()
+        }
+      }) {
+        Cover(
+          url: model.coverURL,
+          state: model.downloadState
+        )
+      }
+      .buttonStyle(.plain)
+      .allowsHitTesting(model.downloadState == .notDownloaded)
 
       content
 
@@ -25,6 +36,9 @@ struct PlayerView: View {
     .padding(.top, -16)
     .toolbar {
       toolbar
+    }
+    .sheet(isPresented: $model.options.isPresented) {
+      PlayerOptionsSheet(model: $model.options)
     }
     .sheet(
       isPresented: Binding(
@@ -55,16 +69,14 @@ struct PlayerView: View {
     }
 
     ToolbarItem(placement: .topBarTrailing) {
-      if let chapters = model.chapters {
-        Button(
-          action: {
-            chapters.isPresented = true
-          },
-          label: {
-            Image(systemName: "ellipsis")
-          }
-        )
-      }
+      Button(
+        action: {
+          model.options.isPresented = true
+        },
+        label: {
+          Image(systemName: "ellipsis")
+        }
+      )
     }
 
     ToolbarItemGroup(placement: .bottomBar) {
@@ -107,20 +119,6 @@ struct PlayerView: View {
         )
         .rotationEffect(.degrees(-90))
     }
-  }
-
-  private var cover: some View {
-    LazyImage(url: model.coverURL) { state in
-      if let image = state.image {
-        image
-          .resizable()
-          .aspectRatio(contentMode: .fill)
-      } else {
-        Color.gray
-      }
-    }
-    .aspectRatio(1, contentMode: .fit)
-    .clipShape(RoundedRectangle(cornerRadius: 8))
   }
 
   private var content: some View {
@@ -193,10 +191,13 @@ extension PlayerView {
     var author: String
     var coverURL: URL?
     var chapters: ChapterPickerSheet.Model?
+    var downloadState: DownloadManager.DownloadState
+    var options: PlayerOptionsSheet.Model
 
     func togglePlayback() {}
     func skipBackward() {}
     func skipForward() {}
+    func onDownloadTapped() {}
 
     init(
       isPlaying: Bool = false,
@@ -207,7 +208,8 @@ extension PlayerView {
       title: String = "",
       author: String = "",
       coverURL: URL? = nil,
-      chapters: ChapterPickerSheet.Model? = nil
+      chapters: ChapterPickerSheet.Model? = nil,
+      downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
       self.isPlaying = isPlaying
       self.progress = progress
@@ -218,6 +220,11 @@ extension PlayerView {
       self.author = author
       self.coverURL = coverURL
       self.chapters = chapters
+      self.downloadState = downloadState
+      self.options = PlayerOptionsSheet.Model(
+        hasChapters: chapters != nil,
+        downloadState: downloadState
+      )
     }
   }
 }

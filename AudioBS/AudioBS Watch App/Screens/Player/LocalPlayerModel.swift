@@ -9,6 +9,7 @@ final class LocalPlayerModel: PlayerView.Model {
   var currentChapterIndex: Int = 0
 
   private let audiobookshelf = Audiobookshelf.shared
+  private let downloadManager = DownloadManager.shared
 
   private var player: AVPlayer?
   private var timeObserver: Any?
@@ -27,6 +28,18 @@ final class LocalPlayerModel: PlayerView.Model {
 
     override func onChapterTapped(at index: Int) {
       playerModel?.seekToChapter(at: index)
+    }
+  }
+
+  private class LocalPlayerOptionsModel: PlayerOptionsSheet.Model {
+    weak var playerModel: LocalPlayerModel?
+
+    override func onChaptersTapped() {
+      playerModel?.chapters?.isPresented = true
+    }
+
+    override func onDownloadTapped() {
+      playerModel?.onDownloadTapped()
     }
   }
 
@@ -50,7 +63,18 @@ final class LocalPlayerModel: PlayerView.Model {
       coverURL: item.coverURL
     )
 
+    setupDownloadStateBinding()
+    setupOptionsModel()
     onLoad()
+  }
+
+  private func setupOptionsModel() {
+    let optionsModel = LocalPlayerOptionsModel(
+      hasChapters: chapters != nil,
+      downloadState: downloadState
+    )
+    optionsModel.playerModel = self
+    options = optionsModel
   }
 
   override func togglePlayback() {
@@ -85,10 +109,44 @@ final class LocalPlayerModel: PlayerView.Model {
     let chapter = chaptersList[index]
     player.seek(to: CMTime(seconds: chapter.start + 0.1, preferredTimescale: 1000))
   }
+
+  override func onDownloadTapped() {
+    switch downloadState {
+    case .downloading:
+      downloadManager.cancelDownload(for: item.bookID)
+    case .downloaded:
+      downloadManager.deleteDownload(for: item.bookID)
+    case .notDownloaded:
+      downloadManager.startDownload(for: item)
+    }
+  }
+
+  private func setupDownloadStateBinding() {
+    downloadManager.$downloads
+      .map { [weak self] downloads -> DownloadManager.DownloadState in
+        guard let self = self else { return .notDownloaded }
+
+        if downloads[item.bookID] == true {
+          return .downloading
+        }
+
+        return item.playSessionInfo.isDownloaded ? .downloaded : .notDownloaded
+      }
+      .sink { [weak self] downloadState in
+        self?.downloadState = downloadState
+        self?.options.downloadState = downloadState
+      }
+      .store(in: &cancellables)
+  }
 }
 
 extension LocalPlayerModel {
   private func setupSessionInfo() async throws -> PlaySessionInfo {
+    if item.playSessionInfo.isDownloaded {
+      print("Playing downloaded book offline")
+      return item.playSessionInfo
+    }
+
     var sessionInfo: PlaySessionInfo?
 
     do {
@@ -135,17 +193,24 @@ extension LocalPlayerModel {
   }
 
   private func setupAudioPlayer(sessionInfo: PlaySessionInfo) async throws -> AVPlayer {
-    guard let serverURL = audiobookshelf.authentication.serverURL else {
-      print("No server URL available")
-      isLoading = false
-      PlayerManager.shared.clearCurrent()
-      throw Audiobookshelf.AudiobookshelfError.networkError("No server URL available")
+    let streamingURL: URL?
+
+    if sessionInfo.isDownloaded {
+      streamingURL = sessionInfo.streamingURL(
+        at: mediaProgress.currentTime, serverURL: URL(string: "http://localhost")!)
+      print("Using local file URL for downloaded book")
+    } else {
+      guard let serverURL = audiobookshelf.authentication.serverURL else {
+        print("No server URL available")
+        isLoading = false
+        PlayerManager.shared.clearCurrent()
+        throw Audiobookshelf.AudiobookshelfError.networkError("No server URL available")
+      }
+
+      streamingURL = sessionInfo.streamingURL(at: mediaProgress.currentTime, serverURL: serverURL)
     }
 
-    guard
-      let streamingURL = sessionInfo.streamingURL(
-        at: mediaProgress.currentTime, serverURL: serverURL)
-    else {
+    guard let streamingURL else {
       print("Failed to get streaming URL")
       isLoading = false
       PlayerManager.shared.clearCurrent()
@@ -187,6 +252,7 @@ extension LocalPlayerModel {
         )
         chapterPickerModel.playerModel = self
         chapters = chapterPickerModel
+        options.hasChapters = true
       }
     }
 

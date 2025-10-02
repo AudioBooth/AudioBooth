@@ -28,19 +28,8 @@ struct ContinueListeningView: View {
             model.playBook(bookID: item.id)
           } label: {
             HStack(spacing: 12) {
-              if let coverURL = item.coverURL {
-                LazyImage(url: coverURL) { state in
-                  if let image = state.image {
-                    image
-                      .resizable()
-                      .aspectRatio(contentMode: .fill)
-                  } else {
-                    Color.gray
-                  }
-                }
+              Cover(url: item.coverURL, state: item.isDownloaded ? .downloaded : .notDownloaded)
                 .frame(width: 50, height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-              }
 
               VStack(alignment: .leading, spacing: 4) {
                 Text(item.title)
@@ -58,7 +47,7 @@ struct ContinueListeningView: View {
 
                 if item.timeRemaining > 0 {
                   Text(formatTimeRemaining(item.timeRemaining))
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(.orange)
                     .lineLimit(1)
                 }
@@ -110,6 +99,7 @@ extension ContinueListeningView {
       let author: String
       let coverURL: URL?
       let timeRemaining: Double
+      let isDownloaded: Bool
     }
 
     var books: [BookItem]
@@ -135,21 +125,24 @@ extension ContinueListeningView {
             title: "The Lord of the Rings",
             author: "J.R.R. Tolkien",
             coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-            timeRemaining: 420
+            timeRemaining: 420,
+            isDownloaded: true
           ),
           .init(
             id: "2",
             title: "Dune",
             author: "Frank Herbert",
             coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-            timeRemaining: 42000
+            timeRemaining: 42000,
+            isDownloaded: false
           ),
           .init(
             id: "3",
             title: "The Foundation",
             author: "Isaac Asimov",
             coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"),
-            timeRemaining: 38000
+            timeRemaining: 38000,
+            isDownloaded: true
           ),
         ]
       )
