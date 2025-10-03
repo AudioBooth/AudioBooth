@@ -24,6 +24,7 @@ struct MiniBookPlayer: View {
           Label("Stop", systemImage: "xmark.circle")
         }
       }
+      .id(player.id)
   }
 
   @ViewBuilder
