@@ -7,38 +7,63 @@ import WatchConnectivity
 final class ContinueListeningViewModel: ContinueListeningView.Model {
   private let connectivityManager = WatchConnectivityManager.shared
   private let playerManager = PlayerManager.shared
+  private let downloadManager = DownloadManager.shared
+  private var cancellables = Set<AnyCancellable>()
 
   override init(books: [BookItem] = [], isLoading: Bool = false) {
     super.init(books: books, isLoading: isLoading)
     loadCachedBooks()
+    observeChanges()
+  }
+
+  private func observeChanges() {
+    Task { @MainActor in
+      for await recentItems in RecentlyPlayedItem.observeAll() {
+        updateBooks(from: recentItems)
+      }
+    }
+
+    downloadManager.$downloads
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.refreshBooksDownloadState()
+      }
+      .store(in: &cancellables)
   }
 
   private func loadCachedBooks() {
     do {
       let recentItems = try RecentlyPlayedItem.fetchAll()
-
-      let items = recentItems.compactMap { item -> BookItem? in
-        guard let mediaProgress = try? MediaProgress.getOrCreate(for: item.bookID) else {
-          return nil
-        }
-
-        let timeRemaining = max(0, item.playSessionInfo.duration - mediaProgress.currentTime)
-
-        return BookItem(
-          id: item.bookID,
-          title: item.title,
-          author: item.author ?? "",
-          coverURL: item.coverURL,
-          timeRemaining: timeRemaining,
-          isDownloaded: item.playSessionInfo.isDownloaded
-        )
-      }
-
-      books = items
-      print("Loaded \(items.count) cached books")
+      updateBooks(from: recentItems)
     } catch {
       print("Failed to load cached books: \(error)")
     }
+  }
+
+  private func updateBooks(from recentItems: [RecentlyPlayedItem]) {
+    let items = recentItems.compactMap { item -> BookItem? in
+      guard let mediaProgress = try? MediaProgress.getOrCreate(for: item.bookID) else {
+        return nil
+      }
+
+      let timeRemaining = max(0, item.playSessionInfo.duration - mediaProgress.currentTime)
+
+      return BookItem(
+        id: item.bookID,
+        title: item.title,
+        author: item.author ?? "",
+        coverURL: item.coverURL,
+        timeRemaining: timeRemaining,
+        isDownloaded: item.playSessionInfo.isDownloaded
+      )
+    }
+
+    books = items
+  }
+
+  private func refreshBooksDownloadState() {
+    guard let recentItems = try? RecentlyPlayedItem.fetchAll() else { return }
+    updateBooks(from: recentItems)
   }
 
   override func fetch() async {

@@ -48,6 +48,7 @@ struct Marquee<Content: View>: View {
         value: animate
       )
     }
+    .scrollDisabled(true)
     .scrollClipDisabled()
   }
 }

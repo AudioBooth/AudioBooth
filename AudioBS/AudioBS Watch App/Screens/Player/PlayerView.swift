@@ -53,6 +53,9 @@ struct PlayerView: View {
     .onDisappear {
       playerManager.isShowingFullPlayer = false
     }
+    .overlay {
+      VolumeView()
+    }
   }
 
   @ToolbarContentBuilder

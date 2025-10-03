@@ -1,13 +1,14 @@
+import AVFoundation
 import Foundation
 import Models
 
 final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
-  private weak var player: LocalPlayerModel?
+  let player: AVPlayer
 
-  init(player: LocalPlayerModel) {
+  init(chapters: [ChapterInfo], player: AVPlayer, currentIndex: Int = 0) {
     self.player = player
 
-    let chapters = (player.item.playSessionInfo.orderedChapters ?? []).map { chapterInfo in
+    let convertedChapters = chapters.map { chapterInfo in
       ChapterPickerSheet.Model.Chapter(
         id: chapterInfo.id,
         title: chapterInfo.title,
@@ -16,12 +17,12 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       )
     }
 
-    super.init(chapters: chapters, currentIndex: player.currentChapterIndex)
+    super.init(chapters: convertedChapters, currentIndex: currentIndex)
   }
 
   override func onChapterTapped(at index: Int) {
-    guard let player = player else { return }
-    player.seekToChapter(at: index)
+    let chapter = chapters[index]
     currentIndex = index
+    player.seek(to: CMTime(seconds: chapter.start + 0.1, preferredTimescale: 1000))
   }
 }

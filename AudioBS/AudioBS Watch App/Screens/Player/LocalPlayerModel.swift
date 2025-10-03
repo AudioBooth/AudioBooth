@@ -23,14 +23,6 @@ final class LocalPlayerModel: PlayerView.Model {
   private var lastPlaybackAt: Date?
   private var lastSyncAt = Date()
 
-  private class LocalChapterPickerModel: ChapterPickerSheet.Model {
-    weak var playerModel: LocalPlayerModel?
-
-    override func onChapterTapped(at index: Int) {
-      playerModel?.seekToChapter(at: index)
-    }
-  }
-
   private class LocalPlayerOptionsModel: PlayerOptionsSheet.Model {
     weak var playerModel: LocalPlayerModel?
 
@@ -64,8 +56,30 @@ final class LocalPlayerModel: PlayerView.Model {
     )
 
     setupDownloadStateBinding()
+    setupInitialChapters()
     setupOptionsModel()
     onLoad()
+  }
+
+  private func setupInitialChapters() {
+    guard let sessionChapters = item.playSessionInfo.orderedChapters, !sessionChapters.isEmpty
+    else {
+      return
+    }
+
+    chaptersList = sessionChapters
+    currentChapterIndex = 0
+    total = item.playSessionInfo.duration
+  }
+
+  private func setupChapters(player: AVPlayer) {
+    guard !chaptersList.isEmpty else { return }
+
+    chapters = ChapterPickerSheetViewModel(
+      chapters: chaptersList,
+      player: player,
+      currentIndex: currentChapterIndex
+    )
   }
 
   private func setupOptionsModel() {
@@ -229,31 +243,15 @@ extension LocalPlayerModel {
     setupRemoteCommandCenter()
     setupPlayerObservers()
     setupTimeObserver()
+    setupChapters(player: player)
 
     total = sessionInfo.duration
 
-    if let sessionChapters = sessionInfo.orderedChapters {
+    if let sessionChapters = sessionInfo.orderedChapters, !sessionChapters.isEmpty {
       chaptersList = sessionChapters
-      if !chaptersList.isEmpty {
-        currentChapterIndex = 0
-        print("Loaded \(chaptersList.count) chapters")
-
-        let pickerChapters = chaptersList.enumerated().map { index, chapter in
-          ChapterPickerSheet.Model.Chapter(
-            id: index,
-            title: chapter.title,
-            start: chapter.start,
-            end: chapter.end
-          )
-        }
-        let chapterPickerModel = LocalChapterPickerModel(
-          chapters: pickerChapters,
-          currentIndex: currentChapterIndex
-        )
-        chapterPickerModel.playerModel = self
-        chapters = chapterPickerModel
-        options.hasChapters = true
-      }
+      currentChapterIndex = 0
+      setupChapters(player: player)
+      options.hasChapters = true
     }
 
     updateNowPlayingInfo()
@@ -541,29 +539,29 @@ extension LocalPlayerModel {
   }
 
   func closeSession() {
-    let sessionInfo = item.playSessionInfo
-
-    Task {
-      if mediaProgress.timeListened > 0 {
-        do {
-          try await audiobookshelf.sessions.sync(
-            sessionInfo.id,
-            timeListened: mediaProgress.timeListened,
-            currentTime: mediaProgress.currentTime
-          )
-
-          mediaProgress.timeListened = 0
-        } catch {
-          print("Failed to sync session progress: \(error)")
-        }
-      }
-
-      do {
-        try await audiobookshelf.sessions.close(sessionInfo.id)
-        print("Successfully closed session: \(sessionInfo.id)")
-      } catch {
-        print("Failed to close session: \(error)")
-      }
-    }
+    //    let sessionInfo = item.playSessionInfo
+    //
+    //    Task {
+    //      if mediaProgress.timeListened > 0 {
+    //        do {
+    //          try await audiobookshelf.sessions.sync(
+    //            sessionInfo.id,
+    //            timeListened: mediaProgress.timeListened,
+    //            currentTime: mediaProgress.currentTime
+    //          )
+    //
+    //          mediaProgress.timeListened = 0
+    //        } catch {
+    //          print("Failed to sync session progress: \(error)")
+    //        }
+    //      }
+    //
+    //      do {
+    //        try await audiobookshelf.sessions.close(sessionInfo.id)
+    //        print("Successfully closed session: \(sessionInfo.id)")
+    //      } catch {
+    //        print("Failed to close session: \(error)")
+    //      }
+    //    }
   }
 }
