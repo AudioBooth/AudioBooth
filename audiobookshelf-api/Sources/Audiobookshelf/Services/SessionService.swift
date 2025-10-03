@@ -20,9 +20,7 @@ public final class SessionService {
   public func start(
     itemID: String, forceDirectPlay: Bool = false, forceTranscode: Bool = false
   ) async throws -> PlaySession {
-    guard let networkService = audiobookshelf.networkService,
-      let serverURL = audiobookshelf.serverURL
-    else {
+    guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Network service not configured. Please login first.")
     }
@@ -74,9 +72,7 @@ public final class SessionService {
 
     do {
       let response = try await networkService.send(request)
-      var session = response.value
-      session.setServerURL(serverURL)
-      return session
+      return response.value
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Failed to start play session: \(error.localizedDescription)")

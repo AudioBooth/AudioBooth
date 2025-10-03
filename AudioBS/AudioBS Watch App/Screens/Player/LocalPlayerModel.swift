@@ -208,31 +208,16 @@ extension LocalPlayerModel {
   }
 
   private func setupAudioPlayer(sessionInfo: PlaySessionInfo) async throws -> AVPlayer {
-    let streamingURL: URL?
-
-    if sessionInfo.isDownloaded {
-      streamingURL = sessionInfo.streamingURL(
-        at: mediaProgress.currentTime, serverURL: URL(string: "http://localhost")!)
-      print("Using local file URL for downloaded book")
-    } else {
-      guard let serverURL = audiobookshelf.authentication.serverURL else {
-        print("No server URL available")
-        isLoading = false
-        PlayerManager.shared.clearCurrent()
-        throw Audiobookshelf.AudiobookshelfError.networkError("No server URL available")
-      }
-
-      streamingURL = sessionInfo.streamingURL(at: mediaProgress.currentTime, serverURL: serverURL)
-    }
-
-    guard let streamingURL else {
-      print("Failed to get streaming URL")
+    guard let track = sessionInfo.track(at: mediaProgress.currentTime),
+      let trackURL = track.url
+    else {
+      print("Failed to get track URL at time \(mediaProgress.currentTime)")
       isLoading = false
       PlayerManager.shared.clearCurrent()
-      throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get streaming URL")
+      throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track URL")
     }
 
-    let playerItem = AVPlayerItem(url: streamingURL)
+    let playerItem = AVPlayerItem(url: trackURL)
     let player = AVPlayer(playerItem: playerItem)
     self.player = player
 

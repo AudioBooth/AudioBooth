@@ -190,23 +190,17 @@ extension BookPlayerModel {
       playerItem = try await createCompositionPlayerItem(from: tracks)
       print("Created composition with \(tracks.count) tracks")
     } else {
-      guard let serverURL = audiobookshelf.authentication.serverURL else {
-        print("No server URL available")
-        Toast(error: "No server URL available").show()
-        isLoading = false
-        PlayerManager.shared.clearCurrent()
-        throw Audiobookshelf.AudiobookshelfError.networkError("No server URL available")
-      }
-
-      guard let streamingURL = sessionInfo.streamingURL(at: 0, serverURL: serverURL) else {
-        print("Failed to get streaming URL - sessionInfo.streamingURL returned nil")
+      guard let track = sessionInfo.track(at: 0),
+        let trackURL = track.url
+      else {
+        print("Failed to get track URL at time 0")
         Toast(error: "Failed to get streaming URL").show()
         isLoading = false
         PlayerManager.shared.clearCurrent()
-        throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get streaming URL")
+        throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track URL")
       }
 
-      playerItem = AVPlayerItem(url: streamingURL)
+      playerItem = AVPlayerItem(url: trackURL)
     }
 
     let player = AVPlayer(playerItem: playerItem)
@@ -495,9 +489,7 @@ extension BookPlayerModel {
     var currentTime = CMTime.zero
 
     for track in tracks.sorted(by: { $0.index < $1.index }) {
-      guard let serverURL = audiobookshelf.serverURL,
-        let trackURL = item?.playSessionInfo.streamingURL(for: track.index, serverURL: serverURL)
-      else {
+      guard let trackURL = track.url else {
         print("Skipping track \(track.index) - no URL")
         continue
       }
@@ -593,15 +585,16 @@ extension BookPlayerModel {
           playerItem = try await createCompositionPlayerItem(from: tracks)
           print("Recreated composition with local files for \(tracks.count) tracks")
         } else {
-          guard let serverURL = audiobookshelf.authentication.serverURL,
-            let streamingURL = sessionInfo.streamingURL(at: 0, serverURL: serverURL)
+          guard let track = sessionInfo.track(at: 0),
+            let trackURL = track.url
           else {
-            print("Failed to get local streaming URL")
-            Toast(error: "Failed to get local streaming URL").show()
+            print("Failed to get track URL at time 0")
+            Toast(error: "Failed to get streaming URL").show()
             return
           }
-          playerItem = AVPlayerItem(url: streamingURL)
-          print("Using local file URL: \(streamingURL)")
+
+          playerItem = AVPlayerItem(url: trackURL)
+          print("Using URL: \(trackURL)")
         }
 
         player.replaceCurrentItem(with: playerItem)

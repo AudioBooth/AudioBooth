@@ -69,7 +69,7 @@ extension RecentlyPlayedItem {
 
     let context = ModelContextProvider.shared.context
     for track in playSessionInfo.audioTracks ?? [] {
-      track.fileName = nil
+      track.relativePath = nil
     }
     try context.save()
   }

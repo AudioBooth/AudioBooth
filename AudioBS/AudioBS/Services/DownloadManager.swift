@@ -82,7 +82,7 @@ final class DownloadManager: ObservableObject {
           try FileManager.default.moveItem(at: tempURL, to: trackFile)
 
           await MainActor.run {
-            track.fileName = "\(track.index).\(fileExtension)"
+            track.relativePath = URL(string: "audiobooks/\(bookID)/\(track.index).\(fileExtension)")
           }
 
           print(
@@ -183,7 +183,7 @@ final class DownloadManager: ObservableObject {
           let tracks = item.playSessionInfo.orderedTracks
         {
           for track in tracks {
-            track.fileName = nil
+            track.relativePath = nil
           }
           try item.save()
           print("Successfully updated database to remove download information")
@@ -235,8 +235,8 @@ final class DownloadManager: ObservableObject {
 
             var expectedFilenames = Set<String>()
             for track in tracks {
-              if let fileName = track.fileName {
-                expectedFilenames.insert(fileName)
+              if let relativePath = track.relativePath {
+                expectedFilenames.insert(relativePath.lastPathComponent)
               }
             }
 

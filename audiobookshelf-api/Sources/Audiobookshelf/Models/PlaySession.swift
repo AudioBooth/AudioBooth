@@ -9,8 +9,6 @@ public struct PlaySession: Codable, Sendable {
   public let audioTracks: [Track]?
   public let chapters: [Chapter]?
 
-  private var serverURL: URL?
-
   public struct Track: Codable, Sendable {
     public let index: Int
     public let startOffset: Double
@@ -37,63 +35,25 @@ public struct PlaySession: Codable, Sendable {
     public let title: String
   }
 
-  mutating func setServerURL(_ url: URL) {
-    serverURL = url
+  public struct StreamingTrack {
+    public var track: Track
+    public var url: URL
   }
 
-  public func streamingURL(at time: Double) -> URL? {
-    guard let serverURL = serverURL else { return nil }
-    guard let tracks = audioTracks, !tracks.isEmpty else { return nil }
+  public var streamingTracks: [StreamingTrack]? {
+    guard var serverURL = Audiobookshelf.shared.authentication.serverURL, let audioTracks else {
+      return nil
+    }
 
     let baseURL = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 
-    if tracks.count == 1 {
-      let track = tracks[0]
+    var tracks = [StreamingTrack]()
+    for track in audioTracks {
       let streamingPath = "/public/session/\(id)/track/\(track.index)"
-      var urlString = "\(baseURL)\(streamingPath)"
-
-      if time > 0 {
-        urlString += "?t=\(Int(time))"
-      }
-
-      return URL(string: urlString)
+      guard let url = URL(string: "\(baseURL)\(streamingPath)") else { return nil }
+      tracks.append(StreamingTrack(track: track, url: url))
     }
 
-    var currentTime: Double = 0
-    for track in tracks {
-      let trackEndTime = currentTime + track.duration
-
-      if time >= currentTime && time < trackEndTime {
-        let trackTime = time - currentTime
-        let streamingPath = "/public/session/\(id)/track/\(track.index)"
-        var urlString = "\(baseURL)\(streamingPath)"
-
-        if trackTime > 0 {
-          urlString += "?t=\(Int(trackTime))"
-        }
-
-        return URL(string: urlString)
-      }
-
-      currentTime = trackEndTime
-    }
-
-    return streamingURL(for: 0)
-  }
-
-  public func streamingURL(for trackIndex: Int) -> URL? {
-    guard let serverURL = serverURL else { return nil }
-
-    let baseURL = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    let streamingPath = "/public/session/\(id)/track/\(trackIndex)"
-    return URL(string: "\(baseURL)\(streamingPath)")
-  }
-
-  public func streamingURLs() -> [URL] {
-    guard let tracks = audioTracks else { return [] }
-
-    return tracks.compactMap { track in
-      streamingURL(for: track.index)
-    }
+    return tracks
   }
 }
