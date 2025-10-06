@@ -100,12 +100,10 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     let bookID = bookID
     itemObservation = Task { [weak self] in
       for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
-        guard !Task.isCancelled, let self = self else { continue }
-
         if updatedItem.isDownloaded {
-          self.downloadState = .downloaded
-        } else if self.downloadState == .downloaded {
-          self.downloadState = .notDownloaded
+          self?.downloadState = .downloaded
+        } else if self?.downloadState == .downloaded {
+          self?.downloadState = .notDownloaded
         }
       }
     }
@@ -114,10 +112,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   private func setupProgressObservation() {
     let bookID = bookID
     progressObservation = Task { [weak self] in
-      guard let self = self else { return }
       for await mediaProgress in MediaProgress.observe(where: \.bookID, equals: bookID) {
-        guard !Task.isCancelled else { break }
-        self.progress = mediaProgress.progress
+        self?.progress = mediaProgress.progress
       }
     }
   }

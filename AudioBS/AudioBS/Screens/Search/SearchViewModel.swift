@@ -6,7 +6,11 @@ final class SearchViewModel: SearchView.Model {
 
   private var currentSearchTask: Task<Void, Never>?
 
+  private let lastSearch = ""
+
   override func onSearchChanged(_ searchText: String) {
+    guard searchText != lastSearch else { return }
+
     currentSearchTask?.cancel()
 
     if searchText.isEmpty {

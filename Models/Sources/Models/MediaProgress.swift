@@ -63,32 +63,6 @@ extension MediaProgress {
     return results
   }
 
-  //  public static func observe(bookID: String) -> AsyncStream<MediaProgress> {
-  //    AsyncStream { continuation in
-  //      let task = Task { @MainActor in
-  //        for await notification in NotificationCenter.default.notifications(named: ModelContext.didSave) {
-  //          guard
-  //            let modelContext = notification.object as? ModelContext,
-  //            let userInfo = notification.userInfo
-  //          else { continue }
-  //
-  //          let updates = (userInfo[NSUpdatedObjectsKey] as? [PersistentIdentifier]) ?? []
-  //
-  //          for identifier in updates {
-  //            if let model: MediaProgress = modelContext.registeredModel(for: identifier), model.bookID == bookID {
-  //              nonisolated(unsafe) let model = model
-  //              continuation.yield(model)
-  //            }
-  //          }
-  //        }
-  //      }
-  //
-  //      continuation.onTermination = { _ in
-  //        task.cancel()
-  //      }
-  //    }
-  //  }
-
   public static func fetch(bookID: String) throws -> MediaProgress? {
     let context = ModelContextProvider.shared.context
     let predicate = #Predicate<MediaProgress> { progress in
@@ -206,7 +180,10 @@ extension MediaProgress {
       }
     } else {
       if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
-        try existingProgress.delete()
+        existingProgress.progress = 0.0
+        existingProgress.isFinished = false
+        existingProgress.lastUpdate = Date()
+        try existingProgress.save()
       }
     }
   }

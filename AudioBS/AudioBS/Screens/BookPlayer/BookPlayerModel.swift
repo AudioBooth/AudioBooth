@@ -7,6 +7,7 @@ import Models
 import Nuke
 import SwiftData
 import SwiftUI
+import WatchConnectivity
 
 final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private let audiobookshelf = Audiobookshelf.shared
@@ -767,6 +768,8 @@ extension BookPlayerModel {
   }
 
   private func sendWatchUpdate() {
+    guard WCSession.default.isReachable, WCSession.default.isPaired else { return }
+
     let playbackProgress = self.playbackProgress
     let actualIsPlaying = player?.rate ?? 0 > 0
 
