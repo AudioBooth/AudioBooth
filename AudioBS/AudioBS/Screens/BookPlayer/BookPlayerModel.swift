@@ -733,6 +733,9 @@ extension BookPlayerModel {
       return
     }
 
+    player?.rate = 0
+    player = nil
+
     Task {
       if mediaProgress.timeListened > 0 {
         do {
