@@ -7,6 +7,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>AudioBS needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
