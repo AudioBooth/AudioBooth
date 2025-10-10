@@ -35,13 +35,15 @@ extension PersistentModel {
           let allChanges = inserts + updates
 
           for identifier in allChanges {
-            guard identifier.entityName == entityName else { continue }
-            if let model: Self = modelContext.registeredModel(for: identifier),
+            guard
+              identifier.entityName == entityName,
+              let model = modelContext.model(for: identifier) as? Self,
+              !model.isDeleted,
               model[keyPath: keyPath] == value
-            {
-              nonisolated(unsafe) let model = model
-              continuation.yield(model)
-            }
+            else { continue }
+
+            nonisolated(unsafe) let value = model
+            continuation.yield(value)
           }
         }
       }

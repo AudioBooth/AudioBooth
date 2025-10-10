@@ -3,8 +3,9 @@ import Combine
 import SwiftUI
 
 struct BookCard: View {
-  @Bindable var model: Model
   @Environment(\.navigationPath) private var navigationPath
+
+  @StateObject var model: Model
 
   var body: some View {
     Button {
@@ -153,7 +154,8 @@ struct BookCard: View {
 }
 
 extension BookCard {
-  @Observable class Model: Identifiable {
+  @Observable
+  class Model: ObservableObject, Identifiable {
     let id: String
     let title: String
     let details: String?

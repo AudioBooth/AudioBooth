@@ -27,9 +27,7 @@ final class BookCardModel: BookCard.Model {
       title: item.title,
       details: item.authorNames,
       coverURL: item.coverURL,
-      sequence: item.series.first?.sequence,
-      progress: (try? MediaProgress.fetch(bookID: id))?.progress,
-      downloadState: item.isDownloaded ? .downloaded : .notDownloaded
+      sequence: item.series.first?.sequence
     )
   }
 
