@@ -97,7 +97,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         coverURL: book.coverURL,
         duration: book.duration,
         chapters: book.chapters?.map { Chapter(from: $0) },
-        mediaType: book.mediaType
+        mediaType: book.mediaType,
+        publisher: book.publisher,
+        publishedYear: book.publishedYear,
+        genres: book.genres,
+        tags: book.tags
       )
 
       error = nil
@@ -118,7 +122,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     coverURL: URL?,
     duration: TimeInterval,
     chapters: [Chapter]?,
-    mediaType: Book.MediaType?
+    mediaType: Book.MediaType?,
+    publisher: String? = nil,
+    publishedYear: String? = nil,
+    genres: [String]? = nil,
+    tags: [String]? = nil
   ) {
     self.title = title
     self.authors = authors
@@ -127,6 +135,10 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     self.coverURL = coverURL
     self.chapters = chapters
     self.tracks = []
+    self.publisher = publisher
+    self.publishedYear = publishedYear
+    self.genres = genres
+    self.tags = tags
 
     if let mediaType {
       self.isEbook = mediaType == .ebook

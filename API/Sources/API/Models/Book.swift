@@ -34,11 +34,16 @@ extension Book {
   public var title: String { media.metadata.title }
   public var authorName: String? { media.metadata.authorName }
   public var publishedYear: String? { media.metadata.publishedYear }
+  public var publisher: String? { media.metadata.publisher }
+  public var description: String? { media.metadata.description }
+  public var descriptionPlain: String? { media.metadata.descriptionPlain }
+  public var genres: [String]? { media.metadata.genres }
   public var series: [Media.Series]? { media.metadata.series }
-  public var duration: Double { media.duration ?? 0 }
+  public var duration: Double { media.duration }
   public var size: Int64? { media.size }
   public var chapters: [Media.Chapter]? { media.chapters }
   public var tracks: [Media.Track]? { media.tracks }
+  public var tags: [String]? { media.tags }
 
   public enum MediaType {
     case audiobook
@@ -53,10 +58,11 @@ extension Book {
 extension Book {
   public struct Media: Codable, Sendable {
     public let metadata: Metadata
-    public let duration: Double?
+    public let duration: Double
     public let size: Int64?
     public let chapters: [Chapter]?
     public let tracks: [Track]?
+    public let tags: [String]?
 
     public struct Metadata: Codable, Sendable {
       public let title: String
@@ -65,6 +71,10 @@ extension Book {
       public let series: [Series]?
       public let publishedYear: String?
       public let authorName: String?
+      public let publisher: String?
+      public let description: String?
+      public let descriptionPlain: String?
+      public let genres: [String]?
 
       public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -73,6 +83,10 @@ extension Book {
         narrators = try container.decodeIfPresent([String].self, forKey: .narrators)
         publishedYear = try container.decodeIfPresent(String.self, forKey: .publishedYear)
         authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
+        publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        descriptionPlain = try container.decodeIfPresent(String.self, forKey: .descriptionPlain)
+        genres = try container.decodeIfPresent([String].self, forKey: .genres)
 
         if let seriesArray = try? container.decode([Series].self, forKey: .series) {
           series = seriesArray

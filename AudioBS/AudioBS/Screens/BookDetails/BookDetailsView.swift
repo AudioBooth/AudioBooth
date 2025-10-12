@@ -38,6 +38,33 @@ struct BookDetailsView: View {
         .background(.background)
       }
     }
+    .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button(action: model.onPlayTapped) {
+          Image(systemName: playButtonIcon)
+          Text("Play")
+        }
+      }
+
+      if #available(iOS 26.0, *) {
+        ToolbarSpacer(placement: .topBarTrailing)
+      }
+
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Menu {
+          Button(action: model.onDownloadTapped) {
+            Label(downloadButtonText, systemImage: downloadButtonIcon)
+          }
+
+          Button(action: model.onMarkFinishedTapped) {
+            Label(markFinishedText, systemImage: markFinishedIcon)
+          }
+        } label: {
+          Image(systemName: "ellipsis.circle")
+            .imageScale(.large)
+        }
+      }
+    }
     .onAppear(perform: model.onAppear)
   }
 
@@ -74,6 +101,12 @@ struct BookDetailsView: View {
       headerSection
       infoSection
       actionButtons
+      if let genres = model.genres, !genres.isEmpty {
+        genresSection(genres)
+      }
+      if let tags = model.tags, !tags.isEmpty {
+        tagsSection(tags)
+      }
       if let chapters = model.chapters, !chapters.isEmpty {
         chaptersSection(chapters)
       }
@@ -133,13 +166,16 @@ struct BookDetailsView: View {
 
   private var headerSection: some View {
     VStack(alignment: .leading, spacing: 16) {
-      VStack(alignment: .leading, spacing: 12) {
-        Text(model.title)
-          .font(.title)
-          .fontWeight(.bold)
-          .multilineTextAlignment(.leading)
+      Text(model.title)
+        .font(.title)
+        .fontWeight(.bold)
+        .multilineTextAlignment(.leading)
 
-        if !model.authors.isEmpty || !model.narrators.isEmpty {
+      if !model.authors.isEmpty || !model.narrators.isEmpty {
+        VStack(alignment: .leading, spacing: 12) {
+          Text("Authors & Narrators")
+            .font(.headline)
+
           FlowLayout(spacing: 4) {
             ForEach(model.authors, id: \.id) { author in
               NavigationLink(value: NavigationDestination.author(id: author.id, name: author.name))
@@ -147,22 +183,29 @@ struct BookDetailsView: View {
                 Chip(
                   title: author.name,
                   icon: "person.circle.fill",
-                  color: .primary
+                  color: .blue
                 )
               }
             }
 
             ForEach(model.narrators, id: \.self) { narrator in
-              Chip(
-                title: narrator,
-                icon: "person.wave.2.fill",
-                color: .primary
-              )
+              NavigationLink(value: NavigationDestination.narrator(name: narrator)) {
+                Chip(
+                  title: narrator,
+                  icon: "person.wave.2.fill",
+                  color: .blue
+                )
+              }
             }
           }
         }
+      }
 
-        if !model.series.isEmpty {
+      if !model.series.isEmpty {
+        VStack(alignment: .leading, spacing: 12) {
+          Text("Series")
+            .font(.headline)
+
           FlowLayout(spacing: 4) {
             ForEach(model.series, id: \.id) { series in
               NavigationLink(value: NavigationDestination.series(id: series.id, name: series.name))
@@ -171,7 +214,7 @@ struct BookDetailsView: View {
                   title: series.sequence.isEmpty
                     ? series.name : "\(series.name) #\(series.sequence)",
                   icon: "square.stack.3d.up.fill",
-                  color: .primary
+                  color: .orange
                 )
               }
             }
@@ -183,29 +226,50 @@ struct BookDetailsView: View {
   }
 
   private var infoSection: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      if let duration = model.durationText {
-        HStack {
-          Image(systemName: "clock")
-          Text("Duration: \(duration)")
-        }
-        .font(.subheadline)
-      }
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Metadata")
+        .font(.headline)
 
-      if let progress = model.progress, progress > 0 {
-        HStack {
-          Image(systemName: "chart.bar.fill")
-          Text("Progress: \(progress.formatted(.percent.precision(.fractionLength(0))))")
+      VStack(alignment: .leading, spacing: 8) {
+        if let publisher = model.publisher {
+          HStack {
+            Image(systemName: "building.2")
+            Text("Publisher: \(publisher)")
+          }
+          .font(.subheadline)
         }
-        .font(.subheadline)
-      }
 
-      if let timeRemaining = model.timeRemaining {
-        HStack {
-          Image(systemName: "clock.arrow.circlepath")
-          Text("Time remaining: \(timeRemaining)")
+        if let publishedYear = model.publishedYear {
+          HStack {
+            Image(systemName: "calendar")
+            Text("Published: \(publishedYear)")
+          }
+          .font(.subheadline)
         }
-        .font(.subheadline)
+
+        if let duration = model.durationText {
+          HStack {
+            Image(systemName: "clock")
+            Text("Duration: \(duration)")
+          }
+          .font(.subheadline)
+        }
+
+        if let progress = model.progress, progress > 0 {
+          HStack {
+            Image(systemName: "chart.bar.fill")
+            Text("Progress: \(progress.formatted(.percent.precision(.fractionLength(0))))")
+          }
+          .font(.subheadline)
+        }
+
+        if let timeRemaining = model.timeRemaining {
+          HStack {
+            Image(systemName: "clock.arrow.circlepath")
+            Text("Time remaining: \(timeRemaining)")
+          }
+          .font(.subheadline)
+        }
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -270,9 +334,6 @@ struct BookDetailsView: View {
   }
 
   private var playButtonIcon: String {
-    if let progress = model.progress, progress > 0 {
-      return "play.circle.fill"
-    }
     return "play.fill"
   }
 
@@ -318,16 +379,16 @@ struct BookDetailsView: View {
 
   private var markFinishedIcon: String {
     if let progress = model.progress, progress >= 1.0 {
-      return "checkmark.circle.fill"
+      return "checkmark.shield.fill"
     }
-    return "checkmark.circle"
+    return "checkmark.shield"
   }
 
   private var markFinishedText: String {
     if let progress = model.progress, progress >= 1.0 {
-      return "Unfinish"
+      return "Mark as Unfinished"
     }
-    return "Finish"
+    return "Mark as Finished"
   }
 
   private func progressBar(_ progress: Double) -> some View {
@@ -339,6 +400,44 @@ struct BookDetailsView: View {
         .frame(width: geometry.size.width * progress, height: 8)
     }
     .frame(height: 8)
+  }
+
+  private func genresSection(_ genres: [String]) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Genres")
+        .font(.headline)
+
+      FlowLayout(spacing: 4) {
+        ForEach(genres, id: \.self) { genre in
+          NavigationLink(value: NavigationDestination.genre(name: genre)) {
+            Chip(
+              title: genre,
+              icon: "theatermasks.fill",
+              color: .gray
+            )
+          }
+        }
+      }
+    }
+  }
+
+  private func tagsSection(_ tags: [String]) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Tags")
+        .font(.headline)
+
+      FlowLayout(spacing: 4) {
+        ForEach(tags, id: \.self) { tag in
+          NavigationLink(value: NavigationDestination.tag(name: tag)) {
+            Chip(
+              title: tag,
+              icon: "tag.fill",
+              color: .gray
+            )
+          }
+        }
+      }
+    }
   }
 
   private func chaptersSection(_ chapters: [Chapter]) -> some View {
@@ -418,6 +517,10 @@ extension BookDetailsView {
     var isLoading: Bool
     var isEbook: Bool
     var error: String?
+    var publisher: String?
+    var publishedYear: String?
+    var genres: [String]?
+    var tags: [String]?
 
     func onAppear() {}
     func onPlayTapped() {}
@@ -439,7 +542,11 @@ extension BookDetailsView {
       downloadState: DownloadManager.DownloadState = .notDownloaded,
       isLoading: Bool = true,
       isEbook: Bool = false,
-      error: String? = nil
+      error: String? = nil,
+      publisher: String? = nil,
+      publishedYear: String? = nil,
+      genres: [String]? = nil,
+      tags: [String]? = nil
     ) {
       self.bookID = bookID
       self.title = title
@@ -456,6 +563,10 @@ extension BookDetailsView {
       self.isLoading = isLoading
       self.isEbook = isEbook
       self.error = error
+      self.publisher = publisher
+      self.publishedYear = publishedYear
+      self.genres = genres
+      self.tags = tags
     }
   }
 }
@@ -534,8 +645,11 @@ struct ParallaxHeader<Content: View, Space: Hashable>: View {
           height: proxy.size.height + heightModifier
         )
         .offset(y: offset)
-        .onAppear { height = proxy.size.width }
-        .onChange(of: proxy.size.width) { _, new in height = new }
+        .onAppear {
+          height = min(370, proxy.size.width)
+          print(height)
+        }
+        .onChange(of: proxy.size.width) { _, new in height = min(370, new) }
     }
     .frame(height: height)
   }

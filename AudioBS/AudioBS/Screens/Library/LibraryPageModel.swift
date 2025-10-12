@@ -9,6 +9,9 @@ final class LibraryPageModel: LibraryPage.Model {
   enum Filter {
     case series(String)
     case authors(String)
+    case narrators(String)
+    case genres(String)
+    case tags(String)
   }
   private var filter: Filter?
 
@@ -38,6 +41,27 @@ final class LibraryPageModel: LibraryPage.Model {
       )
     case .author(let id, let name):
       self.filter = .authors(id)
+      super.init(
+        isRoot: false,
+        sortBy: nil,
+        title: name
+      )
+    case .narrator(let name):
+      self.filter = .narrators(name)
+      super.init(
+        isRoot: false,
+        sortBy: nil,
+        title: name
+      )
+    case .genre(let name):
+      self.filter = .genres(name)
+      super.init(
+        isRoot: false,
+        sortBy: nil,
+        title: name
+      )
+    case .tag(let name):
+      self.filter = .tags(name)
       super.init(
         isRoot: false,
         sortBy: nil,
@@ -113,6 +137,21 @@ final class LibraryPageModel: LibraryPage.Model {
       case .authors(let id):
         let base64SeriesID = Data(id.utf8).base64EncodedString()
         filter = "authors.\(base64SeriesID)"
+        sortBy = .title
+
+      case .narrators(let name):
+        let base64NarratorName = Data(name.utf8).base64EncodedString()
+        filter = "narrators.\(base64NarratorName)"
+        sortBy = .title
+
+      case .genres(let name):
+        let base64GenreName = Data(name.utf8).base64EncodedString()
+        filter = "genres.\(base64GenreName)"
+        sortBy = .title
+
+      case .tags(let name):
+        let base64TagName = Data(name.utf8).base64EncodedString()
+        filter = "tags.\(base64TagName)"
         sortBy = .title
 
       case nil:
