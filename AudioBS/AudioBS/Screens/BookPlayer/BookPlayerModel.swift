@@ -493,6 +493,43 @@ extension BookPlayerModel {
       }
       .store(in: &cancellables)
     }
+
+    NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] notification in
+        self?.handleAudioInterruption(notification)
+      }
+      .store(in: &cancellables)
+  }
+
+  private func handleAudioInterruption(_ notification: Notification) {
+    guard let userInfo = notification.userInfo,
+      let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+      let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+    else {
+      return
+    }
+
+    switch type {
+    case .began:
+      print("Audio interruption began")
+
+    case .ended:
+      guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else {
+        return
+      }
+
+      let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+      if options.contains(.shouldResume) {
+        print("Audio interruption ended - resuming playback")
+        player?.rate = speed.playbackSpeed
+      } else {
+        print("Audio interruption ended - not resuming")
+      }
+
+    @unknown default:
+      break
+    }
   }
 
   private func setupTimeObserver() {
