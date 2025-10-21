@@ -89,6 +89,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       let narrators = book.media.metadata.narrators ?? []
 
+      let displayDescription = convertToAttributedString(
+        html: book.description,
+        fallback: book.descriptionPlain
+      )
+
       updateUI(
         title: book.title,
         authors: authors,
@@ -101,7 +106,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         publisher: book.publisher,
         publishedYear: book.publishedYear,
         genres: book.genres,
-        tags: book.tags
+        tags: book.tags,
+        description: displayDescription
       )
 
       error = nil
@@ -126,7 +132,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     publisher: String? = nil,
     publishedYear: String? = nil,
     genres: [String]? = nil,
-    tags: [String]? = nil
+    tags: [String]? = nil,
+    description: AttributedString? = nil
   ) {
     self.title = title
     self.authors = authors
@@ -139,6 +146,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     self.publishedYear = publishedYear
     self.genres = genres
     self.tags = tags
+    self.description = description
 
     if let mediaType {
       self.isEbook = mediaType == .ebook
@@ -198,6 +206,31 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         self?.progress = mediaProgress.progress
       }
     }
+  }
+
+  private func convertToAttributedString(html: String?, fallback: String?) -> AttributedString? {
+    guard
+      let html,
+      let nsAttributedString = try? NSAttributedString(
+        data: Data(html.utf8),
+        options: [.documentType: NSAttributedString.DocumentType.html],
+        documentAttributes: nil
+      ),
+      var attributedString = try? AttributedString(nsAttributedString, including: \.uiKit)
+    else { return fallback.map(AttributedString.init) }
+
+    let baseFont = UIFont.preferredFont(forTextStyle: .subheadline)
+
+    for run in attributedString.runs {
+      if let existingFont = attributedString[run.range].font {
+        let traits = existingFont.fontDescriptor.symbolicTraits
+        let descriptor =
+          baseFont.fontDescriptor.withSymbolicTraits(traits) ?? baseFont.fontDescriptor
+        attributedString[run.range].font = UIFont(descriptor: descriptor, size: baseFont.pointSize)
+      }
+    }
+
+    return attributedString
   }
 
   override func onPlayTapped() {

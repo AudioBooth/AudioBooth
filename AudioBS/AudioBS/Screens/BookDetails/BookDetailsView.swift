@@ -100,6 +100,9 @@ struct BookDetailsView: View {
     VStack(spacing: 16) {
       headerSection
       infoSection
+      if let description = model.description {
+        descriptionSection(description)
+      }
       actionButtons
       if let genres = model.genres, !genres.isEmpty {
         genresSection(genres)
@@ -497,6 +500,17 @@ struct BookDetailsView: View {
       )
     )
   }
+
+  private func descriptionSection(_ description: AttributedString) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Description")
+        .font(.headline)
+
+      Text(description)
+        .font(.subheadline)
+    }
+    .textSelection(.enabled)
+  }
 }
 
 extension BookDetailsView {
@@ -521,6 +535,7 @@ extension BookDetailsView {
     var publishedYear: String?
     var genres: [String]?
     var tags: [String]?
+    var description: AttributedString?
 
     func onAppear() {}
     func onPlayTapped() {}
@@ -546,7 +561,8 @@ extension BookDetailsView {
       publisher: String? = nil,
       publishedYear: String? = nil,
       genres: [String]? = nil,
-      tags: [String]? = nil
+      tags: [String]? = nil,
+      description: AttributedString? = nil
     ) {
       self.bookID = bookID
       self.title = title
@@ -567,6 +583,7 @@ extension BookDetailsView {
       self.publishedYear = publishedYear
       self.genres = genres
       self.tags = tags
+      self.description = description
     }
   }
 }
@@ -610,7 +627,9 @@ extension BookDetailsView.Model {
       ],
       tracks: [],
       downloadState: .downloaded,
-      isLoading: false
+      isLoading: false,
+      description:
+        "As the Colony continues to develop and thrive, there's too much to do! Territory to seize, nests to build, Champions to train! Anthony will have his mandibles full trying to teach his new protege Brilliant while trying to keep a war from breaking out with the ka'armodo. However, when the Mother Tree comes looking for his help against a particular breed of monster, there is no way he can refuse. After all, no ant can resist a fight against their ancient nemesis... the Termite! Book 7 of the hit monster-evolution LitRPG series with nearly 30 Million views on Royal Road. Grab your copy today!"
     )
   }
 }
