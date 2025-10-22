@@ -39,7 +39,7 @@ extension Book {
   public var descriptionPlain: String? { media.metadata.descriptionPlain }
   public var genres: [String]? { media.metadata.genres }
   public var series: [Media.Series]? { media.metadata.series }
-  public var duration: Double { media.duration }
+  public var duration: Double { media.duration ?? 0 }
   public var size: Int64? { media.size }
   public var chapters: [Media.Chapter]? { media.chapters }
   public var tracks: [Media.Track]? { media.tracks }
@@ -58,7 +58,7 @@ extension Book {
 extension Book {
   public struct Media: Codable, Sendable {
     public let metadata: Metadata
-    public let duration: Double
+    public let duration: Double?
     public let size: Int64?
     public let chapters: [Chapter]?
     public let tracks: [Track]?
