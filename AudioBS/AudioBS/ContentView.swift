@@ -7,7 +7,6 @@ struct ContentView: View {
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
   @Environment(\.scenePhase) private var scenePhase
 
-  @State var miniPlayerHeight: CGFloat = 0.0
   @State private var isKeyboardVisible = false
   @State private var selectedTab: TabSelection = .home
 
@@ -87,7 +86,7 @@ struct ContentView: View {
   private var legacyTabView: some View {
     TabView {
       HomePage(model: HomePageModel())
-        .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+        .safeAreaInset(edge: .bottom) { miniPlayer }
         .tabItem {
           Image(systemName: "house")
           Text("Home")
@@ -95,29 +94,27 @@ struct ContentView: View {
 
       if hasSelectedLibrary {
         LibraryRootPage()
-          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+          .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
             Image(systemName: "books.vertical.fill")
             Text("Library")
           }
 
         SeriesPage(model: SeriesPageModel())
-          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+          .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
             Image(systemName: "square.stack.3d.up.fill")
             Text("Series")
           }
 
         AuthorsPage(model: AuthorsPageModel())
-          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+          .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
             Image(systemName: "person.crop.rectangle.stack")
             Text("Authors")
           }
       }
-
     }
-    .safeAreaInset(edge: .bottom) { miniPlayer.padding(.bottom, 49) }
   }
 
   @ViewBuilder
@@ -127,20 +124,6 @@ struct ContentView: View {
         .id(currentPlayer.id)
         .transition(.move(edge: .bottom))
         .animation(.easeInOut(duration: 0.3), value: playerManager.hasActivePlayer)
-        .overlay {
-          GeometryReader { geometry in
-            Color.clear.onAppear {
-              miniPlayerHeight = geometry.size.height
-            }
-          }
-        }
-    }
-  }
-
-  @ViewBuilder
-  private var miniPlayerOffsetView: some View {
-    if playerManager.current != nil {
-      Color.clear.frame(height: miniPlayerHeight)
     }
   }
 }
