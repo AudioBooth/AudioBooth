@@ -2,12 +2,20 @@ import NukeUI
 import SwiftUI
 
 @available(iOS 26.0, *)
-struct MiniBookPlayer: View {
+struct MiniBookPlayer: View, Equatable {
   private var playerManager: PlayerManager { .shared }
 
   @Environment(\.tabViewBottomAccessoryPlacement) var placement
 
   var player: BookPlayer.Model
+
+  static func == (lhs: MiniBookPlayer, rhs: MiniBookPlayer) -> Bool {
+    lhs.player.id == rhs.player.id
+      && lhs.player.playbackProgress.totalTimeRemaining
+        == rhs.player.playbackProgress.totalTimeRemaining
+      && lhs.player.isPlaying == rhs.player.isPlaying
+      && lhs.player.isLoading == rhs.player.isLoading
+  }
 
   var body: some View {
     content

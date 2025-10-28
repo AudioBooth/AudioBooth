@@ -77,6 +77,7 @@ struct ContentView: View {
     .tabViewBottomAccessory {
       if let currentPlayer = playerManager.current, !isKeyboardVisible {
         MiniBookPlayer(player: currentPlayer)
+          .equatable()
           .glassEffect()
       }
     }

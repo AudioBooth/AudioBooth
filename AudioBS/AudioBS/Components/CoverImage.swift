@@ -34,6 +34,7 @@ struct CoverImage: View {
           .opacity(0.3)
       }
     }
+    .id(url)
   }
 }
 
