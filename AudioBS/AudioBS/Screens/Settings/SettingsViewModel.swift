@@ -93,6 +93,10 @@ final class SettingsViewModel: SettingsView.Model {
   }
 
   override func onDiscoverServersTapped() {
+    showDiscoveryPortAlert = true
+  }
+
+  func performDiscovery() {
     isDiscovering = true
     discoveredServers = []
 

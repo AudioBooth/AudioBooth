@@ -5,14 +5,24 @@ import SwiftUI
 import UIKit
 
 struct SettingsView: View {
+  enum FocusField: Hashable {
+    case serverURL
+    case username
+    case password
+  }
+
   @Environment(\.dismiss) var dismiss
-  @FocusState private var isServerURLFocused: Bool
+  @FocusState private var focusedField: FocusField?
 
   @StateObject var model: Model
 
   var body: some View {
     NavigationStack(path: $model.navigationPath) {
       Form {
+        if !model.isAuthenticated {
+          discovery
+        }
+
         Section("Server Configuration") {
           if !model.isTypingScheme {
             Picker("Protocol", selection: $model.serverScheme) {
@@ -27,53 +37,11 @@ struct SettingsView: View {
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .disabled(model.isAuthenticated)
-            .focused($isServerURLFocused)
-
-          if !model.isAuthenticated {
-            HStack {
-              TextField("Port", text: $model.discoveryPort)
-                .keyboardType(.numberPad)
-                .frame(maxWidth: 80)
-                .disabled(model.isDiscovering)
-
-              Button(action: model.onDiscoverServersTapped) {
-                HStack {
-                  if model.isDiscovering {
-                    ProgressView()
-                      .scaleEffect(0.8)
-                  } else {
-                    Image(systemName: "network")
-                  }
-                  Text(model.isDiscovering ? "Scanning network..." : "Discover Servers")
-                }
-              }
-              .disabled(model.isDiscovering || model.discoveryPort.isEmpty)
+            .focused($focusedField, equals: .serverURL)
+            .submitLabel(.next)
+            .onSubmit {
+              focusedField = .username
             }
-          }
-        }
-
-        if !model.discoveredServers.isEmpty && !model.isAuthenticated {
-          Section("Discovered Servers") {
-            ForEach(model.discoveredServers) { server in
-              Button(action: { model.onServerSelected(server) }) {
-                VStack(alignment: .leading, spacing: 4) {
-                  HStack {
-                    Text(server.serverURL.absoluteString)
-                      .foregroundColor(.primary)
-                    Spacer()
-                    Text("\(Int(server.responseTime * 1000))ms")
-                      .font(.caption)
-                      .foregroundColor(.secondary)
-                  }
-                  if let info = server.serverInfo, let version = info.version {
-                    Text("Version: \(version)")
-                      .font(.caption)
-                      .foregroundColor(.secondary)
-                  }
-                }
-              }
-            }
-          }
         }
 
         if !model.isAuthenticated {
@@ -113,6 +81,57 @@ struct SettingsView: View {
           }
         }
       }
+      .alert("Scan Local Network", isPresented: $model.showDiscoveryPortAlert) {
+        TextField("Discovery Port", text: $model.discoveryPort)
+          .keyboardType(.numberPad)
+        Button("Cancel", role: .cancel) {}
+        Button("Scan") {
+          if let viewModel = model as? SettingsViewModel {
+            viewModel.performDiscovery()
+          }
+        }
+        .disabled(model.discoveryPort.isEmpty)
+      } message: {
+        Text("Enter the port number to scan for Audiobookshelf servers on your local network.")
+      }
+    }
+  }
+
+  @ViewBuilder
+  var discovery: some View {
+    Section("Network Discovery") {
+      Button(action: model.onDiscoverServersTapped) {
+        HStack {
+          if model.isDiscovering {
+            ProgressView()
+              .scaleEffect(0.8)
+          } else {
+            Image(systemName: "network")
+          }
+          Text(model.isDiscovering ? "Scanning network..." : "Scan Local Network")
+        }
+      }
+      .disabled(model.isDiscovering)
+
+      ForEach(model.discoveredServers) { server in
+        Button(action: { model.onServerSelected(server) }) {
+          VStack(alignment: .leading, spacing: 4) {
+            HStack {
+              Text(server.serverURL.absoluteString)
+                .foregroundColor(.primary)
+              Spacer()
+              Text("\(Int(server.responseTime * 1000))ms")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            if let info = server.serverInfo, let version = info.version {
+              Text("Version: \(version)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+          }
+        }
+      }
     }
   }
 
@@ -131,8 +150,18 @@ struct SettingsView: View {
         TextField("Username", text: $model.username)
           .autocorrectionDisabled()
           .textInputAutocapitalization(.never)
+          .focused($focusedField, equals: .username)
+          .submitLabel(.next)
+          .onSubmit {
+            focusedField = .password
+          }
 
         SecureField("Password", text: $model.password)
+          .focused($focusedField, equals: .password)
+          .submitLabel(.send)
+          .onSubmit {
+            model.onLoginTapped()
+          }
       }
 
       Section {
@@ -256,6 +285,7 @@ extension SettingsView {
     var isAuthenticated: Bool
     var isDiscovering: Bool
     var navigationPath = NavigationPath()
+    var showDiscoveryPortAlert: Bool
 
     var serverURL: String
     var serverScheme: ServerScheme
@@ -297,6 +327,7 @@ extension SettingsView {
       isAuthenticated: Bool = false,
       isLoading: Bool = false,
       isDiscovering: Bool = false,
+      showDiscoveryPortAlert: Bool = false,
       serverURL: String = "",
       serverScheme: ServerScheme = .https,
       username: String = "",
@@ -318,6 +349,7 @@ extension SettingsView {
       self.isAuthenticated = isAuthenticated
       self.isLoading = isLoading
       self.isDiscovering = isDiscovering
+      self.showDiscoveryPortAlert = showDiscoveryPortAlert
       self.library = library
       self.tipJar = tipJar
       self.discoveredServers = discoveredServers
