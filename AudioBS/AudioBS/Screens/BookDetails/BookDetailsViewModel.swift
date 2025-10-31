@@ -31,6 +31,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     setupDownloadStateBinding()
     setupProgressObservation()
     setupItemObservation()
+    setupPlayerStateObservation()
   }
 
   private func loadLocalBook() async {
@@ -209,12 +210,50 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
   }
 
+  private func setupPlayerStateObservation() {
+    playerManager.$current
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] current in
+        guard let self else { return }
+        self.observeIsPlaying(current)
+      }
+      .store(in: &cancellables)
+  }
+
+  private func observeIsPlaying(_ current: BookPlayer.Model?) {
+    guard let current, current.id == bookID else {
+      isCurrentlyPlaying = false
+      return
+    }
+
+    updatePlayingState()
+
+    withObservationTracking {
+      _ = current.isPlaying
+    } onChange: { [weak self] in
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        self.updatePlayingState()
+        self.observeIsPlaying(playerManager.current)
+      }
+    }
+  }
+
+  private func updatePlayingState() {
+    let isCurrentBook = playerManager.current?.id == bookID
+    let isPlaying = playerManager.current?.isPlaying ?? false
+    isCurrentlyPlaying = isCurrentBook && isPlaying
+  }
+
   private func convertToAttributedString(html: String?, fallback: String?) -> AttributedString? {
     guard
       let html,
       let nsAttributedString = try? NSAttributedString(
         data: Data(html.utf8),
-        options: [.documentType: NSAttributedString.DocumentType.html],
+        options: [
+          .documentType: NSAttributedString.DocumentType.html,
+          .characterEncoding: String.Encoding.utf8.rawValue,
+        ],
         documentAttributes: nil
       ),
       var attributedString = try? AttributedString(nsAttributedString, including: \.uiKit)
@@ -239,13 +278,27 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     if let book {
       if book.mediaType == .ebook {
         openEbookInSafari(book)
+      } else if playerManager.current?.id == bookID {
+        if let currentPlayer = playerManager.current as? BookPlayerModel {
+          currentPlayer.onTogglePlaybackTapped()
+        }
       } else {
         playerManager.setCurrent(book)
-        playerManager.showFullPlayer()
+        if let currentPlayer = playerManager.current as? BookPlayerModel {
+          currentPlayer.onTogglePlaybackTapped()
+        }
       }
     } else if let localBook {
-      playerManager.setCurrent(localBook)
-      playerManager.showFullPlayer()
+      if playerManager.current?.id == bookID {
+        if let currentPlayer = playerManager.current as? BookPlayerModel {
+          currentPlayer.onTogglePlaybackTapped()
+        }
+      } else {
+        playerManager.setCurrent(localBook)
+        if let currentPlayer = playerManager.current as? BookPlayerModel {
+          currentPlayer.onTogglePlaybackTapped()
+        }
+      }
     } else {
       Toast(error: "Book not available").show()
     }

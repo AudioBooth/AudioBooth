@@ -40,17 +40,6 @@ struct BookDetailsView: View {
     }
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: model.onPlayTapped) {
-          Image(systemName: playButtonIcon)
-          Text("Play")
-        }
-      }
-
-      if #available(iOS 26.0, *) {
-        ToolbarSpacer(placement: .topBarTrailing)
-      }
-
-      ToolbarItem(placement: .navigationBarTrailing) {
         Menu {
           Button(action: model.onDownloadTapped) {
             Label(downloadButtonText, systemImage: downloadButtonIcon)
@@ -98,12 +87,18 @@ struct BookDetailsView: View {
 
   private var contentSections: some View {
     VStack(spacing: 16) {
+      Text(model.title)
+        .font(.title)
+        .fontWeight(.bold)
+        .multilineTextAlignment(.leading)
+
+      actionButtons
+
       headerSection
       infoSection
       if let description = model.description {
         descriptionSection(description)
       }
-      actionButtons
       if let genres = model.genres, !genres.isEmpty {
         genresSection(genres)
       }
@@ -169,11 +164,6 @@ struct BookDetailsView: View {
 
   private var headerSection: some View {
     VStack(alignment: .leading, spacing: 16) {
-      Text(model.title)
-        .font(.title)
-        .fontWeight(.bold)
-        .multilineTextAlignment(.leading)
-
       if !model.authors.isEmpty || !model.narrators.isEmpty {
         VStack(alignment: .leading, spacing: 12) {
           Text("Authors & Narrators")
@@ -302,7 +292,21 @@ struct BookDetailsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.accentColor)
+        .background {
+          if let progress = model.progress, progress >= 0.01 {
+            GeometryReader { geometry in
+              ZStack(alignment: .leading) {
+                Color.accentColor.opacity(0.6)
+
+                Rectangle()
+                  .fill(Color.accentColor)
+                  .frame(width: geometry.size.width * progress)
+              }
+            }
+          } else {
+            Color.accentColor
+          }
+        }
         .foregroundColor(.white)
         .cornerRadius(12)
       }
@@ -337,12 +341,18 @@ struct BookDetailsView: View {
   }
 
   private var playButtonIcon: String {
+    if model.isCurrentlyPlaying {
+      return "pause.fill"
+    }
     return "play.fill"
   }
 
   private var playButtonText: String {
     if model.isEbook {
       return "Read"
+    }
+    if model.isCurrentlyPlaying {
+      return "Pause"
     }
     if let progress = model.progress, progress > 0 {
       return "Continue Listening"
@@ -530,6 +540,7 @@ extension BookDetailsView {
     var downloadState: DownloadManager.DownloadState
     var isLoading: Bool
     var isEbook: Bool
+    var isCurrentlyPlaying: Bool
     var error: String?
     var publisher: String?
     var publishedYear: String?
@@ -557,6 +568,7 @@ extension BookDetailsView {
       downloadState: DownloadManager.DownloadState = .notDownloaded,
       isLoading: Bool = true,
       isEbook: Bool = false,
+      isCurrentlyPlaying: Bool = false,
       error: String? = nil,
       publisher: String? = nil,
       publishedYear: String? = nil,
@@ -578,6 +590,7 @@ extension BookDetailsView {
       self.downloadState = downloadState
       self.isLoading = isLoading
       self.isEbook = isEbook
+      self.isCurrentlyPlaying = isCurrentlyPlaying
       self.error = error
       self.publisher = publisher
       self.publishedYear = publishedYear
