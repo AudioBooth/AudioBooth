@@ -1,5 +1,6 @@
 import API
 import Foundation
+import Models
 
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
@@ -12,6 +13,7 @@ final class LibraryPageModel: LibraryPage.Model {
     case narrators(String)
     case genres(String)
     case tags(String)
+    case offline
   }
   private var filter: Filter?
 
@@ -67,6 +69,13 @@ final class LibraryPageModel: LibraryPage.Model {
         sortBy: nil,
         title: name
       )
+    case .offline:
+      self.filter = .offline
+      super.init(
+        isRoot: false,
+        sortBy: nil,
+        title: "Downloaded"
+      )
     case .book:
       fatalError("LibraryPageModel cannot be initialized with a book destination")
     }
@@ -119,6 +128,10 @@ final class LibraryPageModel: LibraryPage.Model {
     }
   }
 
+  override func onDisplayModeTapped() {
+    displayMode = displayMode == .card ? .row : .card
+  }
+
   private func loadBooks() async {
     guard hasMorePages && !isLoadingNextPage && search.searchText.isEmpty else { return }
 
@@ -126,73 +139,84 @@ final class LibraryPageModel: LibraryPage.Model {
     isLoading = currentPage == 0
 
     do {
-      let filter: String?
-      var sortBy = self.sortBy
+      if case .offline = self.filter {
+        let localBooks = try LocalBook.fetchAll()
+        let bookCards = localBooks.filter(\.isDownloaded).map(BookCardModel.init)
 
-      switch self.filter {
-      case .series(let id):
-        let base64SeriesID = Data(id.utf8).base64EncodedString()
-        filter = "series.\(base64SeriesID)"
-
-      case .authors(let id):
-        let base64SeriesID = Data(id.utf8).base64EncodedString()
-        filter = "authors.\(base64SeriesID)"
-        sortBy = .title
-
-      case .narrators(let name):
-        let base64NarratorName = Data(name.utf8).base64EncodedString()
-        filter = "narrators.\(base64NarratorName)"
-        sortBy = .title
-
-      case .genres(let name):
-        let base64GenreName = Data(name.utf8).base64EncodedString()
-        filter = "genres.\(base64GenreName)"
-        sortBy = .title
-
-      case .tags(let name):
-        let base64TagName = Data(name.utf8).base64EncodedString()
-        filter = "tags.\(base64TagName)"
-        sortBy = .title
-
-      case nil:
-        filter = nil
-      }
-
-      let response = try await audiobookshelf.books.fetch(
-        limit: itemsPerPage,
-        page: currentPage,
-        sortBy: sortBy,
-        ascending: ascending,
-        filter: filter
-      )
-
-      let bookCards = response.results.map { book in
-        if case .series = self.filter {
-          BookCardModel(book, sortBy: .title)
-        } else {
-          BookCardModel(book, sortBy: self.sortBy)
-        }
-      }
-
-      if currentPage == 0 {
         fetched = bookCards
+        books = bookCards
+        hasMorePages = false
       } else {
-        fetched.append(contentsOf: bookCards)
-      }
+        let filter: String?
+        var sortBy = self.sortBy
 
-      if isRoot || search.searchText.isEmpty {
-        books = fetched
-      } else {
-        let searchTerm = search.searchText.lowercased()
-        books = fetched.filter { book in
-          book.title.lowercased().contains(searchTerm)
+        switch self.filter {
+        case .series(let id):
+          let base64SeriesID = Data(id.utf8).base64EncodedString()
+          filter = "series.\(base64SeriesID)"
+
+        case .authors(let id):
+          let base64SeriesID = Data(id.utf8).base64EncodedString()
+          filter = "authors.\(base64SeriesID)"
+          sortBy = .title
+
+        case .narrators(let name):
+          let base64NarratorName = Data(name.utf8).base64EncodedString()
+          filter = "narrators.\(base64NarratorName)"
+          sortBy = .title
+
+        case .genres(let name):
+          let base64GenreName = Data(name.utf8).base64EncodedString()
+          filter = "genres.\(base64GenreName)"
+          sortBy = .title
+
+        case .tags(let name):
+          let base64TagName = Data(name.utf8).base64EncodedString()
+          filter = "tags.\(base64TagName)"
+          sortBy = .title
+
+        case .offline:
+          filter = nil
+
+        case nil:
+          filter = nil
         }
+
+        let response = try await audiobookshelf.books.fetch(
+          limit: itemsPerPage,
+          page: currentPage,
+          sortBy: sortBy,
+          ascending: ascending,
+          filter: filter
+        )
+
+        let bookCards = response.results.map { book in
+          if case .series = self.filter {
+            BookCardModel(book, sortBy: .title)
+          } else {
+            BookCardModel(book, sortBy: self.sortBy)
+          }
+        }
+
+        if currentPage == 0 {
+          fetched = bookCards
+        } else {
+          fetched.append(contentsOf: bookCards)
+        }
+
+        if isRoot || search.searchText.isEmpty {
+          books = fetched
+        } else {
+          let searchTerm = search.searchText.lowercased()
+          books = fetched.filter { book in
+            book.title.lowercased().contains(searchTerm)
+          }
+        }
+
+        currentPage += 1
+
+        hasMorePages = (currentPage * itemsPerPage) < response.total
       }
-
-      currentPage += 1
-
-      hasMorePages = (currentPage * itemsPerPage) < response.total
-
     } catch {
       if currentPage == 0 {
         fetched = []

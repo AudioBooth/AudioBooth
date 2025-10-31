@@ -18,7 +18,7 @@ struct HomePage: View {
           switch destination {
           case .book(let id):
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .series, .author, .narrator, .genre, .tag:
+          case .series, .author, .narrator, .genre, .tag, .offline:
             LibraryPage(model: LibraryPageModel(destination: destination))
           }
         }
@@ -38,7 +38,7 @@ struct HomePage: View {
         }
 
         if let section = model.offline {
-          sectionContent(section)
+          sectionContent(section, isOffline: true)
         }
 
         if model.isLoading && model.others.isEmpty {
@@ -124,13 +124,35 @@ struct HomePage: View {
   }
 
   @ViewBuilder
-  private func sectionContent(_ section: HomePage.Model.Section) -> some View {
+  private func sectionContent(_ section: HomePage.Model.Section, isOffline: Bool = false)
+    -> some View
+  {
     VStack(alignment: .leading, spacing: 12) {
-      Text(section.title)
-        .font(.title2)
-        .fontWeight(.semibold)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal)
+      if isOffline {
+        NavigationLink(value: NavigationDestination.offline) {
+          HStack {
+            Text(section.title)
+              .font(.title2)
+              .fontWeight(.semibold)
+              .foregroundColor(.primary)
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+              .font(.body)
+              .foregroundColor(.secondary)
+          }
+          .padding(.horizontal)
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+      } else {
+        Text(section.title)
+          .font(.title2)
+          .fontWeight(.semibold)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal)
+      }
 
       switch section.items {
       case .continueListening(let items):
@@ -202,6 +224,11 @@ extension HomePage {
         case authors([AuthorCard.Model])
       }
       let items: Items
+
+      init(title: String, items: Items) {
+        self.title = title
+        self.items = items
+      }
     }
 
     var continueListening: Section?

@@ -50,8 +50,12 @@ struct LibraryPage: View {
         } else {
           ScrollView {
             LazyVStack {
-              LibraryView(books: model.books)
-                .padding(.horizontal)
+              LibraryView(
+                books: model.books,
+                displayMode: model.displayMode == .card ? .grid : .list
+              )
+              .environment(\.bookCardDisplayMode, model.displayMode)
+              .padding(.horizontal)
 
               Color.clear
                 .frame(height: 1)
@@ -67,6 +71,12 @@ struct LibraryPage: View {
     }
     .navigationTitle(model.title)
     .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button(action: { model.onDisplayModeTapped() }) {
+          Image(systemName: model.displayMode == .card ? "square.grid.2x2" : "list.bullet")
+        }
+      }
+
       if model.sortBy != nil {
         ToolbarItem(placement: .navigationBarTrailing) {
           Menu("", systemImage: "arrow.up.arrow.down") {
@@ -114,13 +124,17 @@ struct LibraryPage: View {
 }
 
 extension LibraryPage {
-  @Observable class Model: ObservableObject {
+  @Observable
+  class Model: ObservableObject {
     var isLoading: Bool
 
     var isRoot: Bool
 
     var sortBy: BooksService.SortBy?
     var ascending: Bool = true
+
+    @ObservationIgnored
+    @AppStorage("libraryDisplayMode") var displayMode: BookCard.DisplayMode = .card
 
     var title: String
 
@@ -132,6 +146,7 @@ extension LibraryPage {
     func onSortByTapped(_ sortBy: BooksService.SortBy) {}
     func onSearchChanged(_ searchText: String) {}
     func loadNextPageIfNeeded() {}
+    func onDisplayModeTapped() {}
 
     init(
       isLoading: Bool = false,

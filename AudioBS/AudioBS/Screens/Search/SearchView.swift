@@ -13,7 +13,7 @@ struct SearchPage: View {
           switch destination {
           case .book(let id):
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .series, .author, .narrator, .genre, .tag:
+          case .series, .author, .narrator, .genre, .tag, .offline:
             LibraryPage(model: LibraryPageModel(destination: destination))
           }
         }
@@ -122,7 +122,7 @@ struct SearchView: View {
           .foregroundColor(.secondary)
       }
 
-      LibraryView(books: model.books)
+      LibraryView(books: model.books, displayMode: .grid)
     }
   }
 

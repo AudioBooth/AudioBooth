@@ -13,6 +13,7 @@ public final class LocalBook {
   public var duration: TimeInterval
   public var tracks: [Track]
   public var chapters: [Chapter]
+  public var publishedYear: String?
 
   public var authorNames: String {
     authors.map(\.name).joined(separator: ", ")
@@ -27,7 +28,8 @@ public final class LocalBook {
     coverURL: URL? = nil,
     duration: TimeInterval,
     tracks: [Track] = [],
-    chapters: [Chapter] = []
+    chapters: [Chapter] = [],
+    publishedYear: String? = nil
   ) {
     self.bookID = bookID
     self.title = title
@@ -38,6 +40,7 @@ public final class LocalBook {
     self.duration = duration
     self.tracks = tracks
     self.chapters = chapters
+    self.publishedYear = publishedYear
   }
 }
 
@@ -69,6 +72,7 @@ extension LocalBook {
       existingItem.coverURL = self.coverURL
       existingItem.duration = self.duration
       existingItem.chapters = self.chapters
+      existingItem.publishedYear = self.publishedYear
 
       if self.tracks.isEmpty {
         existingItem.tracks = []
@@ -159,7 +163,8 @@ extension LocalBook {
       coverURL: book.coverURL,
       duration: book.duration,
       tracks: book.tracks?.map(Track.init) ?? [],
-      chapters: book.chapters?.map(Chapter.init) ?? []
+      chapters: book.chapters?.map(Chapter.init) ?? [],
+      publishedYear: book.publishedYear
     )
   }
 }

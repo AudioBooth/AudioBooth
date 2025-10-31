@@ -14,12 +14,17 @@ final class BookCardModel: BookCard.Model {
 
     self.item = .local(item)
 
+    let narrator = item.narrators.isEmpty ? nil : item.narrators.joined(separator: ", ")
+
     super.init(
       id: id,
       title: item.title,
       details: item.authorNames,
       coverURL: item.coverURL,
-      sequence: item.series.first?.sequence
+      sequence: item.series.first?.sequence,
+      author: item.authorNames,
+      narrator: narrator,
+      publishedYear: item.publishedYear
     )
   }
 
@@ -60,7 +65,10 @@ final class BookCardModel: BookCard.Model {
       title: item.title,
       details: details,
       coverURL: item.coverURL,
-      sequence: item.series?.first?.sequence
+      sequence: item.series?.first?.sequence,
+      author: item.authorName,
+      narrator: item.media.metadata.narratorName,
+      publishedYear: item.publishedYear
     )
   }
 

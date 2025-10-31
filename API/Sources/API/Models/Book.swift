@@ -73,6 +73,7 @@ extension Book {
       public let publishedYear: String?
       public let publishedDate: String?
       public let authorName: String?
+      public let narratorName: String?
       public let publisher: String?
       public let description: String?
       public let descriptionPlain: String?
@@ -92,6 +93,7 @@ extension Book {
         publishedYear = try container.decodeIfPresent(String.self, forKey: .publishedYear)
         publishedDate = try container.decodeIfPresent(String.self, forKey: .publishedDate)
         authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
+        narratorName = try container.decodeIfPresent(String.self, forKey: .narratorName)
         publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         descriptionPlain = try container.decodeIfPresent(String.self, forKey: .descriptionPlain)
