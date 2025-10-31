@@ -56,6 +56,7 @@ struct HomePage: View {
           }
         }
       }
+      .padding(.bottom)
     }
     .navigationTitle(model.title)
     .toolbar {

@@ -9,12 +9,14 @@ final class OIDCAuthenticationManager: NSObject {
   private var pkce: PKCE
   private var session: ASWebAuthenticationSession?
   private var capturedCookies: [HTTPCookie] = []
+  private var customHeaders: [String: String]
 
   weak var delegate: OIDCAuthenticationDelegate?
 
-  init(serverURL: String) {
+  init(serverURL: String, customHeaders: [String: String] = [:]) {
     self.serverURL = serverURL
     self.pkce = PKCE()
+    self.customHeaders = customHeaders
     super.init()
   }
 
@@ -91,7 +93,8 @@ final class OIDCAuthenticationManager: NSObject {
           code: authCode,
           verifier: pkce.verifier,
           state: state,
-          cookies: capturedCookies
+          cookies: capturedCookies,
+          customHeaders: customHeaders
         )
 
         delegate?.oidcAuthenticationDidSucceed()

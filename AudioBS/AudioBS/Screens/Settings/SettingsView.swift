@@ -42,6 +42,8 @@ struct SettingsView: View {
             .onSubmit {
               focusedField = .username
             }
+
+          customHeadersSection
         }
 
         if !model.isAuthenticated {
@@ -70,6 +72,8 @@ struct SettingsView: View {
           if let model = model.mediaProgressList {
             MediaProgressListView(model: model)
           }
+        case "customHeaders":
+          CustomHeadersView(model: model.customHeaders)
         default:
           EmptyView()
         }
@@ -79,6 +83,11 @@ struct SettingsView: View {
           Button("Close") {
             dismiss()
           }
+        }
+      }
+      .onChange(of: model.library.selected?.id) { oldValue, newValue in
+        if oldValue == nil, newValue != nil {
+          dismiss()
         }
       }
       .alert("Scan Local Network", isPresented: $model.showDiscoveryPortAlert) {
@@ -129,6 +138,23 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             }
+          }
+        }
+      }
+    }
+  }
+
+  @ViewBuilder
+  var customHeadersSection: some View {
+    if !model.isAuthenticated {
+      NavigationLink(value: "customHeaders") {
+        HStack {
+          Image(systemName: "list.bullet.rectangle")
+          Text("Custom Headers")
+          Spacer()
+          if model.customHeaders.headersCount > 0 {
+            Text("\(model.customHeaders.headersCount)")
+              .foregroundColor(.secondary)
           }
         }
       }
@@ -291,6 +317,7 @@ extension SettingsView {
     var serverScheme: ServerScheme
     var username: String
     var password: String
+    var customHeaders: CustomHeadersView.Model
     var discoveryPort: String
     var authenticationMethod: AuthenticationMethod
     var library: LibrariesView.Model
@@ -332,6 +359,7 @@ extension SettingsView {
       serverScheme: ServerScheme = .https,
       username: String = "",
       password: String = "",
+      customHeaders: CustomHeadersView.Model = .mock,
       discoveryPort: String = "13378",
       authenticationMethod: AuthenticationMethod = .usernamePassword,
       library: LibrariesView.Model,
@@ -344,6 +372,7 @@ extension SettingsView {
       self.serverScheme = serverScheme
       self.username = username
       self.password = password
+      self.customHeaders = customHeaders
       self.discoveryPort = discoveryPort
       self.authenticationMethod = authenticationMethod
       self.isAuthenticated = isAuthenticated

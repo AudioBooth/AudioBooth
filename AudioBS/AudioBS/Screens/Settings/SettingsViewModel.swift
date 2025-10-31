@@ -13,12 +13,14 @@ final class SettingsViewModel: SettingsView.Model {
   init() {
     let isAuthenticated = audiobookshelf.isAuthenticated
     let serverURL = audiobookshelf.serverURL?.absoluteString ?? ""
+    let existingHeaders = audiobookshelf.authentication.connection?.customHeaders ?? [:]
 
     super.init(
       isAuthenticated: isAuthenticated,
       serverURL: serverURL,
       username: "",
       password: "",
+      customHeaders: CustomHeadersViewModel(initialHeaders: existingHeaders),
       library: LibrariesViewModel(),
       tipJar: TipJarViewModel(),
       mediaProgressList: MediaProgressListViewModel()
@@ -36,13 +38,15 @@ final class SettingsViewModel: SettingsView.Model {
 
     isLoading = true
     let normalizedURL = buildFullServerURL()
+    let headers = (customHeaders as? CustomHeadersViewModel)?.getHeadersDictionary() ?? [:]
 
     Task {
       do {
         try await audiobookshelf.authentication.login(
           serverURL: normalizedURL,
           username: username.trimmingCharacters(in: .whitespacesAndNewlines),
-          password: password
+          password: password,
+          customHeaders: headers
         )
         password = ""
         isAuthenticated = true
@@ -63,10 +67,11 @@ final class SettingsViewModel: SettingsView.Model {
     }
 
     let normalizedURL = buildFullServerURL()
+    let headers = (customHeaders as? CustomHeadersViewModel)?.getHeadersDictionary() ?? [:]
 
     isLoading = true
 
-    let authManager = OIDCAuthenticationManager(serverURL: normalizedURL)
+    let authManager = OIDCAuthenticationManager(serverURL: normalizedURL, customHeaders: headers)
     authManager.delegate = self
     self.oidcAuthManager = authManager
 

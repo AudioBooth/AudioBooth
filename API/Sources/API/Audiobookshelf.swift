@@ -44,10 +44,12 @@ public final class Audiobookshelf: @unchecked Sendable {
     }
 
     networkService = NetworkService(baseURL: connection.serverURL) { [weak self] in
-      guard let token = self?.authentication.connection?.token else {
+      guard let connection = self?.authentication.connection else {
         return [:]
       }
-      return ["Authorization": "Bearer \(token)"]
+      var headers = ["Authorization": "Bearer \(connection.token)"]
+      headers.merge(connection.customHeaders) { _, new in new }
+      return headers
     }
   }
 

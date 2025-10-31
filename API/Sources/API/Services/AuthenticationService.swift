@@ -16,10 +16,20 @@ public final class AuthenticationService {
   public struct Connection: Codable {
     public let serverURL: URL
     public let token: String
+    public let customHeaders: [String: String]
 
-    public init(serverURL: URL, token: String) {
+    public init(serverURL: URL, token: String, customHeaders: [String: String] = [:]) {
       self.serverURL = serverURL
       self.token = token
+      self.customHeaders = customHeaders
+    }
+
+    public init(from decoder: Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      serverURL = try container.decode(URL.self, forKey: .serverURL)
+      token = try container.decode(String.self, forKey: .token)
+      customHeaders =
+        try container.decodeIfPresent([String: String].self, forKey: .customHeaders) ?? [:]
     }
   }
 
@@ -62,7 +72,9 @@ public final class AuthenticationService {
     }
   }
 
-  public func login(serverURL: String, username: String, password: String) async throws {
+  public func login(
+    serverURL: String, username: String, password: String, customHeaders: [String: String] = [:]
+  ) async throws {
     guard let baseURL = URL(string: serverURL) else {
       throw Audiobookshelf.AudiobookshelfError.invalidURL
     }
@@ -92,7 +104,7 @@ public final class AuthenticationService {
       let response = try await loginService.send(request)
       let token = response.value.user.token
 
-      self.connection = Connection(serverURL: baseURL, token: token)
+      self.connection = Connection(serverURL: baseURL, token: token, customHeaders: customHeaders)
       onAuthenticationChanged((baseURL, token))
 
     } catch {
@@ -102,7 +114,8 @@ public final class AuthenticationService {
   }
 
   public func loginWithOIDC(
-    serverURL: String, code: String, verifier: String, state: String?, cookies: [HTTPCookie]
+    serverURL: String, code: String, verifier: String, state: String?, cookies: [HTTPCookie],
+    customHeaders: [String: String] = [:]
   ) async throws {
     guard let baseURL = URL(string: serverURL) else {
       throw Audiobookshelf.AudiobookshelfError.invalidURL
@@ -141,7 +154,7 @@ public final class AuthenticationService {
       let response = try await loginService.send(request)
       let token = response.value.user.token
 
-      self.connection = Connection(serverURL: baseURL, token: token)
+      self.connection = Connection(serverURL: baseURL, token: token, customHeaders: customHeaders)
       onAuthenticationChanged((baseURL, token))
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
