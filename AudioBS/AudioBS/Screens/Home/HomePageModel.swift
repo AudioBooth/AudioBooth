@@ -58,21 +58,39 @@ extension HomePageModel {
   }
 
   private func refreshContinueListening() {
-    var books: [ContinueListeningRowModel] = []
+    let existingModels: [String: ContinueListeningCardModel]
+    if case .continueListening(let items) = continueListening?.items {
+      existingModels = Dictionary(
+        uniqueKeysWithValues: items.compactMap { item in
+          guard let cardModel = item as? ContinueListeningCardModel else { return nil }
+          return (cardModel.id, cardModel)
+        }
+      )
+    } else {
+      existingModels = [:]
+    }
+
+    var models: [ContinueListeningCardModel] = []
 
     for book in self.books {
-      books.append(
-        ContinueListeningRowModel(
+      let model: ContinueListeningCardModel
+
+      if let existingModel = existingModels[book.id] {
+        model = existingModel
+      } else {
+        model = ContinueListeningCardModel(
           book: book,
           onRemoved: { [weak self] in
             guard let self else { return }
             self.books = self.books.filter({ $0.id != book.id })
           }
         )
-      )
+      }
+
+      models.append(model)
     }
 
-    let sorted = books.sorted(by: >)
+    let sorted = models.sorted(by: >)
 
     if !sorted.isEmpty {
       self.continueListening = Section(

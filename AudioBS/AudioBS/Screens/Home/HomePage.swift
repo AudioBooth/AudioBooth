@@ -156,12 +156,14 @@ struct HomePage: View {
 
       switch section.items {
       case .continueListening(let items):
-        VStack(spacing: 8) {
-          ForEach(items) { item in
-            ContinueListeningRow(model: item)
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(spacing: 16) {
+            ForEach(items) { item in
+              ContinueListeningCard(model: item)
+            }
           }
+          .padding(.horizontal)
         }
-        .padding(.horizontal)
 
       case .books(let items):
         ScrollView(.horizontal, showsIndicators: false) {
@@ -218,7 +220,7 @@ extension HomePage {
       let title: String
 
       enum Items {
-        case continueListening([ContinueListeningRow.Model])
+        case continueListening([ContinueListeningCard.Model])
         case books([BookCard.Model])
         case series([SeriesCard.Model])
         case authors([AuthorCard.Model])
@@ -259,15 +261,15 @@ extension HomePage {
 
 extension HomePage.Model {
   static var mock: HomePage.Model {
-    let books: [ContinueListeningRow.Model] = [
-      ContinueListeningRow.Model(
+    let books: [ContinueListeningCard.Model] = [
+      ContinueListeningCard.Model(
         title: "The Lord of the Rings",
         author: "J.R.R. Tolkien",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
         progress: 0.45,
         lastPlayedAt: Date().addingTimeInterval(-3600)
       ),
-      ContinueListeningRow.Model(
+      ContinueListeningCard.Model(
         title: "Dune",
         author: "Frank Herbert",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),

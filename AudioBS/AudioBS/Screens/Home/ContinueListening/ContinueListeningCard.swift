@@ -2,52 +2,52 @@ import API
 import Combine
 import SwiftUI
 
-struct ContinueListeningRow: View {
+struct ContinueListeningCard: View {
   @ObservedObject var model: Model
 
   var body: some View {
     NavigationLink(value: NavigationDestination.book(id: model.id)) {
-      HStack(spacing: 8) {
+      VStack(alignment: .leading, spacing: 8) {
         cover
 
-        VStack(alignment: .leading, spacing: 16) {
-          HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-              title
-              author
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 4) {
+          title
+          author
+        }
 
-            Menu(
-              content: { contextMenu },
-              label: {
-                Image(systemName: "ellipsis")
-                  .font(.headline)
-                  .foregroundColor(.primary)
-                  .padding(.vertical, 10)
-                  .padding(.leading, 4)
-                  .contentShape(Rectangle())
-              }
-            )
+        VStack(alignment: .leading, spacing: 4) {
+          if let progress = model.progress {
+            HStack(alignment: .top) {
+              Text("Progress:")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+              Spacer()
+
+              Text(progress.formatted(.percent.precision(.fractionLength(0))))
+                .font(.caption)
+                .foregroundColor(.primary)
+            }
           }
 
           if let timeRemaining = model.timeRemaining {
-            Text("\(timeRemaining)")
-              .font(.caption)
-              .foregroundColor(.secondary)
+            HStack(alignment: .top) {
+              Text("Time remaining:")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+              Spacer()
+
+              Text(timeRemaining)
+                .font(.caption)
+                .foregroundColor(.primary)
+            }
           }
 
-          progressInfo
+          lastPlayedInfo
         }
       }
-      .padding(.horizontal, 12)
-      .padding(.vertical, 8)
-      .background(Color(.systemGray6))
-      .clipShape(RoundedRectangle(cornerRadius: 8))
-      .overlay(
-        RoundedRectangle(cornerRadius: 8)
-          .stroke(.gray.opacity(0.3), lineWidth: 1)
-      )
+      .frame(width: 220)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
@@ -57,11 +57,15 @@ struct ContinueListeningRow: View {
 
   var cover: some View {
     CoverImage(url: model.coverURL)
-      .frame(width: 100, height: 100)
+      .aspectRatio(1, contentMode: .fit)
       .overlay(alignment: .bottom) {
         progressBar
       }
-      .clipShape(RoundedRectangle(cornerRadius: 8))
+      .clipShape(RoundedRectangle(cornerRadius: 12))
+      .overlay(
+        RoundedRectangle(cornerRadius: 12)
+          .stroke(.gray.opacity(0.3), lineWidth: 1)
+      )
   }
 
   var title: some View {
@@ -70,6 +74,7 @@ struct ContinueListeningRow: View {
       .lineLimit(2)
       .foregroundColor(.primary)
       .multilineTextAlignment(.leading)
+      .frame(maxWidth: .infinity, alignment: .leading)
   }
 
   @ViewBuilder
@@ -79,20 +84,20 @@ struct ContinueListeningRow: View {
         .font(.subheadline)
         .foregroundColor(.secondary)
         .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 
-  var progressInfo: some View {
-    HStack {
-      if let progress = model.progress {
-        Text(progress.formatted(.percent.precision(.fractionLength(0))))
+  @ViewBuilder
+  var lastPlayedInfo: some View {
+    if let lastPlayedAt = model.lastPlayedAt {
+      HStack(alignment: .top) {
+        Text("Last played:")
           .font(.caption)
           .foregroundColor(.secondary)
-      }
 
-      Spacer()
+        Spacer()
 
-      if let lastPlayedAt = model.lastPlayedAt {
         if lastPlayedAt == .distantFuture {
           Text("Playing now")
             .font(.caption)
@@ -100,7 +105,7 @@ struct ContinueListeningRow: View {
         } else {
           Text(lastPlayedAt, style: .relative)
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(.primary)
             .monospacedDigit()
         }
       }
@@ -124,15 +129,15 @@ struct ContinueListeningRow: View {
 
         Rectangle()
           .fill(progressColor)
-          .frame(width: geometry.size.width * progress, height: 4)
+          .frame(width: geometry.size.width * progress, height: 8)
       }
-      .frame(height: 4)
+      .frame(height: 8)
     }
   }
 
 }
 
-extension ContinueListeningRow {
+extension ContinueListeningCard {
   @Observable
   class Model: Comparable, Identifiable, ObservableObject {
     let id: String
@@ -164,11 +169,11 @@ extension ContinueListeningRow {
       self.timeRemaining = timeRemaining
     }
 
-    static func == (lhs: ContinueListeningRow.Model, rhs: ContinueListeningRow.Model) -> Bool {
+    static func == (lhs: ContinueListeningCard.Model, rhs: ContinueListeningCard.Model) -> Bool {
       lhs.id == rhs.id
     }
 
-    static func < (lhs: ContinueListeningRow.Model, rhs: ContinueListeningRow.Model) -> Bool {
+    static func < (lhs: ContinueListeningCard.Model, rhs: ContinueListeningCard.Model) -> Bool {
       switch (lhs.lastPlayedAt, rhs.lastPlayedAt) {
       case (.none, .none): false
       case (.some, .none): false
@@ -179,8 +184,8 @@ extension ContinueListeningRow {
   }
 }
 
-extension ContinueListeningRow.Model {
-  static let mock = ContinueListeningRow.Model(
+extension ContinueListeningCard.Model {
+  static let mock = ContinueListeningCard.Model(
     title: "The Lord of the Rings",
     author: "J.R.R. Tolkien",
     coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
@@ -190,9 +195,22 @@ extension ContinueListeningRow.Model {
   )
 }
 
-#Preview("ContinueListeningRow") {
-  ScrollView {
-    ContinueListeningRow(model: .mock)
-      .padding()
+#Preview("ContinueListeningCard") {
+  NavigationStack {
+    ScrollView(.horizontal) {
+      LazyHStack(spacing: 16) {
+        ContinueListeningCard(model: .mock)
+        ContinueListeningCard(
+          model: ContinueListeningCard.Model(
+            title: "Dune",
+            author: "Frank Herbert",
+            coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+            progress: 0.75,
+            lastPlayedAt: Date().addingTimeInterval(-7200),
+            timeRemaining: "2hr 15min remaining"
+          ))
+      }
+      .padding(.horizontal)
+    }
   }
 }

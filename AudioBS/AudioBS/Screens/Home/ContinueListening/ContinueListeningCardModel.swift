@@ -1,10 +1,12 @@
 import API
+import Combine
 import Foundation
 import Models
 
-final class ContinueListeningRowModel: ContinueListeningRow.Model {
+final class ContinueListeningCardModel: ContinueListeningCard.Model {
   private let book: Book
   private var onRemoved: (() -> Void)?
+  private var cancellables = Set<AnyCancellable>()
 
   init(book: Book, onRemoved: @escaping () -> Void) {
     self.book = book
@@ -20,10 +22,45 @@ final class ContinueListeningRowModel: ContinueListeningRow.Model {
     )
 
     self.onRemoved = onRemoved
+    observePlayerChanges()
   }
 
   override func onAppear() {
     fetchProgressData()
+  }
+
+  private func observePlayerChanges() {
+    PlayerManager.shared.$current
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] current in
+        guard let self else { return }
+        self.observeIsPlaying(current)
+      }
+      .store(in: &cancellables)
+  }
+
+  private func observeIsPlaying(_ current: BookPlayer.Model?) {
+    guard let current, current.id == id else { return }
+
+    withObservationTracking {
+      _ = current.isPlaying
+    } onChange: { [weak self] in
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        self.updateLastPlayedStatus()
+        self.observeIsPlaying(PlayerManager.shared.current)
+      }
+    }
+  }
+
+  private func updateLastPlayedStatus() {
+    let current = PlayerManager.shared.current
+
+    if let current, current.id == id, current.isPlaying {
+      lastPlayedAt = .distantFuture
+    } else if let mediaProgress = try? MediaProgress.fetch(bookID: id) {
+      lastPlayedAt = mediaProgress.lastPlayedAt
+    }
   }
 
   private func fetchProgressData() {
