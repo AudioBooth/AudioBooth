@@ -195,9 +195,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
           PlayerManager.shared.current?.onTogglePlaybackTapped()
         }
       case "skipForward":
-        PlayerManager.shared.current?.onSkipForwardTapped()
+        PlayerManager.shared.current?.onSkipForwardTapped(seconds: 30)
       case "skipBackward":
-        PlayerManager.shared.current?.onSkipBackwardTapped()
+        PlayerManager.shared.current?.onSkipBackwardTapped(seconds: 30)
       default:
         AppLogger.watchConnectivity.warning("Unknown command from watch: \(command)")
       }

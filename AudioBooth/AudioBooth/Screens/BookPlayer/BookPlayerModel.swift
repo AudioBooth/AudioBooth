@@ -112,17 +112,17 @@ final class BookPlayerModel: BookPlayer.Model {
     }
   }
 
-  override func onSkipForwardTapped() {
+  override func onSkipForwardTapped(seconds: Double) {
     guard let player = player else { return }
     let currentTime = player.currentTime()
-    let newTime = CMTimeAdd(currentTime, CMTime(seconds: 30, preferredTimescale: 1))
+    let newTime = CMTimeAdd(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
     player.seek(to: newTime)
   }
 
-  override func onSkipBackwardTapped() {
+  override func onSkipBackwardTapped(seconds: Double) {
     guard let player = player else { return }
     let currentTime = player.currentTime()
-    let newTime = CMTimeSubtract(currentTime, CMTime(seconds: 30, preferredTimescale: 1))
+    let newTime = CMTimeSubtract(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
     let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
     player.seek(to: CMTimeMaximum(newTime, zeroTime))
   }
@@ -406,12 +406,12 @@ extension BookPlayerModel {
     }
 
     commandCenter.skipForwardCommand.addTarget { [weak self] _ in
-      self?.onSkipForwardTapped()
+      self?.onSkipForwardTapped(seconds: 30)
       return .success
     }
 
     commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
-      self?.onSkipBackwardTapped()
+      self?.onSkipBackwardTapped(seconds: 30)
       return .success
     }
 

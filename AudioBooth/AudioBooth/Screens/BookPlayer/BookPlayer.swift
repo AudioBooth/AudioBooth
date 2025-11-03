@@ -190,7 +190,7 @@ struct BookPlayer: View {
         .disabled(model.isLoading || isFirstChapter)
       }
 
-      Button(action: model.onSkipBackwardTapped) {
+      Button(action: { model.onSkipBackwardTapped(seconds: 30) }) {
         Image(systemName: "30.arrow.trianglehead.counterclockwise")
           .font(.system(size: 40, weight: .thin))
           .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
@@ -218,7 +218,7 @@ struct BookPlayer: View {
       }
       .disabled(model.isLoading)
 
-      Button(action: model.onSkipForwardTapped) {
+      Button(action: { model.onSkipForwardTapped(seconds: 30) }) {
         Image(systemName: "30.arrow.trianglehead.clockwise")
           .font(.system(size: 40, weight: .thin))
           .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
@@ -372,8 +372,8 @@ extension BookPlayer {
     }
 
     func onTogglePlaybackTapped() {}
-    func onSkipForwardTapped() {}
-    func onSkipBackwardTapped() {}
+    func onSkipForwardTapped(seconds: Double) {}
+    func onSkipBackwardTapped(seconds: Double) {}
     func onProgressChanged(to progress: Double) {}
     func onDownloadTapped() {}
   }
