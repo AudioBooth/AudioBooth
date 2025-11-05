@@ -1,7 +1,8 @@
+import Combine
 import SwiftUI
 
 struct ChapterPickerSheet: View {
-  @Binding var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     NavigationStack {
@@ -74,7 +75,8 @@ struct ChapterPickerSheet: View {
 }
 
 extension ChapterPickerSheet {
-  @Observable class Model {
+  @Observable
+  class Model: ObservableObject {
     struct Chapter: Identifiable, Equatable {
       let id: Int
       let title: String
@@ -135,5 +137,5 @@ extension ChapterPickerSheet.Model {
 }
 
 #Preview {
-  ChapterPickerSheet(model: .constant(.mock))
+  ChapterPickerSheet(model: .mock)
 }

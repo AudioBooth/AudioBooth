@@ -48,7 +48,7 @@ struct BookPlayer: View {
         set: { newValue in model.chapters?.isPresented = newValue }
       )
     ) {
-      if let chapters = Binding($model.chapters) {
+      if let chapters = model.chapters {
         ChapterPickerSheet(model: chapters)
       }
     }
