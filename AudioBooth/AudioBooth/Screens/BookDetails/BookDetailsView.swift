@@ -7,6 +7,7 @@ import SwiftUI
 struct BookDetailsView: View {
   @ObservedObject var model: Model
   @Environment(\.verticalSizeClass) private var verticalSizeClass
+  @State private var showPlaylistSelector = false
 
   private enum CoordinateSpaces {
     case scrollView
@@ -42,6 +43,10 @@ struct BookDetailsView: View {
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         Menu {
+          Button(action: { showPlaylistSelector = true }) {
+            Label("Your Playlists", systemImage: "music.note.list")
+          }
+
           Button(action: model.onDownloadTapped) {
             Label(downloadButtonText, systemImage: downloadButtonIcon)
           }
@@ -50,10 +55,14 @@ struct BookDetailsView: View {
             Label(markFinishedText, systemImage: markFinishedIcon)
           }
         } label: {
-          Image(systemName: "ellipsis.circle")
-            .imageScale(.large)
+          Image(systemName: "ellipsis")
         }
       }
+    }
+    .sheet(isPresented: $showPlaylistSelector) {
+      PlaylistSelectorSheet(
+        model: PlaylistSelectorSheetModel(bookID: model.bookID)
+      )
     }
     .onAppear(perform: model.onAppear)
   }

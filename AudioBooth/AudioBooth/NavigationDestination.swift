@@ -8,5 +8,6 @@ enum NavigationDestination: Hashable {
   case narrator(name: String)
   case genre(name: String)
   case tag(name: String)
+  case playlist(id: String)
   case offline
 }

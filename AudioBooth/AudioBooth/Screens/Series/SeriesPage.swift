@@ -5,17 +5,7 @@ struct SeriesPage: View {
   @StateObject var model: Model
 
   var body: some View {
-    NavigationStack {
-      content
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .series, .author, .narrator, .genre, .tag, .offline:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          }
-        }
-    }
+    content
   }
 
   var content: some View {
@@ -37,7 +27,6 @@ struct SeriesPage: View {
         }
       }
     }
-    .navigationTitle("Series")
     .refreshable {
       await model.refresh()
     }
@@ -49,19 +38,17 @@ struct SeriesPage: View {
 
   var seriesContent: some View {
     ScrollView {
-      LazyVStack {
-        SeriesView(series: model.series)
-          .padding(.horizontal)
+      SeriesView(series: model.series)
+        .padding(.horizontal)
 
-        if let seriesModel = model as? SeriesPageModel {
-          Color.clear
-            .frame(height: 1)
-            .onAppear {
-              Task {
-                await seriesModel.loadNextPageIfNeeded()
-              }
+      if let seriesModel = model as? SeriesPageModel {
+        Color.clear
+          .frame(height: 1)
+          .onAppear {
+            Task {
+              await seriesModel.loadNextPageIfNeeded()
             }
-        }
+          }
       }
     }
   }

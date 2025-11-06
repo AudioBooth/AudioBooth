@@ -78,6 +78,8 @@ final class LibraryPageModel: LibraryPage.Model {
       )
     case .book:
       fatalError("LibraryPageModel cannot be initialized with a book destination")
+    case .playlist:
+      fatalError("LibraryPageModel cannot be initialized with a playlist destination")
     }
 
     self.search = SearchViewModel()

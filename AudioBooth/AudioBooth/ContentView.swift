@@ -12,7 +12,7 @@ struct ContentView: View {
   @State private var selectedTab: TabSelection = .home
 
   enum TabSelection {
-    case home, library, series, authors, search
+    case home, library, collections, authors, search
   }
 
   private var hasSelectedLibrary: Bool {
@@ -57,8 +57,8 @@ struct ContentView: View {
           LibraryRootPage()
         }
 
-        Tab("Series", systemImage: "square.stack.3d.up.fill", value: .series) {
-          SeriesPage(model: SeriesPageModel())
+        Tab("Collections", systemImage: "square.stack.3d.up.fill", value: .collections) {
+          CollectionsRootPage()
         }
 
         Tab("Authors", systemImage: "person.crop.rectangle.stack", value: .authors) {
@@ -110,11 +110,11 @@ struct ContentView: View {
             Text("Library")
           }
 
-        SeriesPage(model: SeriesPageModel())
+        CollectionsRootPage()
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
             Image(systemName: "square.stack.3d.up.fill")
-            Text("Series")
+            Text("Collections")
           }
 
         AuthorsPage(model: AuthorsPageModel())
