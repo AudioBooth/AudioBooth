@@ -59,13 +59,14 @@ public final class Track {
     guard let relativePath else { return nil }
 
     guard
-      let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
     else {
       return nil
     }
 
-    let fileURL = documentsURL.appendingPathComponent(relativePath.relativePath)
+    let fileURL = appGroupURL.appendingPathComponent(relativePath.relativePath)
     guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
     return fileURL
   }

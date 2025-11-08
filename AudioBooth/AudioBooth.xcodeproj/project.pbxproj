@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		3F1E6AA12EB9B62E00CD9090 /* RichText in Frameworks */ = {isa = PBXBuildFile; productRef = 3F1E6AA02EB9B62E00CD9090 /* RichText */; };
+		3F2D3BF52EBE711800D49AFF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F2D3BF42EBE711800D49AFF /* WidgetKit.framework */; };
+		3F2D3BF72EBE711800D49AFF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F2D3BF62EBE711800D49AFF /* SwiftUI.framework */; };
+		3F2D3C042EBE711A00D49AFF /* AudioBoothWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3F2D3BF32EBE711800D49AFF /* AudioBoothWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3F2D3C132EBE730D00D49AFF /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = 3F2D3C122EBE730D00D49AFF /* Models */; };
+		3F2D3C1C2EBFC7A100D49AFF /* PlayerIntents in Frameworks */ = {isa = PBXBuildFile; productRef = 3F2D3C1B2EBFC7A100D49AFF /* PlayerIntents */; };
+		3F2D3C202EBFC9D700D49AFF /* PlayerIntents in Frameworks */ = {isa = PBXBuildFile; productRef = 3F2D3C1F2EBFC9D700D49AFF /* PlayerIntents */; };
 		3F3AF2692E91DA350052C80D /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 3F3AF2682E91DA350052C80D /* RevenueCat */; };
 		3F3AF26B2E91DA350052C80D /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3F3AF26A2E91DA350052C80D /* RevenueCatUI */; };
 		3F3AF26D2E91DA4E0052C80D /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F3AF26C2E91DA4E0052C80D /* StoreKit.framework */; };
@@ -19,6 +25,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		3F2D3C022EBE711A00D49AFF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3FC8DC662E638F5E00A4B080 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F2D3BF22EBE711800D49AFF;
+			remoteInfo = AudioBoothWidgetExtension;
+		};
 		3FBEA06D2E8CD49400976BA0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3FC8DC662E638F5E00A4B080 /* Project object */;
@@ -29,6 +42,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		3F2D3C092EBE711A00D49AFF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3F2D3C042EBE711A00D49AFF /* AudioBoothWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FBEA0702E8CD49400976BA0 /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -43,6 +67,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3F2D3BF32EBE711800D49AFF /* AudioBoothWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AudioBoothWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F2D3BF42EBE711800D49AFF /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		3F2D3BF62EBE711800D49AFF /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		3F2D3C1A2EBFC79200D49AFF /* PlayerIntents */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = PlayerIntents; path = ../PlayerIntents; sourceTree = SOURCE_ROOT; };
 		3F3AF26C2E91DA4E0052C80D /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		3F50E5E22E8DD9700087A5B6 /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Models; path = ../Models; sourceTree = "<group>"; };
 		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = API; path = ../API; sourceTree = SOURCE_ROOT; };
@@ -58,6 +86,13 @@
 			);
 			target = 3FC8DC6D2E638F5E00A4B080 /* AudioBooth */;
 		};
+		3F2D3C082EBE711A00D49AFF /* Exceptions for "AudioBoothWidget" folder in "AudioBoothWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3F2D3BF22EBE711800D49AFF /* AudioBoothWidgetExtension */;
+		};
 		3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBooth Watch App" folder in "AudioBooth Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -68,6 +103,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F2D3C082EBE711A00D49AFF /* Exceptions for "AudioBoothWidget" folder in "AudioBoothWidgetExtension" target */,
+			);
+			path = AudioBoothWidget;
+			sourceTree = "<group>";
+		};
 		3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -87,6 +130,17 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3F2D3BF02EBE711800D49AFF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F2D3C132EBE730D00D49AFF /* Models in Frameworks */,
+				3F2D3BF72EBE711800D49AFF /* SwiftUI.framework in Frameworks */,
+				3F2D3BF52EBE711800D49AFF /* WidgetKit.framework in Frameworks */,
+				3F2D3C202EBFC9D700D49AFF /* PlayerIntents in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FBEA0622E8CD49300976BA0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -106,6 +160,7 @@
 				3F3AF26D2E91DA4E0052C80D /* StoreKit.framework in Frameworks */,
 				3F6E94DD2E6395A20039F187 /* API in Frameworks */,
 				3F3AF2692E91DA350052C80D /* RevenueCat in Frameworks */,
+				3F2D3C1C2EBFC7A100D49AFF /* PlayerIntents in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +171,8 @@
 			isa = PBXGroup;
 			children = (
 				3F3AF26C2E91DA4E0052C80D /* StoreKit.framework */,
+				3F2D3BF42EBE711800D49AFF /* WidgetKit.framework */,
+				3F2D3BF62EBE711800D49AFF /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -126,6 +183,7 @@
 				3FC8DC702E638F5E00A4B080 /* AudioBooth */,
 				3FC8DC822E63904C00A4B080 /* Packages */,
 				3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */,
+				3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */,
 				3F6E94DB2E6395A20039F187 /* Frameworks */,
 				3FC8DC6F2E638F5E00A4B080 /* Products */,
 			);
@@ -136,6 +194,7 @@
 			children = (
 				3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */,
 				3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */,
+				3F2D3BF32EBE711800D49AFF /* AudioBoothWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -145,6 +204,7 @@
 			children = (
 				3F75FB462E7139F700F77C1B /* API */,
 				3F50E5E22E8DD9700087A5B6 /* Models */,
+				3F2D3C1A2EBFC79200D49AFF /* PlayerIntents */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -152,6 +212,30 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3F2D3BF22EBE711800D49AFF /* AudioBoothWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F2D3C052EBE711A00D49AFF /* Build configuration list for PBXNativeTarget "AudioBoothWidgetExtension" */;
+			buildPhases = (
+				3F2D3BEF2EBE711800D49AFF /* Sources */,
+				3F2D3BF02EBE711800D49AFF /* Frameworks */,
+				3F2D3BF12EBE711800D49AFF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */,
+			);
+			name = AudioBoothWidgetExtension;
+			packageProductDependencies = (
+				3F2D3C122EBE730D00D49AFF /* Models */,
+				3F2D3C1F2EBFC9D700D49AFF /* PlayerIntents */,
+			);
+			productName = AudioBoothWidgetExtension;
+			productReference = 3F2D3BF32EBE711800D49AFF /* AudioBoothWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBooth Watch App" */;
@@ -184,12 +268,14 @@
 				3FC8DC6B2E638F5E00A4B080 /* Frameworks */,
 				3FC8DC6C2E638F5E00A4B080 /* Resources */,
 				3FBEA0702E8CD49400976BA0 /* Embed Watch Content */,
+				3F2D3C092EBE711A00D49AFF /* Embed Foundation Extensions */,
 				3FB0B59A2E95683B0094FC83 /* Set Build Number */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */,
+				3F2D3C032EBE711A00D49AFF /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3FC8DC702E638F5E00A4B080 /* AudioBooth */,
@@ -201,6 +287,7 @@
 				3F3AF2682E91DA350052C80D /* RevenueCat */,
 				3F3AF26A2E91DA350052C80D /* RevenueCatUI */,
 				3F1E6AA02EB9B62E00CD9090 /* RichText */,
+				3F2D3C1B2EBFC7A100D49AFF /* PlayerIntents */,
 			);
 			productName = AudiobookshelfDemo;
 			productReference = 3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */;
@@ -213,9 +300,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2610;
+				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					3F2D3BF22EBE711800D49AFF = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
 					3FBEA0642E8CD49300976BA0 = {
 						CreatedOnToolsVersion = 26.1;
 					};
@@ -244,11 +334,19 @@
 			targets = (
 				3FC8DC6D2E638F5E00A4B080 /* AudioBooth */,
 				3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */,
+				3F2D3BF22EBE711800D49AFF /* AudioBoothWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3F2D3BF12EBE711800D49AFF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FBEA0632E8CD49300976BA0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -283,11 +381,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" = \"Release\" ]; then\n    TIMESTAMP=$(date -u +%s)\n    \n    IOS_PLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n    /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $TIMESTAMP\" \"$IOS_PLIST\"\n    echo \"Updated iOS build number to: $TIMESTAMP\"\n    \n    WATCH_PLIST=\"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/Watch/${PRODUCT_NAME} Watch App.app/Info.plist\"\n    \n    if [ -f \"$WATCH_PLIST\" ]; then\n        /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $TIMESTAMP\" \"$WATCH_PLIST\"\n        echo \"Updated watchOS build number to: $TIMESTAMP\"\n    else\n        echo \"Watch app not found at: $WATCH_PLIST\"\n    fi\n    \n    echo \"Both apps updated to build: $TIMESTAMP\"\nfi\n";
+			shellScript = "if [ \"$CONFIGURATION\" = \"Release\" ]; then\n    TIMESTAMP=$(date -u +%s)\n    \n    IOS_PLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n    /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $TIMESTAMP\" \"$IOS_PLIST\"\n    echo \"Updated iOS build number to: $TIMESTAMP\"\n    \n    WATCH_PLIST=\"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/Watch/${PRODUCT_NAME} Watch App.app/Info.plist\"\n\n    if [ -f \"$WATCH_PLIST\" ]; then\n        /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $TIMESTAMP\" \"$WATCH_PLIST\"\n        echo \"Updated watchOS build number to: $TIMESTAMP\"\n    else\n        echo \"Watch app not found at: $WATCH_PLIST\"\n    fi\n\n    WIDGET_PLIST=\"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/PlugIns/${PRODUCT_NAME}WidgetExtension.appex/Info.plist\"\n\n    if [ -f \"$WIDGET_PLIST\" ]; then\n        /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $TIMESTAMP\" \"$WIDGET_PLIST\"\n        echo \"Updated widget build number to: $TIMESTAMP\"\n    else\n        echo \"Widget extension not found at: $WIDGET_PLIST\"\n    fi\n    \n    echo \"Both apps updated to build: $TIMESTAMP\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3F2D3BEF2EBE711800D49AFF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FBEA0612E8CD49300976BA0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -305,6 +410,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		3F2D3C032EBE711A00D49AFF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F2D3BF22EBE711800D49AFF /* AudioBoothWidgetExtension */;
+			targetProxy = 3F2D3C022EBE711A00D49AFF /* PBXContainerItemProxy */;
+		};
 		3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */;
@@ -313,6 +423,70 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		3F2D3C062EBE711A00D49AFF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = AudioBoothWidget/AudioBoothWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 0;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AudioBoothWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3F2D3C072EBE711A00D49AFF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = AudioBoothWidget/AudioBoothWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 0;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AudioBoothWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		3FBEA0712E8CD49400976BA0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -583,6 +757,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3F2D3C052EBE711A00D49AFF /* Build configuration list for PBXNativeTarget "AudioBoothWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F2D3C062EBE711A00D49AFF /* Debug */,
+				3F2D3C072EBE711A00D49AFF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBooth Watch App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -636,6 +819,18 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3F1E6A9F2EB9B60B00CD9090 /* XCRemoteSwiftPackageReference "RichText" */;
 			productName = RichText;
+		};
+		3F2D3C122EBE730D00D49AFF /* Models */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Models;
+		};
+		3F2D3C1B2EBFC7A100D49AFF /* PlayerIntents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PlayerIntents;
+		};
+		3F2D3C1F2EBFC9D700D49AFF /* PlayerIntents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PlayerIntents;
 		};
 		3F3AF2682E91DA350052C80D /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;

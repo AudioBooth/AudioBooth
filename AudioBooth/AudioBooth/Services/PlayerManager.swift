@@ -1,9 +1,11 @@
 import API
 import Combine
 import Models
+import PlayerIntents
 import SwiftUI
+import WidgetKit
 
-final class PlayerManager: ObservableObject {
+final class PlayerManager: ObservableObject, Sendable {
   @Published var current: BookPlayer.Model?
   @Published var isShowingFullPlayer = false
 
@@ -11,8 +13,13 @@ final class PlayerManager: ObservableObject {
 
   private static let currentBookIDKey = "currentBookID"
   private let watchConnectivity = WatchConnectivityManager.shared
+  private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
 
   private init() {
+    if let existingBookID = UserDefaults.standard.string(forKey: Self.currentBookIDKey) {
+      sharedDefaults?.set(existingBookID, forKey: Self.currentBookIDKey)
+    }
+
     Task { @MainActor in
       await self.restoreLastPlayer()
     }
@@ -46,6 +53,8 @@ final class PlayerManager: ObservableObject {
       }
       current = BookPlayerModel(book)
       UserDefaults.standard.set(book.bookID, forKey: Self.currentBookIDKey)
+      sharedDefaults?.set(book.bookID, forKey: Self.currentBookIDKey)
+      WidgetCenter.shared.reloadAllTimelines()
     }
   }
 
@@ -58,6 +67,8 @@ final class PlayerManager: ObservableObject {
       }
       current = BookPlayerModel(book)
       UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
+      sharedDefaults?.set(book.id, forKey: Self.currentBookIDKey)
+      WidgetCenter.shared.reloadAllTimelines()
     }
   }
 
@@ -69,8 +80,10 @@ final class PlayerManager: ObservableObject {
     current = nil
     isShowingFullPlayer = false
     UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)
+    sharedDefaults?.removeObject(forKey: Self.currentBookIDKey)
     watchConnectivity.clearPlaybackState()
     SessionManager.shared.clearSession()
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   func showFullPlayer() {
@@ -79,5 +92,15 @@ final class PlayerManager: ObservableObject {
 
   func hideFullPlayer() {
     isShowingFullPlayer = false
+  }
+}
+
+extension PlayerManager: PlayerManagerProtocol {
+  func play() {
+    current?.onPlayTapped()
+  }
+
+  func pause() {
+    current?.onPauseTapped()
   }
 }

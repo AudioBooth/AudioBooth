@@ -30,7 +30,6 @@ final class ListeningStatsCardModel: ListeningStatsCard.Model {
       let stats = try await Audiobookshelf.shared.authentication.fetchListeningStats()
       processStats(stats)
     } catch {
-      print("Failed to fetch listening stats: \(error)")
       isLoading = false
     }
   }

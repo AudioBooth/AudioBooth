@@ -1,7 +1,11 @@
 import API
+import AppIntents
+import Models
+import PlayerIntents
 import RevenueCat
 import SwiftUI
 import UIKit
+import WidgetKit
 
 @main
 struct AudioBoothApp: App {
@@ -39,6 +43,9 @@ struct AudioBoothApp: App {
 
     Purchases.logLevel = .error
     Purchases.configure(withAPIKey: "appl_AuBdFKRrOngbJsXGkkxDKGNbGRW")
+
+    let player: PlayerManagerProtocol = PlayerManager.shared
+    AppDependencyManager.shared.add(dependency: player)
   }
 
   var body: some Scene {

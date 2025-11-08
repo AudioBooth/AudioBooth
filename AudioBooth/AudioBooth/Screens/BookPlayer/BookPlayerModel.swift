@@ -9,6 +9,7 @@ import OSLog
 import SwiftData
 import SwiftUI
 import WatchConnectivity
+import WidgetKit
 
 final class BookPlayerModel: BookPlayer.Model {
   private let audiobookshelf = Audiobookshelf.shared
@@ -144,6 +145,12 @@ final class BookPlayerModel: BookPlayer.Model {
     } else {
       player.rate = speed.playbackSpeed
     }
+  }
+
+  private func updateWidgetPlayingState(_ isPlaying: Bool) {
+    let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
+    sharedDefaults?.set(isPlaying, forKey: "isPlaying")
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   override func onSkipForwardTapped(seconds: Double) {
@@ -868,6 +875,7 @@ extension BookPlayerModel {
     try? item?.save()
 
     sendWatchUpdate()
+    updateWidgetPlayingState(isNowPlaying)
   }
 
   private func markAsFinishedIfNeeded() {
@@ -932,6 +940,8 @@ extension BookPlayerModel {
         }
       }
     }
+
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   private func isSessionNotFoundError(_ error: Error) -> Bool {

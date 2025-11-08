@@ -1,4 +1,5 @@
 import AppIntents
+import PlayerIntents
 
 struct AudioBoothShortcuts: AppShortcutsProvider {
   static var appShortcuts: [AppShortcut] {

@@ -20,6 +20,16 @@
 				<string>audiobooth</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>me.jgrenier</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>audiobs</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>

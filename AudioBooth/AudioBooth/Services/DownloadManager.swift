@@ -64,12 +64,17 @@ final class DownloadManager: NSObject, ObservableObject {
 extension DownloadManager {
   func deleteDownload(for bookID: String) {
     Task {
-      let documentsPath = FileManager.default
-        .urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
+      guard
+        let appGroupURL = FileManager.default.containerURL(
+          forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+        )
+      else {
+        Toast(error: "Failed to access app group container").show()
+        return
+      }
 
       let bookDirectory =
-        documentsPath
+        appGroupURL
         .appendingPathComponent("audiobooks")
         .appendingPathComponent(bookID)
 
@@ -93,9 +98,15 @@ extension DownloadManager {
   func cleanupOrphanedDownloads() {
     Task {
       do {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-          .first!
-        let audiobooksDirectory = documentsPath.appendingPathComponent("audiobooks")
+        guard
+          let appGroupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+          )
+        else {
+          return
+        }
+
+        let audiobooksDirectory = appGroupURL.appendingPathComponent("audiobooks")
 
         guard FileManager.default.fileExists(atPath: audiobooksDirectory.path) else {
           return
@@ -200,9 +211,15 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   }
 
   private func cleanupPartialDownload() async {
-    let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-      .first!
-    let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
+    guard
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
+    else {
+      return
+    }
+
+    let bookDirectory = appGroupURL.appendingPathComponent("audiobooks").appendingPathComponent(
       bookID)
     try? FileManager.default.removeItem(at: bookDirectory)
   }
@@ -246,11 +263,22 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let tracks = book.orderedTracks
     guard !tracks.isEmpty else { throw URLError(.badURL) }
 
-    let bookDirectory = FileManager.default
-      .urls(for: .documentDirectory, in: .userDomainMask).first!
-      .appendingPathComponent("audiobooks/\(bookID)")
+    guard
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
+    else {
+      throw URLError(.fileDoesNotExist)
+    }
+
+    var audiobooksDirectory = appGroupURL.appendingPathComponent("audiobooks")
+    let bookDirectory = audiobooksDirectory.appendingPathComponent(bookID)
 
     try FileManager.default.createDirectory(at: bookDirectory, withIntermediateDirectories: true)
+
+    var resourceValues = URLResourceValues()
+    resourceValues.isExcludedFromBackup = true
+    try? audiobooksDirectory.setResourceValues(resourceValues)
 
     for track in tracks {
       guard !isCancelled else { throw CancellationError() }

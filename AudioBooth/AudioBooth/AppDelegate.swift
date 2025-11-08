@@ -1,4 +1,5 @@
 import UIKit
+import WidgetKit
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(
@@ -7,5 +8,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     completionHandler: @escaping () -> Void
   ) {
     DownloadManager.shared.backgroundCompletionHandler = completionHandler
+  }
+
+  func applicationDidEnterBackground(_ application: UIApplication) {
+    WidgetCenter.shared.reloadAllTimelines()
   }
 }
