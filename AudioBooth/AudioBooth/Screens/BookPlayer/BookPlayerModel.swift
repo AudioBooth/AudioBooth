@@ -23,6 +23,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private var mediaProgress: MediaProgress
   private var timerSecondsCounter = 0
   private var pendingPlay: Bool = false
+  private var pendingSeekTime: TimeInterval?
 
   private var lastPlaybackAt: Date?
 
@@ -55,6 +56,7 @@ final class BookPlayerModel: BookPlayer.Model {
       coverURL: book.coverURL,
       speed: SpeedPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
+      bookmarks: BookmarkViewerSheet.Model(),
       playbackProgress: PlaybackProgressViewModel()
     )
 
@@ -77,6 +79,7 @@ final class BookPlayerModel: BookPlayer.Model {
       coverURL: item.coverURL,
       speed: SpeedPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
+      bookmarks: BookmarkViewerSheet.Model(),
       playbackProgress: PlaybackProgressViewModel()
     )
 
@@ -158,6 +161,29 @@ final class BookPlayerModel: BookPlayer.Model {
     player.seek(to: CMTimeMaximum(newTime, zeroTime))
   }
 
+  func seekToTime(_ time: TimeInterval) {
+    guard let player = player else {
+      pendingSeekTime = time
+      AppLogger.player.debug("Player not ready, storing pending seek to \(time)s")
+      return
+    }
+
+    let seekTime = CMTime(seconds: time, preferredTimescale: 1000)
+    player.seek(to: seekTime) { _ in
+      AppLogger.player.debug("Seeked to position: \(time)s")
+    }
+  }
+
+  override func onBookmarksTapped() {
+    if let player = player {
+      let time = player.currentTime()
+      if time.isValid && !time.isIndefinite {
+        bookmarks?.currentTime = Int(ceil(CMTimeGetSeconds(time)))
+      }
+    }
+    bookmarks?.isPresented = true
+  }
+
   override func onDownloadTapped() {
     guard let item = item else { return }
 
@@ -184,16 +210,25 @@ extension BookPlayerModel {
       mediaProgress: mediaProgress
     )
 
-    if result.serverCurrentTime > mediaProgress.currentTime {
+    let timeToUse: TimeInterval
+    if let pendingSeekTime = pendingSeekTime {
+      timeToUse = pendingSeekTime
+      mediaProgress.currentTime = pendingSeekTime
+      self.pendingSeekTime = nil
+      AppLogger.player.info("Using pending seek time: \(pendingSeekTime)s")
+    } else if result.serverCurrentTime > mediaProgress.currentTime {
+      timeToUse = result.serverCurrentTime
       mediaProgress.currentTime = result.serverCurrentTime
       AppLogger.player.info(
         "Using server currentTime for cross-device sync: \(result.serverCurrentTime)s")
+    } else {
+      timeToUse = mediaProgress.currentTime
+    }
 
-      if let player = self.player {
-        let seekTime = CMTime(seconds: result.serverCurrentTime, preferredTimescale: 1000)
-        player.seek(to: seekTime) { _ in
-          AppLogger.player.debug("Seeked to server position")
-        }
+    if let player = self.player {
+      let seekTime = CMTime(seconds: timeToUse, preferredTimescale: 1000)
+      player.seek(to: seekTime) { _ in
+        AppLogger.player.debug("Seeked to position: \(timeToUse)s")
       }
     }
 
@@ -250,6 +285,10 @@ extension BookPlayerModel {
     let timerViewModel = TimerPickerSheetViewModel()
     timerViewModel.setPlayer(player)
     timer = timerViewModel
+
+    if let localBook = item {
+      bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook), initialTime: 0)
+    }
 
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
       chapters = ChapterPickerSheetViewModel(chapters: sessionChapters, player: player)

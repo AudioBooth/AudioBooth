@@ -58,6 +58,16 @@ struct BookPlayer: View {
     .sheet(isPresented: $model.timer.isPresented) {
       TimerPickerSheet(model: $model.timer)
     }
+    .sheet(
+      isPresented: Binding(
+        get: { model.bookmarks?.isPresented ?? false },
+        set: { newValue in model.bookmarks?.isPresented = newValue }
+      )
+    ) {
+      if let bookmarks = model.bookmarks {
+        BookmarkViewerSheet(model: bookmarks)
+      }
+    }
   }
 
   private var portraitLayout: some View {
@@ -265,6 +275,20 @@ struct BookPlayer: View {
       }
       .frame(maxWidth: .infinity)
 
+      if model.bookmarks != nil {
+        Button(action: { model.onBookmarksTapped() }) {
+          VStack(spacing: 6) {
+            Image(systemName: "bookmark")
+              .font(.system(size: 20))
+              .foregroundColor(.white)
+            Text("Bookmarks")
+              .font(.caption2)
+              .foregroundColor(.white.opacity(0.7))
+          }
+        }
+        .frame(maxWidth: .infinity)
+      }
+
       VStack(spacing: 6) {
         AirPlayButton()
           .frame(width: 20, height: 20)
@@ -339,6 +363,7 @@ extension BookPlayer {
     var speed: SpeedPickerSheet.Model
     var timer: TimerPickerSheet.Model
     var chapters: ChapterPickerSheet.Model?
+    var bookmarks: BookmarkViewerSheet.Model?
     var playbackProgress: PlaybackProgressView.Model
 
     var downloadState: DownloadManager.DownloadState
@@ -355,6 +380,7 @@ extension BookPlayer {
       speed: SpeedPickerSheet.Model,
       timer: TimerPickerSheet.Model,
       chapters: ChapterPickerSheet.Model? = nil,
+      bookmarks: BookmarkViewerSheet.Model? = nil,
       playbackProgress: PlaybackProgressView.Model,
       downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
@@ -367,6 +393,7 @@ extension BookPlayer {
       self.speed = speed
       self.timer = timer
       self.chapters = chapters
+      self.bookmarks = bookmarks
       self.playbackProgress = playbackProgress
       self.downloadState = downloadState
     }
@@ -378,6 +405,7 @@ extension BookPlayer {
     func onSkipBackwardTapped(seconds: Double) {}
     func onProgressChanged(to progress: Double) {}
     func onDownloadTapped() {}
+    func onBookmarksTapped() {}
   }
 }
 

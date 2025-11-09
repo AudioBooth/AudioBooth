@@ -173,6 +173,14 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         )
       }
     }
+
+    if let book = book {
+      self.bookmarks = BookmarkViewerSheetViewModel(item: .remote(book))
+    } else if let localBook = localBook {
+      self.bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook))
+    } else {
+      self.bookmarks = nil
+    }
   }
 
   private func setupDownloadStateBinding() {

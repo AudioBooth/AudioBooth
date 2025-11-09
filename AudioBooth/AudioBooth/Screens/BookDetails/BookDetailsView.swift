@@ -53,6 +53,12 @@ struct BookDetailsView: View {
             Label("Your Playlists", systemImage: "music.note.list")
           }
 
+          if let bookmarks = model.bookmarks, !bookmarks.bookmarks.isEmpty {
+            Button(action: { model.bookmarks?.isPresented = true }) {
+              Label("Your Bookmarks", systemImage: "bookmark.fill")
+            }
+          }
+
           Button(action: model.onDownloadTapped) {
             Label(downloadButtonText, systemImage: downloadButtonIcon)
           }
@@ -69,6 +75,16 @@ struct BookDetailsView: View {
       CollectionSelectorSheet(
         model: CollectionSelectorSheetModel(bookID: model.bookID, mode: mode)
       )
+    }
+    .sheet(
+      isPresented: Binding(
+        get: { model.bookmarks?.isPresented ?? false },
+        set: { newValue in model.bookmarks?.isPresented = newValue }
+      )
+    ) {
+      if let bookmarks = model.bookmarks {
+        BookmarkViewerSheet(model: bookmarks)
+      }
     }
     .onAppear(perform: model.onAppear)
   }
@@ -568,6 +584,7 @@ extension BookDetailsView {
     var tags: [String]?
     var description: String?
     var canManageCollections: Bool
+    var bookmarks: BookmarkViewerSheet.Model?
 
     func onAppear() {}
     func onPlayTapped() {}
@@ -596,7 +613,8 @@ extension BookDetailsView {
       genres: [String]? = nil,
       tags: [String]? = nil,
       description: String? = nil,
-      canManageCollections: Bool = false
+      canManageCollections: Bool = false,
+      bookmarks: BookmarkViewerSheet.Model? = nil
     ) {
       self.bookID = bookID
       self.title = title
@@ -620,6 +638,7 @@ extension BookDetailsView {
       self.tags = tags
       self.description = description
       self.canManageCollections = canManageCollections
+      self.bookmarks = bookmarks
     }
   }
 }

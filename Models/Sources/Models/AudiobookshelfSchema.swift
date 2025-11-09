@@ -11,6 +11,7 @@ enum AudiobookshelfSchema: VersionedSchema {
       Track.self,
       Chapter.self,
       MediaProgress.self,
+      Bookmark.self,
     ]
   }
 }
