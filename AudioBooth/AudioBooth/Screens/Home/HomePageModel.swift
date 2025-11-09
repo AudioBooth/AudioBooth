@@ -187,8 +187,9 @@ extension HomePageModel {
     }
 
     do {
-      try? await MediaProgress.syncFromAPI()
-      try? await Bookmark.syncFromAPI()
+      let userData = try await Audiobookshelf.shared.authentication.fetchMe()
+      try? MediaProgress.syncFromAPI(userData: userData)
+      try? Bookmark.syncFromAPI(userData: userData)
 
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
       processSections(personalized.sections)

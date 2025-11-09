@@ -97,9 +97,7 @@ extension Bookmark {
     try context.save()
   }
 
-  public static func syncFromAPI() async throws {
-    let userData = try await Audiobookshelf.shared.authentication.fetchMe()
-
+  public static func syncFromAPI(userData: User) throws {
     let context = ModelContextProvider.shared.context
 
     for apiBookmark in userData.bookmarks {
