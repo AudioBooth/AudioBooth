@@ -14,6 +14,9 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     static func personalized(libraryID: String) -> String {
       "personalized_\(libraryID)"
     }
+    static func filterData(libraryID: String) -> String {
+      "filterdata_\(libraryID)"
+    }
   }
 
   init(audiobookshelf: Audiobookshelf) {
@@ -137,6 +140,66 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Failed to update book finished status: \(error.localizedDescription)"
+      )
+    }
+  }
+
+  public func getCachedFilterData() -> FilterData? {
+    guard let library = audiobookshelf.libraries.current else { return nil }
+    let key = Keys.filterData(libraryID: library.id)
+    guard let data = userDefaults.data(forKey: key) else { return nil }
+    return try? JSONDecoder().decode(FilterData.self, from: data)
+  }
+
+  public func fetchFilterData() async throws -> FilterData {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first.")
+    }
+
+    guard let library = audiobookshelf.libraries.current else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "No library selected. Please select a library first.")
+    }
+
+    struct Response: Codable {
+      let filterdata: FilterData
+    }
+
+    let request = NetworkRequest<Response>(
+      path: "/api/libraries/\(library.id)",
+      method: .get,
+      query: ["include": "filterdata"]
+    )
+
+    do {
+      let response = try await networkService.send(request)
+
+      let encoder = JSONEncoder()
+      if let data = try? encoder.encode(response.value.filterdata) {
+        let key = Keys.filterData(libraryID: library.id)
+        userDefaults.set(data, forKey: key)
+      }
+
+      return response.value.filterdata
+    } catch {
+      print("❌ FilterData decoding error: \(error)")
+      if let decodingError = error as? DecodingError {
+        switch decodingError {
+        case .keyNotFound(let key, let context):
+          print("  Missing key: \(key.stringValue) at path: \(context.codingPath)")
+        case .typeMismatch(let type, let context):
+          print("  Type mismatch for type: \(type) at path: \(context.codingPath)")
+        case .valueNotFound(let type, let context):
+          print("  Value not found for type: \(type) at path: \(context.codingPath)")
+        case .dataCorrupted(let context):
+          print("  Data corrupted at path: \(context.codingPath)")
+        @unknown default:
+          print("  Unknown decoding error")
+        }
+      }
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to fetch filter data: \(error.localizedDescription)"
       )
     }
   }

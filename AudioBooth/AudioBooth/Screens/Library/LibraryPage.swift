@@ -71,15 +71,51 @@ struct LibraryPage: View {
     }
     .navigationTitle(model.title)
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: { model.onDisplayModeTapped() }) {
-          Image(systemName: model.displayMode == .card ? "square.grid.2x2" : "list.bullet")
+      if model.isRoot {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          if let viewModel = model as? LibraryPageModel,
+            let filterModel = viewModel.filterPickerModel
+          {
+            FilterPicker(model: filterModel)
+          }
+        }
+
+        if #available(iOS 26.0, *) {
+          ToolbarSpacer(.fixed, placement: .navigationBarTrailing)
         }
       }
 
-      if model.sortBy != nil {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Menu("", systemImage: "arrow.up.arrow.down") {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Menu {
+          Toggle(
+            isOn: Binding(
+              get: { model.displayMode == .card },
+              set: { isOn in
+                if isOn && model.displayMode != .card {
+                  model.onDisplayModeTapped()
+                }
+              }
+            )
+          ) {
+            Label("Grid View", systemImage: "square.grid.2x2")
+          }
+
+          Toggle(
+            isOn: Binding(
+              get: { model.displayMode == .row },
+              set: { isOn in
+                if isOn && model.displayMode != .row {
+                  model.onDisplayModeTapped()
+                }
+              }
+            )
+          ) {
+            Label("List View", systemImage: "list.bullet")
+          }
+
+          if model.sortBy != nil {
+            Divider()
+
             sortByOption(.title)
             sortByOption(.authorName)
             sortByOption(.authorNameLF)
@@ -89,6 +125,8 @@ struct LibraryPage: View {
             sortByOption(.duration)
             sortByOption(.updatedAt)
           }
+        } label: {
+          Image(systemName: "ellipsis")
         }
       }
     }
