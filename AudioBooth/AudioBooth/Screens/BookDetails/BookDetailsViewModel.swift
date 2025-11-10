@@ -97,6 +97,16 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       let narrators = book.media.metadata.narrators ?? []
 
+      let supplementaryEbooks = book.libraryFiles?
+        .filter { $0.isSupplementary == true && $0.fileType == "ebook" }
+        .map { libraryFile in
+          BookDetailsView.Model.SupplementaryEbook(
+            filename: libraryFile.metadata.filename,
+            size: libraryFile.metadata.size,
+            ino: libraryFile.ino
+          )
+        }
+
       updateUI(
         title: book.title,
         authors: authors,
@@ -110,7 +120,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         publishedYear: book.publishedYear,
         genres: book.genres,
         tags: book.tags,
-        description: book.description ?? book.descriptionPlain
+        description: book.description ?? book.descriptionPlain,
+        supplementaryEbooks: supplementaryEbooks
       )
 
       error = nil
@@ -136,7 +147,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     publishedYear: String? = nil,
     genres: [String]? = nil,
     tags: [String]? = nil,
-    description: String? = nil
+    description: String? = nil,
+    supplementaryEbooks: [BookDetailsView.Model.SupplementaryEbook]? = nil
   ) {
     self.title = title
     self.authors = authors
@@ -150,6 +162,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     self.genres = genres
     self.tags = tags
     self.description = description
+    self.supplementaryEbooks = supplementaryEbooks
 
     if let mediaType {
       self.isEbook = mediaType == .ebook
@@ -338,6 +351,28 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       } catch {
         Toast(error: "Failed to update finished status").show()
       }
+    }
+  }
+
+  override func onSupplementaryEbookTapped(_ ebook: BookDetailsView.Model.SupplementaryEbook) {
+    guard let serverURL = Audiobookshelf.shared.serverURL,
+      let token = Audiobookshelf.shared.authentication.connection?.token
+    else {
+      Toast(error: "Unable to open ebook").show()
+      return
+    }
+
+    var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ebook.ino)")
+    url.append(queryItems: [URLQueryItem(name: "token", value: token)])
+
+    let safariViewController = SFSafariViewController(url: url)
+    safariViewController.modalPresentationStyle = .overFullScreen
+
+    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+      let window = windowScene.windows.first,
+      let rootViewController = window.rootViewController
+    {
+      rootViewController.present(safariViewController, animated: true)
     }
   }
 }

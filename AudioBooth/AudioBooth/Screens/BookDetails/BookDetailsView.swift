@@ -140,6 +140,9 @@ struct BookDetailsView: View {
       if let chapters = model.chapters, !chapters.isEmpty {
         chaptersSection(chapters)
       }
+      if let supplementaryEbooks = model.supplementaryEbooks, !supplementaryEbooks.isEmpty {
+        supplementaryEbooksSection(supplementaryEbooks)
+      }
     }
   }
 
@@ -557,6 +560,54 @@ struct BookDetailsView: View {
     }
     .textSelection(.enabled)
   }
+
+  private func supplementaryEbooksSection(
+    _ supplementaryEbooks: [BookDetailsView.Model.SupplementaryEbook]
+  ) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Supplementary eBooks")
+        .font(.headline)
+
+      VStack(alignment: .leading, spacing: 8) {
+        ForEach(supplementaryEbooks, id: \.filename) { ebook in
+          Button(action: { model.onSupplementaryEbookTapped(ebook) }) {
+            HStack {
+              Image(systemName: "book.closed.fill")
+                .foregroundColor(.blue)
+
+              VStack(alignment: .leading, spacing: 4) {
+                Text(ebook.filename)
+                  .font(.subheadline)
+                  .foregroundColor(.primary)
+                  .multilineTextAlignment(.leading)
+
+                Text(
+                  ebook.size.formatted(
+                    .byteCount(
+                      style: .file,
+                      allowedUnits: [.kb, .mb, .gb]
+                    )
+                  )
+                )
+                .font(.caption)
+                .foregroundColor(.secondary)
+              }
+
+              Spacer()
+
+              Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+          }
+        }
+      }
+      .padding()
+      .background(Color.secondary.opacity(0.1))
+      .cornerRadius(8)
+    }
+  }
 }
 
 extension BookDetailsView {
@@ -585,11 +636,13 @@ extension BookDetailsView {
     var description: String?
     var canManageCollections: Bool
     var bookmarks: BookmarkViewerSheet.Model?
+    var supplementaryEbooks: [SupplementaryEbook]?
 
     func onAppear() {}
     func onPlayTapped() {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped() {}
+    func onSupplementaryEbookTapped(_ ebook: SupplementaryEbook) {}
 
     init(
       bookID: String,
@@ -614,7 +667,8 @@ extension BookDetailsView {
       tags: [String]? = nil,
       description: String? = nil,
       canManageCollections: Bool = false,
-      bookmarks: BookmarkViewerSheet.Model? = nil
+      bookmarks: BookmarkViewerSheet.Model? = nil,
+      supplementaryEbooks: [SupplementaryEbook]? = nil
     ) {
       self.bookID = bookID
       self.title = title
@@ -639,6 +693,7 @@ extension BookDetailsView {
       self.description = description
       self.canManageCollections = canManageCollections
       self.bookmarks = bookmarks
+      self.supplementaryEbooks = supplementaryEbooks
     }
   }
 }
@@ -653,6 +708,12 @@ extension BookDetailsView.Model {
     let id: String
     let name: String
     let sequence: String
+  }
+
+  struct SupplementaryEbook {
+    let filename: String
+    let size: Int64
+    let ino: String
   }
 }
 

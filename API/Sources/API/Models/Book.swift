@@ -5,6 +5,7 @@ public struct Book: Codable, Sendable {
   public let media: Media
   public let addedAt: Date
   public let updatedAt: Date
+  public let libraryFiles: [LibraryFile]?
 
   public var coverURL: URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
@@ -56,6 +57,24 @@ extension Book {
 }
 
 extension Book {
+  public struct LibraryFile: Codable, Sendable {
+    public let ino: String
+    public let metadata: Metadata
+    public let isSupplementary: Bool?
+    public let addedAt: Date
+    public let updatedAt: Date
+    public let fileType: String
+
+    public struct Metadata: Codable, Sendable {
+      public let filename: String
+      public let ext: String
+      public let path: String
+      public let relPath: String
+      public let size: Int64
+      public let birthtimeMs: Int64
+    }
+  }
+
   public struct Media: Codable, Sendable {
     public let metadata: Metadata
     public let duration: Double?
