@@ -182,6 +182,8 @@ extension HomePageModel {
   }
 
   private func fetchRemoteContent() async {
+    guard Audiobookshelf.shared.isAuthenticated else { return }
+
     if others.isEmpty {
       isLoading = true
     }
