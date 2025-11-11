@@ -61,7 +61,7 @@ final class BookPlayerModel: BookPlayer.Model {
       playbackProgress: PlaybackProgressViewModel()
     )
 
-    setupDownloadStateBinding()
+    setupDownloadStateBinding(bookID: book.id)
     onLoad()
   }
 
@@ -84,7 +84,7 @@ final class BookPlayerModel: BookPlayer.Model {
       playbackProgress: PlaybackProgressViewModel()
     )
 
-    setupDownloadStateBinding()
+    setupDownloadStateBinding(bookID: item.bookID)
     onLoad()
   }
 
@@ -374,19 +374,17 @@ extension BookPlayerModel {
     }
   }
 
-  private func setupDownloadStateBinding() {
-    guard let item = item else { return }
-
+  private func setupDownloadStateBinding(bookID: String) {
     downloadManager.$currentProgress
       .receive(on: DispatchQueue.main)
-      .map { [weak self] progressDict in
-        guard let item = self?.item else { return .notDownloaded }
-
-        if let progress = progressDict[item.bookID] {
+      .map { [weak self] progress in
+        if self?.item?.isDownloaded == true || self?.downloadState == .downloaded {
+          return .downloaded
+        } else if let progress = progress[bookID] {
           return .downloading(progress: progress)
+        } else {
+          return .notDownloaded
         }
-
-        return item.isDownloaded ? .downloaded : .notDownloaded
       }
       .sink { [weak self] downloadState in
         self?.downloadState = downloadState
@@ -394,10 +392,12 @@ extension BookPlayerModel {
       .store(in: &cancellables)
 
     itemObservation = Task { [weak self] in
-      for await updatedItem in LocalBook.observe(where: \.bookID, equals: item.bookID) {
-        guard !Task.isCancelled, let self = self else { continue }
+      for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
+        guard !Task.isCancelled, let self else { continue }
 
         self.item = updatedItem
+
+        self.downloadState = updatedItem.isDownloaded ? .downloaded : .notDownloaded
 
         if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
           self.refreshPlayerForLocalPlayback()
@@ -829,7 +829,7 @@ extension BookPlayerModel {
   }
 
   private func markAsFinishedIfNeeded() {
-    guard !mediaProgress.isFinished else { return }
+    guard !mediaProgress.isFinished, player?.status == .readyToPlay else { return }
 
     let remainingTime = mediaProgress.duration - mediaProgress.currentTime
     let isNearEnd = remainingTime <= 120
@@ -841,7 +841,7 @@ extension BookPlayerModel {
         chaptersModel.chapters.count > 1
         && chaptersModel.currentIndex == chaptersModel.chapters.count - 1
 
-      shouldMarkFinished = isOnLastChapter || isNearEnd
+      shouldMarkFinished = isOnLastChapter
       AppLogger.player.debug("📖 Chapter check: \(isOnLastChapter), Near end: \(isNearEnd)")
     } else {
       AppLogger.player.debug("📖 No chapters, using time-based check. Near end: \(isNearEnd)")

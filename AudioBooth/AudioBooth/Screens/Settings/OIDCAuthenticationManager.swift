@@ -224,12 +224,18 @@ extension OIDCAuthenticationManager {
     let challenge: String
 
     init() {
-      let array = (0..<42).map { _ in UInt32.random(in: 0...UInt32.max) }
-      self.verifier = array.map { String(format: "%02x", $0) }.joined()
+      var buffer = [UInt8](repeating: 0, count: 32)
+      _ = SecRandomCopyBytes(kSecRandomDefault, buffer.count, &buffer)
+
+      verifier = Data(buffer)
+        .base64EncodedString()
+        .replacingOccurrences(of: "+", with: "-")
+        .replacingOccurrences(of: "/", with: "_")
+        .replacingOccurrences(of: "=", with: "")
 
       let data = Data(verifier.utf8)
       let hash = SHA256.hash(data: data)
-      self.challenge = Data(hash)
+      challenge = Data(hash)
         .base64EncodedString()
         .replacingOccurrences(of: "+", with: "-")
         .replacingOccurrences(of: "/", with: "_")

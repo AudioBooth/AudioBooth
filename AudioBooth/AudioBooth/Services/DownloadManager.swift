@@ -247,6 +247,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       let book = existingItem ?? LocalBook(from: playSession.libraryItem)
       self.book = book
       self.totalBytes = book.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
+      try? book.save()
 
       try await downloadTracks()
 

@@ -15,12 +15,6 @@ final class HomePageModel: HomePage.Model {
   private var books: [Book] = [] {
     didSet {
       refreshDynamicSections()
-
-      Task { @MainActor in
-        if playerManager.current == nil, let book = books.first {
-          playerManager.current = BookPlayerModel(book)
-        }
-      }
     }
   }
 
@@ -41,13 +35,15 @@ final class HomePageModel: HomePage.Model {
   }
 
   override func onReset(_ shouldRefresh: Bool) {
+    if !shouldRefresh {
+      availableOffline = []
+    }
+
     books = []
     others = []
     continueListening = nil
     offline = nil
     isLoading = false
-
-    refreshDynamicSections()
 
     if shouldRefresh {
       onAppear()
