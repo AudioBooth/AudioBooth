@@ -15,6 +15,9 @@ struct BookCard: View {
       content
     }
     .buttonStyle(.plain)
+    .contextMenu {
+      BookCardContextMenu(model: model.contextMenu())
+    }
     .onAppear(perform: model.onAppear)
   }
 
@@ -91,6 +94,7 @@ struct BookCard: View {
   var cover: some View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) { progressBar }
+      .overlay { downloadProgress }
       .clipShape(RoundedRectangle(cornerRadius: 8))
       .overlay(
         RoundedRectangle(cornerRadius: 8)
@@ -102,12 +106,25 @@ struct BookCard: View {
   var rowCover: some View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) { progressBar }
+      .overlay { downloadProgress }
       .frame(width: 60, height: 60)
       .clipShape(RoundedRectangle(cornerRadius: 6))
       .overlay(
         RoundedRectangle(cornerRadius: 6)
           .stroke(.gray.opacity(0.3), lineWidth: 1)
       )
+  }
+
+  @ViewBuilder
+  var downloadProgress: some View {
+    if let downloadProgress = model.downloadProgress {
+      ZStack {
+        Color.black.opacity(0.6)
+        ProgressView(value: downloadProgress)
+          .progressViewStyle(GaugeProgressViewStyle(tint: .white, lineWidth: 4))
+          .frame(width: 20, height: 20)
+      }
+    }
   }
 
   func rowMetadata(icon: String, value: String) -> some View {
@@ -182,6 +199,20 @@ extension BookCard {
     }
   }
 
+  struct Author {
+    let id: String
+    let name: String
+  }
+
+  struct Narrator {
+    let name: String
+  }
+
+  struct Series {
+    let id: String
+    let name: String
+  }
+
   @Observable
   class Model: ObservableObject, Identifiable {
     let id: String
@@ -193,8 +224,10 @@ extension BookCard {
     let author: String?
     let narrator: String?
     let publishedYear: String?
+    var downloadProgress: Double?
 
     func onAppear() {}
+    func contextMenu() -> BookCardContextMenu.Model { fatalError("Must be overridden") }
 
     init(
       id: String = UUID().uuidString,
@@ -205,7 +238,8 @@ extension BookCard {
       progress: Double? = nil,
       author: String? = nil,
       narrator: String? = nil,
-      publishedYear: String? = nil
+      publishedYear: String? = nil,
+      downloadProgress: Double? = nil
     ) {
       self.id = id
       self.title = title
@@ -216,6 +250,7 @@ extension BookCard {
       self.author = author
       self.narrator = narrator
       self.publishedYear = publishedYear
+      self.downloadProgress = downloadProgress
     }
   }
 }

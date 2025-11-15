@@ -1,0 +1,203 @@
+import API
+import Foundation
+import Models
+
+final class BookCardContextMenuModel: BookCardContextMenu.Model {
+  enum Item {
+    case local(LocalBook)
+    case remote(Book)
+  }
+
+  private let item: Item
+  private let onProgressChanged: ((Double) -> Void)?
+
+  init(_ item: LocalBook, onProgressChanged: ((Double) -> Void)? = nil) {
+    self.item = .local(item)
+    self.onProgressChanged = onProgressChanged
+
+    let authorInfo: BookCard.Author? = {
+      guard let firstAuthor = item.authors.first else { return nil }
+      return BookCard.Author(id: firstAuthor.id, name: firstAuthor.name)
+    }()
+
+    let narratorInfo: BookCard.Narrator? = {
+      guard let firstNarrator = item.narrators.first else { return nil }
+      return BookCard.Narrator(name: firstNarrator)
+    }()
+
+    let seriesInfo: BookCard.Series? = {
+      guard let firstSeries = item.series.first else { return nil }
+      return BookCard.Series(id: firstSeries.id, name: firstSeries.name)
+    }()
+
+    let downloadState: DownloadManager.DownloadState
+    if let progress = DownloadManager.shared.currentProgress[item.bookID] {
+      downloadState = .downloading(progress: progress)
+    } else if item.isDownloaded {
+      downloadState = .downloaded
+    } else {
+      downloadState = .notDownloaded
+    }
+
+    let mediaProgress = try? MediaProgress.fetch(bookID: item.bookID)
+    let hasProgress = mediaProgress.flatMap { $0.progress > 0 } ?? false
+    let isFinished = mediaProgress?.isFinished ?? false
+
+    super.init(
+      downloadState: downloadState,
+      hasProgress: hasProgress,
+      isFinished: isFinished,
+      authorInfo: authorInfo,
+      narratorInfo: narratorInfo,
+      seriesInfo: seriesInfo
+    )
+  }
+
+  init(_ item: Book, onProgressChanged: ((Double) -> Void)? = nil) {
+    self.item = .remote(item)
+    self.onProgressChanged = onProgressChanged
+
+    let mediaProgress = try? MediaProgress.fetch(bookID: item.id)
+    let hasProgress = mediaProgress.flatMap { $0.progress > 0 } ?? false
+    let isFinished = mediaProgress?.isFinished ?? false
+
+    lazy var filterData = Audiobookshelf.shared.libraries.getCachedFilterData()
+
+    let authorInfo: BookCard.Author? = {
+      if let firstAuthor = item.media.metadata.authors?.first {
+        return BookCard.Author(id: firstAuthor.id, name: firstAuthor.name)
+      } else if let authorName = item.authorName {
+        let firstAuthorName = authorName.split(separator: ",").first.map {
+          String($0.trimmingCharacters(in: .whitespaces))
+        }
+        if let name = firstAuthorName,
+          let filterData,
+          let author = filterData.authors.first(where: { $0.name == name })
+        {
+          return BookCard.Author(id: author.id, name: author.name)
+        }
+      }
+      return nil
+    }()
+
+    let narratorInfo: BookCard.Narrator? = {
+      if let firstNarrator = item.media.metadata.narrators?.first {
+        return BookCard.Narrator(name: firstNarrator)
+      } else if let narratorName = item.media.metadata.narratorName {
+        let firstNarratorName = narratorName.split(separator: ",").first.map {
+          String($0.trimmingCharacters(in: .whitespaces))
+        }
+        if let name = firstNarratorName {
+          return BookCard.Narrator(name: name)
+        }
+      }
+      return nil
+    }()
+
+    let seriesInfo: BookCard.Series? = {
+      if let firstSeries = item.series?.first {
+        return BookCard.Series(id: firstSeries.id, name: firstSeries.name)
+      } else if let seriesName = item.media.metadata.seriesName {
+        let firstSeriesName = seriesName.split(separator: ",").first.map {
+          String($0.trimmingCharacters(in: .whitespaces))
+        }
+        if let name = firstSeriesName {
+          let cleanedName: String
+          if let hashIndex = name.range(of: " #") {
+            cleanedName = String(name[..<hashIndex.lowerBound])
+          } else {
+            cleanedName = name
+          }
+
+          if let filterData,
+            let series = filterData.series.first(where: { $0.name == cleanedName })
+          {
+            return BookCard.Series(id: series.id, name: series.name)
+          }
+        }
+      }
+      return nil
+    }()
+
+    let localBook = try? LocalBook.fetch(bookID: item.id)
+    let isDownloaded = localBook?.isDownloaded ?? false
+
+    let downloadState: DownloadManager.DownloadState
+    if let progress = DownloadManager.shared.currentProgress[item.id] {
+      downloadState = .downloading(progress: progress)
+    } else if isDownloaded {
+      downloadState = .downloaded
+    } else {
+      downloadState = .notDownloaded
+    }
+
+    super.init(
+      downloadState: downloadState,
+      hasProgress: hasProgress,
+      isFinished: isFinished,
+      authorInfo: authorInfo,
+      narratorInfo: narratorInfo,
+      seriesInfo: seriesInfo
+    )
+  }
+
+  override func onDownloadTapped() {
+    switch item {
+    case .local(let localBook):
+      try? localBook.download()
+    case .remote(let book):
+      try? book.download()
+    }
+  }
+
+  override func onCancelDownloadTapped() {
+    switch item {
+    case .local(let localBook):
+      DownloadManager.shared.cancelDownload(for: localBook.bookID)
+    case .remote(let book):
+      DownloadManager.shared.cancelDownload(for: book.id)
+    }
+  }
+
+  override func onRemoveDownloadTapped() {
+    switch item {
+    case .local(let localBook):
+      localBook.removeDownload()
+    case .remote(let book):
+      book.removeDownload()
+    }
+  }
+
+  override func onPlayTapped() {
+    switch item {
+    case .local(let localBook):
+      localBook.play()
+    case .remote(let book):
+      book.play()
+    }
+  }
+
+  override func onMarkAsFinishedTapped() {
+    Task {
+      switch item {
+      case .local(let localBook):
+        try? await localBook.markAsFinished()
+      case .remote(let book):
+        try? await book.markAsFinished()
+      }
+      onProgressChanged?(1)
+    }
+  }
+
+  override func onResetProgressTapped() {
+    Task {
+      switch item {
+      case .local(let localBook):
+        try? await localBook.resetProgress()
+      case .remote(let book):
+        try? await book.resetProgress()
+      }
+      onProgressChanged?(0)
+    }
+  }
+}

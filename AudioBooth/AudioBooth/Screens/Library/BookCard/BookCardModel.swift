@@ -1,4 +1,5 @@
 import API
+import Combine
 import Foundation
 import Models
 
@@ -8,11 +9,14 @@ final class BookCardModel: BookCard.Model {
     case remote(Book)
   }
   private let item: Item
+  private let navigate: ((NavigationDestination) -> Void)?
+  private var downloadStateCancellable: AnyCancellable?
 
-  init(_ item: LocalBook) {
+  init(_ item: LocalBook, navigate: ((NavigationDestination) -> Void)? = nil) {
     let id = item.bookID
 
     self.item = .local(item)
+    self.navigate = navigate
 
     let narrator = item.narrators.isEmpty ? nil : item.narrators.joined(separator: ", ")
 
@@ -24,11 +28,16 @@ final class BookCardModel: BookCard.Model {
       sequence: item.series.first?.sequence,
       author: item.authorNames,
       narrator: narrator,
-      publishedYear: item.publishedYear
+      publishedYear: item.publishedYear,
+      downloadProgress: nil
     )
+
+    setupDownloadProgressObserver()
   }
 
-  init(_ item: Book, sortBy: BooksService.SortBy?) {
+  init(
+    _ item: Book, sortBy: BooksService.SortBy?, navigate: ((NavigationDestination) -> Void)? = nil
+  ) {
     let id = item.id
 
     let details: String?
@@ -59,6 +68,7 @@ final class BookCardModel: BookCard.Model {
     }
 
     self.item = .remote(item)
+    self.navigate = navigate
 
     super.init(
       id: id,
@@ -68,11 +78,39 @@ final class BookCardModel: BookCard.Model {
       sequence: item.series?.first?.sequence,
       author: item.authorName,
       narrator: item.media.metadata.narratorName,
-      publishedYear: item.publishedYear
+      publishedYear: item.publishedYear,
+      downloadProgress: nil
     )
+
+    setupDownloadProgressObserver()
+  }
+
+  private func setupDownloadProgressObserver() {
+    downloadStateCancellable = DownloadManager.shared.$currentProgress
+      .sink { [weak self] progressDict in
+        guard let self else { return }
+        self.downloadProgress = progressDict[self.id]
+      }
   }
 
   override func onAppear() {
     progress = try? MediaProgress.fetch(bookID: id)?.progress
+  }
+
+  override func contextMenu() -> BookCardContextMenu.Model {
+    switch item {
+    case .local(let localBook):
+      BookCardContextMenuModel(
+        localBook,
+        onProgressChanged: { [weak self] progress in
+          self?.progress = progress
+        })
+    case .remote(let book):
+      BookCardContextMenuModel(
+        book,
+        onProgressChanged: { [weak self] progress in
+          self?.progress = progress
+        })
+    }
   }
 }
