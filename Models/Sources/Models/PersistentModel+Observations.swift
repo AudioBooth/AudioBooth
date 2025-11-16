@@ -38,7 +38,7 @@ extension PersistentModel {
           for identifier in allChanges {
             guard
               identifier.entityName == entityName,
-              !deletes.contains(where: { $0.id == identifier.id }),
+              !deletes.contains(identifier),
               let model = modelContext.model(for: identifier) as? Self,
               !model.isDeleted,
               model[keyPath: keyPath] == value

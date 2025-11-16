@@ -1,4 +1,5 @@
 import API
+import Models
 import SwiftData
 import SwiftUI
 
@@ -41,6 +42,34 @@ struct ContentView: View {
     .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification))
     { _ in
       isKeyboardVisible = false
+    }
+    .onOpenURL { url in
+      handleDeepLink(url)
+    }
+  }
+
+  private func handleDeepLink(_ url: URL) {
+    guard
+      ["audiobooth", "audiobs"].contains(url.scheme),
+      let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+      components.host == "play"
+    else { return }
+
+    let bookID = String(components.path.dropFirst())
+
+    Task {
+      do {
+        if let localBook = try LocalBook.fetch(bookID: bookID) {
+          playerManager.setCurrent(localBook)
+          playerManager.play()
+        } else {
+          let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
+          playerManager.setCurrent(book)
+          playerManager.play()
+        }
+      } catch {
+        print("Failed to load book for deep link: \(error)")
+      }
     }
   }
 
