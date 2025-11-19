@@ -23,6 +23,13 @@ struct SettingsView: View {
             }
           }
 
+          NavigationLink(value: "home") {
+            HStack {
+              Image(systemName: "house")
+              Text("Home")
+            }
+          }
+
           NavigationLink(value: "player") {
             HStack {
               Image(systemName: "play.circle")
@@ -62,6 +69,8 @@ struct SettingsView: View {
           if let model = model.mediaProgressList {
             MediaProgressListView(model: model)
           }
+        case "home":
+          HomePreferencesView()
         case "general":
           GeneralPreferencesView()
         case "player":

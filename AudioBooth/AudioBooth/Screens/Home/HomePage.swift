@@ -34,32 +34,15 @@ struct HomePage: View {
   var content: some View {
     ScrollView {
       VStack(spacing: 24) {
-        if preferences.showListeningStats {
-          ListeningStatsCard(model: ListeningStatsCardModel())
-            .padding(.horizontal)
-        }
-
-        if let section = model.continueListening {
+        ForEach(model.sections, id: \.id) { section in
           sectionContent(section)
         }
 
-        if let section = model.offline {
-          sectionContent(section, isOffline: true)
-        }
-
-        if model.isLoading && model.others.isEmpty {
+        if model.isLoading && model.sections.isEmpty {
           ProgressView("Loading...")
             .frame(maxWidth: .infinity, maxHeight: 200)
-        } else if model.others.isEmpty && !model.isLoading {
-          if model.continueListening == nil && model.offline == nil {
-            emptyState
-          } else {
-            emptyPersonalizedState
-          }
-        } else {
-          ForEach(model.others, id: \.title) { section in
-            sectionContent(section)
-          }
+        } else if model.sections.isEmpty && !model.isLoading {
+          emptyState
         }
       }
       .padding(.bottom)
@@ -105,6 +88,9 @@ struct HomePage: View {
       showingServerPicker = false
       model.onReset(new != nil)
     }
+    .onChange(of: preferences.homeSections) { _, _ in
+      model.onPreferencesChanged()
+    }
     .refreshable {
       await model.refresh()
     }
@@ -133,25 +119,15 @@ struct HomePage: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
-  private var emptyPersonalizedState: some View {
-    VStack(spacing: 16) {
-      Text("No additional content available")
-        .font(.title3)
-        .fontWeight(.medium)
-        .foregroundColor(.secondary)
-        .padding(.top, 32)
-
-      Spacer()
-    }
-    .frame(maxWidth: .infinity, minHeight: 100)
-  }
-
   @ViewBuilder
-  private func sectionContent(_ section: HomePage.Model.Section, isOffline: Bool = false)
-    -> some View
-  {
+  private func sectionContent(_ section: HomePage.Model.Section) -> some View {
     VStack(alignment: .leading, spacing: 12) {
-      if isOffline {
+      switch section.items {
+      case .stats:
+        ListeningStatsCard(model: ListeningStatsCardModel())
+          .padding(.horizontal)
+
+      case .offline(let items):
         NavigationLink(value: NavigationDestination.offline) {
           HStack {
             Text(section.title)
@@ -169,16 +145,24 @@ struct HomePage: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-      } else {
+
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(alignment: .top, spacing: 16) {
+            ForEach(items, id: \.id) { book in
+              BookCard(model: book)
+                .frame(width: 120)
+            }
+          }
+          .padding(.horizontal)
+        }
+
+      case .continueListening(let items):
         Text(section.title)
           .font(.title2)
           .fontWeight(.semibold)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal)
-      }
 
-      switch section.items {
-      case .continueListening(let items):
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items) { item in
@@ -189,6 +173,12 @@ struct HomePage: View {
         }
 
       case .books(let items):
+        Text(section.title)
+          .font(.title2)
+          .fontWeight(.semibold)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal)
+
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { book in
@@ -200,6 +190,12 @@ struct HomePage: View {
         }
 
       case .series(let items):
+        Text(section.title)
+          .font(.title2)
+          .fontWeight(.semibold)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal)
+
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { series in
@@ -211,6 +207,12 @@ struct HomePage: View {
         }
 
       case .authors(let items):
+        Text(section.title)
+          .font(.title2)
+          .fontWeight(.semibold)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal)
+
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { author in
@@ -233,44 +235,43 @@ extension HomePage {
     var title: String
 
     struct Section {
+      let id: String
       let title: String
 
       enum Items {
+        case stats
         case continueListening([ContinueListeningCard.Model])
+        case offline([BookCard.Model])
         case books([BookCard.Model])
         case series([SeriesCard.Model])
         case authors([AuthorCard.Model])
       }
       let items: Items
 
-      init(title: String, items: Items) {
+      init(id: String, title: String, items: Items) {
+        self.id = id
         self.title = title
         self.items = items
       }
     }
 
-    var continueListening: Section?
-    var offline: Section?
-    var others: [Section]
+    var sections: [Section]
 
     func onAppear() {}
     func refresh() async {}
     func onReset(_ shouldRefresh: Bool) {}
+    func onPreferencesChanged() {}
 
     init(
       isLoading: Bool = false,
       isRoot: Bool = true,
       title: String = "Home",
-      continueListening: Section? = nil,
-      offline: Section? = nil,
-      others: [Section] = []
+      sections: [Section] = []
     ) {
       self.isLoading = isLoading
       self.isRoot = isRoot
       self.title = title
-      self.continueListening = continueListening
-      self.offline = offline
-      self.others = others
+      self.sections = sections
     }
   }
 }
@@ -295,7 +296,10 @@ extension HomePage.Model {
     ]
 
     return HomePage.Model(
-      continueListening: Section(title: "Continue Listening", items: .continueListening(books))
+      sections: [
+        Section(
+          id: "continue-listening", title: "Continue Listening", items: .continueListening(books))
+      ]
     )
   }
 }

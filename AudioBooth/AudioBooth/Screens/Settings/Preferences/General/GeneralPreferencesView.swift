@@ -6,12 +6,6 @@ struct GeneralPreferencesView: View {
   var body: some View {
     Form {
       Section {
-        Toggle("Show Listening Stats", isOn: $preferences.showListeningStats)
-          .bold()
-      }
-      .listSectionSpacing(.custom(12))
-
-      Section {
         Toggle("Auto-Download Books", isOn: $preferences.autoDownloadBooks)
           .bold()
 

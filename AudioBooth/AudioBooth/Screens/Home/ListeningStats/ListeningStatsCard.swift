@@ -7,18 +7,27 @@ struct ListeningStatsCard: View {
   @State private var selectedDay: String?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
-      todaySection
-      weekSection
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Listening Stats")
+        .font(.title2)
+        .fontWeight(.semibold)
+        .foregroundColor(.primary)
+
+      HStack {
+        VStack(alignment: .leading, spacing: 16) {
+          todaySection
+          weekSection
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+          RoundedRectangle(cornerRadius: 8)
+            .stroke(.gray.opacity(0.3), lineWidth: 1)
+        )
+      }
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 8)
-    .background(Color(.systemGray6))
-    .clipShape(RoundedRectangle(cornerRadius: 8))
-    .overlay(
-      RoundedRectangle(cornerRadius: 8)
-        .stroke(.gray.opacity(0.3), lineWidth: 1)
-    )
     .onAppear(perform: model.onAppear)
   }
 

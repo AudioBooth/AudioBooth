@@ -6,17 +6,14 @@ import SwiftUI
 
 final class HomePageModel: HomePage.Model {
   private let downloadManager = DownloadManager.shared
-  private var playerManager = PlayerManager.shared
+  private let playerManager = PlayerManager.shared
+  private let preferences = UserPreferences.shared
 
   private var availableOfflineTask: Task<Void, Never>?
 
   private var availableOffline: [LocalBook] = []
-
-  private var books: [Book] = [] {
-    didSet {
-      refreshDynamicSections()
-    }
-  }
+  private var continueListeningBooks: [Book] = []
+  private var personalizedSections: [Personalized.Section] = []
 
   init() {
     super.init()
@@ -42,15 +39,18 @@ final class HomePageModel: HomePage.Model {
       availableOffline = []
     }
 
-    books = []
-    others = []
-    continueListening = nil
-    offline = nil
+    continueListeningBooks = []
+    personalizedSections = []
+    sections = []
     isLoading = false
 
     if shouldRefresh {
       onAppear()
     }
+  }
+
+  override func onPreferencesChanged() {
+    rebuildSections()
   }
 }
 
@@ -60,19 +60,99 @@ extension HomePageModel {
       for await books in LocalBook.observeAll() {
         guard !Task.isCancelled else { break }
         self?.availableOffline = books
-        self?.refreshDynamicSections()
+        self?.rebuildSections()
       }
     }
   }
 
-  private func refreshDynamicSections() {
-    refreshContinueListeningSection()
-    refreshOfflineSection()
+  private func processSections(_ personalized: [Personalized.Section]) {
+    personalizedSections = personalized
+
+    for section in personalized {
+      if section.id == "continue-listening" {
+        if case .books(let items) = section.entities {
+          continueListeningBooks = items
+        }
+        break
+      }
+    }
+
+    rebuildSections()
   }
 
-  private func refreshContinueListeningSection() {
+  private func rebuildSections() {
+    guard Audiobookshelf.shared.isAuthenticated else {
+      self.sections = []
+      return
+    }
+
+    let enabledSections = Set(preferences.homeSections.map(\.rawValue))
+
+    var sectionsByID: [String: Section] = [:]
+
+    for section in personalizedSections {
+      guard enabledSections.contains(section.id) else { continue }
+
+      switch section.entities {
+      case .books(let items):
+        if section.id == "continue-listening" {
+          continue
+        } else {
+          let books = items.map({ BookCardModel($0, sortBy: .title) })
+          sectionsByID[section.id] = .init(
+            id: section.id, title: section.label, items: .books(books))
+        }
+
+      case .series(let items):
+        let series = items.map { SeriesCardModel(series: $0) }
+        sectionsByID[section.id] = .init(
+          id: section.id, title: section.label, items: .series(series))
+
+      case .authors(let items):
+        let authors = items.map { AuthorCardModel(author: $0) }
+        sectionsByID[section.id] = .init(
+          id: section.id, title: section.label, items: .authors(authors))
+
+      case .unknown:
+        continue
+      }
+    }
+
+    let continueListeningSection = buildContinueListeningSection()
+    let offlineSection = buildOfflineSection()
+
+    var orderedSections: [Section] = []
+
+    for sectionID in preferences.homeSections {
+      switch sectionID {
+      case .listeningStats:
+        orderedSections.append(Section(id: "listening-stats", title: "", items: .stats))
+
+      case .continueListening:
+        if let section = continueListeningSection {
+          orderedSections.append(section)
+        }
+
+      case .availableOffline:
+        if let section = offlineSection {
+          orderedSections.append(section)
+        }
+
+      default:
+        if let section = sectionsByID[sectionID.rawValue] {
+          orderedSections.append(section)
+        }
+      }
+    }
+
+    self.sections = orderedSections
+  }
+
+  private func buildContinueListeningSection() -> Section? {
     let existingModels: [String: ContinueListeningCardModel]
-    if case .continueListening(let items) = continueListening?.items {
+    if let existingSection = sections.first(where: { $0.id == "continue-listening" }),
+      case .continueListening(let items) = existingSection.items
+    {
       existingModels = Dictionary(
         uniqueKeysWithValues: items.compactMap { item in
           guard let cardModel = item as? ContinueListeningCardModel else { return nil }
@@ -85,7 +165,7 @@ extension HomePageModel {
 
     var models: [ContinueListeningCardModel] = []
 
-    for book in self.books {
+    for book in continueListeningBooks {
       let model: ContinueListeningCardModel
 
       if let existingModel = existingModels[book.id] {
@@ -95,7 +175,8 @@ extension HomePageModel {
           book: book,
           onRemoved: { [weak self] in
             guard let self else { return }
-            self.books = self.books.filter({ $0.id != book.id })
+            self.continueListeningBooks = self.continueListeningBooks.filter({ $0.id != book.id })
+            self.rebuildSections()
           }
         )
       }
@@ -105,15 +186,16 @@ extension HomePageModel {
 
     let sorted = models.sorted(by: >)
 
-    if !sorted.isEmpty {
-      self.continueListening = Section(
-        title: "Continue Listening", items: .continueListening(sorted))
-    } else {
-      self.continueListening = nil
-    }
+    guard !sorted.isEmpty else { return nil }
+
+    return Section(
+      id: "continue-listening",
+      title: "Continue Listening",
+      items: .continueListening(sorted)
+    )
   }
 
-  private func refreshOfflineSection() {
+  private func buildOfflineSection() -> Section? {
     var downloadedBooks: [LocalBook] = []
 
     for book in availableOffline {
@@ -127,47 +209,17 @@ extension HomePageModel {
       }
     }
 
-    guard !downloadedBooks.isEmpty else {
-      self.offline = nil
-      return
-    }
+    guard !downloadedBooks.isEmpty else { return nil }
 
     let sortedBooks = downloadedBooks.sorted()
-
     let models = sortedBooks.map { BookCardModel($0) }
-    self.offline = Section(title: "Available Offline", items: .books(models))
+
+    return Section(
+      id: "available-offline",
+      title: "Available Offline",
+      items: .offline(models)
+    )
   }
-
-  private func processSections(_ personalized: [Personalized.Section]) {
-    var sections = [Section]()
-
-    for section in personalized {
-      switch section.entities {
-      case .books(let items):
-        if section.id == "continue-listening" {
-          books = items
-          continue
-        } else {
-          let books = items.map({ BookCardModel($0, sortBy: .title) })
-          sections.append(.init(title: section.label, items: .books(books)))
-        }
-
-      case .series(let items):
-        let series = items.map { SeriesCardModel(series: $0) }
-        sections.append(.init(title: section.label, items: .series(series)))
-
-      case .authors(let items):
-        let authors = items.map { AuthorCardModel(author: $0) }
-        sections.append(.init(title: section.label, items: .authors(authors)))
-
-      case .unknown:
-        continue
-      }
-    }
-
-    self.others = sections
-  }
-
 }
 
 extension HomePageModel {
@@ -177,13 +229,12 @@ extension HomePageModel {
     }
 
     processSections(personalized.sections)
-    refreshDynamicSections()
   }
 
   private func fetchRemoteContent() async {
     guard Audiobookshelf.shared.isAuthenticated else { return }
 
-    if others.isEmpty {
+    if sections.isEmpty {
       isLoading = true
     }
 
@@ -197,7 +248,6 @@ extension HomePageModel {
 
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
       processSections(personalized.sections)
-      refreshDynamicSections()
     } catch {
       AppLogger.viewModel.error("Failed to fetch personalized content: \(error)")
     }
