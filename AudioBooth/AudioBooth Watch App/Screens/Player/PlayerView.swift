@@ -27,8 +27,8 @@ struct PlayerView: View {
       content
 
       Playback(
-        current: model.current,
-        remaining: model.remaining,
+        current: model.chapterTitle != nil ? model.chapterCurrent : model.current,
+        remaining: model.chapterTitle != nil ? model.chapterRemaining : model.remaining,
         totalTimeRemaining: model.totalTimeRemaining
       )
       .padding(.bottom, 12)
@@ -58,9 +58,6 @@ struct PlayerView: View {
         VolumeView()
       }
     }
-    .sheet(item: $model.playbackDestination) { model in
-      PlaybackDestinationSheet(model: model)
-    }
   }
 
   @ToolbarContentBuilder
@@ -76,7 +73,7 @@ struct PlayerView: View {
       )
     }
 
-    if model.isLocal {
+    if !model.options.isHidden {
       ToolbarItem(placement: .topBarTrailing) {
         Button(
           action: {
@@ -202,17 +199,22 @@ extension PlayerView {
     var remaining: Double
     var totalTimeRemaining: Double
 
+    var chapterTitle: String?
+    var chapterProgress: Double = 0
+    var chapterCurrent: Double = 0
+    var chapterRemaining: Double = 0
+
     var title: String
     var author: String?
     var coverURL: URL?
     var chapters: ChapterPickerSheet.Model?
     var options: PlayerOptionsSheet.Model
-    var playbackDestination: PlaybackDestinationSheet.Model?
 
     func togglePlayback() {}
     func skipBackward() {}
     func skipForward() {}
     func onDownloadTapped() {}
+    func stop() {}
 
     init(
       isPlaying: Bool = false,

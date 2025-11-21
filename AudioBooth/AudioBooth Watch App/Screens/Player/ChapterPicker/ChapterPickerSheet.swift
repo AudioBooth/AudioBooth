@@ -1,4 +1,3 @@
-import Models
 import SwiftUI
 
 struct ChapterPickerSheet: View {

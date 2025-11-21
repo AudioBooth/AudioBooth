@@ -1,25 +1,18 @@
 import Combine
-import NukeUI
 import SwiftUI
 
 struct ContinueListeningView: View {
   @StateObject var model: Model
-  @ObservedObject var connectivityManager = WatchConnectivityManager.shared
 
   var body: some View {
     Group {
-      if model.isLoading && model.continueListeningRows.isEmpty
-        && model.availableOfflineRows.isEmpty
-      {
+      if model.continueListeningRows.isEmpty && model.availableOfflineRows.isEmpty {
         ProgressView()
       } else {
         content
       }
     }
     .navigationTitle("AudioBooth")
-    .task {
-      await model.fetch()
-    }
   }
 
   private var content: some View {
@@ -38,8 +31,6 @@ struct ContinueListeningView: View {
             ContinueListeningRow(model: rowModel)
           }
         }
-
-        refresh
       }
     }
   }
@@ -53,18 +44,6 @@ struct ContinueListeningView: View {
       .padding(.horizontal)
       .padding(.top, 8)
   }
-
-  private var refresh: some View {
-    Button {
-      Task {
-        await model.fetch()
-      }
-    } label: {
-      Label("Refresh", systemImage: "arrow.clockwise")
-    }
-    .disabled(model.isLoading)
-    .padding(.top)
-  }
 }
 
 extension ContinueListeningView {
@@ -72,18 +51,13 @@ extension ContinueListeningView {
   class Model: ObservableObject {
     var continueListeningRows: [ContinueListeningRow.Model]
     var availableOfflineRows: [ContinueListeningRow.Model]
-    var isLoading: Bool
-
-    func fetch() async {}
 
     init(
       continueListeningRows: [ContinueListeningRow.Model] = [],
-      availableOfflineRows: [ContinueListeningRow.Model] = [],
-      isLoading: Bool = false
+      availableOfflineRows: [ContinueListeningRow.Model] = []
     ) {
       self.continueListeningRows = continueListeningRows
       self.availableOfflineRows = availableOfflineRows
-      self.isLoading = isLoading
     }
   }
 }

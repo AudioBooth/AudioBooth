@@ -1,106 +1,79 @@
-import API
-import Combine
-import Models
 import SwiftUI
 
 struct ContentView: View {
   @ObservedObject var connectivityManager = WatchConnectivityManager.shared
   @ObservedObject var playerManager = PlayerManager.shared
-  @ObservedObject var libraries = Audiobookshelf.shared.libraries
 
-  @StateObject private var model: Model = ContentViewModel()
+  @State private var player: PlayerView.Model?
 
   var body: some View {
-    if Audiobookshelf.shared.authentication.server == nil || libraries.current == nil {
-      VStack(spacing: 16) {
-        if !model.authTimeout {
-          ProgressView()
-            .controlSize(.large)
-          Text("Authenticating...")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        } else {
-          Image(systemName: "exclamationmark.triangle")
-            .font(.largeTitle)
-            .foregroundColor(.orange)
-
-          Text("Authentication Timeout")
-            .font(.caption)
-            .fontWeight(.medium)
-
-          Text("Make sure your iPhone is nearby and the app is open")
-            .font(.caption2)
-            .foregroundColor(.secondary)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal)
-
-          Button("Retry", action: model.retryAuth)
-            .buttonStyle(.borderedProminent)
+    NavigationStack {
+      ContinueListeningView(model: ContinueListeningViewModel())
+        .toolbar {
+          toolbar
         }
-      }
-      .task {
-        await model.onAuthenticationWait()
-      }
-    } else {
-      NavigationStack {
-        ContinueListeningView(model: ContinueListeningViewModel())
-          .toolbar {
-            toolbar
+        .sheet(item: $player) { model in
+          PlayerView(model: model)
+        }
+        .onChange(of: playerManager.isShowingFullPlayer) { _, newValue in
+          if newValue, let model = playerManager.current {
+            self.player = model
+          } else if !newValue {
+            self.player = nil
           }
-          .sheet(item: $model.player) { model in
-            PlayerView(model: model)
-          }
-          .onChange(of: playerManager.isShowingFullPlayer) { _, newValue in
-            guard newValue, let model = playerManager.current else { return }
-            self.model.player = model
-          }
-      }
+        }
     }
+  }
+
+  enum PlayerButton {
+    case watch
+    case iphone
+    case none
+  }
+
+  var activePlayerButton: PlayerButton {
+    let hasWatchPlayer = playerManager.current is BookPlayerModel
+    let hasIPhonePlayer = connectivityManager.currentBook != nil
+    let isIPhonePlaying = hasIPhonePlayer && connectivityManager.isPlaying
+
+    if playerManager.isPlayingOnWatch {
+      return .watch
+    }
+
+    if hasWatchPlayer && !isIPhonePlaying {
+      return .watch
+    }
+
+    if hasIPhonePlayer {
+      return .iphone
+    }
+
+    return .none
   }
 
   @ToolbarContentBuilder
   var toolbar: some ToolbarContent {
-    if connectivityManager.hasActivePlayer
-      && !playerManager.isPlayingLocally
-      && !connectivityManager.bookID.isEmpty
-    {
+    switch activePlayerButton {
+    case .watch:
       ToolbarItem(placement: .topBarTrailing) {
-        Button(
-          action: {
-            model.player = RemotePlayerModel()
-          },
-          label: {
-            Image(systemName: "iphone")
-          }
-        )
+        Button {
+          player = playerManager.current
+        } label: {
+          Image(systemName: "applewatch")
+        }
       }
-    } else if let localPlayer = playerManager.current {
+    case .iphone:
       ToolbarItem(placement: .topBarTrailing) {
-        Button(
-          action: {
-            model.player = localPlayer
-          },
-          label: {
-            Image(systemName: "applewatch")
-          }
-        )
+        Button {
+          player = RemotePlayerModel()
+        } label: {
+          Image(systemName: "iphone")
+        }
       }
-    }
-  }
-}
-
-extension ContentView {
-  @Observable
-  class Model: ObservableObject {
-    var player: PlayerView.Model?
-    var authTimeout: Bool
-
-    func onAuthenticationWait() async {}
-    func retryAuth() {}
-
-    init(player: PlayerView.Model? = nil, authTimeout: Bool = false) {
-      self.player = player
-      self.authTimeout = authTimeout
+    case .none:
+      ToolbarItem(placement: .topBarTrailing) {
+        EmptyView()
+      }
     }
   }
 }

@@ -1204,23 +1204,31 @@ extension BookPlayerModel {
   }
 
   private func syncPlayback() {
-    if WCSession.default.isReachable, WCSession.default.isPaired {
-      watchConnectivity.sendPlaybackState(
-        isPlaying: isPlaying,
-        progress: playbackProgress.progress,
-        current: playbackProgress.current,
-        remaining: playbackProgress.remaining,
-        total: playbackProgress.total,
-        totalTimeRemaining: playbackProgress.totalTimeRemaining,
-        bookID: id,
-        title: title,
-        author: author,
-        coverURL: coverURL,
-        playbackSpeed: speed.playbackSpeed
-      )
-    }
-
     savePlaybackStateToWidget()
+
+    let actualIsPlaying = player?.rate ?? 0 > 0
+
+    let chapters: [[String: Any]] =
+      item?.orderedChapters.enumerated().map { index, chapter in
+        [
+          "id": index,
+          "title": chapter.title,
+          "start": chapter.start,
+          "end": chapter.end,
+        ]
+      } ?? []
+
+    watchConnectivity.sendPlaybackState(
+      isPlaying: actualIsPlaying,
+      currentTime: mediaProgress.currentTime,
+      bookID: id,
+      title: title,
+      author: author,
+      coverURL: coverURL,
+      duration: mediaProgress.duration,
+      chapters: chapters,
+      playbackSpeed: speed.playbackSpeed
+    )
   }
 
   private func savePlaybackStateToWidget() {

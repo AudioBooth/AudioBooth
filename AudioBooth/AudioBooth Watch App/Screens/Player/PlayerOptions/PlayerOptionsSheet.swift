@@ -42,13 +42,16 @@ extension PlayerOptionsSheet {
     let id = UUID()
 
     var isPresented: Bool = false
+    var isHidden: Bool
     var hasChapters: Bool
     var downloadState: DownloadManager.DownloadState
 
     init(
+      isHidden: Bool = false,
       hasChapters: Bool = false,
       downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
+      self.isHidden = isHidden
       self.hasChapters = hasChapters
       self.downloadState = downloadState
     }

@@ -4,6 +4,34 @@ import UIKit
 public final class SessionService {
   private let audiobookshelf: Audiobookshelf
 
+  public enum SessionType {
+    case player
+    case download
+    case watch
+
+    var deviceID: String {
+      switch self {
+      case .player: SessionService.deviceID
+      case .download: SessionService.deviceID + "-download"
+      case .watch: SessionService.deviceID + "-watch"
+      }
+    }
+
+    var clientName: String {
+      switch self {
+      case .player, .download: "AudioBooth iOS"
+      case .watch: "AudioBooth Watch"
+      }
+    }
+
+    var mediaPlayer: String {
+      switch self {
+      case .player, .download: "ios"
+      case .watch: "watchos"
+      }
+    }
+  }
+
   init(audiobookshelf: Audiobookshelf) {
     self.audiobookshelf = audiobookshelf
   }
@@ -17,13 +45,11 @@ public final class SessionService {
     return deviceID
   }
 
-  public static var downloadDeviceID: String {
-    return deviceID + "-download"
-  }
-
   public func start(
-    itemID: String, forceDirectPlay: Bool = false, forceTranscode: Bool = false,
-    isDownload: Bool = false
+    itemID: String,
+    forceDirectPlay: Bool = false,
+    forceTranscode: Bool = false,
+    sessionType: SessionType = .player
   ) async throws -> PlaySession {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
@@ -43,14 +69,14 @@ public final class SessionService {
         let deviceId: String
       }
 
-      init(forceDirectPlay: Bool, forceTranscode: Bool, isDownload: Bool) {
+      init(forceDirectPlay: Bool, forceTranscode: Bool, sessionType: SessionType) {
         self.forceDirectPlay = forceDirectPlay
         self.forceTranscode = forceTranscode
         self.supportedMimeTypes = [
           "audio/flac", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/aac", "audio/x-aiff",
           "audio/webm",
         ]
-        self.mediaPlayer = "ios"
+        self.mediaPlayer = sessionType.mediaPlayer
 
         var clientVersion: String?
         if let infoDictionary = Bundle.main.infoDictionary,
@@ -60,11 +86,10 @@ public final class SessionService {
           clientVersion = "\(version) (\(build))"
         }
 
-        let deviceID = isDownload ? SessionService.downloadDeviceID : SessionService.deviceID
         self.deviceInfo = DeviceInfo(
-          clientName: "AudioBooth iOS",
+          clientName: sessionType.clientName,
           clientVersion: clientVersion,
-          deviceId: deviceID
+          deviceId: sessionType.deviceID
         )
       }
     }
@@ -73,7 +98,7 @@ public final class SessionService {
       path: "/api/items/\(itemID)/play",
       method: .post,
       body: PlayRequest(
-        forceDirectPlay: forceDirectPlay, forceTranscode: false, isDownload: isDownload),
+        forceDirectPlay: forceDirectPlay, forceTranscode: forceTranscode, sessionType: sessionType),
       timeout: 5
     )
 

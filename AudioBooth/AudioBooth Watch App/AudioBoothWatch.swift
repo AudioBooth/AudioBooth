@@ -1,4 +1,3 @@
-import API
 import Nuke
 import SwiftUI
 
@@ -7,7 +6,6 @@ struct AudioBoothWatch: App {
   init() {
     configureImagePipeline()
     DownloadManager.shared.cleanupOrphanedDownloads()
-    _ = Audiobookshelf.shared
     _ = WatchConnectivityManager.shared
   }
 

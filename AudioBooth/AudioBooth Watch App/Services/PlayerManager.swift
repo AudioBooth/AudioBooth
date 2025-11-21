@@ -1,8 +1,5 @@
-import API
 import Combine
 import Foundation
-import Models
-import OSLog
 
 final class PlayerManager: ObservableObject {
   @Published var current: PlayerView.Model?
@@ -12,46 +9,24 @@ final class PlayerManager: ObservableObject {
 
   private static let currentBookIDKey = "currentBookID"
 
-  var isPlayingLocally: Bool {
+  var isPlayingOnWatch: Bool {
     guard let current else { return false }
-    return current is LocalPlayerModel && current.isPlaying
+    return current is BookPlayerModel && current.isPlaying
   }
 
-  func setCurrent(_ item: LocalBook) {
-    if let localPlayer = current as? LocalPlayerModel,
-      item.bookID == localPlayer.item.bookID
-    {
+  func setCurrent(_ book: WatchBook) {
+    if let player = current as? BookPlayerModel, book.id == player.bookID {
       return
-    } else {
-      clearCurrent()
-      guard let playerModel = LocalPlayerModel(item) else {
-        AppLogger.player.error(
-          "Failed to create player model for item \(item.bookID)")
-        return
-      }
-      current = playerModel
-      UserDefaults.standard.set(item.bookID, forKey: Self.currentBookIDKey)
     }
-  }
 
-  func setCurrent(_ book: Book) {
-    if let localPlayer = current as? LocalPlayerModel,
-      book.id == localPlayer.item.bookID
-    {
-      return
-    } else {
-      clearCurrent()
-      guard let playerModel = LocalPlayerModel(book) else {
-        AppLogger.player.error(
-          "Failed to create player model for book \(book.id)")
-        return
-      }
-      current = playerModel
-      UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
-    }
+    clearCurrent()
+    let playerModel = BookPlayerModel(book: book)
+    current = playerModel
+    UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
   }
 
   func clearCurrent() {
+    current?.stop()
     current = nil
     UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)
   }

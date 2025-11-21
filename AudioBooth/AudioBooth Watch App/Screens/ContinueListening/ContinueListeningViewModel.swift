@@ -1,99 +1,60 @@
-import API
 import Combine
 import Foundation
-import Models
-import OSLog
-import WatchConnectivity
 
 final class ContinueListeningViewModel: ContinueListeningView.Model {
+  private let connectivityManager = WatchConnectivityManager.shared
+  private let localStorage = LocalBookStorage.shared
   private var cancellables = Set<AnyCancellable>()
 
   init() {
     super.init()
-    loadCachedBooks()
-    observeChanges()
+    setupObservers()
+    updateAllRows()
   }
 
-  private func observeChanges() {
-    Task { @MainActor in
-      for await books in LocalBook.observeAll() {
-        updateBooks(from: books)
+  private func setupObservers() {
+    connectivityManager.$continueListeningBooks
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.updateAllRows()
       }
-    }
-  }
+      .store(in: &cancellables)
 
-  private func loadCachedBooks() {
-    do {
-      let books = try LocalBook.fetchAll()
-      updateBooks(from: books)
-    } catch {
-      AppLogger.viewModel.error("Failed to load cached books: \(error)")
-    }
-  }
-
-  private func updateBooks(from localBooks: [LocalBook]) {
-    let rowModels = localBooks.compactMap { localBook -> ContinueListeningRow.Model? in
-      guard localBook.isDownloaded,
-        let mediaProgress = try? MediaProgress.fetch(bookID: localBook.bookID)
-      else {
-        return nil
+    connectivityManager.$progress
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.updateAllRows()
       }
+      .store(in: &cancellables)
 
-      let timeRemaining = max(0, localBook.duration - mediaProgress.currentTime)
-
-      return ContinueListeningRowModel(localBook, timeRemaining: timeRemaining)
-    }
-
-    self.availableOfflineRows = rowModels
-  }
-
-  override func fetch() async {
-    isLoading = true
-    defer { isLoading = false }
-
-    do {
-      let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
-
-      let continueListeningBooks =
-        personalized.sections
-        .first(where: { $0.id == "continue-listening" })
-        .flatMap { section -> [Book]? in
-          if case .books(let books) = section.entities {
-            return books
-          }
-          return nil
-        } ?? []
-
-      let userData = try await Audiobookshelf.shared.authentication.fetchMe()
-      let progressByBookID = Dictionary(
-        uniqueKeysWithValues: userData.mediaProgress.map { ($0.libraryItemId, $0) }
-      )
-
-      let rowModels = await MainActor.run {
-        continueListeningBooks.map { book in
-          let timeRemaining: Double
-          if let progress = progressByBookID[book.id] {
-            timeRemaining = max(0, book.duration - progress.currentTime)
-          } else {
-            timeRemaining = book.duration
-          }
-
-          let isDownloaded: Bool
-          if let item = try? LocalBook.fetch(bookID: book.id) {
-            isDownloaded = item.isDownloaded
-          } else {
-            isDownloaded = false
-          }
-
-          return ContinueListeningRowModel(
-            book, timeRemaining: timeRemaining, isDownloaded: isDownloaded)
-        }
+    localStorage.$books
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.updateAllRows()
       }
-
-      self.continueListeningRows = rowModels
-    } catch {
-      AppLogger.viewModel.error("Failed to fetch continue listening: \(error)")
-    }
+      .store(in: &cancellables)
   }
 
+  private func updateAllRows() {
+    let localBooks = localStorage.books
+    let downloadedBooks = localBooks.filter { $0.isDownloaded }
+    let progress = connectivityManager.progress
+
+    let remoteBooks = connectivityManager.continueListeningBooks
+
+    continueListeningRows = remoteBooks.map { book in
+      if let localBook = downloadedBooks.first(where: { $0.id == book.id }) {
+        return ContinueListeningRowModel(book: localBook)
+      }
+      var updatedBook = book
+      if let currentTime = progress[book.id] {
+        updatedBook.currentTime = currentTime
+      }
+      return ContinueListeningRowModel(book: updatedBook)
+    }
+
+    availableOfflineRows = downloadedBooks.map { book in
+      ContinueListeningRowModel(book: book)
+    }
+  }
 }

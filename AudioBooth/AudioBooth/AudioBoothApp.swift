@@ -25,7 +25,6 @@ struct AudioBoothApp: App {
     _ = SessionManager.shared
     _ = UserPreferences.shared
 
-    observeAuthentication()
     observeLibrary()
 
     Purchases.logLevel = .error
@@ -66,41 +65,16 @@ struct AudioBoothApp: App {
     }
   }
 
-  private func observeAuthentication() {
-    Audiobookshelf.shared.authentication.onAuthenticationChanged = { credentials in
-      if let (serverID, serverURL, token) = credentials {
-        do {
-          try ModelContextProvider.shared.switchToServer(serverID, serverURL: serverURL)
-        } catch {
-          AppLogger.general.error(
-            "Failed to switch database on login: \(error.localizedDescription)")
-        }
-        WatchConnectivityManager.shared.syncAuthCredentials(serverURL: serverURL, token: token)
-      } else {
-        WatchConnectivityManager.shared.clearAuthCredentials()
-      }
-    }
-
-    if let server = Audiobookshelf.shared.authentication.server {
-      WatchConnectivityManager.shared.syncAuthCredentials(
-        serverURL: server.baseURL, token: "")
-    }
-  }
-
   private func observeLibrary() {
     Audiobookshelf.shared.libraries.onLibraryChanged = { library in
-      if let library {
-        WatchConnectivityManager.shared.syncLibrary(library)
+      if library != nil {
         Task {
           try? await Audiobookshelf.shared.libraries.fetchFilterData()
         }
-      } else {
-        WatchConnectivityManager.shared.clearLibrary()
       }
     }
 
-    if let library = Audiobookshelf.shared.libraries.current {
-      WatchConnectivityManager.shared.syncLibrary(library)
+    if Audiobookshelf.shared.libraries.current != nil {
       Task {
         try? await Audiobookshelf.shared.libraries.fetchFilterData()
       }

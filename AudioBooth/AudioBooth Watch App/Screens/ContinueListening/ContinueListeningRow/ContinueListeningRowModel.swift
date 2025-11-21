@@ -1,56 +1,13 @@
-import API
 import Foundation
-import Models
 
 final class ContinueListeningRowModel: ContinueListeningRow.Model {
-  enum Item {
-    case local(LocalBook)
-    case remote(Book)
-  }
-
-  private let item: Item
+  let book: WatchBook
   private let playerManager = PlayerManager.shared
 
-  init(_ localBook: LocalBook, timeRemaining: Double) {
-    self.item = .local(localBook)
+  init(book: WatchBook) {
+    self.book = book
 
-    let timeRemainingText: String?
-    if timeRemaining > 0 {
-      timeRemainingText =
-        Duration.seconds(timeRemaining).formatted(
-          .units(
-            allowed: [.hours, .minutes],
-            width: .narrow
-          )
-        ) + " left"
-    } else {
-      timeRemainingText = nil
-    }
-
-    super.init(
-      id: localBook.bookID,
-      title: localBook.title,
-      author: localBook.authorNames,
-      coverURL: localBook.coverURL,
-      timeRemaining: timeRemainingText
-    )
-  }
-
-  init(_ book: Book, timeRemaining: Double, isDownloaded: Bool) {
-    self.item = .remote(book)
-
-    let timeRemainingText: String?
-    if timeRemaining > 0 {
-      timeRemainingText =
-        Duration.seconds(timeRemaining).formatted(
-          .units(
-            allowed: [.hours, .minutes],
-            width: .narrow
-          )
-        ) + " left"
-    } else {
-      timeRemainingText = nil
-    }
+    let timeRemainingText = Self.formatTimeRemaining(book.timeRemaining)
 
     super.init(
       id: book.id,
@@ -61,13 +18,18 @@ final class ContinueListeningRowModel: ContinueListeningRow.Model {
     )
   }
 
+  private static func formatTimeRemaining(_ timeRemaining: Double) -> String? {
+    guard timeRemaining > 0 else { return nil }
+    return Duration.seconds(timeRemaining).formatted(
+      .units(
+        allowed: [.hours, .minutes],
+        width: .narrow
+      )
+    ) + " left"
+  }
+
   override func onTapped() {
-    switch item {
-    case .local(let localBook):
-      playerManager.setCurrent(localBook)
-    case .remote(let book):
-      playerManager.setCurrent(book)
-    }
+    playerManager.setCurrent(book)
     playerManager.isShowingFullPlayer = true
   }
 }

@@ -1,10 +1,9 @@
 import Combine
-import Foundation
 import NukeUI
 import SwiftUI
 
 struct ContinueListeningRow: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     Button(action: model.onTapped) {
@@ -43,6 +42,7 @@ struct ContinueListeningRow: View {
               .lineLimit(1)
           }
         }
+
       }
       .padding()
       .background(Color(red: 0.1, green: 0.1, blue: 0.2))

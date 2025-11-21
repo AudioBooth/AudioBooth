@@ -1,10 +1,6 @@
-import API
-import AVFoundation
 import Combine
 import Foundation
-import Models
 import OSLog
-import SwiftData
 
 final class DownloadManager: NSObject, ObservableObject {
   static let shared = DownloadManager()
@@ -22,6 +18,9 @@ final class DownloadManager: NSObject, ObservableObject {
     return queue
   }()
 
+  private let localStorage = LocalBookStorage.shared
+  private let connectivityManager = WatchConnectivityManager.shared
+
   private var activeOperations: [String: DownloadOperation] = [:]
   private var progressTasks: [String: Task<Void, Never>] = [:]
   @Published private(set) var currentProgress: [String: Double] = [:]
@@ -30,51 +29,59 @@ final class DownloadManager: NSObject, ObservableObject {
     activeOperations[bookID] != nil
   }
 
-  func startDownload(for item: LocalBook, session: Session) {
-    guard activeOperations[item.bookID] == nil else { return }
+  func startDownload(for book: WatchBook) {
+    guard activeOperations[book.id] == nil else { return }
 
-    let operation = DownloadOperation(book: item, session: session)
-    activeOperations[item.bookID] = operation
-    currentProgress.removeValue(forKey: item.bookID)
+    Task {
+      guard
+        let localBook = await connectivityManager.startSession(bookID: book.id, forDownload: true)
+      else {
+        AppLogger.download.error("Failed to get download info")
+        return
+      }
 
-    let progressTask = Task { @MainActor [weak self] in
-      for await progress in operation.progress {
-        guard !Task.isCancelled else { break }
-        self?.currentProgress[item.bookID] = progress
+      var bookToSave = localBook
+      bookToSave.currentTime = book.currentTime
+      if bookToSave.coverURL == nil {
+        bookToSave.coverURL = book.coverURL
+      }
+      localStorage.saveBook(bookToSave)
+
+      var downloadURLs: [Int: URL] = [:]
+      for track in localBook.tracks {
+        if let url = track.url {
+          downloadURLs[track.index] = url
+        }
+      }
+
+      await MainActor.run {
+        startDownloadOperation(for: bookToSave, downloadURLs: downloadURLs)
       }
     }
-    progressTasks[item.bookID] = progressTask
-
-    operation.completionBlock = { @MainActor [weak self] in
-      self?.progressTasks[item.bookID]?.cancel()
-      self?.progressTasks.removeValue(forKey: item.bookID)
-      self?.activeOperations.removeValue(forKey: item.bookID)
-      self?.currentProgress.removeValue(forKey: item.bookID)
-    }
-
-    operationQueue.addOperation(operation)
   }
 
-  func startDownload(for book: LocalBook) {
-    guard activeOperations[book.bookID] == nil else { return }
-
-    let operation = DownloadOperation(bookID: book.bookID)
-    activeOperations[book.bookID] = operation
-    currentProgress.removeValue(forKey: book.bookID)
+  private func startDownloadOperation(for book: WatchBook, downloadURLs: [Int: URL]) {
+    let operation = DownloadOperation(
+      book: book,
+      downloadURLs: downloadURLs,
+      localStorage: localStorage
+    )
+    activeOperations[book.id] = operation
+    currentProgress.removeValue(forKey: book.id)
 
     let progressTask = Task { @MainActor [weak self] in
       for await progress in operation.progress {
         guard !Task.isCancelled else { break }
-        self?.currentProgress[book.bookID] = progress
+        self?.currentProgress[book.id] = progress
       }
     }
-    progressTasks[book.bookID] = progressTask
+    progressTasks[book.id] = progressTask
 
     operation.completionBlock = { @MainActor [weak self] in
-      self?.progressTasks[book.bookID]?.cancel()
-      self?.progressTasks.removeValue(forKey: book.bookID)
-      self?.activeOperations.removeValue(forKey: book.bookID)
-      self?.currentProgress.removeValue(forKey: book.bookID)
+      self?.progressTasks[book.id]?.cancel()
+      self?.progressTasks.removeValue(forKey: book.id)
+      self?.activeOperations.removeValue(forKey: book.id)
+      self?.currentProgress.removeValue(forKey: book.id)
     }
 
     operationQueue.addOperation(operation)
@@ -87,129 +94,77 @@ final class DownloadManager: NSObject, ObservableObject {
 
 extension DownloadManager {
   func deleteDownload(for bookID: String) {
-    Task {
+    guard
       let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
-      let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
-        bookID)
+        .first
+    else {
+      return
+    }
 
-      do {
-        if FileManager.default.fileExists(atPath: bookDirectory.path) {
-          try FileManager.default.removeItem(at: bookDirectory)
-        }
+    let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
+      bookID)
 
-        if let item = try? LocalBook.fetch(bookID: bookID) {
-          for track in item.orderedTracks {
-            track.relativePath = nil
-          }
-          try? item.save()
-        }
-      } catch {
-        AppLogger.download.error(
-          "Failed to delete download: \(error.localizedDescription)")
+    do {
+      if FileManager.default.fileExists(atPath: bookDirectory.path) {
+        try FileManager.default.removeItem(at: bookDirectory)
       }
+
+      localStorage.deleteBook(bookID)
+    } catch {
+      AppLogger.download.error("Failed to delete download: \(error.localizedDescription)")
     }
   }
 
   func cleanupOrphanedDownloads() {
-    Task {
-      do {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-          .first!
-        let audiobooksDirectory = documentsPath.appendingPathComponent("audiobooks")
+    guard
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first
+    else {
+      return
+    }
 
-        guard FileManager.default.fileExists(atPath: audiobooksDirectory.path) else {
-          AppLogger.download.debug("Audiobooks directory does not exist, nothing to cleanup")
-          return
-        }
+    let audiobooksDirectory = documentsPath.appendingPathComponent("audiobooks")
 
-        var orphanedFilesCount = 0
-        var orphanedDirectoriesCount = 0
+    guard FileManager.default.fileExists(atPath: audiobooksDirectory.path) else {
+      AppLogger.download.debug("Audiobooks directory does not exist, nothing to cleanup")
+      return
+    }
 
-        let serverDirectories = try FileManager.default.contentsOfDirectory(
-          at: audiobooksDirectory, includingPropertiesForKeys: [.isDirectoryKey])
+    do {
+      let downloadDirectories = try FileManager.default.contentsOfDirectory(
+        at: audiobooksDirectory, includingPropertiesForKeys: [.isDirectoryKey])
 
-        for serverDirectory in serverDirectories {
-          var isServerDirectory: ObjCBool = false
-          FileManager.default.fileExists(
-            atPath: serverDirectory.path, isDirectory: &isServerDirectory)
+      let localBooks = localStorage.books
+      let localBookIDs = Set(localBooks.map { $0.id })
 
-          guard isServerDirectory.boolValue else {
-            continue
-          }
+      for directory in downloadDirectories {
+        var isDirectory: ObjCBool = false
+        FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
 
-          let bookDirectories = try FileManager.default.contentsOfDirectory(
-            at: serverDirectory, includingPropertiesForKeys: [.isDirectoryKey])
+        if isDirectory.boolValue {
+          let bookID = directory.lastPathComponent
 
-          for directory in bookDirectories {
-            var isDirectory: ObjCBool = false
-            FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
-
-            if isDirectory.boolValue {
-              let bookID = directory.lastPathComponent
-
-              guard let item = try? LocalBook.fetch(bookID: bookID) else {
-                try FileManager.default.removeItem(at: directory)
-                orphanedDirectoriesCount += 1
-                AppLogger.download.info(
-                  "Removed orphaned directory for unknown book: \(bookID)")
-                continue
-              }
-
-              let tracks = item.orderedTracks
-
-              var expectedFilenames = Set<String>()
-              for track in tracks {
-                if let relativePath = track.relativePath {
-                  expectedFilenames.insert(relativePath.lastPathComponent)
-                }
-              }
-
-              let filesInDirectory = try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: nil)
-
-              for file in filesInDirectory {
-                let filename = file.lastPathComponent
-
-                if !expectedFilenames.contains(filename) {
-                  try FileManager.default.removeItem(at: file)
-                  orphanedFilesCount += 1
-                }
-              }
-
-              let remainingFiles = try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: nil)
-              if remainingFiles.isEmpty {
-                try FileManager.default.removeItem(at: directory)
-                orphanedDirectoriesCount += 1
-              }
-            }
-          }
-
-          let remainingBooks = try FileManager.default.contentsOfDirectory(
-            at: serverDirectory, includingPropertiesForKeys: nil)
-          if remainingBooks.isEmpty {
-            try FileManager.default.removeItem(at: serverDirectory)
+          if !localBookIDs.contains(bookID) {
+            try FileManager.default.removeItem(at: directory)
+            AppLogger.download.info("Removed orphaned directory for unknown book: \(bookID)")
           }
         }
-
-      } catch {
       }
+    } catch {
+      AppLogger.download.error("Failed to cleanup orphaned downloads: \(error)")
     }
   }
-
 }
 
 private final class DownloadOperation: Operation, @unchecked Sendable {
-  private var audiobookshelf: Audiobookshelf { .shared }
-
   let bookID: String
   let progress: AsyncStream<Double>
 
   private let progressContinuation: AsyncStream<Double>.Continuation
+  private let localStorage: LocalBookStorage
+  private let downloadURLs: [Int: URL]
 
-  private var book: LocalBook?
-  private var session: Session?
+  private var book: WatchBook
   private var totalBytes: Int64 = 0
   private var bytesDownloadedSoFar: Int64 = 0
 
@@ -229,42 +184,28 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   }()
 
   private var _executing = false {
-    willSet {
-      willChangeValue(forKey: "isExecuting")
-    }
-    didSet {
-      didChangeValue(forKey: "isExecuting")
-    }
+    willSet { willChangeValue(forKey: "isExecuting") }
+    didSet { didChangeValue(forKey: "isExecuting") }
   }
 
   private var _finished = false {
-    willSet {
-      willChangeValue(forKey: "isFinished")
-    }
-    didSet {
-      didChangeValue(forKey: "isFinished")
-    }
+    willSet { willChangeValue(forKey: "isFinished") }
+    didSet { didChangeValue(forKey: "isFinished") }
   }
 
   override var isAsynchronous: Bool { true }
   override var isExecuting: Bool { _executing }
   override var isFinished: Bool { _finished }
 
-  init(bookID: String) {
-    self.bookID = bookID
-
-    let (stream, continuation) = AsyncStream.makeStream(
-      of: Double.self, bufferingPolicy: .bufferingNewest(1))
-    self.progress = stream
-    self.progressContinuation = continuation
-
-    super.init()
-  }
-
-  init(book: LocalBook, session: Session) {
-    self.bookID = book.bookID
+  init(
+    book: WatchBook,
+    downloadURLs: [Int: URL],
+    localStorage: LocalBookStorage
+  ) {
     self.book = book
-    self.session = session
+    self.bookID = book.id
+    self.downloadURLs = downloadURLs
+    self.localStorage = localStorage
 
     let (stream, continuation) = AsyncStream.makeStream(
       of: Double.self, bufferingPolicy: .bufferingNewest(1))
@@ -292,14 +233,17 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     currentTrack?.cancel()
     progressContinuation.finish()
 
-    Task {
-      await cleanupPartialDownload()
-    }
+    cleanupPartialDownload()
   }
 
-  private func cleanupPartialDownload() async {
-    let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-      .first!
+  private func cleanupPartialDownload() {
+    guard
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first
+    else {
+      return
+    }
+
     let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
       bookID)
     try? FileManager.default.removeItem(at: bookDirectory)
@@ -307,35 +251,11 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
   private func executeDownload() async {
     do {
-      if book == nil || session == nil {
-        let playSession = try await audiobookshelf.sessions.start(
-          itemID: bookID,
-          isDownload: true
-        )
-
-        guard !isCancelled else {
-          finish(success: false, error: CancellationError())
-          return
-        }
-
-        guard let session = Session(from: playSession) else {
-          finish(success: false, error: URLError(.badServerResponse))
-          return
-        }
-
-        self.session = session
-
-        let existingItem = try? LocalBook.fetch(bookID: bookID)
-        let book = existingItem ?? LocalBook(from: playSession.libraryItem)
-        self.book = book
-        self.totalBytes = book.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
-      } else {
-        self.totalBytes = book!.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
-      }
+      totalBytes = book.tracks.reduce(0) { $0 + ($1.size ?? 0) }
 
       try await downloadTracks()
 
-      try? book?.save()
+      localStorage.saveBook(book)
       finish(success: true, error: nil)
     } catch {
       finish(success: false, error: error)
@@ -343,30 +263,35 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   }
 
   private func downloadTracks() async throws {
-    guard let book, let session else { throw URLError(.unknown) }
-
-    let tracks = book.orderedTracks
+    let tracks = book.tracks.sorted { $0.index < $1.index }
     guard !tracks.isEmpty else { throw URLError(.badURL) }
 
-    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
-      throw URLError(.userAuthenticationRequired)
+    guard
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first
+    else {
+      throw URLError(.cannotCreateFile)
     }
 
-    let bookDirectory = FileManager.default
-      .urls(for: .documentDirectory, in: .userDomainMask).first!
-      .appendingPathComponent("audiobooks/\(serverID)/\(bookID)")
-
+    let bookDirectory = documentsPath.appendingPathComponent("audiobooks/\(bookID)")
     try FileManager.default.createDirectory(at: bookDirectory, withIntermediateDirectories: true)
 
     for track in tracks {
       guard !isCancelled else { throw CancellationError() }
 
-      let trackURL = session.url(for: track)
-      let fileExtension = track.ext ?? ".mp3"
+      guard let downloadURL = downloadURLs[track.index] else {
+        AppLogger.download.error("Track \(track.index) missing download URL")
+        throw URLError(.badURL)
+      }
+
+      guard let fileExtension = track.ext, !fileExtension.isEmpty else {
+        AppLogger.download.error("Track \(track.index) missing file extension, cannot download")
+        throw URLError(.cannotDecodeContentData)
+      }
       let trackFile = bookDirectory.appendingPathComponent("\(track.index)\(fileExtension)")
 
       try await withCheckedThrowingContinuation { continuation in
-        let downloadTask = downloadSession.downloadTask(with: trackURL)
+        let downloadTask = downloadSession.downloadTask(with: downloadURL)
         downloadTask.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
 
         self.currentTrack = downloadTask
@@ -376,8 +301,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         downloadTask.resume()
       }
 
-      track.relativePath = URL(
-        string: "audiobooks/\(serverID)/\(bookID)/\(track.index)\(fileExtension)")
+      if let trackArrayIndex = book.tracks.firstIndex(where: { $0.index == track.index }) {
+        book.tracks[trackArrayIndex].relativePath =
+          "audiobooks/\(bookID)/\(track.index)\(fileExtension)"
+      }
 
       if let size = track.size {
         bytesDownloadedSoFar += size
@@ -392,14 +319,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     progressContinuation.finish()
     downloadSession.invalidateAndCancel()
 
-    if let session = session {
-      Task {
-        try await audiobookshelf.sessions.close(session.id)
-      }
-    }
-
     if success {
-      AppLogger.download.info("Download completed")
+      AppLogger.download.info("Download completed for \(self.bookID)")
     } else if let error = error {
       let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
       if !isCancelled {

@@ -77,6 +77,7 @@ extension HomePageModel {
       if section.id == "continue-listening" {
         if case .books(let items) = section.entities {
           continueListeningBooks = items
+          WatchConnectivityManager.shared.syncContinueListening(books: items)
         }
         break
       }

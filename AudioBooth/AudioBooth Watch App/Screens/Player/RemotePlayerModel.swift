@@ -8,7 +8,9 @@ final class RemotePlayerModel: PlayerView.Model {
 
   init() {
     super.init(isReadyToPlay: true, isLocal: false)
+    options = PlayerOptionsSheet.Model(isHidden: true, downloadState: .downloaded)
     setupBindings()
+    updateFromCurrentBook()
   }
 
   private func setupBindings() {
@@ -26,33 +28,53 @@ final class RemotePlayerModel: PlayerView.Model {
       }
       .store(in: &cancellables)
 
+    connectivityManager.$currentBook
+      .sink { [weak self] _ in
+        self?.updateFromCurrentBook()
+      }
+      .store(in: &cancellables)
+
     connectivityManager.$progress
-      .assign(to: \.progress, on: self)
+      .sink { [weak self] _ in
+        self?.updateFromCurrentBook()
+      }
       .store(in: &cancellables)
+  }
 
-    connectivityManager.$current
-      .assign(to: \.current, on: self)
-      .store(in: &cancellables)
+  private func updateFromCurrentBook() {
+    guard let book = connectivityManager.currentBook else { return }
 
-    connectivityManager.$remaining
-      .assign(to: \.remaining, on: self)
-      .store(in: &cancellables)
+    let currentTime = connectivityManager.progress[book.id] ?? book.currentTime
 
-    connectivityManager.$totalTimeRemaining
-      .assign(to: \.totalTimeRemaining, on: self)
-      .store(in: &cancellables)
+    self.title = book.title
+    self.author = book.authorName
+    self.coverURL = book.coverURL
+    self.current = currentTime
+    self.remaining = max(0, book.duration - currentTime)
+    self.totalTimeRemaining = self.remaining
+    self.progress = book.duration > 0 ? currentTime / book.duration : 0
 
-    connectivityManager.$title
-      .assign(to: \.title, on: self)
-      .store(in: &cancellables)
+    updateCurrentChapter(currentTime: currentTime, chapters: book.chapters)
+  }
 
-    connectivityManager.$author
-      .assign(to: \.author, on: self)
-      .store(in: &cancellables)
+  private func updateCurrentChapter(currentTime: Double, chapters: [WatchChapter]) {
+    guard !chapters.isEmpty else {
+      chapterTitle = nil
+      return
+    }
 
-    connectivityManager.$coverURL
-      .assign(to: \.coverURL, on: self)
-      .store(in: &cancellables)
+    for chapter in chapters {
+      if currentTime >= chapter.start && currentTime < chapter.end {
+        chapterTitle = chapter.title
+        chapterCurrent = currentTime - chapter.start
+        chapterRemaining = chapter.end - currentTime
+        chapterProgress =
+          chapter.duration > 0 ? (currentTime - chapter.start) / chapter.duration : 0
+        return
+      }
+    }
+
+    chapterTitle = nil
   }
 
   override func togglePlayback() {

@@ -233,7 +233,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     do {
       let playSession = try await audiobookshelf.sessions.start(
         itemID: bookID,
-        isDownload: true
+        sessionType: .download
       )
 
       guard !isCancelled else {

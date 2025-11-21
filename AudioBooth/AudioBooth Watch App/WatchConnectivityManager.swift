@@ -1,7 +1,5 @@
-import API
 import Combine
 import Foundation
-import KeychainAccess
 import OSLog
 import WatchConnectivity
 
@@ -9,32 +7,28 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   static let shared = WatchConnectivityManager()
 
   @Published var isPlaying: Bool = false
-  @Published var progress: Double = 0
-  @Published var current: Double = 0
-  @Published var remaining: Double = 0
-  @Published var total: Double = 0
-  @Published var totalTimeRemaining: Double = 0
-  @Published var bookID: String = ""
-  @Published var title: String = ""
-  @Published var author: String?
-  @Published var coverURL: URL?
-  @Published var playbackSpeed: Float = 1.0
-  @Published var hasActivePlayer: Bool = false
+  @Published var currentBook: WatchBook?
+
+  @Published var continueListeningBooks: [WatchBook] = []
+  @Published var progress: [String: Double] = [:]
 
   private var session: WCSession?
-  private let keychain = Keychain(service: "me.jgrenier.AudioBS")
+  private var cancellables = Set<AnyCancellable>()
 
   private enum Keys {
-    static let authServerURL = "watch_auth_server_url"
-    static let authToken = "watch_auth_token"
-    static let library = "watch_library"
+    static let continueListeningBooks = "continue_listening_books"
+    static let progress = "progress"
+  }
+
+  var isReachable: Bool {
+    session?.isReachable ?? false
   }
 
   private override init() {
     super.init()
 
-    loadPersistedAuth()
-    loadPersistedLibrary()
+    loadPersistedState()
+    setupObservers()
 
     if WCSession.isSupported() {
       session = WCSession.default
@@ -43,32 +37,37 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
-  private func loadPersistedAuth() {
-    guard let serverURLString = try? keychain.get(Keys.authServerURL),
-      let token = try? keychain.get(Keys.authToken),
-      let serverURL = URL(string: serverURLString)
-    else {
-      return
-    }
-
-    Audiobookshelf.shared.authentication.restoreConnection(
-      Connection(
-        serverURL: serverURL,
-        token: .legacy(token: token)
-      )
-    )
-    AppLogger.watchConnectivity.info("Loaded persisted auth credentials")
+  private func setupObservers() {
+    LocalBookStorage.shared.$books
+      .dropFirst()
+      .map { books in books.filter { $0.isDownloaded }.map { $0.id } }
+      .removeDuplicates()
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] downloadedBookIDs in
+        self?.sendDownloadedBookIDs(downloadedBookIDs)
+      }
+      .store(in: &cancellables)
   }
 
-  private func loadPersistedLibrary() {
-    guard let libraryData = try? keychain.getData(Keys.library),
-      let library = try? JSONDecoder().decode(Library.self, from: libraryData)
-    else {
-      return
+  private func loadPersistedState() {
+    if let data = UserDefaults.standard.data(forKey: Keys.continueListeningBooks),
+      let books = try? JSONDecoder().decode([WatchBook].self, from: data)
+    {
+      continueListeningBooks = books
+      AppLogger.watchConnectivity.info("Loaded \(books.count) persisted books")
     }
 
-    Audiobookshelf.shared.libraries.current = library
-    AppLogger.watchConnectivity.info("Loaded persisted library: \(library.name)")
+    if let progressData = UserDefaults.standard.dictionary(forKey: Keys.progress)
+      as? [String: Double]
+    {
+      progress = progressData
+    }
+  }
+
+  private func persistBooks(_ books: [WatchBook]) {
+    guard let data = try? JSONEncoder().encode(books) else { return }
+    UserDefaults.standard.set(data, forKey: Keys.continueListeningBooks)
+    UserDefaults.standard.set(progress, forKey: Keys.progress)
   }
 
   func sendCommand(_ command: String) {
@@ -99,153 +98,250 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     sendCommand("skipBackward")
   }
 
-  func playBook(bookID: String) {
+  func sendDownloadedBookIDs(_ ids: [String]) {
     guard let session = session, session.isReachable else {
-      AppLogger.watchConnectivity.warning("Cannot send play command - session not reachable")
+      AppLogger.watchConnectivity.warning("Cannot send downloaded book IDs - session not reachable")
       return
     }
 
     let message: [String: Any] = [
-      "command": "play",
-      "bookID": bookID,
+      "command": "syncDownloadedBooks",
+      "bookIDs": ids,
     ]
-
     session.sendMessage(message, replyHandler: nil) { error in
-      AppLogger.watchConnectivity.error(
-        "Failed to send play command to iOS: \(error)")
+      AppLogger.watchConnectivity.error("Failed to send downloaded book IDs to iOS: \(error)")
     }
+
+    AppLogger.watchConnectivity.info("Sent \(ids.count) downloaded book IDs to iPhone")
   }
 
-  func requestFullContext() {
-    guard let session = session, session.isReachable else {
-      AppLogger.watchConnectivity.warning("Cannot request context - session not reachable")
-      return
+  func reportProgress(sessionID: String, currentTime: Double, timeListened: Double) {
+    guard let session = session, session.isReachable else { return }
+
+    let message: [String: Any] = [
+      "command": "reportProgress",
+      "sessionID": sessionID,
+      "currentTime": currentTime,
+      "timeListened": timeListened,
+    ]
+
+    session.sendMessage(message, replyHandler: nil, errorHandler: nil)
+  }
+
+  func startSession(bookID: String, forDownload: Bool = false) async -> WatchBook? {
+    AppLogger.watchConnectivity.info(
+      "startSession called for \(bookID), forDownload=\(forDownload)")
+
+    guard let session = session else {
+      AppLogger.watchConnectivity.warning("Cannot start session - no session")
+      return nil
     }
 
-    let message = ["command": "requestContext"]
-    session.sendMessage(message, replyHandler: nil) { error in
-      AppLogger.watchConnectivity.error(
-        "Failed to request context from iOS: \(error)")
+    guard session.isReachable else {
+      AppLogger.watchConnectivity.warning(
+        "Cannot start session - session not reachable (activationState: \(session.activationState.rawValue))"
+      )
+      return nil
     }
 
-    AppLogger.watchConnectivity.info("Requested full context from iPhone")
+    return await withCheckedContinuation {
+      (continuation: CheckedContinuation<WatchBook?, Never>) in
+      let message: [String: Any] = [
+        "command": "startSession",
+        "bookID": bookID,
+        "forDownload": forDownload,
+      ]
+
+      session.sendMessage(
+        message,
+        replyHandler: { response in
+          guard let id = response["id"] as? String,
+            let title = response["title"] as? String,
+            let duration = response["duration"] as? Double,
+            let tracksData = response["tracks"] as? [[String: Any]],
+            let chaptersData = response["chapters"] as? [[String: Any]]
+          else {
+            if let error = response["error"] as? String {
+              AppLogger.watchConnectivity.error("Failed to start session: \(error)")
+            }
+            continuation.resume(returning: nil)
+            return
+          }
+
+          let tracks = tracksData.compactMap { dict -> WatchTrack? in
+            guard let index = dict["index"] as? Int,
+              let trackDuration = dict["duration"] as? Double
+            else { return nil }
+            let url = (dict["url"] as? String).flatMap { URL(string: $0) }
+            return WatchTrack(
+              index: index,
+              duration: trackDuration,
+              size: dict["size"] as? Int64,
+              ext: dict["ext"] as? String,
+              url: url,
+              relativePath: nil
+            )
+          }
+
+          let chapters = chaptersData.compactMap { dict -> WatchChapter? in
+            guard let chapterID = dict["id"] as? Int,
+              let chapterTitle = dict["title"] as? String,
+              let start = dict["start"] as? Double,
+              let end = dict["end"] as? Double
+            else { return nil }
+            return WatchChapter(id: chapterID, title: chapterTitle, start: start, end: end)
+          }
+
+          let coverURL = (response["coverURL"] as? String).flatMap { URL(string: $0) }
+          let sessionID = response["sessionID"] as? String
+
+          let book = WatchBook(
+            id: id,
+            sessionID: sessionID,
+            title: title,
+            authorName: response["authorName"] as? String,
+            coverURL: coverURL,
+            duration: duration,
+            chapters: chapters,
+            tracks: tracks,
+            currentTime: 0
+          )
+
+          AppLogger.watchConnectivity.info("Started session for \(id)")
+          continuation.resume(returning: book)
+        },
+        errorHandler: { error in
+          AppLogger.watchConnectivity.error("Failed to start session: \(error)")
+          continuation.resume(returning: nil)
+        })
+    }
   }
 }
 
 extension WatchConnectivityManager: WCSessionDelegate {
   func session(
-    _ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState,
+    _ session: WCSession,
+    activationDidCompleteWith activationState: WCSessionActivationState,
     error: Error?
   ) {
     if let error = error {
-      AppLogger.watchConnectivity.error(
-        "Watch session activation failed: \(error)")
+      AppLogger.watchConnectivity.error("Watch session activation failed: \(error)")
     } else {
       AppLogger.watchConnectivity.info(
         "Watch session activated with state: \(activationState.rawValue)")
+
+      if activationState == .activated {
+        let context = session.receivedApplicationContext
+        Task { @MainActor in
+          handleContext(context)
+        }
+
+        if session.isReachable {
+          let downloadedBookIDs = LocalBookStorage.shared.books
+            .filter { $0.isDownloaded }
+            .map { $0.id }
+          sendDownloadedBookIDs(downloadedBookIDs)
+        }
+      }
     }
   }
 
   func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any])
   {
     Task { @MainActor in
-      handleAuthCredentials(applicationContext)
-      handleLibrary(applicationContext)
+      handleContext(applicationContext)
+    }
+  }
 
-      if let hasActivePlayer = applicationContext["hasActivePlayer"] as? Bool,
-        !hasActivePlayer
-      {
-        self.hasActivePlayer = false
-        return
+  func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    Task { @MainActor in
+      handleMessage(message)
+    }
+  }
+
+  private func handleContext(_ context: [String: Any]) {
+    if let currentData = context["current"] as? [String: Any] {
+      handleCurrentBook(currentData)
+    } else {
+      currentBook = nil
+    }
+
+    if let playbackData = context["playback"] as? [String: Any],
+      let newIsPlaying = playbackData["isPlaying"] as? Bool
+    {
+      if newIsPlaying && !PlayerManager.shared.isPlayingOnWatch {
+        PlayerManager.shared.clearCurrent()
       }
+      isPlaying = newIsPlaying
+    } else {
+      isPlaying = false
+    }
 
-      if let isPlaying = applicationContext["isPlaying"] as? Bool {
+    let continueListeningData = context["continueListening"] as? [[String: Any]] ?? []
+    handleContinueListening(continueListeningData)
+
+    let progressData = context["progress"] as? [String: Double] ?? [:]
+    handleProgress(progressData)
+  }
+
+  private func handleMessage(_ message: [String: Any]) {
+    if let progressData = message["progress"] as? [String: Double] {
+      handleProgress(progressData)
+    }
+
+    if let playbackData = message["playback"] as? [String: Any] {
+      if let isPlaying = playbackData["isPlaying"] as? Bool {
+        if isPlaying && !PlayerManager.shared.isPlayingOnWatch {
+          PlayerManager.shared.clearCurrent()
+        }
         self.isPlaying = isPlaying
       }
+    }
 
-      if let progress = applicationContext["progress"] as? Double {
-        self.progress = progress
-      }
-
-      if let current = applicationContext["current"] as? Double {
-        self.current = current
-      }
-
-      if let remaining = applicationContext["remaining"] as? Double {
-        self.remaining = remaining
-      }
-
-      if let total = applicationContext["total"] as? Double {
-        self.total = total
-      }
-
-      if let totalTimeRemaining = applicationContext["totalTimeRemaining"] as? Double {
-        self.totalTimeRemaining = totalTimeRemaining
-      }
-
-      if let bookID = applicationContext["bookID"] as? String {
-        self.bookID = bookID
-      }
-
-      if let title = applicationContext["title"] as? String {
-        self.title = title
-      }
-
-      if let author = applicationContext["author"] as? String {
-        self.author = author
-      }
-
-      if let coverURLString = applicationContext["coverURL"] as? String {
-        self.coverURL = URL(string: coverURLString)
-      } else {
-        self.coverURL = nil
-      }
-
-      if let playbackSpeed = applicationContext["playbackSpeed"] as? Float {
-        self.playbackSpeed = playbackSpeed
-      }
-
-      self.hasActivePlayer = true
+    if let currentData = message["current"] as? [String: Any] {
+      handleCurrentBook(currentData)
     }
   }
 
-  private func handleAuthCredentials(_ context: [String: Any]) {
-    if let serverURLString = context["authServerURL"] as? String,
-      let token = context["authToken"] as? String,
-      let serverURL = URL(string: serverURLString)
-    {
-      try? keychain.set(serverURLString, key: Keys.authServerURL)
-      try? keychain.set(token, key: Keys.authToken)
-
-      Audiobookshelf.shared.authentication.restoreConnection(
-        Connection(
-          serverURL: serverURL,
-          token: .legacy(token: token)
-        )
-      )
-
-      AppLogger.watchConnectivity.info("Received and persisted auth credentials")
-    } else if context["authServerURL"] == nil && context["authToken"] == nil {
-      try? keychain.remove(Keys.authServerURL)
-      try? keychain.remove(Keys.authToken)
-
-      Audiobookshelf.shared.authentication.logout(serverID: "")
-      AppLogger.watchConnectivity.info("Cleared persisted auth credentials")
+  private func handleContinueListening(_ data: [[String: Any]]) {
+    var books = data.compactMap { dict -> WatchBook? in
+      let currentTime = progress[dict["id"] as? String ?? ""] ?? 0
+      return WatchBook(dictionary: dict, currentTime: currentTime)
     }
+
+    if let current = currentBook, !books.contains(where: { $0.id == current.id }) {
+      books.insert(current, at: 0)
+    }
+
+    continueListeningBooks = books
+    persistBooks(books)
+
+    AppLogger.watchConnectivity.info("Received \(books.count) continue listening books")
   }
 
-  private func handleLibrary(_ context: [String: Any]) {
-    if let libraryData = context["library"] as? Data,
-      let library = try? JSONDecoder().decode(Library.self, from: libraryData)
-    {
-      try? keychain.set(libraryData, key: Keys.library)
-      Audiobookshelf.shared.libraries.current = library
-      AppLogger.watchConnectivity.info(
-        "Received and persisted library: \(library.name)")
-    } else if context["library"] == nil {
-      try? keychain.remove(Keys.library)
-      Audiobookshelf.shared.libraries.current = nil
-      AppLogger.watchConnectivity.info("Cleared persisted library")
+  private func handleProgress(_ data: [String: Double]) {
+    for (bookID, currentTime) in data {
+      progress[bookID] = currentTime
+
+      if let index = continueListeningBooks.firstIndex(where: { $0.id == bookID }) {
+        continueListeningBooks[index].currentTime = currentTime
+      }
+
+      LocalBookStorage.shared.updateProgress(for: bookID, currentTime: currentTime)
+    }
+
+    persistBooks(continueListeningBooks)
+  }
+
+  private func handleCurrentBook(_ data: [String: Any]) {
+    let currentTime = progress[data["id"] as? String ?? ""] ?? 0
+    guard let book = WatchBook(dictionary: data, currentTime: currentTime) else { return }
+
+    currentBook = book
+
+    if !continueListeningBooks.contains(where: { $0.id == book.id }) {
+      continueListeningBooks.insert(book, at: 0)
+      persistBooks(continueListeningBooks)
     }
   }
 }
