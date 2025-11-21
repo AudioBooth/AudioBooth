@@ -58,7 +58,7 @@ final class LocalPlayerModel: PlayerView.Model {
     self.item = item
 
     do {
-      self.mediaProgress = try MediaProgress.getOrCreate(for: item.bookID)
+      self.mediaProgress = try MediaProgress.getOrCreate(for: item.bookID, duration: item.duration)
     } catch {
       AppLogger.player.error("Failed to create MediaProgress for item \(item.bookID): \(error)")
       return nil
@@ -86,7 +86,7 @@ final class LocalPlayerModel: PlayerView.Model {
     self.item = existingItem ?? LocalBook(from: book)
 
     do {
-      self.mediaProgress = try MediaProgress.getOrCreate(for: book.id)
+      self.mediaProgress = try MediaProgress.getOrCreate(for: book.id, duration: item.duration)
     } catch {
       AppLogger.player.error("Failed to create MediaProgress for book \(book.id): \(error)")
       return nil

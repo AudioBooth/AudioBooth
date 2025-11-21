@@ -39,14 +39,12 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       downloadState = .notDownloaded
     }
 
-    let mediaProgress = try? MediaProgress.fetch(bookID: item.bookID)
-    let hasProgress = mediaProgress.flatMap { $0.progress > 0 } ?? false
-    let isFinished = mediaProgress?.isFinished ?? false
+    let progress = MediaProgress.progress(for: item.bookID)
 
     super.init(
       downloadState: downloadState,
-      hasProgress: hasProgress,
-      isFinished: isFinished,
+      hasProgress: progress > 0,
+      isFinished: progress == 1.0,
       authorInfo: authorInfo,
       narratorInfo: narratorInfo,
       seriesInfo: seriesInfo
@@ -56,10 +54,6 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
   init(_ item: Book, onProgressChanged: ((Double) -> Void)? = nil) {
     self.item = .remote(item)
     self.onProgressChanged = onProgressChanged
-
-    let mediaProgress = try? MediaProgress.fetch(bookID: item.id)
-    let hasProgress = mediaProgress.flatMap { $0.progress > 0 } ?? false
-    let isFinished = mediaProgress?.isFinished ?? false
 
     lazy var filterData = Audiobookshelf.shared.libraries.getCachedFilterData()
 
@@ -131,10 +125,12 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       downloadState = .notDownloaded
     }
 
+    let progress = MediaProgress.progress(for: item.id)
+
     super.init(
       downloadState: downloadState,
-      hasProgress: hasProgress,
-      isFinished: isFinished,
+      hasProgress: progress > 0,
+      isFinished: progress == 1.0,
       authorInfo: authorInfo,
       narratorInfo: narratorInfo,
       seriesInfo: seriesInfo

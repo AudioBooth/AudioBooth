@@ -37,19 +37,35 @@ public final class MediaProgress {
     self.lastUpdate = lastUpdate
   }
 
-  public convenience init(from apiProgress: User.MediaProgress, duration: TimeInterval = 0) {
+  public convenience init(from apiProgress: User.MediaProgress) {
     self.init(
       bookID: apiProgress.libraryItemId,
       id: apiProgress.id,
       lastPlayedAt: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000)),
       currentTime: apiProgress.currentTime,
       timeListened: 0,
-      duration: duration,
+      duration: apiProgress.duration,
       progress: apiProgress.progress,
-      isFinished: apiProgress.progress >= 1.0,
+      isFinished: apiProgress.isFinished,
       lastUpdate: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
     )
   }
+}
+
+@MainActor
+extension MediaProgress {
+  private static var cache: [String: Double] = initialize()
+
+  public static func initialize() -> [String: Double] {
+    do {
+      let allProgress = try fetchAll()
+      return Dictionary(uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.progress) })
+    } catch {
+      return [:]
+    }
+  }
+
+  public static func progress(for bookID: String) -> Double { cache[bookID, default: 0] }
 }
 
 @MainActor
@@ -91,12 +107,14 @@ extension MediaProgress {
     }
 
     try context.save()
+    MediaProgress.cache[self.bookID] = self.progress
   }
 
   public func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
     try context.save()
+    MediaProgress.cache.removeValue(forKey: self.bookID)
   }
 
   public static func deleteAll() throws {
@@ -109,9 +127,10 @@ extension MediaProgress {
     }
 
     try context.save()
+    cache.removeAll()
   }
 
-  public static func getOrCreate(for bookID: String, duration: TimeInterval = 0) throws
+  public static func getOrCreate(for bookID: String, duration: TimeInterval) throws
     -> MediaProgress
   {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
@@ -156,6 +175,7 @@ extension MediaProgress {
       )
       try newProgress.save()
     }
+    cache[bookID] = progress
   }
 
   public static func markAsFinished(for bookID: String) throws {
@@ -173,6 +193,7 @@ extension MediaProgress {
       )
       try newProgress.save()
     }
+    cache[bookID] = 1.0
   }
 
   @MainActor
@@ -199,8 +220,10 @@ extension MediaProgress {
           local.isFinished = remote.isFinished
           local.lastUpdate = remote.lastUpdate
         }
+        cache[local.bookID] = local.progress
       } else {
         context.insert(remote)
+        cache[remote.bookID] = remote.progress
       }
     }
 
@@ -211,6 +234,7 @@ extension MediaProgress {
         }
 
         context.delete(localProgress)
+        cache.removeValue(forKey: localProgress.bookID)
       }
     }
 

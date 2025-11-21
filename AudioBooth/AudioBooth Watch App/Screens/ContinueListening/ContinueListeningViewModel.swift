@@ -34,7 +34,7 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
   private func updateBooks(from localBooks: [LocalBook]) {
     let rowModels = localBooks.compactMap { localBook -> ContinueListeningRow.Model? in
       guard localBook.isDownloaded,
-        let mediaProgress = try? MediaProgress.getOrCreate(for: localBook.bookID)
+        let mediaProgress = try? MediaProgress.fetch(bookID: localBook.bookID)
       else {
         return nil
       }

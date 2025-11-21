@@ -10,16 +10,26 @@ extension User {
   public struct MediaProgress: Codable, Sendable {
     public let id: String
     public let libraryItemId: String
+    public let duration: Double
     public let progress: Double
+    public let isFinished: Bool
     public let currentTime: Double
     public let lastUpdate: Int64
 
     public init(
-      id: String, libraryItemId: String, progress: Double, currentTime: Double, lastUpdate: Int64
+      id: String,
+      libraryItemId: String,
+      duration: Double,
+      progress: Double,
+      isFinished: Bool,
+      currentTime: Double,
+      lastUpdate: Int64
     ) {
       self.id = id
       self.libraryItemId = libraryItemId
+      self.duration = duration
       self.progress = progress
+      self.isFinished = isFinished
       self.currentTime = currentTime
       self.lastUpdate = lastUpdate
     }

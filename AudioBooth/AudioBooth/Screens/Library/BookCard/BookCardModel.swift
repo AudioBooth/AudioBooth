@@ -123,7 +123,7 @@ final class BookCardModel: BookCard.Model {
     if case .remote(let book) = item, let collapsedSeries = book.collapsedSeries {
       progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
     } else {
-      progress = try? MediaProgress.fetch(bookID: id)?.progress
+      progress = MediaProgress.progress(for: id)
     }
   }
 
@@ -131,7 +131,7 @@ final class BookCardModel: BookCard.Model {
     guard !libraryItemIds.isEmpty else { return nil }
 
     let totalProgress = libraryItemIds.compactMap { bookID in
-      (try? MediaProgress.fetch(bookID: bookID))?.progress ?? 0.0
+      MediaProgress.progress(for: bookID)
     }.reduce(0, +)
 
     return totalProgress / Double(libraryItemIds.count)

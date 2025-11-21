@@ -70,7 +70,7 @@ final class BookPlayerModel: BookPlayer.Model {
   init(_ item: LocalBook) {
     self.item = item
     do {
-      self.mediaProgress = try MediaProgress.getOrCreate(for: item.bookID)
+      self.mediaProgress = try MediaProgress.getOrCreate(for: item.bookID, duration: item.duration)
     } catch {
       fatalError("Failed to create MediaProgress for item \(item.bookID): \(error)")
     }

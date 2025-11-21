@@ -238,11 +238,12 @@ final class LibraryPageModel: LibraryPage.Model {
         filter: filter
       )
 
-      let bookCards = response.results.map { book in
+      var bookCards = [BookCardModel]()
+      for book in response.results {
         if case .series = self.filter {
-          BookCardModel(book, sortBy: .title)
+          bookCards.append(BookCardModel(book, sortBy: .title))
         } else {
-          BookCardModel(book, sortBy: self.sortBy)
+          bookCards.append(BookCardModel(book, sortBy: self.sortBy))
         }
       }
 

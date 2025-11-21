@@ -20,7 +20,7 @@ final class SeriesCardModel: SeriesCard.Model {
     guard !books.isEmpty else { return nil }
 
     let totalProgress = books.compactMap { book in
-      (try? MediaProgress.fetch(bookID: book.id))?.progress ?? 0.0
+      MediaProgress.progress(for: book.id)
     }.reduce(0, +)
 
     return totalProgress / Double(books.count)

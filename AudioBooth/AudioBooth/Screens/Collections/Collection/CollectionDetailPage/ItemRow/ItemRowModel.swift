@@ -13,6 +13,6 @@ final class ItemRowModel: ItemRow.Model {
   }
 
   override func onAppear() {
-    progress = try? MediaProgress.fetch(bookID: id)?.progress
+    progress = MediaProgress.progress(for: id)
   }
 }
