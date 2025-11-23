@@ -51,7 +51,7 @@ final class ServerViewModel: ServerView.Model {
 
     isLoading = true
     let normalizedURL = buildFullServerURL()
-    let headers = (customHeaders as? CustomHeadersViewModel)?.getHeadersDictionary() ?? [:]
+    let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
 
     Task {
       do {
@@ -80,11 +80,14 @@ final class ServerViewModel: ServerView.Model {
     }
 
     let normalizedURL = buildFullServerURL()
-    let headers = (customHeaders as? CustomHeadersViewModel)?.getHeadersDictionary() ?? [:]
+    let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
 
     isLoading = true
 
-    let authManager = OIDCAuthenticationManager(serverURL: normalizedURL, customHeaders: headers)
+    let authManager = OIDCAuthenticationManager(
+      serverURL: normalizedURL,
+      customHeaders: headers
+    )
     authManager.delegate = self
     self.oidcAuthManager = authManager
 
@@ -166,11 +169,26 @@ final class ServerViewModel: ServerView.Model {
   private func buildFullServerURL() -> String {
     let trimmedURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
 
+    var fullURL: String
     if trimmedURL.hasPrefix("http://") || trimmedURL.hasPrefix("https://") {
-      return trimmedURL
+      fullURL = trimmedURL
+    } else {
+      fullURL = serverScheme.rawValue + trimmedURL
     }
 
-    return serverScheme.rawValue + trimmedURL
+    if useSubdirectory {
+      let trimmedSubdirectory =
+        subdirectory
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+      if !trimmedSubdirectory.isEmpty {
+        fullURL = fullURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        fullURL += "/" + trimmedSubdirectory
+      }
+    }
+
+    return fullURL
   }
 }
 

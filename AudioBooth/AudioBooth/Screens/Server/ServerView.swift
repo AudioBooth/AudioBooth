@@ -41,6 +41,16 @@ struct ServerView: View {
               focusedField = .username
             }
 
+          if !model.isAuthenticated {
+            Toggle("Use Subdirectory", isOn: $model.useSubdirectory)
+
+            if model.useSubdirectory {
+              TextField("Subdirectory Path", text: $model.subdirectory)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+            }
+          }
+
           customHeadersSection
         }
 
@@ -128,8 +138,8 @@ struct ServerView: View {
           Image(systemName: "list.bullet.rectangle")
           Text("Custom Headers")
           Spacer()
-          if model.customHeaders.headersCount > 0 {
-            Text("\(model.customHeaders.headersCount)")
+          if model.customHeaders.headers.count > 0 {
+            Text("\(model.customHeaders.headers.count)")
               .foregroundColor(.secondary)
           }
         }
@@ -273,6 +283,8 @@ extension ServerView {
 
     var serverURL: String
     var serverScheme: ServerScheme
+    var useSubdirectory: Bool
+    var subdirectory: String
     var username: String
     var password: String
     var customHeaders: CustomHeadersView.Model
@@ -303,6 +315,8 @@ extension ServerView {
       showDiscoveryPortAlert: Bool = false,
       serverURL: String = "",
       serverScheme: ServerScheme = .https,
+      useSubdirectory: Bool = false,
+      subdirectory: String = "",
       username: String = "",
       password: String = "",
       customHeaders: CustomHeadersView.Model = .mock,
@@ -314,6 +328,8 @@ extension ServerView {
     ) {
       self.serverURL = serverURL
       self.serverScheme = serverScheme
+      self.useSubdirectory = useSubdirectory
+      self.subdirectory = subdirectory
       self.username = username
       self.password = password
       self.customHeaders = customHeaders

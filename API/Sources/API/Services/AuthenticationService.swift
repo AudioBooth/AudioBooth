@@ -73,7 +73,10 @@ public final class AuthenticationService {
   }
 
   public func login(
-    serverURL: String, username: String, password: String, customHeaders: [String: String] = [:]
+    serverURL: String,
+    username: String,
+    password: String,
+    customHeaders: [String: String] = [:]
   ) async throws {
     guard let baseURL = URL(string: serverURL) else {
       throw Audiobookshelf.AudiobookshelfError.invalidURL
@@ -95,9 +98,10 @@ public final class AuthenticationService {
 
     let loginRequest = LoginRequest(username: username, password: password)
     let request = NetworkRequest<Response>(
-      path: "/audiobookshelf/login",
+      path: "/login",
       method: .post,
-      body: loginRequest
+      body: loginRequest,
+      headers: customHeaders
     )
 
     let response = try await loginService.send(request)

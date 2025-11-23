@@ -128,10 +128,6 @@ extension CustomHeadersView {
 
 extension CustomHeadersView.Model {
   static let mock = CustomHeadersView.Model()
-
-  var headersCount: Int {
-    headers.count
-  }
 }
 
 #Preview {
