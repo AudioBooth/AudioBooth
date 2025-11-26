@@ -129,92 +129,109 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   func startSession(bookID: String, forDownload: Bool = false) async -> WatchBook? {
+    await withCheckedContinuation { continuation in
+      startSessionWithCallback(bookID: bookID, forDownload: forDownload) { book in
+        continuation.resume(returning: book)
+      }
+    }
+  }
+
+  private func startSessionWithCallback(
+    bookID: String,
+    forDownload: Bool,
+    completion: @escaping (WatchBook?) -> Void
+  ) {
     AppLogger.watchConnectivity.info(
       "startSession called for \(bookID), forDownload=\(forDownload)")
 
     guard let session = session else {
-      AppLogger.watchConnectivity.warning("Cannot start session - no session")
-      return nil
+      AppLogger.watchConnectivity.error("Cannot start session - no WCSession instance")
+      completion(nil)
+      return
     }
+
+    AppLogger.watchConnectivity.info(
+      "Session state - isReachable: \(session.isReachable), activationState: \(session.activationState.rawValue)"
+    )
 
     guard session.isReachable else {
-      AppLogger.watchConnectivity.warning(
-        "Cannot start session - session not reachable (activationState: \(session.activationState.rawValue))"
-      )
-      return nil
+      AppLogger.watchConnectivity.error("Cannot start session - session not reachable")
+      completion(nil)
+      return
     }
 
-    return await withCheckedContinuation {
-      (continuation: CheckedContinuation<WatchBook?, Never>) in
-      let message: [String: Any] = [
-        "command": "startSession",
-        "bookID": bookID,
-        "forDownload": forDownload,
-      ]
+    AppLogger.watchConnectivity.info("Sending startSession message to iOS...")
 
-      session.sendMessage(
-        message,
-        replyHandler: { response in
-          guard let id = response["id"] as? String,
-            let title = response["title"] as? String,
-            let duration = response["duration"] as? Double,
-            let tracksData = response["tracks"] as? [[String: Any]],
-            let chaptersData = response["chapters"] as? [[String: Any]]
-          else {
-            if let error = response["error"] as? String {
-              AppLogger.watchConnectivity.error("Failed to start session: \(error)")
-            }
-            continuation.resume(returning: nil)
-            return
+    let message: [String: Any] = [
+      "command": "startSession",
+      "bookID": bookID,
+      "forDownload": forDownload,
+    ]
+
+    session.sendMessage(
+      message,
+      replyHandler: { response in
+        AppLogger.watchConnectivity.info("Received reply from iOS")
+
+        guard let id = response["id"] as? String,
+          let title = response["title"] as? String,
+          let duration = response["duration"] as? Double,
+          let tracksData = response["tracks"] as? [[String: Any]],
+          let chaptersData = response["chapters"] as? [[String: Any]]
+        else {
+          if let error = response["error"] as? String {
+            AppLogger.watchConnectivity.error("Failed to start session: \(error)")
           }
+          completion(nil)
+          return
+        }
 
-          let tracks = tracksData.compactMap { dict -> WatchTrack? in
-            guard let index = dict["index"] as? Int,
-              let trackDuration = dict["duration"] as? Double
-            else { return nil }
-            let url = (dict["url"] as? String).flatMap { URL(string: $0) }
-            return WatchTrack(
-              index: index,
-              duration: trackDuration,
-              size: dict["size"] as? Int64,
-              ext: dict["ext"] as? String,
-              url: url,
-              relativePath: nil
-            )
-          }
-
-          let chapters = chaptersData.compactMap { dict -> WatchChapter? in
-            guard let chapterID = dict["id"] as? Int,
-              let chapterTitle = dict["title"] as? String,
-              let start = dict["start"] as? Double,
-              let end = dict["end"] as? Double
-            else { return nil }
-            return WatchChapter(id: chapterID, title: chapterTitle, start: start, end: end)
-          }
-
-          let coverURL = (response["coverURL"] as? String).flatMap { URL(string: $0) }
-          let sessionID = response["sessionID"] as? String
-
-          let book = WatchBook(
-            id: id,
-            sessionID: sessionID,
-            title: title,
-            authorName: response["authorName"] as? String,
-            coverURL: coverURL,
-            duration: duration,
-            chapters: chapters,
-            tracks: tracks,
-            currentTime: 0
+        let tracks = tracksData.compactMap { dict -> WatchTrack? in
+          guard let index = dict["index"] as? Int,
+            let trackDuration = dict["duration"] as? Double
+          else { return nil }
+          let url = (dict["url"] as? String).flatMap { URL(string: $0) }
+          return WatchTrack(
+            index: index,
+            duration: trackDuration,
+            size: dict["size"] as? Int64,
+            ext: dict["ext"] as? String,
+            url: url,
+            relativePath: nil
           )
+        }
 
-          AppLogger.watchConnectivity.info("Started session for \(id)")
-          continuation.resume(returning: book)
-        },
-        errorHandler: { error in
-          AppLogger.watchConnectivity.error("Failed to start session: \(error)")
-          continuation.resume(returning: nil)
-        })
-    }
+        let chapters = chaptersData.compactMap { dict -> WatchChapter? in
+          guard let chapterID = dict["id"] as? Int,
+            let chapterTitle = dict["title"] as? String,
+            let start = dict["start"] as? Double,
+            let end = dict["end"] as? Double
+          else { return nil }
+          return WatchChapter(id: chapterID, title: chapterTitle, start: start, end: end)
+        }
+
+        let coverURL = (response["coverURL"] as? String).flatMap { URL(string: $0) }
+        let sessionID = response["sessionID"] as? String
+
+        let book = WatchBook(
+          id: id,
+          sessionID: sessionID,
+          title: title,
+          authorName: response["authorName"] as? String,
+          coverURL: coverURL,
+          duration: duration,
+          chapters: chapters,
+          tracks: tracks,
+          currentTime: 0
+        )
+
+        AppLogger.watchConnectivity.info("Started session for \(id)")
+        completion(book)
+      },
+      errorHandler: { error in
+        AppLogger.watchConnectivity.error("sendMessage error: \(error.localizedDescription)")
+        completion(nil)
+      })
   }
 }
 

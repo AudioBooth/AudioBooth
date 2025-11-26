@@ -7,7 +7,7 @@ struct PlayerView: View {
 
   private var playerManager: PlayerManager { .shared }
 
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     VStack(spacing: 6) {

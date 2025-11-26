@@ -30,7 +30,7 @@ struct Cover: View {
       EmptyView()
     case .downloading(let value):
       progress(value)
-        .padding(2)
+        //        .padding(2)
         .frame(width: 14, height: 14)
         .foregroundColor(.white)
         .padding(.trailing, 4)
@@ -55,16 +55,22 @@ struct Cover: View {
 
   func progress(_ progress: Double) -> some View {
     ZStack {
-      Circle()
-        .stroke(Color.white.opacity(0.4), lineWidth: 2)
+      //      Circle()
+      //        .stroke(Color.white.opacity(0.4), lineWidth: 2)
+      //
+      //      Circle()
+      //        .trim(from: 0, to: progress)
+      //        .stroke(
+      //          Color.white,
+      //          style: StrokeStyle(lineWidth: 2, lineCap: .round)
+      //        )
+      //        .rotationEffect(.degrees(-90))
 
-      Circle()
-        .trim(from: 0, to: progress)
-        .stroke(
-          Color.white,
-          style: StrokeStyle(lineWidth: 2, lineCap: .round)
-        )
-        .rotationEffect(.degrees(-90))
+      Text("\(Int(progress * 100))%")
+        .font(.system(size: 8, weight: .bold))
+        .monospacedDigit()
+        .minimumScaleFactor(0.5)
+        .foregroundColor(.white)
     }
   }
 }

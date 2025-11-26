@@ -285,9 +285,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
           replyHandler(["error": "Missing bookID"])
           return
         }
+
         let forDownload = message["forDownload"] as? Bool ?? false
         await handleStartSession(
-          bookID: bookID, forDownload: forDownload, replyHandler: replyHandler)
+          bookID: bookID,
+          forDownload: forDownload,
+          replyHandler: replyHandler
+        )
 
       default:
         replyHandler(["error": "Unknown command: \(command)"])

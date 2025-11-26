@@ -89,6 +89,52 @@ final class DownloadManager: NSObject, ObservableObject {
 
   func cancelDownload(for bookID: String) {
     activeOperations[bookID]?.cancel()
+    currentProgress.removeValue(forKey: bookID)
+  }
+
+  func reconnectBackgroundSession(withIdentifier identifier: String) {
+    guard identifier.hasPrefix("me.jgrenier.AudioBS.watch.download.") else { return }
+    let bookID = String(identifier.dropFirst("me.jgrenier.AudioBS.watch.download.".count))
+
+    guard activeOperations[bookID] == nil else {
+      AppLogger.download.debug("Session already active for book: \(bookID)")
+      return
+    }
+
+    guard let book = localStorage.books.first(where: { $0.id == bookID }) else {
+      AppLogger.download.warning("Cannot reconnect session for unknown book: \(bookID)")
+      let config = URLSessionConfiguration.background(withIdentifier: identifier)
+      let session = URLSession(configuration: config)
+      session.invalidateAndCancel()
+      return
+    }
+
+    AppLogger.download.info("Reconnecting background session for book: \(bookID)")
+
+    let operation = DownloadOperation(
+      book: book,
+      downloadURLs: [:],
+      localStorage: localStorage,
+      reconnecting: true
+    )
+    activeOperations[book.id] = operation
+
+    let progressTask = Task { @MainActor [weak self] in
+      for await progress in operation.progress {
+        guard !Task.isCancelled else { break }
+        self?.currentProgress[book.id] = progress
+      }
+    }
+    progressTasks[book.id] = progressTask
+
+    operation.completionBlock = { @MainActor [weak self] in
+      self?.progressTasks[book.id]?.cancel()
+      self?.progressTasks.removeValue(forKey: book.id)
+      self?.activeOperations.removeValue(forKey: book.id)
+      self?.currentProgress.removeValue(forKey: book.id)
+    }
+
+    operationQueue.addOperation(operation)
   }
 }
 
@@ -173,7 +219,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   private var trackDestination: URL?
 
   private lazy var downloadSession: URLSession = {
-    let config = URLSessionConfiguration.default
+    let config = URLSessionConfiguration.background(
+      withIdentifier: "me.jgrenier.AudioBS.watch.download.\(bookID)")
+    config.isDiscretionary = false
+    config.sessionSendsLaunchEvents = true
     config.timeoutIntervalForRequest = 60
     config.timeoutIntervalForResource = 3600
     config.allowsCellularAccess = true
@@ -197,15 +246,19 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   override var isExecuting: Bool { _executing }
   override var isFinished: Bool { _finished }
 
+  private let isReconnecting: Bool
+
   init(
     book: WatchBook,
     downloadURLs: [Int: URL],
-    localStorage: LocalBookStorage
+    localStorage: LocalBookStorage,
+    reconnecting: Bool = false
   ) {
     self.book = book
     self.bookID = book.id
     self.downloadURLs = downloadURLs
     self.localStorage = localStorage
+    self.isReconnecting = reconnecting
 
     let (stream, continuation) = AsyncStream.makeStream(
       of: Double.self, bufferingPolicy: .bufferingNewest(1))
@@ -223,8 +276,13 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     _executing = true
 
-    Task {
-      await executeDownload()
+    if isReconnecting {
+      _ = downloadSession
+      AppLogger.download.info("Reconnected to background session for \(self.bookID)")
+    } else {
+      Task {
+        await executeDownload()
+      }
     }
   }
 
