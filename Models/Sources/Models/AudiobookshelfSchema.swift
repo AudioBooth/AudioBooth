@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 
 enum AudiobookshelfSchema: VersionedSchema {
-  static nonisolated(unsafe) var versionIdentifier = Schema.Version(0, 0, 0)
+  static nonisolated(unsafe) var versionIdentifier = Schema.Version(0, 0, 1)
 
   static var models: [any PersistentModel.Type] {
     [
@@ -12,6 +12,7 @@ enum AudiobookshelfSchema: VersionedSchema {
       Chapter.self,
       MediaProgress.self,
       Bookmark.self,
+      PlaybackSession.self,
     ]
   }
 }

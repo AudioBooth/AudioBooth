@@ -9,7 +9,6 @@ public final class MediaProgress {
   public var id: String?
   public var lastPlayedAt: Date
   public var currentTime: TimeInterval
-  public var timeListened: TimeInterval
   public var duration: TimeInterval
   public var progress: Double
   public var isFinished: Bool
@@ -20,7 +19,6 @@ public final class MediaProgress {
     id: String? = nil,
     lastPlayedAt: Date = Date(),
     currentTime: TimeInterval = 0,
-    timeListened: TimeInterval = 0,
     duration: TimeInterval = 0,
     progress: Double = 0,
     isFinished: Bool = false,
@@ -30,7 +28,6 @@ public final class MediaProgress {
     self.id = id
     self.lastPlayedAt = lastPlayedAt
     self.currentTime = currentTime
-    self.timeListened = timeListened
     self.duration = duration
     self.progress = progress
     self.isFinished = isFinished
@@ -43,7 +40,6 @@ public final class MediaProgress {
       id: apiProgress.id,
       lastPlayedAt: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000)),
       currentTime: apiProgress.currentTime,
-      timeListened: 0,
       duration: apiProgress.duration,
       progress: apiProgress.progress,
       isFinished: apiProgress.isFinished,
@@ -97,7 +93,6 @@ extension MediaProgress {
       existingProgress.id = self.id
       existingProgress.lastPlayedAt = self.lastPlayedAt
       existingProgress.currentTime = self.currentTime
-      existingProgress.timeListened = self.timeListened
       existingProgress.duration = self.duration
       existingProgress.progress = self.progress
       existingProgress.isFinished = self.isFinished
@@ -149,13 +144,11 @@ extension MediaProgress {
   public static func updateProgress(
     for bookID: String,
     currentTime: TimeInterval,
-    timeListened: TimeInterval,
     duration: TimeInterval,
     progress: Double
   ) throws {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
       existingProgress.currentTime = currentTime
-      existingProgress.timeListened = timeListened
       existingProgress.duration = duration
       existingProgress.progress = progress
       existingProgress.lastUpdate = Date()
@@ -167,7 +160,6 @@ extension MediaProgress {
         id: nil,
         lastPlayedAt: Date(),
         currentTime: currentTime,
-        timeListened: timeListened,
         duration: duration,
         progress: progress,
         isFinished: progress >= 1.0,
@@ -215,7 +207,6 @@ extension MediaProgress {
         if remote.lastUpdate > local.lastUpdate {
           local.lastPlayedAt = remote.lastPlayedAt
           local.currentTime = remote.currentTime
-          local.timeListened = remote.timeListened
           local.progress = remote.progress
           local.isFinished = remote.isFinished
           local.lastUpdate = remote.lastUpdate

@@ -37,6 +37,12 @@ struct AudioBoothApp: App {
     Task { @MainActor in
       await PlayerManager.shared.restoreLastPlayer()
     }
+
+    Task {
+      if Audiobookshelf.shared.authentication.isAuthenticated {
+        await SessionManager.shared.syncUnsyncedSessions()
+      }
+    }
   }
 
   private func setupDatabaseCallbacks() {

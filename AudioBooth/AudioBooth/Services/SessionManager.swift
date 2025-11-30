@@ -14,7 +14,7 @@ final class SessionManager {
   private let inactivityTimeout: TimeInterval = 10 * 60
   private let audiobookshelf = Audiobookshelf.shared
 
-  private(set) var current: Session?
+  private(set) var current: PlaybackSession?
   private var lastSyncAt = Date()
   private var inactivityTask: Task<Void, Never>?
 
@@ -22,7 +22,7 @@ final class SessionManager {
     registerBackgroundTask()
   }
 
-  func startSession(
+  private func startSession(
     itemID: String,
     item: LocalBook?,
     mediaProgress: MediaProgress
@@ -38,11 +38,7 @@ final class SessionManager {
       throw SessionError.failedToCreateSession
     }
 
-    current = session
-    UserDefaults.standard.set(0, forKey: retryCountKey)
-    scheduleSessionClose()
-
-    var updatedItem = item
+    let updatedItem: LocalBook
 
     if let item {
       item.chapters = audiobookshelfSession.chapters?.map(Chapter.init) ?? []
@@ -55,66 +51,116 @@ final class SessionManager {
       AppLogger.session.debug("Created new item from session")
     }
 
+    let playbackSession = PlaybackSession(
+      id: session.id,
+      libraryItemID: itemID,
+      startTime: mediaProgress.currentTime,
+      currentTime: mediaProgress.currentTime,
+      duration: updatedItem.duration,
+      baseURL: session.url,
+      displayTitle: updatedItem.title,
+      displayAuthor: updatedItem.authorNames
+    )
+    try playbackSession.save()
+    current = playbackSession
+
+    UserDefaults.standard.set(0, forKey: retryCountKey)
+    scheduleSessionClose()
+
     AppLogger.session.info("Session setup completed successfully")
     return (session, updatedItem, audiobookshelfSession.currentTime)
   }
 
   func closeSession(
-    timeListened: TimeInterval = 0,
-    currentTime: TimeInterval = 0
+    currentTime: TimeInterval = 0,
+    isDownloaded: Bool = false
   ) async throws {
-    let sessionID = current?.id ?? UserDefaults.standard.string(forKey: sessionIDKey)
-
-    guard let sessionID else {
+    guard let session = current else {
       AppLogger.session.debug("Session already closed or no session to close")
       return
     }
 
-    if timeListened > 0, let session = current {
-      do {
-        try await audiobookshelf.sessions.sync(
-          session.id,
-          timeListened: timeListened,
-          currentTime: currentTime
-        )
-        AppLogger.session.debug("Synced final progress before closing session")
-      } catch {
-        AppLogger.session.error(
-          "Failed to sync session progress before close: \(error, privacy: .public)")
+    session.currentTime = currentTime
+    session.updatedAt = Date()
+    try session.save()
+
+    if session.isRemote {
+      if session.pendingListeningTime > 0 {
+        do {
+          try await audiobookshelf.sessions.sync(
+            session.id,
+            timeListened: session.pendingListeningTime,
+            currentTime: currentTime
+          )
+          session.timeListening += session.pendingListeningTime
+          session.pendingListeningTime = 0
+          try session.save()
+          AppLogger.session.debug("Synced final progress before closing remote session")
+        } catch {
+          AppLogger.session.error(
+            "Failed to sync session progress before close: \(error, privacy: .public)")
+        }
       }
-    }
 
-    do {
-      try await audiobookshelf.sessions.close(sessionID)
-      AppLogger.session.info("Successfully closed session: \(sessionID, privacy: .public)")
-      current = nil
-      UserDefaults.standard.removeObject(forKey: sessionIDKey)
-      UserDefaults.standard.removeObject(forKey: retryCountKey)
-      cancelScheduledSessionClose()
-    } catch {
-      AppLogger.session.error("Failed to close session: \(error, privacy: .public)")
-
-      let retryCount = UserDefaults.standard.integer(forKey: retryCountKey)
-      guard let backoffDelay = calculateBackoffDelay(retryCount: retryCount) else {
-        AppLogger.session.warning(
-          "Maximum retry attempts reached. Giving up on closing session \(sessionID, privacy: .public). Session will auto-expire on server after 24h."
-        )
-        current = nil
+      do {
+        try await audiobookshelf.sessions.close(session.id)
+        AppLogger.session.info(
+          "Successfully closed remote session: \(session.id, privacy: .public)")
         UserDefaults.standard.removeObject(forKey: sessionIDKey)
         UserDefaults.standard.removeObject(forKey: retryCountKey)
         cancelScheduledSessionClose()
-        return
+      } catch {
+        AppLogger.session.error("Failed to close remote session: \(error, privacy: .public)")
+
+        if isDownloaded {
+          AppLogger.session.info(
+            "Book is downloaded, clearing session to allow local session creation")
+          current = nil
+          UserDefaults.standard.removeObject(forKey: sessionIDKey)
+          UserDefaults.standard.removeObject(forKey: retryCountKey)
+          cancelScheduledSessionClose()
+          return
+        }
+
+        let retryCount = UserDefaults.standard.integer(forKey: retryCountKey)
+        guard let backoffDelay = calculateBackoffDelay(retryCount: retryCount) else {
+          AppLogger.session.warning(
+            "Maximum retry attempts reached. Giving up on closing session \(session.id, privacy: .public). Session will auto-expire on server after 24h."
+          )
+          current = nil
+          UserDefaults.standard.removeObject(forKey: sessionIDKey)
+          UserDefaults.standard.removeObject(forKey: retryCountKey)
+          cancelScheduledSessionClose()
+          return
+        }
+
+        let newRetryCount = retryCount + 1
+        UserDefaults.standard.set(newRetryCount, forKey: retryCountKey)
+
+        AppLogger.session.info(
+          "Rescheduling session close with backoff delay: \(backoffDelay, privacy: .public)s (retry: \(newRetryCount, privacy: .public))"
+        )
+
+        scheduleSessionClose(customDelay: backoffDelay)
+        throw error
       }
-
-      let newRetryCount = retryCount + 1
-      UserDefaults.standard.set(newRetryCount, forKey: retryCountKey)
-
-      AppLogger.session.info(
-        "Rescheduling session close with backoff delay: \(backoffDelay, privacy: .public)s (retry: \(newRetryCount, privacy: .public))"
-      )
-
-      scheduleSessionClose(customDelay: backoffDelay)
-      throw error
+      current = nil
+    } else {
+      do {
+        let sessionSync = SessionSync(session)
+        try await audiobookshelf.sessions.syncLocalSession(sessionSync)
+        session.timeListening += session.pendingListeningTime
+        session.pendingListeningTime = 0
+        try session.save()
+        AppLogger.session.info(
+          "Successfully closed and synced local session: \(session.id, privacy: .public)")
+      } catch {
+        try session.save()
+        AppLogger.session.error(
+          "Failed to sync local session: \(error, privacy: .public). Session will be synced on next app startup."
+        )
+      }
+      current = nil
     }
   }
 
@@ -122,47 +168,97 @@ final class SessionManager {
     itemID: String,
     item: LocalBook?,
     mediaProgress: MediaProgress
-  ) async throws -> (session: Session, updatedItem: LocalBook?, serverCurrentTime: TimeInterval) {
-    if let existingSession = current, existingSession.itemID == itemID {
-      AppLogger.session.debug(
-        "Session already exists for this book, reusing: \(existingSession.id, privacy: .public)")
-      return (existingSession, item, mediaProgress.currentTime)
-    }
-
-    if current != nil {
+  ) async throws -> (updatedItem: LocalBook?, serverCurrentTime: TimeInterval) {
+    if let existingSession = current, existingSession.libraryItemID != itemID {
       AppLogger.session.info(
         "Session exists for different book, server will close old session when starting new one")
       current = nil
       cancelScheduledSessionClose()
     }
 
-    return try await startSession(itemID: itemID, item: item, mediaProgress: mediaProgress)
+    if let existingSession = current, existingSession.libraryItemID == itemID {
+      AppLogger.session.debug(
+        "Session already exists for this book, reusing: \(existingSession.id, privacy: .public)")
+      return (item, mediaProgress.currentTime)
+    }
+
+    do {
+      let result = try await startSession(itemID: itemID, item: item, mediaProgress: mediaProgress)
+      return (result.updatedItem, result.serverCurrentTime)
+    } catch {
+      AppLogger.session.warning("Failed to create remote session: \(error, privacy: .public)")
+
+      if let item, item.isDownloaded {
+        try startLocalSession(
+          libraryItemID: itemID,
+          item: item,
+          mediaProgress: mediaProgress
+        )
+        AppLogger.session.info("Created local session for offline stats tracking")
+        return (item, mediaProgress.currentTime)
+      } else {
+        throw error
+      }
+    }
+  }
+
+  private func startLocalSession(
+    libraryItemID: String,
+    item: LocalBook,
+    mediaProgress: MediaProgress
+  ) throws {
+    let session = PlaybackSession(
+      libraryItemID: libraryItemID,
+      startTime: mediaProgress.currentTime,
+      currentTime: mediaProgress.currentTime,
+      duration: item.duration,
+      displayTitle: item.title,
+      displayAuthor: item.authorNames
+    )
+    try session.save()
+    current = session
+    AppLogger.session.info("Started local session: \(session.id, privacy: .public)")
   }
 
   func syncProgress(
-    timeListened: TimeInterval,
     currentTime: TimeInterval
-  ) async throws -> Bool {
+  ) async throws {
     guard let session = current else {
       throw SessionError.noActiveSession
     }
 
     let now = Date()
-    guard timeListened >= 20, now.timeIntervalSince(lastSyncAt) >= 10 else {
-      return false
+
+    session.currentTime = currentTime
+    session.updatedAt = now
+    try session.save()
+
+    guard session.pendingListeningTime >= 20, now.timeIntervalSince(lastSyncAt) >= 10 else {
+      return
     }
 
     lastSyncAt = now
 
-    try await audiobookshelf.sessions.sync(
-      session.id,
-      timeListened: timeListened,
-      currentTime: currentTime
-    )
-
-    scheduleSessionClose()
-
-    return true
+    if session.isRemote {
+      do {
+        try await audiobookshelf.sessions.sync(
+          session.id,
+          timeListened: session.pendingListeningTime,
+          currentTime: currentTime
+        )
+        session.timeListening += session.pendingListeningTime
+        session.pendingListeningTime = 0
+        try session.save()
+        scheduleSessionClose()
+        AppLogger.session.info(
+          "Successfully synced remote session: \(session.id, privacy: .public)")
+        return
+      } catch {
+        try session.save()
+        AppLogger.session.error("Failed to sync remote session: \(error, privacy: .public)")
+        throw error
+      }
+    }
   }
 
   private func calculateBackoffDelay(retryCount: Int) -> TimeInterval? {
@@ -272,6 +368,44 @@ final class SessionManager {
     cancelInactivityTask()
   }
 
+  func syncUnsyncedSessions() async {
+    AppLogger.session.info("Starting bulk sync of unsynced sessions")
+
+    let unsyncedSessions: [PlaybackSession]
+    do {
+      unsyncedSessions = try PlaybackSession.fetchUnsynced()
+    } catch {
+      AppLogger.session.error("Failed to fetch unsynced sessions: \(error, privacy: .public)")
+      return
+    }
+
+    guard !unsyncedSessions.isEmpty else {
+      AppLogger.session.debug("No unsynced sessions to sync")
+      return
+    }
+
+    AppLogger.session.info(
+      "Found \(unsyncedSessions.count, privacy: .public) unsynced sessions to sync")
+
+    let sessionSyncs = unsyncedSessions.map(SessionSync.init)
+
+    do {
+      try await audiobookshelf.sessions.syncLocalSessions(sessionSyncs)
+
+      for session in unsyncedSessions {
+        session.timeListening += session.pendingListeningTime
+        session.pendingListeningTime = 0
+        try session.save()
+      }
+
+      AppLogger.session.info(
+        "Successfully synced \(unsyncedSessions.count, privacy: .public) sessions")
+    } catch {
+      AppLogger.session.error(
+        "Failed to bulk sync sessions: \(error, privacy: .public). Will retry on next startup.")
+    }
+  }
+
   func notifyPlaybackStopped() {
     AppLogger.session.debug("Playback stopped - starting inactivity countdown")
     startInactivityTask()
@@ -319,5 +453,20 @@ final class SessionManager {
   enum SessionError: Error {
     case noActiveSession
     case failedToCreateSession
+  }
+}
+
+extension SessionSync {
+  init(_ session: PlaybackSession) {
+    self.init(
+      id: session.id,
+      libraryItemId: session.libraryItemID,
+      duration: session.duration,
+      startTime: session.startTime,
+      currentTime: session.currentTime,
+      timeListening: Int(session.timeListening + session.pendingListeningTime),
+      startedAt: Int(session.startedAt.timeIntervalSince1970 * 1000),
+      updatedAt: Int(session.updatedAt.timeIntervalSince1970 * 1000)
+    )
   }
 }

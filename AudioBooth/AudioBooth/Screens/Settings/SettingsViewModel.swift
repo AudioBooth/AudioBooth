@@ -12,7 +12,7 @@ final class SettingsViewModel: SettingsView.Model {
   init() {
     super.init(
       tipJar: TipJarViewModel(),
-      mediaProgressList: MediaProgressListViewModel()
+      playbackSessionList: PlaybackSessionListViewModel()
     )
   }
 

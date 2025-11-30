@@ -159,4 +159,59 @@ public final class SessionService {
         "Failed to remove from continue listening: \(error.localizedDescription)")
     }
   }
+
+  public func syncLocalSession(_ session: SessionSync) async throws {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first.")
+    }
+
+    let request = NetworkRequest<Data>(
+      path: "/api/session/local",
+      method: .post,
+      body: session,
+      discretionary: true
+    )
+
+    do {
+      _ = try await networkService.send(request)
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to sync local session: \(error.localizedDescription)")
+    }
+  }
+
+  public func syncLocalSessions(_ sessions: [SessionSync]) async throws {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first.")
+    }
+
+    struct BulkSyncRequest: Codable {
+      let sessions: [SessionSync]
+      let deviceInfo: SessionSync.DeviceInfo
+    }
+
+    guard let firstSession = sessions.first else { return }
+
+    let bulkRequest = BulkSyncRequest(
+      sessions: sessions,
+      deviceInfo: firstSession.deviceInfo
+    )
+
+    let request = NetworkRequest<Data>(
+      path: "/api/session/local-all",
+      method: .post,
+      body: bulkRequest,
+      discretionary: true
+    )
+
+    do {
+      _ = try await networkService.send(request)
+      print("syncLocalSessions successful!")
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to sync local sessions: \(error.localizedDescription)")
+    }
+  }
 }

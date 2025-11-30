@@ -65,9 +65,9 @@ struct SettingsView: View {
       .navigationTitle("Settings")
       .navigationDestination(for: String.self) { destination in
         switch destination {
-        case "mediaProgress":
-          if let model = model.mediaProgressList {
-            MediaProgressListView(model: model)
+        case "playbackSession":
+          if let model = model.playbackSessionList {
+            PlaybackSessionListView(model: model)
           }
         case "home":
           HomePreferencesView()
@@ -109,10 +109,10 @@ struct SettingsView: View {
         .disabled(model.isExportingLogs)
 
         #if DEBUG
-          NavigationLink(value: "mediaProgress") {
+          NavigationLink(value: "playbackSession") {
             HStack {
               Image(systemName: "chart.line.uptrend.xyaxis")
-              Text("Media Progress")
+              Text("Playback Sessions")
             }
           }
         #endif
@@ -133,7 +133,7 @@ extension SettingsView {
   @Observable class Model: ObservableObject {
     var navigationPath = NavigationPath()
     var tipJar: TipJarView.Model
-    var mediaProgressList: MediaProgressListView.Model?
+    var playbackSessionList: PlaybackSessionListView.Model?
     var isExportingLogs: Bool
 
     var appVersion: String {
@@ -148,11 +148,11 @@ extension SettingsView {
 
     init(
       tipJar: TipJarView.Model = .mock,
-      mediaProgressList: MediaProgressListView.Model? = nil,
+      playbackSessionList: PlaybackSessionListView.Model? = nil,
       isExportingLogs: Bool = false
     ) {
       self.tipJar = tipJar
-      self.mediaProgressList = mediaProgressList
+      self.playbackSessionList = playbackSessionList
       self.isExportingLogs = isExportingLogs
     }
   }

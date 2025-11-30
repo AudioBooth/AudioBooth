@@ -27,6 +27,7 @@ final class LocalPlayerModel: PlayerView.Model {
 
   private var lastPlaybackAt: Date?
   private var lastSyncAt = Date()
+  private var timeSinceLastSync: TimeInterval = 0
 
   private var itemObservation: Task<Void, Never>?
 
@@ -322,7 +323,6 @@ extension LocalPlayerModel {
       try? MediaProgress.updateProgress(
         for: item.bookID,
         currentTime: mediaProgress.currentTime,
-        timeListened: mediaProgress.timeListened,
         duration: item.duration,
         progress: mediaProgress.currentTime / item.duration
       )
@@ -672,7 +672,7 @@ extension LocalPlayerModel {
     } else if !isNowPlaying && isPlaying {
       if let last = lastPlaybackAt {
         let timeListened = now.timeIntervalSince(last)
-        mediaProgress.timeListened += timeListened
+        timeSinceLastSync += timeListened
         syncSessionProgress()
       }
       lastPlaybackAt = nil
@@ -687,7 +687,7 @@ extension LocalPlayerModel {
 
     let now = Date()
 
-    guard mediaProgress.timeListened >= 20, now.timeIntervalSince(lastSyncAt) >= 10 else { return }
+    guard timeSinceLastSync >= 20, now.timeIntervalSince(lastSyncAt) >= 10 else { return }
 
     lastSyncAt = now
 
@@ -695,11 +695,11 @@ extension LocalPlayerModel {
       do {
         try await audiobookshelf.sessions.sync(
           session.id,
-          timeListened: mediaProgress.timeListened,
+          timeListened: timeSinceLastSync,
           currentTime: mediaProgress.currentTime
         )
 
-        mediaProgress.timeListened = 0
+        timeSinceLastSync = 0
       } catch {
         AppLogger.player.error("Failed to sync session progress: \(error, privacy: .public)")
       }
@@ -711,7 +711,7 @@ extension LocalPlayerModel {
       do {
         if isPlaying, let lastTime = lastPlaybackAt {
           let timeListened = Date().timeIntervalSince(lastTime)
-          mediaProgress.timeListened += timeListened
+          timeSinceLastSync += timeListened
           lastPlaybackAt = Date()
         }
 

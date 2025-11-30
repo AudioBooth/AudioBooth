@@ -39,10 +39,6 @@ final class BookPlayerModel: BookPlayer.Model {
   private var maxRecoveryAttempts = 3
   private var isRecovering = false
 
-  private var session: Session? {
-    sessionManager.current?.itemID == item?.bookID ? sessionManager.current : nil
-  }
-
   init(_ book: Book) {
     self.item = nil
     do {
@@ -103,7 +99,7 @@ final class BookPlayerModel: BookPlayer.Model {
       player.rate = 0
       try? audioSession.setActive(false)
     } else {
-      if session == nil {
+      if sessionManager.current == nil {
         AppLogger.player.warning("Session was closed, recreating in background for progress sync")
 
         player.rate = speed.playbackSpeed
@@ -145,7 +141,7 @@ final class BookPlayerModel: BookPlayer.Model {
       return
     }
 
-    if session == nil {
+    if sessionManager.current == nil {
       AppLogger.player.warning("Session was closed, recreating in background for progress sync")
 
       player.rate = speed.playbackSpeed
@@ -296,7 +292,7 @@ extension BookPlayerModel {
         throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track")
       }
 
-      let trackURL = session?.url(for: track) ?? track.localPath
+      let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
       guard let trackURL else {
         AppLogger.player.error("No URL available for track")
         throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track URL")
@@ -845,7 +841,7 @@ extension BookPlayerModel {
     var currentTime = CMTime.zero
 
     for track in tracks.sorted(by: { $0.index < $1.index }) {
-      let trackURL = session?.url(for: track) ?? track.localPath
+      let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
       guard let trackURL else {
         AppLogger.player.warning("Skipping track \(track.index, privacy: .public) - no URL")
         continue
@@ -917,7 +913,7 @@ extension BookPlayerModel {
             return
           }
 
-          let trackURL = session?.url(for: track) ?? track.localPath
+          let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
           guard let trackURL else {
             AppLogger.player.error("No URL available for track")
             Toast(error: "Failed to get streaming URL").show()
@@ -964,7 +960,7 @@ extension BookPlayerModel {
       AppLogger.player.debug("🎵 State: Stopping playback")
       if let last = lastPlaybackAt {
         let timeListened = now.timeIntervalSince(last)
-        mediaProgress.timeListened += timeListened
+        sessionManager.current?.pendingListeningTime += timeListened
         mediaProgress.lastPlayedAt = Date()
         syncSessionProgress()
       }
@@ -1028,23 +1024,16 @@ extension BookPlayerModel {
   }
 
   private func syncSessionProgress() {
-    guard session != nil else { return }
+    guard sessionManager.current != nil else { return }
 
     Task {
       do {
-        let didSync = try await sessionManager.syncProgress(
-          timeListened: mediaProgress.timeListened,
-          currentTime: mediaProgress.currentTime
-        )
-
-        if didSync {
-          mediaProgress.timeListened = 0
-        }
+        try await sessionManager.syncProgress(currentTime: mediaProgress.currentTime)
       } catch {
         AppLogger.player.error("Failed to sync session progress: \(error, privacy: .public)")
 
-        if isSessionNotFoundError(error) {
-          AppLogger.player.debug("Session not found (404) - triggering recovery")
+        if sessionManager.current?.isRemote == true && isSessionNotFoundError(error) {
+          AppLogger.player.debug("Remote session not found (404) - triggering recovery")
           handleStreamFailure(error: error)
         }
       }
@@ -1066,7 +1055,7 @@ extension BookPlayerModel {
       do {
         if isPlaying, let lastTime = lastPlaybackAt {
           let timeListened = Date().timeIntervalSince(lastTime)
-          mediaProgress.timeListened += timeListened
+          sessionManager.current?.pendingListeningTime += timeListened
           lastPlaybackAt = Date()
         }
 
@@ -1159,7 +1148,7 @@ extension BookPlayerModel {
             throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track")
           }
 
-          let trackURL = session?.url(for: track) ?? track.localPath
+          let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
           guard let trackURL else {
             throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track URL")
           }
@@ -1232,10 +1221,9 @@ extension BookPlayerModel {
   func closeSession() {
     Task {
       try? await sessionManager.closeSession(
-        timeListened: mediaProgress.timeListened,
-        currentTime: mediaProgress.currentTime
+        currentTime: mediaProgress.currentTime,
+        isDownloaded: item?.isDownloaded ?? false
       )
-      mediaProgress.timeListened = 0
     }
   }
 
