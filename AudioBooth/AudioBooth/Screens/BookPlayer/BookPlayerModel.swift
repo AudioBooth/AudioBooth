@@ -98,11 +98,8 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onPauseTapped() {
-    guard let player = player, player.status == .readyToPlay else {
-      return
-    }
-    player.rate = 0
-    try? audioSession.setActive(false)
+    pendingPlay = false
+    player?.pause()
   }
 
   override func onPlayTapped() {
@@ -139,7 +136,7 @@ final class BookPlayerModel: BookPlayer.Model {
       }
     }
 
-    player.rate = speed.playbackSpeed
+    player.play()
     try? audioSession.setActive(true)
   }
 
@@ -289,7 +286,7 @@ extension BookPlayerModel {
     syncPlayback()
 
     if pendingPlay {
-      player.rate = speed.playbackSpeed
+      player.play()
       pendingPlay = false
     }
   }
@@ -746,7 +743,7 @@ extension BookPlayerModel {
       let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
       if options.contains(.shouldResume) {
         AppLogger.player.info("Audio interruption ended - resuming playback")
-        player?.rate = speed.playbackSpeed
+        player?.play()
       } else {
         AppLogger.player.info("Audio interruption ended - not resuming")
       }
@@ -922,7 +919,7 @@ extension BookPlayerModel {
 
       player.seek(to: currentTime) { _ in
         if wasPlaying {
-          player.rate = self.speed.playbackSpeed
+          player.play()
         }
         AppLogger.player.info("Restored playback position and state after reload")
       }
@@ -1143,7 +1140,7 @@ extension BookPlayerModel {
   }
 
   func stopPlayer() {
-    player?.rate = 0
+    player?.pause()
 
     if let timeObserver {
       player?.removeTimeObserver(timeObserver)
@@ -1151,6 +1148,8 @@ extension BookPlayerModel {
     }
 
     player = nil
+
+    try? audioSession.setActive(false)
 
     itemObservation?.cancel()
     cancellables.removeAll()

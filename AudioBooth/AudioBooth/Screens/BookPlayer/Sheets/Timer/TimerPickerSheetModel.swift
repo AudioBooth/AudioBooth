@@ -56,8 +56,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
     isPresented = false
 
-    let speed = UserDefaults.standard.float(forKey: "playbackSpeed")
-    player?.rate = speed > 0 ? speed : 1.0
+    player?.play()
   }
 
   private func startSleepTimer(duration: TimeInterval) {
@@ -142,8 +141,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       startSleepTimer(duration: originalTimerDuration)
       current = .preset(originalTimerDuration)
 
-      let speed = UserDefaults.standard.float(forKey: "playbackSpeed")
-      player?.rate = speed > 0 ? speed : 1.0
+      player?.play()
 
       AppLogger.player.info("Timer extended by \(self.originalTimerDuration) seconds")
     }
@@ -183,8 +181,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func extendChapterTimer() {
     current = .chapters(1)
 
-    let speed = UserDefaults.standard.float(forKey: "playbackSpeed")
-    player?.rate = speed > 0 ? speed : 1.0
+    player?.play()
 
     AppLogger.player.info("Chapter timer extended by 1 chapter")
 

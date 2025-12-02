@@ -10,8 +10,10 @@ final class SpeedPickerSheetViewModel: SpeedPickerSheet.Model {
     let speed = UserDefaults.standard.float(forKey: "playbackSpeed")
     sharedDefaults?.set(speed, forKey: "playbackSpeed")
 
+    player.defaultRate = speed > 0 ? speed : 1.0
+
     self.player = player
-    super.init(playbackSpeed: speed > 0 ? speed : 1.0)
+    super.init(playbackSpeed: player.defaultRate)
   }
 
   override func onSpeedIncrease() {
@@ -31,6 +33,7 @@ final class SpeedPickerSheetViewModel: SpeedPickerSheet.Model {
     sharedDefaults?.set(playbackSpeed, forKey: "playbackSpeed")
 
     if player.rate > 0 {
+      player.defaultRate = roundedSpeed
       player.rate = roundedSpeed
     }
   }
