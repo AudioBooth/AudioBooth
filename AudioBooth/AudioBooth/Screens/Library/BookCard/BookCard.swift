@@ -166,12 +166,18 @@ struct BookCard: View {
   }
 
   var title: some View {
-    Text(model.title)
-      .font(.caption)
-      .foregroundColor(.primary)
-      .fontWeight(.medium)
-      .lineLimit(1)
-      .allowsTightening(true)
+    Group {
+      if displayMode == .row, let sequence = model.sequence {
+        Text(model.title) + Text(" #\(sequence)")
+      } else {
+        Text(model.title)
+      }
+    }
+    .font(.caption)
+    .foregroundColor(.primary)
+    .fontWeight(.medium)
+    .lineLimit(1)
+    .allowsTightening(true)
   }
 
   @ViewBuilder
@@ -333,38 +339,41 @@ extension BookCard.Model {
 
 #Preview("BookCard - Row Mode") {
   NavigationStack {
-    VStack(spacing: 12) {
-      BookCard(
-        model: BookCard.Model(
-          title: "The Lord of the Rings",
-          details: "J.R.R. Tolkien",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-          progress: 0.5,
-          author: "J.R.R. Tolkien",
-          narrator: "Rob Inglis",
-          publishedYear: "1954"
+    ScrollView {
+      VStack(spacing: 12) {
+        BookCard(
+          model: BookCard.Model(
+            title: "The Lord of the Rings",
+            details: "J.R.R. Tolkien",
+            coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+            sequence: "1",
+            progress: 0.5,
+            author: "J.R.R. Tolkien",
+            narrator: "Rob Inglis",
+            publishedYear: "1954"
+          )
         )
-      )
-      BookCard(
-        model: BookCard.Model(
-          title: "Dune",
-          details: "Frank Herbert",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-          author: "Frank Herbert",
-          narrator: "Scott Brick, Orlagh Cassidy, Euan Morton",
-          publishedYear: "1965"
+        BookCard(
+          model: BookCard.Model(
+            title: "Dune",
+            details: "Frank Herbert",
+            coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+            author: "Frank Herbert",
+            narrator: "Scott Brick, Orlagh Cassidy, Euan Morton",
+            publishedYear: "1965"
+          )
         )
-      )
-      BookCard(
-        model: BookCard.Model(
-          title: "The Foundation",
-          details: "Isaac Asimov",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"),
-          author: "Isaac Asimov",
-          narrator: "Scott Brick",
-          publishedYear: "1951"
+        BookCard(
+          model: BookCard.Model(
+            title: "The Foundation",
+            details: "Isaac Asimov",
+            coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"),
+            author: "Isaac Asimov",
+            narrator: "Scott Brick",
+            publishedYear: "1951"
+          )
         )
-      )
+      }
     }
     .environment(\.bookCardDisplayMode, .row)
     .padding()
