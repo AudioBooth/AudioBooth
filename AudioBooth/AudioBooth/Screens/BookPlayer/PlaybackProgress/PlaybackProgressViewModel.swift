@@ -8,6 +8,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var totalDuration: TimeInterval?
   private var currentTime: TimeInterval = 0
   private var isPlayerLoading: Bool = false
+  private let preferences = UserPreferences.shared
 
   init() {
     super.init(
@@ -56,8 +57,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     }
 
     let currentTime = self.currentTime
-    let current: TimeInterval
-    let remaining: TimeInterval
+    var current: TimeInterval
+    var remaining: TimeInterval
     let progress: CGFloat
 
     if let chapters = chapters, chapters.current != nil {
@@ -70,15 +71,23 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       progress = CGFloat(currentTime / totalDuration)
     }
 
+    if let speed, preferences.chapterProgressionAdjustsWithSpeed {
+      let playbackSpeed = Double(speed.playbackSpeed)
+      let adjustedTotal = (current + remaining) / playbackSpeed
+      current = (current / playbackSpeed).rounded()
+      remaining = adjustedTotal - current
+    }
+
+    var totalTimeRemaining = (totalDuration - currentTime)
+    if let speed, preferences.timeRemainingAdjustsWithSpeed {
+      totalTimeRemaining /= Double(speed.playbackSpeed)
+    }
+
     self.progress = progress
     self.current = current
     self.remaining = remaining
     self.total = totalDuration
     self.totalProgress = currentTime / totalDuration
-    var totalTimeRemaining = (totalDuration - currentTime)
-    if let speed {
-      totalTimeRemaining /= Double(speed.playbackSpeed)
-    }
     self.totalTimeRemaining = totalTimeRemaining
     self.isLoading = isPlayerLoading
   }

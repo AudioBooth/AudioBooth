@@ -21,6 +21,9 @@ final class UserPreferences: ObservableObject {
     false
   @AppStorage("lockScreenAllowPlaybackPositionChange") var lockScreenAllowPlaybackPositionChange:
     Bool = true
+  @AppStorage("timeRemainingAdjustsWithSpeed") var timeRemainingAdjustsWithSpeed: Bool = true
+  @AppStorage("chapterProgressionAdjustsWithSpeed") var chapterProgressionAdjustsWithSpeed: Bool =
+    false
 
   private init() {
     migrateShowListeningStats()

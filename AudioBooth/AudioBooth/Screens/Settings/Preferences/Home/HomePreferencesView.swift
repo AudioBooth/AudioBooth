@@ -13,6 +13,7 @@ struct HomePreferencesView: View {
           ForEach(allSections) { section in
             HStack {
               Text(section.displayName)
+                .font(.subheadline)
                 .bold()
 
               Spacer()
@@ -21,7 +22,6 @@ struct HomePreferencesView: View {
                 Toggle("", isOn: binding(for: section))
               }
             }
-            //            .moveDisabled(!enabledSections.contains(section))
           }
           .onMove(perform: move)
         }

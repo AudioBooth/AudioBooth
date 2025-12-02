@@ -50,6 +50,7 @@ struct PlayerPreferencesView: View {
             Text(
               "Back \(Int(preferences.skipBackwardInterval))s Forward \(Int(preferences.skipForwardInterval))s"
             )
+            .font(.subheadline)
             .bold()
           }
         )
@@ -77,6 +78,7 @@ struct PlayerPreferencesView: View {
           Text("75s").tag(75.0)
           Text("90s").tag(90.0)
         }
+        .font(.subheadline)
         .bold()
       }
       .listRowSeparator(.hidden)
@@ -92,6 +94,7 @@ struct PlayerPreferencesView: View {
         .font(.caption)
 
         Toggle("Shake to extend", isOn: $preferences.shakeToExtendTimer)
+          .font(.subheadline)
           .bold()
       }
       .listRowSeparator(.hidden)
@@ -108,6 +111,7 @@ struct PlayerPreferencesView: View {
 
         VStack(alignment: .leading, spacing: 8) {
           Text("Skip by")
+            .font(.subheadline)
             .bold()
 
           Picker("Skip by", selection: $preferences.lockScreenNextPreviousUsesChapters) {
@@ -120,7 +124,28 @@ struct PlayerPreferencesView: View {
         Toggle(
           "Allow Playback Position Change", isOn: $preferences.lockScreenAllowPlaybackPositionChange
         )
+        .font(.subheadline)
         .bold()
+      }
+      .listRowSeparator(.hidden)
+      .listSectionSpacing(.custom(12))
+
+      Section {
+        VStack(alignment: .leading) {
+          Text("Playback Speed Adjustments".uppercased())
+            .bold()
+
+          Text("Configure how time displays are affected by playback speed.")
+        }
+        .font(.caption)
+
+        Toggle("Adjusts Time Remaining", isOn: $preferences.timeRemainingAdjustsWithSpeed)
+          .font(.subheadline)
+          .bold()
+
+        Toggle("Adjusts Chapter Progression", isOn: $preferences.chapterProgressionAdjustsWithSpeed)
+          .font(.subheadline)
+          .bold()
       }
       .listRowSeparator(.hidden)
     }

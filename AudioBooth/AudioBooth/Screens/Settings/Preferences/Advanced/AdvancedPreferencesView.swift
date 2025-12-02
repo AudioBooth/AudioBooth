@@ -17,6 +17,7 @@ struct AdvancedPreferencesView: View {
         .font(.caption)
 
         Toggle("Visible", isOn: $preferences.showNFCTagWriting)
+          .font(.subheadline)
           .bold()
       }
       .listRowSeparator(.hidden)

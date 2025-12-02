@@ -7,9 +7,11 @@ struct GeneralPreferencesView: View {
     Form {
       Section {
         Toggle("Auto-Download Books", isOn: $preferences.autoDownloadBooks)
+          .font(.subheadline)
           .bold()
 
         Toggle("Remove Download on Completion", isOn: $preferences.removeDownloadOnCompletion)
+          .font(.subheadline)
           .bold()
       }
     }
