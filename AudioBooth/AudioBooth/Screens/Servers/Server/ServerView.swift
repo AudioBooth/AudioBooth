@@ -16,81 +16,71 @@ struct ServerView: View {
   @StateObject var model: Model
 
   var body: some View {
-    NavigationStack(path: $model.navigationPath) {
-      Form {
-        if !model.isAuthenticated {
-          discovery
-        }
+    Form {
+      if !model.isAuthenticated {
+        discovery
+      }
 
-        Section("Server Configuration") {
-          if model.isAuthenticated {
-            TextField("Alias (optional)", text: $model.alias)
-              .autocorrectionDisabled()
-              .onChange(of: model.alias) { _, newValue in
-                model.onAliasChanged(newValue)
-              }
-          }
-
-          if !model.isTypingScheme {
-            Picker("Protocol", selection: $model.serverScheme) {
-              Text("https://").tag(ServerView.Model.ServerScheme.https)
-              Text("http://").tag(ServerView.Model.ServerScheme.http)
-            }
-            .pickerStyle(.segmented)
-            .disabled(model.isAuthenticated)
-          }
-
-          TextField("Server URL", text: $model.serverURL)
+      Section("Server Configuration") {
+        if model.isAuthenticated {
+          TextField("Alias (optional)", text: $model.alias)
             .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .disabled(model.isAuthenticated)
-            .focused($focusedField, equals: .serverURL)
-            .submitLabel(.next)
-            .onSubmit {
-              focusedField = .username
+            .onChange(of: model.alias) { _, newValue in
+              model.onAliasChanged(newValue)
             }
-
-          if !model.isAuthenticated {
-            Toggle("Use Subdirectory", isOn: $model.useSubdirectory)
-
-            if model.useSubdirectory {
-              TextField("Subdirectory Path", text: $model.subdirectory)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-            }
-          }
-
-          customHeadersSection
         }
+
+        if !model.isTypingScheme {
+          Picker("Protocol", selection: $model.serverScheme) {
+            Text("https://").tag(ServerView.Model.ServerScheme.https)
+            Text("http://").tag(ServerView.Model.ServerScheme.http)
+          }
+          .pickerStyle(.segmented)
+          .disabled(model.isAuthenticated)
+        }
+
+        TextField("Server URL", text: $model.serverURL)
+          .autocorrectionDisabled()
+          .textInputAutocapitalization(.never)
+          .disabled(model.isAuthenticated)
+          .focused($focusedField, equals: .serverURL)
+          .submitLabel(.next)
+          .onSubmit {
+            focusedField = .username
+          }
 
         if !model.isAuthenticated {
-          authentication
-        } else {
-          account
-        }
-      }
-      .navigationTitle("Server")
-      .navigationDestination(for: String.self) { destination in
-        switch destination {
-        case "customHeaders":
-          CustomHeadersView(model: model.customHeaders)
-        default:
-          EmptyView()
-        }
-      }
-      .alert("Scan Local Network", isPresented: $model.showDiscoveryPortAlert) {
-        TextField("Discovery Port", text: $model.discoveryPort)
-          .keyboardType(.numberPad)
-        Button("Cancel", role: .cancel) {}
-        Button("Scan") {
-          if let viewModel = model as? ServerViewModel {
-            viewModel.performDiscovery()
+          Toggle("Use Subdirectory", isOn: $model.useSubdirectory)
+
+          if model.useSubdirectory {
+            TextField("Subdirectory Path", text: $model.subdirectory)
+              .autocorrectionDisabled()
+              .textInputAutocapitalization(.never)
           }
         }
-        .disabled(model.discoveryPort.isEmpty)
-      } message: {
-        Text("Enter the port number to scan for Audiobookshelf servers on your local network.")
+
+        customHeadersSection
       }
+
+      if !model.isAuthenticated {
+        authentication
+      } else {
+        account
+      }
+    }
+    .navigationTitle("Server")
+    .alert("Scan Local Network", isPresented: $model.showDiscoveryPortAlert) {
+      TextField("Discovery Port", text: $model.discoveryPort)
+        .keyboardType(.numberPad)
+      Button("Cancel", role: .cancel) {}
+      Button("Scan") {
+        if let viewModel = model as? ServerViewModel {
+          viewModel.performDiscovery()
+        }
+      }
+      .disabled(model.discoveryPort.isEmpty)
+    } message: {
+      Text("Enter the port number to scan for Audiobookshelf servers on your local network.")
     }
     .onAppear(perform: model.onAppear)
   }
@@ -136,7 +126,7 @@ struct ServerView: View {
   @ViewBuilder
   var customHeadersSection: some View {
     if !model.isAuthenticated {
-      NavigationLink(value: "customHeaders") {
+      NavigationLink(destination: { CustomHeadersView(model: model.customHeaders) }) {
         HStack {
           Image(systemName: "list.bullet.rectangle")
           Text("Custom Headers")
