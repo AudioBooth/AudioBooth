@@ -21,7 +21,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   init(bookID: String) {
     let canManageCollections = Audiobookshelf.shared.authentication.permissions?.update == true
-    super.init(bookID: bookID, canManageCollections: canManageCollections)
+    super.init(
+      bookID: bookID,
+      canManageCollections: canManageCollections,
+      tabs: []
+    )
   }
 
   isolated deinit {
@@ -60,8 +64,9 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           series: series,
           coverURL: localBook.coverURL,
           duration: localBook.duration,
+          mediaType: nil,
           chapters: localBook.chapters,
-          mediaType: nil
+          tracks: localBook.tracks
         )
 
         if localBook.isDownloaded {
@@ -97,7 +102,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       let narrators = book.media.metadata.narrators ?? []
 
-      let supplementaryEbooks = book.libraryFiles?
+      let ebooks = book.libraryFiles?
         .filter { $0.isSupplementary == true && $0.fileType == "ebook" }
         .map { libraryFile in
           BookDetailsView.Model.SupplementaryEbook(
@@ -114,14 +119,15 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         series: series,
         coverURL: book.coverURL,
         duration: book.duration,
-        chapters: book.chapters?.map { Chapter(from: $0) },
         mediaType: book.mediaType,
         publisher: book.publisher,
         publishedYear: book.publishedYear,
         genres: book.genres,
         tags: book.tags,
         description: book.description ?? book.descriptionPlain,
-        supplementaryEbooks: supplementaryEbooks
+        chapters: book.chapters?.map(Chapter.init(from:)),
+        tracks: book.tracks?.map(Track.init(from:)),
+        ebooks: ebooks
       )
 
       error = nil
@@ -141,28 +147,26 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     series: [Series],
     coverURL: URL?,
     duration: TimeInterval,
-    chapters: [Chapter]?,
     mediaType: Book.MediaType?,
     publisher: String? = nil,
     publishedYear: String? = nil,
     genres: [String]? = nil,
     tags: [String]? = nil,
     description: String? = nil,
-    supplementaryEbooks: [BookDetailsView.Model.SupplementaryEbook]? = nil
+    chapters: [Chapter]?,
+    tracks: [Track]?,
+    ebooks: [BookDetailsView.Model.SupplementaryEbook]? = nil
   ) {
     self.title = title
     self.authors = authors
     self.series = series
     self.narrators = narrators
     self.coverURL = coverURL
-    self.chapters = chapters
-    self.tracks = []
     self.publisher = publisher
     self.publishedYear = publishedYear
     self.genres = genres
     self.tags = tags
     self.description = description
-    self.supplementaryEbooks = supplementaryEbooks
 
     if let mediaType {
       self.isEbook = mediaType == .ebook
@@ -206,6 +210,22 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     } else {
       self.bookmarks = nil
     }
+
+    var tabs = [ContentTab]()
+
+    if let chapters, !chapters.isEmpty {
+      tabs.append(.chapters(chapters))
+    }
+
+    if let tracks, !tracks.isEmpty {
+      tabs.append(.tracks(tracks))
+    }
+
+    if let ebooks, !ebooks.isEmpty {
+      tabs.append(.ebooks(ebooks))
+    }
+
+    self.tabs = tabs
   }
 
   private func setupDownloadStateBinding() {

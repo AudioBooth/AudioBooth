@@ -166,6 +166,12 @@ extension Book {
       public let title: String?
       public let updatedAt: Date?
       public let metadata: Metadata?
+      public let format: String?
+      public let bitRate: Int?
+      public let codec: String?
+      public let channels: Int?
+      public let channelLayout: String?
+      public let mimeType: String?
 
       public struct Metadata: Codable, Sendable {
         public let filename: String?

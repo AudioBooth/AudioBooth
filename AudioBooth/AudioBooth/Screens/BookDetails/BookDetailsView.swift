@@ -10,6 +10,8 @@ struct BookDetailsView: View {
   @ObservedObject var preferences = UserPreferences.shared
   @Environment(\.verticalSizeClass) private var verticalSizeClass
   @State private var collectionSelector: CollectionMode?
+  @State private var selectedTabIndex: Int = 0
+  @State private var isDescriptionExpanded: Bool = false
 
   private enum CoordinateSpaces {
     case scrollView
@@ -153,11 +155,40 @@ struct BookDetailsView: View {
       if let tags = model.tags, !tags.isEmpty {
         tagsSection(tags)
       }
-      if let chapters = model.chapters, !chapters.isEmpty {
-        chaptersSection(chapters)
+      if !model.tabs.isEmpty {
+        contentTabsSection
       }
-      if let supplementaryEbooks = model.supplementaryEbooks, !supplementaryEbooks.isEmpty {
-        supplementaryEbooksSection(supplementaryEbooks)
+    }
+  }
+
+  private var contentTabsSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      if model.tabs.count > 1 {
+        Picker("Content", selection: $selectedTabIndex) {
+          ForEach(model.tabs.indices, id: \.self) { index in
+            Text(model.tabs[index].title).tag(index)
+          }
+        }
+        .pickerStyle(.segmented)
+      } else if let firstTab = model.tabs.first {
+        Text(firstTab.title)
+          .font(.headline)
+      }
+
+      if model.tabs.indices.contains(selectedTabIndex) {
+        switch model.tabs[selectedTabIndex] {
+        case .chapters(let chapters):
+          chaptersContent(chapters)
+        case .tracks(let tracks):
+          tracksContent(tracks)
+        case .ebooks(let ebooks):
+          ebooksContent(ebooks)
+        }
+      }
+    }
+    .onChange(of: model.tabs.count) { _, newCount in
+      if selectedTabIndex >= newCount {
+        selectedTabIndex = 0
       }
     }
   }
@@ -503,125 +534,153 @@ struct BookDetailsView: View {
     }
   }
 
-  private func chaptersSection(_ chapters: [Chapter]) -> some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Chapters")
-        .font(.headline)
-
-      VStack(alignment: .leading, spacing: 8) {
-        ForEach(chapters, id: \.id) { chapter in
-          HStack {
-            Text(chapter.title)
-              .font(.subheadline)
-              .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(formatDuration(chapter.end - chapter.start))
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
-          .padding(.vertical, 4)
-        }
-      }
-      .padding()
-      .background(Color.secondary.opacity(0.1))
-      .cornerRadius(8)
-    }
-  }
-
-  private func tracksSection(_ tracks: [Track]) -> some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Audio Files")
-        .font(.headline)
-
-      VStack(alignment: .leading, spacing: 8) {
-        ForEach(Array(tracks.enumerated()), id: \.element.index) { index, track in
-          HStack {
-            Text(track.title ?? "Track \(index + 1)")
-              .font(.subheadline)
-            Spacer()
-            Text(formatDuration(track.duration))
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
-          .padding(.vertical, 4)
-        }
-      }
-      .padding()
-      .background(Color.secondary.opacity(0.1))
-      .cornerRadius(8)
-    }
-  }
-
-  private func formatDuration(_ seconds: Double) -> String {
-    Duration.seconds(seconds).formatted(
-      .units(
-        allowed: [.hours, .minutes, .seconds],
-        width: .narrow
-      )
-    )
-  }
-
   private func descriptionSection(_ description: String) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("Description")
         .font(.headline)
 
-      RichText(
-        html: description,
-        configuration: Configuration(
-          customCSS: "body { font: -apple-system-subheadline; }",
+      ZStack(alignment: .bottom) {
+        RichText(
+          html: description,
+          configuration: Configuration(
+            customCSS: "body { font: -apple-system-subheadline; }"
+          )
         )
-      )
+        .frame(maxHeight: isDescriptionExpanded ? nil : 180, alignment: .top)
+        .clipped()
+        .allowsHitTesting(false)
+
+        if !isDescriptionExpanded {
+          LinearGradient(
+            colors: [.clear, Color(.systemBackground)],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+          .frame(height: 60)
+        }
+      }
+    }
+    .contentShape(Rectangle())
+    .onTapGesture {
+      withAnimation(.easeInOut(duration: 0.25)) {
+        isDescriptionExpanded.toggle()
+      }
     }
     .textSelection(.enabled)
   }
 
-  private func supplementaryEbooksSection(
+  private func formatDuration(_ seconds: Double) -> String {
+    if seconds < 3600 {
+      Duration.seconds(seconds).formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2)))
+    } else {
+      Duration.seconds(seconds).formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2)))
+    }
+  }
+}
+
+extension BookDetailsView {
+  private func chaptersContent(_ chapters: [Chapter]) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
+      ForEach(chapters, id: \.id) { chapter in
+        HStack {
+          Text(chapter.title)
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+          Text(formatDuration(chapter.end - chapter.start))
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 4)
+      }
+    }
+    .padding()
+    .background(Color.secondary.opacity(0.1))
+    .cornerRadius(8)
+  }
+
+  private func tracksContent(_ tracks: [Track]) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
+      ForEach(tracks, id: \.index) { track in
+        VStack(alignment: .leading, spacing: 8) {
+          Text(track.filename ?? "Track \(track.index)")
+            .font(.caption)
+            .fontWeight(.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+          VStack(alignment: .leading, spacing: 2) {
+            if let codec = track.codec {
+              Text("**Codec:** \(codec)")
+            }
+
+            if let bitRate = track.bitRate {
+              Text("**Bitrate:** \(bitRate / 1000) kbps")
+            }
+
+            if let channel = track.channels {
+              Text("**Channel:** \(channel) (\(track.channelLayout ?? ""))")
+            }
+
+            if let size = track.size {
+              Text(
+                "**Size:** \(size.formatted(.byteCount(style: .file, allowedUnits: [.kb, .mb, .gb])))"
+              )
+            }
+
+            Text("**Duration:** \(formatDuration(track.duration))")
+          }
+          .font(.caption2)
+          .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 4)
+      }
+    }
+    .padding()
+    .background(Color.secondary.opacity(0.1))
+    .cornerRadius(8)
+  }
+
+  private func ebooksContent(
     _ supplementaryEbooks: [BookDetailsView.Model.SupplementaryEbook]
   ) -> some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Supplementary eBooks")
-        .font(.headline)
+    VStack(alignment: .leading, spacing: 8) {
+      ForEach(supplementaryEbooks, id: \.filename) { ebook in
+        Button(action: { model.onSupplementaryEbookTapped(ebook) }) {
+          HStack {
+            Image(systemName: "book.closed.fill")
+              .foregroundColor(.blue)
 
-      VStack(alignment: .leading, spacing: 8) {
-        ForEach(supplementaryEbooks, id: \.filename) { ebook in
-          Button(action: { model.onSupplementaryEbookTapped(ebook) }) {
-            HStack {
-              Image(systemName: "book.closed.fill")
-                .foregroundColor(.blue)
+            VStack(alignment: .leading, spacing: 4) {
+              Text(ebook.filename)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.leading)
 
-              VStack(alignment: .leading, spacing: 4) {
-                Text(ebook.filename)
-                  .font(.subheadline)
-                  .foregroundColor(.primary)
-                  .multilineTextAlignment(.leading)
-
-                Text(
-                  ebook.size.formatted(
-                    .byteCount(
-                      style: .file,
-                      allowedUnits: [.kb, .mb, .gb]
-                    )
+              Text(
+                ebook.size.formatted(
+                  .byteCount(
+                    style: .file,
+                    allowedUnits: [.kb, .mb, .gb]
                   )
                 )
-                .font(.caption)
-                .foregroundColor(.secondary)
-              }
-
-              Spacer()
-
-              Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
+              )
+              .font(.caption)
+              .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+              .font(.caption)
+              .foregroundColor(.secondary)
           }
+          .padding(.vertical, 8)
         }
       }
-      .padding()
-      .background(Color.secondary.opacity(0.1))
-      .cornerRadius(8)
     }
+    .padding()
+    .background(Color.secondary.opacity(0.1))
+    .cornerRadius(8)
   }
 }
 
@@ -637,8 +696,6 @@ extension BookDetailsView {
     var progress: Double?
     var durationText: String?
     var timeRemaining: String?
-    var chapters: [Chapter]?
-    var tracks: [Track]?
     var downloadState: DownloadManager.DownloadState
     var isLoading: Bool
     var isEbook: Bool
@@ -651,7 +708,8 @@ extension BookDetailsView {
     var description: String?
     var canManageCollections: Bool
     var bookmarks: BookmarkViewerSheet.Model?
-    var supplementaryEbooks: [SupplementaryEbook]?
+
+    var tabs: [ContentTab]
 
     func onAppear() {}
     func onPlayTapped() {}
@@ -671,8 +729,6 @@ extension BookDetailsView {
       progress: Double? = nil,
       durationText: String? = nil,
       timeRemaining: String? = nil,
-      chapters: [Chapter]? = nil,
-      tracks: [Track]? = nil,
       downloadState: DownloadManager.DownloadState = .notDownloaded,
       isLoading: Bool = true,
       isEbook: Bool = false,
@@ -685,7 +741,7 @@ extension BookDetailsView {
       description: String? = nil,
       canManageCollections: Bool = false,
       bookmarks: BookmarkViewerSheet.Model? = nil,
-      supplementaryEbooks: [SupplementaryEbook]? = nil
+      tabs: [ContentTab]
     ) {
       self.bookID = bookID
       self.title = title
@@ -696,8 +752,6 @@ extension BookDetailsView {
       self.progress = progress
       self.durationText = durationText
       self.timeRemaining = timeRemaining
-      self.chapters = chapters
-      self.tracks = tracks
       self.downloadState = downloadState
       self.isLoading = isLoading
       self.isEbook = isEbook
@@ -710,12 +764,26 @@ extension BookDetailsView {
       self.description = description
       self.canManageCollections = canManageCollections
       self.bookmarks = bookmarks
-      self.supplementaryEbooks = supplementaryEbooks
+      self.tabs = tabs
     }
   }
 }
 
 extension BookDetailsView.Model {
+  enum ContentTab {
+    case chapters([Chapter])
+    case tracks([Track])
+    case ebooks([SupplementaryEbook])
+
+    var title: String {
+      switch self {
+      case .chapters: "Chapters"
+      case .tracks: "Tracks"
+      case .ebooks: "eBooks"
+      }
+    }
+  }
+
   struct Author {
     let id: String
     let name: String
@@ -750,19 +818,31 @@ extension BookDetailsView.Model {
       progress: 0.45,
       durationText: "12hr 30min",
       timeRemaining: "6hr 52min",
-      chapters: [
-        .init(id: 1, start: 0, end: 1000, title: "001"),
-        .init(id: 2, start: 1001, end: 2000, title: "002"),
-        .init(id: 3, start: 2001, end: 3000, title: "003"),
-        .init(id: 4, start: 3001, end: 4000, title: "004"),
-        .init(id: 5, start: 4001, end: 5000, title: "005"),
-        .init(id: 6, start: 5001, end: 6000, title: "006"),
-      ],
-      tracks: [],
       downloadState: .downloaded,
       isLoading: false,
       description:
-        "As the Colony continues to develop and thrive, there's too much to do! Territory to seize, nests to build, Champions to train! Anthony will have his mandibles full trying to teach his new protege Brilliant while trying to keep a war from breaking out with the ka'armodo. However, when the Mother Tree comes looking for his help against a particular breed of monster, there is no way he can refuse. After all, no ant can resist a fight against their ancient nemesis... the Termite! Book 7 of the hit monster-evolution LitRPG series with nearly 30 Million views on Royal Road. Grab your copy today!"
+        "As the Colony continues to develop and thrive, there's too much to do! Territory to seize, nests to build, Champions to train! Anthony will have his mandibles full trying to teach his new protege Brilliant while trying to keep a war from breaking out with the ka'armodo. However, when the Mother Tree comes looking for his help against a particular breed of monster, there is no way he can refuse. After all, no ant can resist a fight against their ancient nemesis... the Termite! Book 7 of the hit monster-evolution LitRPG series with nearly 30 Million views on Royal Road. Grab your copy today!",
+      tabs: [
+        .chapters([
+          .init(id: 1, start: 0, end: 1000, title: "001"),
+          .init(id: 2, start: 1001, end: 2000, title: "002"),
+          .init(id: 3, start: 2001, end: 3000, title: "003"),
+          .init(id: 4, start: 3001, end: 4000, title: "004"),
+          .init(id: 5, start: 4001, end: 5000, title: "005"),
+          .init(id: 6, start: 5001, end: 6000, title: "006"),
+        ]),
+        .tracks([
+          .init(
+            index: 1,
+            startOffset: 0,
+            duration: 45000,
+            filename: "The Lord of the Rings.m4b",
+            size: 552_003_086,
+            bitRate: 128000,
+            codec: "aac"
+          )
+        ]),
+      ]
     )
   }
 }
