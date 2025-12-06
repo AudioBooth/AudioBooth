@@ -368,7 +368,7 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func handleCorruptedDownload() async {
-    guard let localBook = localBook else { return }
+    guard localBook != nil else { return }
 
     AppLogger.player.info("Cleaning up corrupted download for \(self.bookID)")
 

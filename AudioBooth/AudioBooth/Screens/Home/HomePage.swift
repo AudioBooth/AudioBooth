@@ -195,7 +195,7 @@ struct HomePage: View {
           .padding(.horizontal)
 
         ScrollView(.horizontal, showsIndicators: false) {
-          LazyHStack(alignment: .top, spacing: 16) {
+          HStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { book in
               BookCard(model: book)
                 .frame(width: 120)
@@ -212,7 +212,7 @@ struct HomePage: View {
           .padding(.horizontal)
 
         ScrollView(.horizontal, showsIndicators: false) {
-          LazyHStack(alignment: .top, spacing: 16) {
+          HStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { series in
               SeriesCard(model: series, titleFont: .footnote)
                 .frame(width: 240)
@@ -229,7 +229,7 @@ struct HomePage: View {
           .padding(.horizontal)
 
         ScrollView(.horizontal, showsIndicators: false) {
-          LazyHStack(alignment: .top, spacing: 16) {
+          HStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { author in
               AuthorCard(model: author)
                 .frame(width: 80)

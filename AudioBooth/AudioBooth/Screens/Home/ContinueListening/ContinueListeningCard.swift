@@ -16,36 +16,11 @@ struct ContinueListeningCard: View {
         }
 
         VStack(alignment: .leading, spacing: 4) {
-          if let progress = model.progress {
-            HStack(alignment: .top) {
-              Text("Progress:")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-              Spacer()
-
-              Text(progress.formatted(.percent.precision(.fractionLength(0))))
-                .font(.caption)
-                .foregroundColor(.primary)
-            }
-          }
-
-          if let timeRemaining = model.timeRemaining {
-            HStack(alignment: .top) {
-              Text("Time remaining:")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-              Spacer()
-
-              Text(timeRemaining)
-                .font(.caption)
-                .foregroundColor(.primary)
-            }
-          }
-
+          progress
+          timeRemaining
           lastPlayedInfo
         }
+        .font(.caption)
       }
       .frame(width: 220)
       .contentShape(Rectangle())
@@ -70,8 +45,9 @@ struct ContinueListeningCard: View {
 
   var title: some View {
     Text(model.title)
-      .font(.headline)
-      .lineLimit(2)
+      .font(.callout)
+      .fontWeight(.medium)
+      .lineLimit(1)
       .foregroundColor(.primary)
       .multilineTextAlignment(.leading)
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -81,10 +57,40 @@ struct ContinueListeningCard: View {
   var author: some View {
     if let author = model.author {
       Text(author)
-        .font(.subheadline)
+        .font(.footnote)
         .foregroundColor(.secondary)
         .lineLimit(1)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+  }
+
+  @ViewBuilder
+  var progress: some View {
+    if let progress = model.progress {
+      HStack(alignment: .top) {
+        Text("Progress:")
+          .foregroundColor(.secondary)
+
+        Text(progress.formatted(.percent.precision(.fractionLength(0))))
+          .foregroundColor(.primary)
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
+    }
+  }
+
+  @ViewBuilder
+  var timeRemaining: some View {
+    if let timeRemaining = model.timeRemaining {
+      HStack(alignment: .top) {
+        Text("Time remaining:")
+          .foregroundColor(.secondary)
+
+        Spacer()
+
+        Text(timeRemaining)
+          .foregroundColor(.primary)
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
     }
   }
 
@@ -93,20 +99,17 @@ struct ContinueListeningCard: View {
     if let lastPlayedAt = model.lastPlayedAt {
       HStack(alignment: .top) {
         Text("Last played:")
-          .font(.caption)
           .foregroundColor(.secondary)
-
-        Spacer()
 
         if lastPlayedAt == .distantFuture {
           Text("Playing now")
-            .font(.caption)
             .foregroundColor(.blue)
+            .frame(maxWidth: .infinity, alignment: .trailing)
         } else {
           Text(lastPlayedAt, style: .relative)
-            .font(.caption)
             .foregroundColor(.primary)
             .monospacedDigit()
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
       }
     }
@@ -178,7 +181,7 @@ extension ContinueListeningCard {
       case (.none, .none): false
       case (.some, .none): false
       case (.none, .some): true
-      case let (.some(lhs), .some(rhs)): lhs < rhs
+      case (.some(let lhs), .some(let rhs)): lhs < rhs
       }
     }
   }
@@ -191,7 +194,7 @@ extension ContinueListeningCard.Model {
     coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
     progress: 0.45,
     lastPlayedAt: Date().addingTimeInterval(-3600),
-    timeRemaining: "8hr 32min remaining"
+    timeRemaining: "8hr 32min left"
   )
 }
 
@@ -207,7 +210,7 @@ extension ContinueListeningCard.Model {
             coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
             progress: 0.75,
             lastPlayedAt: Date().addingTimeInterval(-7200),
-            timeRemaining: "2hr 15min remaining"
+            timeRemaining: "2hr 15min left"
           ))
       }
       .padding(.horizontal)
