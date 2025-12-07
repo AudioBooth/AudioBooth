@@ -259,12 +259,12 @@ extension HomePageModel {
     }
 
     do {
-      let userData = try await Audiobookshelf.shared.authentication.fetchMe()
+      let data = try await Audiobookshelf.shared.authentication.authorize()
       try? MediaProgress.syncFromAPI(
-        userData: userData,
+        userData: data.user,
         currentPlayingBookID: PlayerManager.shared.current?.id
       )
-      try? Bookmark.syncFromAPI(userData: userData)
+      try? Bookmark.syncFromAPI(userData: data.user)
 
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
       processSections(personalized.sections)

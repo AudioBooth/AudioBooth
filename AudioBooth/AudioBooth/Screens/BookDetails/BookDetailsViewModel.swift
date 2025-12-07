@@ -8,6 +8,7 @@ import UIKit
 
 final class BookDetailsViewModel: BookDetailsView.Model {
   private var booksService: BooksService { Audiobookshelf.shared.books }
+  private var miscService: MiscService { Audiobookshelf.shared.misc }
   private var downloadManager: DownloadManager { .shared }
   private var playerManager: PlayerManager { .shared }
   private var authenticationService: AuthenticationService { Audiobookshelf.shared.authentication }
@@ -170,6 +171,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
     if let mediaType {
       self.isEbook = mediaType == .ebook
+      self.ereaderDevices = miscService.ereaderDevices.compactMap(\.name)
     }
 
     self.durationText = Duration.seconds(duration).formatted(
@@ -402,6 +404,17 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   override func onWriteTagTapped() {
     Task {
       await NFCWriter.write(bookID: bookID)
+    }
+  }
+
+  override func onSendToEbookTapped(_ device: String) {
+    Task {
+      do {
+        try await miscService.sendEbookToDevice(itemID: bookID, deviceName: device)
+        Toast(success: "Ebook sent to \(device)").show()
+      } catch {
+        Toast(error: "Unable to send ebook to \(device)").show()
+      }
     }
   }
 

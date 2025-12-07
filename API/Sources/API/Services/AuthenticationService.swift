@@ -358,6 +358,30 @@ public final class AuthenticationService: ObservableObject {
     onAuthenticationChanged(nil)
   }
 
+  public func authorize() async throws -> Authorize {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first.")
+    }
+
+    let request = NetworkRequest<Authorize>(
+      path: "/api/authorize",
+      method: .post,
+      body: nil
+    )
+
+    do {
+      let response = try await networkService.send(request)
+      let authorize = response.value
+      permissions = authorize.user.permissions
+      audiobookshelf.misc.ereaderDevices = authorize.ereaderDevices
+      return authorize
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to fetch user data: \(error.localizedDescription)")
+    }
+  }
+
   public func fetchMe() async throws -> User {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(

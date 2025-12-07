@@ -77,6 +77,8 @@ struct BookDetailsView: View {
             }
           }
 
+          ereaderDevices
+
           if preferences.showNFCTagWriting {
             Divider()
 
@@ -579,6 +581,23 @@ struct BookDetailsView: View {
 }
 
 extension BookDetailsView {
+  @ViewBuilder
+  private var ereaderDevices: some View {
+    if !model.ereaderDevices.isEmpty {
+      Divider()
+
+      Menu("Send Ebook to") {
+        ForEach(model.ereaderDevices, id: \.self) { device in
+          Button(device) {
+            model.onSendToEbookTapped(device)
+          }
+        }
+      }
+    }
+  }
+}
+
+extension BookDetailsView {
   private func chaptersContent(_ chapters: [Chapter]) -> some View {
     VStack(alignment: .leading, spacing: 8) {
       ForEach(chapters, id: \.id) { chapter in
@@ -708,6 +727,7 @@ extension BookDetailsView {
     var description: String?
     var canManageCollections: Bool
     var bookmarks: BookmarkViewerSheet.Model?
+    var ereaderDevices: [String]
 
     var tabs: [ContentTab]
 
@@ -718,6 +738,7 @@ extension BookDetailsView {
     func onResetProgressTapped() {}
     func onWriteTagTapped() {}
     func onSupplementaryEbookTapped(_ ebook: SupplementaryEbook) {}
+    func onSendToEbookTapped(_ device: String) {}
 
     init(
       bookID: String,
@@ -741,6 +762,7 @@ extension BookDetailsView {
       description: String? = nil,
       canManageCollections: Bool = false,
       bookmarks: BookmarkViewerSheet.Model? = nil,
+      ereaderDevices: [String] = [],
       tabs: [ContentTab]
     ) {
       self.bookID = bookID
@@ -764,6 +786,7 @@ extension BookDetailsView {
       self.description = description
       self.canManageCollections = canManageCollections
       self.bookmarks = bookmarks
+      self.ereaderDevices = ereaderDevices
       self.tabs = tabs
     }
   }

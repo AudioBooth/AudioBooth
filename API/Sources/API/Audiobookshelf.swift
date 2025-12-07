@@ -19,6 +19,7 @@ public final class Audiobookshelf: @unchecked Sendable {
   public lazy var collections = CollectionsService(audiobookshelf: self)
   public lazy var bookmarks = BookmarksService(audiobookshelf: self)
   public lazy var networkDiscovery = NetworkDiscoveryService(audiobookshelf: self)
+  public lazy var misc = MiscService(audiobookshelf: self)
 
   public var serverURL: URL? { authentication.serverURL }
   public var isAuthenticated: Bool { authentication.isAuthenticated }
