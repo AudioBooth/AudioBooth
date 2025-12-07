@@ -8,6 +8,8 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
   private var onRemoved: (() -> Void)?
   private var cancellables = Set<AnyCancellable>()
 
+  private var progressObservation: Task<Void, Never>?
+
   init(book: Book, onRemoved: @escaping () -> Void) {
     self.book = book
 
@@ -23,6 +25,7 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
 
     self.onRemoved = onRemoved
     observePlayerChanges()
+    observeMediaProgress()
   }
 
   override func onAppear() {
@@ -71,13 +74,21 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
     }
   }
 
-  private func updateLastPlayedStatus() {
-    let current = PlayerManager.shared.current
+  private func observeMediaProgress() {
+    let bookID = book.bookID
+    progressObservation = Task { [weak self] in
+      for await mediaProgress in MediaProgress.observe(where: \.bookID, equals: bookID) {
 
-    if let current, current.id == id, current.isPlaying {
-      lastPlayedAt = .distantFuture
-    } else if let mediaProgress = try? MediaProgress.fetch(bookID: id) {
-      lastPlayedAt = mediaProgress.lastPlayedAt
+        let current = PlayerManager.shared.current
+
+        if let current, current.id == bookID, current.isPlaying {
+          self?.lastPlayedAt = .distantFuture
+        } else {
+          self?.lastPlayedAt = mediaProgress.lastPlayedAt
+        }
+
+        self?.progress = mediaProgress.progress
+      }
     }
   }
 

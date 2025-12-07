@@ -1,4 +1,5 @@
 import API
+import Combine
 import Logging
 import Models
 import SwiftData
@@ -10,6 +11,7 @@ final class HomePageModel: HomePage.Model {
   private let preferences = UserPreferences.shared
 
   private var availableOfflineTask: Task<Void, Never>?
+  private var cancellables = Set<AnyCancellable>()
 
   private var availableOffline: [LocalBook] = []
   private var continueListeningBooks: [Book] = []
@@ -18,6 +20,14 @@ final class HomePageModel: HomePage.Model {
   init() {
     super.init()
     loadCachedContent()
+
+    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+      .sink { [weak self] _ in
+        Task {
+          await self?.fetchRemoteContent()
+        }
+      }
+      .store(in: &cancellables)
   }
 
   override func onAppear() {
