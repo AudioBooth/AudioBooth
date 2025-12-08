@@ -180,7 +180,7 @@ final class OIDCAuthenticationManager: NSObject {
     var request = URLRequest(url: authURL)
     request.httpMethod = "GET"
 
-    let config = URLSessionConfiguration.default
+    let config = URLSessionConfiguration.ephemeral
     let session = URLSession(
       configuration: config,
       delegate: NoRedirectDelegate(),
