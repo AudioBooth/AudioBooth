@@ -9,6 +9,14 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private var timerStartTime: Date?
   private var originalTimerDuration: TimeInterval = 0
 
+  override init() {
+    super.init()
+
+    let totalMinutes = UserPreferences.shared.customTimerMinutes
+    customHours = totalMinutes / 60
+    customMinutes = totalMinutes % 60
+  }
+
   func setPlayer(_ player: AVPlayer?) {
     self.player = player
   }
@@ -48,6 +56,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     case .preset(let duration):
       startSleepTimer(duration: duration)
     case .custom(let duration):
+      let totalMinutes = customHours * 60 + customMinutes
+      UserPreferences.shared.customTimerMinutes = totalMinutes
       startSleepTimer(duration: duration)
     case .chapters:
       break
