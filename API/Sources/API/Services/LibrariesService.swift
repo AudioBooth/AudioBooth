@@ -7,8 +7,6 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   private let audiobookshelf: Audiobookshelf
   private let userDefaults = UserDefaults.standard
 
-  public var onLibraryChanged: ((Library)?) -> Void = { _ in }
-
   enum Keys {
     static let library = "selected_library"
     static func personalized(libraryID: String) -> String {
@@ -48,7 +46,6 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
         userDefaults.removeObject(forKey: Keys.library)
       }
       ImagePipeline.shared.cache.removeAll()
-      onLibraryChanged(newValue)
     }
   }
 

@@ -346,14 +346,13 @@ public final class AuthenticationService: ObservableObject {
   }
 
   public func logout(serverID: String) {
-    removeServer(serverID)
-
     if server?.id == serverID {
       permissions = nil
       audiobookshelf.libraries.current = nil
       ImagePipeline.shared.cache.removeAll()
       onAuthenticationChanged(nil)
     }
+    removeServer(serverID)
   }
 
   public func logoutAll() {

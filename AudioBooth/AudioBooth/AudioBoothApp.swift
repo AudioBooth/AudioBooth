@@ -12,6 +12,8 @@ import WidgetKit
 struct AudioBoothApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+  @StateObject private var libraries: LibrariesService = Audiobookshelf.shared.libraries
+
   init() {
     AppLogger.bootstrap()
 
@@ -24,8 +26,6 @@ struct AudioBoothApp: App {
     _ = WatchConnectivityManager.shared
     _ = SessionManager.shared
     _ = UserPreferences.shared
-
-    observeLibrary()
 
     Purchases.logLevel = .error
     Purchases.configure(withAPIKey: "appl_AuBdFKRrOngbJsXGkkxDKGNbGRW")
@@ -65,25 +65,23 @@ struct AudioBoothApp: App {
     }
   }
 
-  private func observeLibrary() {
-    Audiobookshelf.shared.libraries.onLibraryChanged = { library in
-      if library != nil {
+  var body: some Scene {
+    WindowGroup {
+      ContentView()
+        .task {
+          if libraries.current != nil {
+            Task {
+              try? await Audiobookshelf.shared.libraries.fetchFilterData()
+            }
+          }
+        }
+    }
+    .onChange(of: libraries.current) { _, newValue in
+      if newValue != nil {
         Task {
           try? await Audiobookshelf.shared.libraries.fetchFilterData()
         }
       }
-    }
-
-    if Audiobookshelf.shared.libraries.current != nil {
-      Task {
-        try? await Audiobookshelf.shared.libraries.fetchFilterData()
-      }
-    }
-  }
-
-  var body: some Scene {
-    WindowGroup {
-      ContentView()
     }
   }
 }

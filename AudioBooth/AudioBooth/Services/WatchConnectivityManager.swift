@@ -192,8 +192,11 @@ extension WatchConnectivityManager: WCSessionDelegate {
         "Watch session activated with state: \(activationState.rawValue)"
       )
 
-      if activationState == .activated {
-        syncCachedDataToWatch()
+      Task {
+        if activationState == .activated, Audiobookshelf.shared.authentication.server != nil {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
+          syncCachedDataToWatch()
+        }
       }
     }
   }
