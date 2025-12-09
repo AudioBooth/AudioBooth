@@ -646,7 +646,7 @@ extension BookPlayerModel {
       }
     }
 
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    updateNowPlayingInfo()
   }
 
   private func updateNowPlayingInfo() {
@@ -654,7 +654,7 @@ extension BookPlayerModel {
       playbackProgress.current + playbackProgress.remaining
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
 
-    nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = player?.defaultRate
+    nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = Double(speed.playbackSpeed)
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
 
     if let chapters {

@@ -32,8 +32,8 @@ final class SpeedPickerSheetViewModel: SpeedPickerSheet.Model {
     UserDefaults.standard.set(playbackSpeed, forKey: "playbackSpeed")
     sharedDefaults?.set(playbackSpeed, forKey: "playbackSpeed")
 
+    player.defaultRate = roundedSpeed
     if player.rate > 0 {
-      player.defaultRate = roundedSpeed
       player.rate = roundedSpeed
     }
   }

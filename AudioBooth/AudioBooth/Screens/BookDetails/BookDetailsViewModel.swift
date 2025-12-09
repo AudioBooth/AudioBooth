@@ -311,9 +311,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         }
       } else {
         playerManager.setCurrent(book)
-        if let currentPlayer = playerManager.current as? BookPlayerModel {
-          currentPlayer.onPlayTapped()
-        }
+        PlayerManager.shared.play()
       }
     } else if let localBook {
       if playerManager.current?.id == bookID {
@@ -322,9 +320,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         }
       } else {
         playerManager.setCurrent(localBook)
-        if let currentPlayer = playerManager.current as? BookPlayerModel {
-          currentPlayer.onPlayTapped()
-        }
+        PlayerManager.shared.play()
       }
     } else {
       Toast(error: "Book not available").show()
