@@ -16,9 +16,26 @@ public final class LocalBook {
   public var publishedYear: String?
   public var displayOrder: Int = 0
   public var createdAt: Date = Date()
+  public var ebookFile: URL?
 
   public var authorNames: String {
     authors.map(\.name).joined(separator: ", ")
+  }
+
+  public var ebookLocalPath: URL? {
+    guard let ebookFile else { return nil }
+
+    guard
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
+    else {
+      return nil
+    }
+
+    let fileURL = appGroupURL.appendingPathComponent(ebookFile.relativePath)
+    guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+    return fileURL
   }
 
   public init(
@@ -33,7 +50,8 @@ public final class LocalBook {
     chapters: [Chapter] = [],
     publishedYear: String? = nil,
     displayOrder: Int = 0,
-    createdAt: Date = Date()
+    createdAt: Date = Date(),
+    ebookFile: URL? = nil
   ) {
     self.bookID = bookID
     self.title = title
@@ -47,6 +65,7 @@ public final class LocalBook {
     self.publishedYear = publishedYear
     self.displayOrder = displayOrder
     self.createdAt = createdAt
+    self.ebookFile = ebookFile
   }
 }
 
@@ -82,6 +101,10 @@ extension LocalBook {
 
       if self.tracks.isEmpty {
         existingItem.tracks = []
+        // Preserve ebookFile if set
+        if self.ebookFile != nil || existingItem.ebookFile != nil {
+          existingItem.ebookFile = self.ebookFile ?? existingItem.ebookFile
+        }
         try context.save()
         return
       }
@@ -153,7 +176,11 @@ extension LocalBook {
   }
 
   public var isDownloaded: Bool {
-    guard !tracks.isEmpty else { return false }
+    // Ebook: check if ebookFile exists
+    if tracks.isEmpty {
+      return ebookFile != nil
+    }
+    // Audiobook: check all tracks downloaded
     return tracks.allSatisfy { track in track.relativePath != nil }
   }
 

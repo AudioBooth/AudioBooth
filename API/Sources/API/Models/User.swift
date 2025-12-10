@@ -12,6 +12,7 @@ extension User {
     public let libraryItemId: String
     public let duration: Double
     public let progress: Double
+    public let ebookProgress: Double
     public let isFinished: Bool
     public let currentTime: Double
     public let lastUpdate: Int64
@@ -21,6 +22,7 @@ extension User {
       libraryItemId: String,
       duration: Double,
       progress: Double,
+      ebookProgress: Double,
       isFinished: Bool,
       currentTime: Double,
       lastUpdate: Int64
@@ -29,6 +31,7 @@ extension User {
       self.libraryItemId = libraryItemId
       self.duration = duration
       self.progress = progress
+      self.ebookProgress = ebookProgress
       self.isFinished = isFinished
       self.currentTime = currentTime
       self.lastUpdate = lastUpdate

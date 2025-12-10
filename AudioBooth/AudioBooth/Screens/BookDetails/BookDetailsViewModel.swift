@@ -172,12 +172,16 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       self.ereaderDevices = miscService.ereaderDevices.compactMap(\.name)
     }
 
-    self.durationText = Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
+    if mediaType != .ebook {
+      self.durationText = Duration.seconds(duration).formatted(
+        .units(
+          allowed: [.hours, .minutes],
+          width: .narrow
+        )
       )
-    )
+    } else {
+      self.durationText = nil
+    }
 
     if let progress = try? MediaProgress.fetch(bookID: bookID) {
       let remainingTime = duration * (1.0 - progress.progress)
@@ -246,6 +250,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     let bookID = bookID
     itemObservation = Task { [weak self] in
       for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
+        self?.localBook = updatedItem
         if updatedItem.isDownloaded {
           self?.downloadState = .downloaded
         } else if self?.downloadState == .downloaded {
@@ -302,8 +307,10 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   override func onPlayTapped() {
     if let book {
       if book.mediaType == .ebook {
-        if let ebookURL = book.ebookURL {
-          self.ebookReader = EbookReaderViewModel(ebookURL: ebookURL)
+        if let ebookURL = localBook?.ebookLocalPath {
+          ebookReader = EbookReaderViewModel(source: .local(ebookURL), bookID: bookID)
+        } else if let ebookURL = book.ebookURL {
+          ebookReader = EbookReaderViewModel(source: .remote(ebookURL), bookID: bookID)
         } else {
           Toast(error: "Ebook URL not available").show()
         }
@@ -418,6 +425,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
     }
 
-    self.ebookReader = EbookReaderViewModel(ebookURL: url)
+    ebookReader = EbookReaderViewModel(source: .remote(url), bookID: nil)
   }
 }

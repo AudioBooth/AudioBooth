@@ -1,5 +1,7 @@
+import API
 import Foundation
 import Logging
+import Models
 import ReadiumAdapterGCDWebServer
 import ReadiumNavigator
 import ReadiumShared
@@ -7,11 +9,18 @@ import ReadiumStreamer
 import UIKit
 
 final class EbookReaderViewModel: EbookReaderView.Model {
-  private let ebookURL: URL
-  private var ebookFile: URL?
+  enum Source {
+    case local(URL)
+    case remote(URL)
+  }
+
+  private let source: Source
+  private let bookID: String?
   private var publication: Publication?
   private var httpServer: HTTPServer?
   private var navigator: (any Navigator)?
+  private var lastProgressUpdate: Date?
+  private let audiobookshelf = Audiobookshelf.shared
 
   private lazy var assetRetriever = AssetRetriever(
     httpClient: DefaultHTTPClient()
@@ -25,8 +34,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     )
   )
 
-  init(ebookURL: URL) {
-    self.ebookURL = ebookURL
+  init(source: Source, bookID: String?) {
+    self.source = source
+    self.bookID = bookID
     super.init()
     observeChanges()
   }
@@ -53,19 +63,23 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     }
   }
 
-  override func onDisappear() {
-    cleanup()
-  }
-
   private func loadEbook() async {
     do {
       isLoading = true
       error = nil
 
-      let downloadedFile = try await downloadEbook()
-      self.ebookFile = downloadedFile
+      let url: AbsoluteURL
+      switch source {
+      case .local(let localURL):
+        guard let httpURL = FileURL(url: localURL) else { throw EbookError.unsupportedURL }
+        url = httpURL
 
-      let asset = try await assetRetriever.retrieve(url: HTTPURL(url: ebookURL)!).get()
+      case .remote(let remoteURL):
+        guard let httpURL = HTTPURL(url: remoteURL) else { throw EbookError.unsupportedURL }
+        url = httpURL
+      }
+
+      let asset = try await assetRetriever.retrieve(url: url).get()
 
       let publication = try await publicationOpener.open(
         asset: asset,
@@ -73,12 +87,18 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       ).get()
 
       self.publication = publication
-      self.bookTitle = publication.metadata.title ?? "Ebook"
 
       let httpServer = GCDHTTPServer(assetRetriever: assetRetriever)
       self.httpServer = httpServer
 
-      let initialLocation = await publication.locate(progression: 0.0)
+      let progress: Double
+      if let bookID {
+        progress = MediaProgress.progress(for: bookID)
+      } else {
+        progress = 0.0
+      }
+
+      let initialLocation = await publication.locate(progression: progress)
       let navigator = try createNavigator(
         for: publication,
         httpServer: httpServer,
@@ -98,21 +118,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       self.error = "Failed to load ebook. Please try again."
       isLoading = false
     }
-  }
-
-  private func downloadEbook() async throws -> URL {
-    let temporaryDirectory = FileManager.default.temporaryDirectory
-    let filename = ebookURL.lastPathComponent.isEmpty ? "ebook.epub" : ebookURL.lastPathComponent
-    let destinationURL = temporaryDirectory.appendingPathComponent(filename)
-
-    if FileManager.default.fileExists(atPath: destinationURL.path) {
-      try? FileManager.default.removeItem(at: destinationURL)
-    }
-
-    let (tempURL, _) = try await URLSession.shared.download(from: ebookURL)
-    try FileManager.default.moveItem(at: tempURL, to: destinationURL)
-
-    return destinationURL
   }
 
   private func createNavigator(
@@ -151,7 +156,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private func updateProgress() {
     guard let navigator = navigator else { return }
     if let progression = navigator.currentLocation?.locations.totalProgression {
-      readingProgress = progression
+      progress = progression
     }
   }
 
@@ -208,7 +213,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onProgressTapped() {
-    AppLogger.viewModel.info("Progress tapped - current: \(Int(readingProgress * 100))%")
+    AppLogger.viewModel.info("Progress tapped - current: \(Int(progress * 100))%")
   }
 
   override func onPreferencesChanged(_ preferences: EbookReaderPreferences) {
@@ -226,13 +231,38 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     epubNavigator.submitPreferences(epubPrefs)
   }
 
-  private func cleanup() {
-    if let ebookFile {
-      try? FileManager.default.removeItem(at: ebookFile)
+  private func syncProgressToServer(_ progress: Double) {
+    guard let bookID else { return }
+
+    try? MediaProgress.updateProgress(
+      for: bookID,
+      currentTime: 0,
+      duration: 0,
+      progress: progress
+    )
+
+    let now = Date()
+    if let lastUpdate = lastProgressUpdate, now.timeIntervalSince(lastUpdate) < 1.0 {
+      return
+    }
+
+    lastProgressUpdate = now
+
+    Task {
+      do {
+        try await audiobookshelf.books.updateEbookProgress(
+          bookID: bookID,
+          progress: progress
+        )
+        AppLogger.viewModel.debug("Synced ebook progress: \(progress)")
+      } catch {
+        AppLogger.viewModel.error("Failed to sync ebook progress: \(error)")
+      }
     }
   }
 
   enum EbookError: Error {
+    case unsupportedURL
     case unsupportedFormat
   }
 }
@@ -241,6 +271,7 @@ extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
   func navigator(_ navigator: Navigator, locationDidChange locator: Locator) {
     updateProgress()
     updateCurrentChapterIndex()
+    syncProgressToServer(progress)
   }
 
   func navigator(_ navigator: Navigator, presentError error: NavigatorError) {

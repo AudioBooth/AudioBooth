@@ -10,6 +10,11 @@ import SwiftData
 final class DownloadManager: NSObject, ObservableObject {
   static let shared = DownloadManager()
 
+  enum DownloadType {
+    case audiobook
+    case ebook
+  }
+
   enum DownloadState: Equatable {
     case notDownloaded
     case downloading(progress: Double)
@@ -33,10 +38,10 @@ final class DownloadManager: NSObject, ObservableObject {
     activeOperations[bookID] != nil
   }
 
-  func startDownload(for bookID: String) {
+  func startDownload(for bookID: String, type: DownloadType = .audiobook) {
     guard activeOperations[bookID] == nil else { return }
 
-    let operation = DownloadOperation(bookID: bookID)
+    let operation = DownloadOperation(bookID: bookID, type: type)
     activeOperations[bookID] = operation
     currentProgress[bookID] = 0
 
@@ -76,10 +81,18 @@ extension DownloadManager {
         return
       }
 
+      guard let item = try? LocalBook.fetch(bookID: bookID) else {
+        return
+      }
+
+      // Determine if this is an audiobook or ebook
+      let isEbook = item.tracks.isEmpty
+      let directory = isEbook ? "ebooks" : "audiobooks"
+
       let bookDirectory =
         appGroupURL
         .appendingPathComponent(serverID)
-        .appendingPathComponent("audiobooks")
+        .appendingPathComponent(directory)
         .appendingPathComponent(bookID)
 
       do {
@@ -87,12 +100,14 @@ extension DownloadManager {
           try FileManager.default.removeItem(at: bookDirectory)
         }
 
-        if let item = try? LocalBook.fetch(bookID: bookID) {
+        if isEbook {
+          item.ebookFile = nil
+        } else {
           for track in item.orderedTracks {
             track.relativePath = nil
           }
-          try? item.save()
         }
+        try? item.save()
       } catch {
         Toast(error: "Failed to delete download: \(error.localizedDescription)").show()
       }
@@ -138,6 +153,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   private var audiobookshelf: Audiobookshelf { .shared }
 
   let bookID: String
+  let type: DownloadManager.DownloadType
   let progress: AsyncStream<Double>
 
   private let progressContinuation: AsyncStream<Double>.Continuation
@@ -183,8 +199,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   override var isExecuting: Bool { _executing }
   override var isFinished: Bool { _finished }
 
-  init(bookID: String) {
+  init(bookID: String, type: DownloadManager.DownloadType) {
     self.bookID = bookID
+    self.type = type
 
     let (stream, continuation) = AsyncStream.makeStream(
       of: Double.self,
@@ -223,49 +240,78 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     guard
       let appGroupURL = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
-      )
+      ),
+      let serverID = Audiobookshelf.shared.authentication.server?.id
     else {
       return
     }
 
-    let bookDirectory = appGroupURL.appendingPathComponent("audiobooks").appendingPathComponent(
-      bookID
-    )
+    let directory = type == .audiobook ? "audiobooks" : "ebooks"
+    let bookDirectory =
+      appGroupURL
+      .appendingPathComponent(serverID)
+      .appendingPathComponent(directory)
+      .appendingPathComponent(bookID)
+
     try? FileManager.default.removeItem(at: bookDirectory)
   }
 
   private func executeDownload() async {
     do {
-      let playSession = try await audiobookshelf.sessions.start(
-        itemID: bookID,
-        sessionType: .download
-      )
-
-      guard !isCancelled else {
-        finish(success: false, error: CancellationError())
-        return
+      switch type {
+      case .audiobook:
+        try await executeAudiobookDownload()
+      case .ebook:
+        try await executeEbookDownload()
       }
-
-      guard let session = Session(from: playSession) else {
-        finish(success: false, error: URLError(.badServerResponse))
-        return
-      }
-
-      self.session = session
-
-      let existingItem = try? LocalBook.fetch(bookID: bookID)
-      let book = existingItem ?? LocalBook(from: playSession.libraryItem)
-      self.book = book
-      self.totalBytes = book.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
-      try? book.save()
-
-      try await downloadTracks()
-
-      try? book.save()
       finish(success: true, error: nil)
     } catch {
       finish(success: false, error: error)
     }
+  }
+
+  private func executeAudiobookDownload() async throws {
+    let playSession = try await audiobookshelf.sessions.start(
+      itemID: bookID,
+      sessionType: .download
+    )
+
+    guard !isCancelled else {
+      throw CancellationError()
+    }
+
+    guard let session = Session(from: playSession) else {
+      throw URLError(.badServerResponse)
+    }
+
+    self.session = session
+
+    let existingItem = try? LocalBook.fetch(bookID: bookID)
+    let book = existingItem ?? LocalBook(from: playSession.libraryItem)
+    self.book = book
+    self.totalBytes = book.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
+    try? book.save()
+
+    try await downloadTracks()
+
+    try? book.save()
+  }
+
+  private func executeEbookDownload() async throws {
+    let book = try await audiobookshelf.books.fetch(id: bookID)
+
+    guard let ebookURL = book.ebookURL else {
+      throw URLError(.badURL)
+    }
+
+    let existingItem = try? LocalBook.fetch(bookID: bookID)
+    let localBook = existingItem ?? LocalBook(from: book)
+    self.book = localBook
+    try? localBook.save()
+
+    try await downloadEbook(from: ebookURL)
+
+    try? localBook.save()
   }
 
   private func downloadTracks() async throws {
@@ -321,6 +367,48 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         bytesDownloadedSoFar += size
       }
     }
+  }
+
+  private func downloadEbook(from ebookURL: URL) async throws {
+    guard
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
+    else {
+      throw URLError(.fileDoesNotExist)
+    }
+
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+      throw URLError(.userAuthenticationRequired)
+    }
+
+    let serverDirectory = appGroupURL.appendingPathComponent(serverID)
+    var ebooksDirectory = serverDirectory.appendingPathComponent("ebooks")
+    let bookDirectory = ebooksDirectory.appendingPathComponent(bookID)
+
+    try FileManager.default.createDirectory(at: bookDirectory, withIntermediateDirectories: true)
+
+    var resourceValues = URLResourceValues()
+    resourceValues.isExcludedFromBackup = true
+    try? ebooksDirectory.setResourceValues(resourceValues)
+
+    let filename = ebookURL.lastPathComponent
+    let ext = ebookURL.pathExtension.isEmpty ? ".epub" : ".\(ebookURL.pathExtension)"
+    let ebookFile = bookDirectory.appendingPathComponent(filename.hasSuffix(ext) ? filename : "\(bookID)\(ext)")
+
+    try await withCheckedThrowingContinuation { continuation in
+      let downloadTask = downloadSession.downloadTask(with: ebookURL)
+      downloadTask.countOfBytesClientExpectsToReceive = 50_000_000
+
+      self.currentTrack = downloadTask
+      self.continuation = continuation
+      self.trackDestination = ebookFile
+
+      downloadTask.resume()
+    }
+
+    book?.ebookFile = URL(string: "\(serverID)/ebooks/\(bookID)/\(ebookFile.lastPathComponent)")
+    progressContinuation.yield(1.0)
   }
 
   private func finish(success: Bool, error: Error?) {

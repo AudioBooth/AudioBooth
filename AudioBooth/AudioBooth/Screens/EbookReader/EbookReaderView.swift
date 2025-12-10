@@ -133,7 +133,7 @@ struct EbookReaderView: View {
 
       Button(action: { model.onProgressTapped() }) {
         VStack(spacing: 6) {
-          Text("\(Int(model.readingProgress * 100))%")
+          Text("\(Int(model.progress * 100))%")
             .font(.system(size: 16, weight: .medium))
           Text("Progress")
             .font(.caption2)
@@ -214,9 +214,7 @@ extension EbookReaderView {
     var isLoading: Bool
     var error: String?
     var readerViewController: UIViewController?
-    var bookTitle: String
-    var currentChapter: String?
-    var readingProgress: Double
+    var progress: Double
     var chapters: EbookChapterPickerSheet.Model?
     var preferences: EbookReaderPreferences
 
@@ -233,16 +231,14 @@ extension EbookReaderView {
       readerViewController: UIViewController? = nil,
       bookTitle: String = "",
       currentChapter: String? = nil,
-      readingProgress: Double = 0.0,
+      progress: Double = 0.0,
       chapters: EbookChapterPickerSheet.Model? = nil,
       preferences: EbookReaderPreferences = EbookReaderPreferences()
     ) {
       self.isLoading = isLoading
       self.error = error
       self.readerViewController = readerViewController
-      self.bookTitle = bookTitle
-      self.currentChapter = currentChapter
-      self.readingProgress = readingProgress
+      self.progress = progress
       self.chapters = chapters
       self.preferences = preferences
     }

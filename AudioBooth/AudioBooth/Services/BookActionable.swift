@@ -41,7 +41,17 @@ extension BookActionable {
   }
 
   public func download() throws {
-    DownloadManager.shared.startDownload(for: bookID)
+    let downloadType: DownloadManager.DownloadType
+
+    if let book = self as? Book {
+      downloadType = book.mediaType == .ebook ? .ebook : .audiobook
+    } else if let localBook = self as? LocalBook {
+      downloadType = localBook.tracks.isEmpty ? .ebook : .audiobook
+    } else {
+      downloadType = .audiobook
+    }
+
+    DownloadManager.shared.startDownload(for: bookID, type: downloadType)
   }
 
   public func removeDownload() {

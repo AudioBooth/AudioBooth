@@ -252,9 +252,9 @@ struct BookDetailsView: View {
 
   private var headerSection: some View {
     VStack(alignment: .leading, spacing: 16) {
-      if !model.authors.isEmpty || !model.narrators.isEmpty {
+      if !model.authors.isEmpty || (!model.isEbook && !model.narrators.isEmpty) {
         VStack(alignment: .leading, spacing: 12) {
-          Text("Authors & Narrators")
+          Text(model.isEbook ? "Authors" : "Authors & Narrators")
             .font(.headline)
 
           FlowLayout(spacing: 4) {
@@ -268,13 +268,15 @@ struct BookDetailsView: View {
               }
             }
 
-            ForEach(model.narrators, id: \.self) { narrator in
-              NavigationLink(value: NavigationDestination.narrator(name: narrator)) {
-                Chip(
-                  title: narrator,
-                  icon: "person.wave.2.fill",
-                  color: .blue
-                )
+            if !model.isEbook {
+              ForEach(model.narrators, id: \.self) { narrator in
+                NavigationLink(value: NavigationDestination.narrator(name: narrator)) {
+                  Chip(
+                    title: narrator,
+                    icon: "person.wave.2.fill",
+                    color: .blue
+                  )
+                }
               }
             }
           }
