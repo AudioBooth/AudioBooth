@@ -22,7 +22,7 @@ struct EbookReaderView: View {
     .toolbarBackground(.hidden, for: .navigationBar)
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        if showControls {
+        if showControls || model.isLoading {
           Button {
             dismiss()
           } label: {
@@ -116,18 +116,20 @@ struct EbookReaderView: View {
       }
       .frame(maxWidth: .infinity)
 
-      Button(action: {
-        model.onSettingsTapped()
-        showSettings = true
-      }) {
-        VStack(spacing: 6) {
-          Image(systemName: "textformat.size")
-            .font(.system(size: 20))
-          Text("Settings")
-            .font(.caption2)
+      if model.supportsSettings {
+        Button(action: {
+          model.onSettingsTapped()
+          showSettings = true
+        }) {
+          VStack(spacing: 6) {
+            Image(systemName: "textformat.size")
+              .font(.system(size: 20))
+            Text("Settings")
+              .font(.caption2)
+          }
         }
+        .frame(maxWidth: .infinity)
       }
-      .frame(maxWidth: .infinity)
 
       Button(action: { model.onProgressTapped() }) {
         VStack(spacing: 6) {
@@ -215,6 +217,7 @@ extension EbookReaderView {
     var progress: Double
     var chapters: EbookChapterPickerSheet.Model?
     var preferences: EbookReaderPreferences
+    var supportsSettings: Bool
 
     func onAppear() {}
     func onDisappear() {}
@@ -231,7 +234,8 @@ extension EbookReaderView {
       currentChapter: String? = nil,
       progress: Double = 0.0,
       chapters: EbookChapterPickerSheet.Model? = nil,
-      preferences: EbookReaderPreferences = EbookReaderPreferences()
+      preferences: EbookReaderPreferences = EbookReaderPreferences(),
+      supportsSettings: Bool = false
     ) {
       self.isLoading = isLoading
       self.error = error
@@ -239,6 +243,7 @@ extension EbookReaderView {
       self.progress = progress
       self.chapters = chapters
       self.preferences = preferences
+      self.supportsSettings = supportsSettings
     }
   }
 }

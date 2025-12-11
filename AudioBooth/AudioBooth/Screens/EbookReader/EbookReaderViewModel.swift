@@ -1,4 +1,5 @@
 import API
+import Combine
 import Foundation
 import Logging
 import Models
@@ -21,6 +22,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
   private let audiobookshelf = Audiobookshelf.shared
+  private var temporaryFileURL: URL?
+
+  private var cancellables = Set<AnyCancellable>()
 
   private lazy var assetRetriever = AssetRetriever(
     httpClient: DefaultHTTPClient()
@@ -42,19 +46,13 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   func observeChanges() {
-    withObservationTracking {
-      _ = preferences.fontSize
-      _ = preferences.fontFamily
-      _ = preferences.theme
-      _ = preferences.pageMargins
-      _ = preferences.lineSpacing
-    } onChange: { [weak self] in
-      RunLoop.current.perform {
+    preferences.objectWillChange
+      .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+      .sink { [weak self] _ in
         guard let self else { return }
         self.applyPreferences(self.preferences)
-        self.observeChanges()
       }
-    }
+      .store(in: &cancellables)
   }
 
   override func onAppear() {
@@ -63,23 +61,32 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     }
   }
 
+  override func onDisappear() {
+    cleanupTemporaryFile()
+  }
+
   private func loadEbook() async {
     do {
       isLoading = true
       error = nil
 
-      let url: AbsoluteURL
+      let localURL: URL
       switch source {
-      case .local(let localURL):
-        guard let httpURL = FileURL(url: localURL) else { throw EbookError.unsupportedURL }
-        url = httpURL
+      case .local(let url):
+        localURL = url
 
       case .remote(let remoteURL):
-        guard let httpURL = HTTPURL(url: remoteURL) else { throw EbookError.unsupportedURL }
-        url = httpURL
+        if let bookID {
+          localURL = try await downloadEbook(bookID: bookID, remoteURL: remoteURL)
+        } else {
+          localURL = try await downloadTemporaryFile(from: remoteURL)
+          temporaryFileURL = localURL
+        }
       }
 
-      let asset = try await assetRetriever.retrieve(url: url).get()
+      guard let fileURL = FileURL(url: localURL) else { throw EbookError.unsupportedURL }
+
+      let asset = try await assetRetriever.retrieve(url: fileURL).get()
 
       let publication = try await publicationOpener.open(
         asset: asset,
@@ -87,6 +94,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       ).get()
 
       self.publication = publication
+      self.supportsSettings = publication.conforms(to: .epub)
 
       let httpServer = GCDHTTPServer(assetRetriever: assetRetriever)
       self.httpServer = httpServer
@@ -130,6 +138,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         publication: publication,
         initialLocation: initialLocation,
         config: EPUBNavigatorViewController.Configuration(
+          preferences: preferences.toEPUBPreferences(),
           contentInset: [
             .compact: (top: 0, bottom: 0),
             .regular: (top: 0, bottom: 0),
@@ -260,10 +269,59 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       }
     }
   }
+}
 
+extension EbookReaderViewModel {
   enum EbookError: Error {
     case unsupportedURL
     case unsupportedFormat
+    case downloadFailed
+  }
+}
+
+extension EbookReaderViewModel {
+  private func downloadEbook(bookID: String, remoteURL: URL) async throws -> URL {
+    DownloadManager.shared.startDownload(for: bookID, type: .ebook)
+
+    for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
+      if updatedItem.isDownloaded {
+        guard let path = updatedItem.ebookLocalPath else { throw EbookError.downloadFailed }
+        return path
+      }
+    }
+
+    throw EbookError.downloadFailed
+  }
+
+  private func downloadTemporaryFile(from url: URL) async throws -> URL {
+    let (tempURL, _) = try await URLSession.shared.download(from: url)
+
+    let tempDirectory = FileManager.default.temporaryDirectory
+    let fileName = url.lastPathComponent
+    let destinationURL = tempDirectory.appendingPathComponent(fileName)
+
+    if FileManager.default.fileExists(atPath: destinationURL.path) {
+      try FileManager.default.removeItem(at: destinationURL)
+    }
+
+    try FileManager.default.moveItem(at: tempURL, to: destinationURL)
+
+    return destinationURL
+  }
+
+  private func cleanupTemporaryFile() {
+    guard let tempURL = temporaryFileURL else { return }
+
+    do {
+      if FileManager.default.fileExists(atPath: tempURL.path) {
+        try FileManager.default.removeItem(at: tempURL)
+        AppLogger.viewModel.info("Cleaned up temporary ebook file")
+      }
+    } catch {
+      AppLogger.viewModel.error("Failed to cleanup temporary file: \(error)")
+    }
+
+    temporaryFileURL = nil
   }
 }
 

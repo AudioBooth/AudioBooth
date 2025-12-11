@@ -1,14 +1,15 @@
+import Combine
 import Foundation
 import ReadiumNavigator
 import ReadiumShared
+import SwiftUI
 
-@Observable
-class EbookReaderPreferences {
-  var fontSize: FontSize = .medium
-  var fontFamily: FontFamily = .system
-  var theme: Theme = .light
-  var pageMargins: PageMargins = .medium
-  var lineSpacing: LineSpacing = .normal
+class EbookReaderPreferences: ObservableObject {
+  @AppStorage("ebookReader.fontSize") var fontSize: FontSize = .medium
+  @AppStorage("ebookReader.fontFamily") var fontFamily: FontFamily = .system
+  @AppStorage("ebookReader.theme") var theme: Theme = .light
+  @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
+  @AppStorage("ebookReader.lineSpacing") var lineSpacing: LineSpacing = .normal
 
   enum FontSize: String, CaseIterable, Identifiable {
     case small = "Small"
