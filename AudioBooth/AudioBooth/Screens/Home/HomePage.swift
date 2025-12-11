@@ -67,11 +67,14 @@ struct HomePage: View {
         Button {
           showingServerPicker = true
         } label: {
-          Text("●")
-            .foregroundStyle(connectionStatusColor)
+          HStack(spacing: 4) {
+            Text("●")
+              .foregroundStyle(connectionStatusColor)
 
-          Text(libraries.current?.name ?? "Server")
-            .bold()
+            Text(libraries.current?.name ?? "Server")
+              .bold()
+          }
+          .frame(maxWidth: 250)
         }
       }
 
