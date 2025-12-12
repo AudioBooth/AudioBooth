@@ -134,13 +134,13 @@ struct BookPlayer: View {
 
   private var cover: some View {
     CoverImage(url: model.coverURL)
-      .frame(maxWidth: 280, maxHeight: 280)
-      .clipShape(RoundedRectangle(cornerRadius: 16))
-      .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
-      .padding(30)
+      .frame(minWidth: 200, maxWidth: 280, minHeight: 200, maxHeight: 280)
       .overlay(alignment: .topLeading) {
         timerOverlay
       }
+      .clipShape(RoundedRectangle(cornerRadius: 16))
+      .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+      .padding(30)
   }
 
   @ViewBuilder
@@ -174,8 +174,7 @@ struct BookPlayer: View {
     .background(Color.black.opacity(0.7))
     .foregroundColor(.white)
     .clipShape(Capsule())
-    .padding(.top, 40)
-    .padding(.trailing, 40)
+    .padding(4)
   }
 
   @ViewBuilder
