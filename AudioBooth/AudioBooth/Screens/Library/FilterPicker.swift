@@ -113,6 +113,7 @@ struct FilterPicker: View {
 extension FilterPicker {
   var filterButtonLabel: String? {
     switch model.selectedFilter {
+    case .all: nil
     case .progress(let name): name
     case .authors(_, let name): name
     case .series(_, let name): name

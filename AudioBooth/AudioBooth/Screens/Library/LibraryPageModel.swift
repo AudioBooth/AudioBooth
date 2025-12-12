@@ -2,20 +2,6 @@ import API
 import Foundation
 import Models
 
-extension LibraryPageModel {
-  enum Filter: Equatable {
-    case progress(String)
-    case series(String, String)
-    case authors(String, String)
-    case narrators(String)
-    case genres(String)
-    case tags(String)
-    case languages(String)
-    case publishers(String)
-    case publishedDecades(String)
-  }
-}
-
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
 
@@ -35,13 +21,17 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   init() {
-    self.filter = nil
+    let preferences = UserPreferences.shared
+    self.filter = preferences.libraryFilter == .all ? nil : preferences.libraryFilter
 
     super.init(
       isRoot: true,
+      sortBy: preferences.librarySortBy,
       search: SearchViewModel(),
       title: "Library"
     )
+
+    self.ascending = preferences.librarySortAscending
 
     createFilterPickerModel()
   }
@@ -134,6 +124,13 @@ final class LibraryPageModel: LibraryPage.Model {
       self.sortBy = sortBy
       ascending = true
     }
+
+    if isRoot {
+      let preferences = UserPreferences.shared
+      preferences.librarySortBy = sortBy
+      preferences.librarySortAscending = ascending
+    }
+
     Task {
       await refresh()
     }
@@ -222,7 +219,7 @@ final class LibraryPageModel: LibraryPage.Model {
         filter = "publishedDecades.\(base64Decade)"
         sortBy = .title
 
-      case nil:
+      case .all, nil:
         filter = nil
       }
 
@@ -317,6 +314,10 @@ final class LibraryPageModel: LibraryPage.Model {
 
     filter = newFilter
 
+    if isRoot {
+      UserPreferences.shared.libraryFilter = newFilter
+    }
+
     Task {
       await refresh()
     }
@@ -327,8 +328,137 @@ final class LibraryPageModel: LibraryPage.Model {
 
     filter = nil
 
+    if isRoot {
+      UserPreferences.shared.libraryFilter = .all
+    }
+
     Task {
       await refresh()
     }
+  }
+}
+
+extension LibraryPageModel {
+  enum Filter: Equatable {
+    case all
+    case progress(String)
+    case series(String, String)
+    case authors(String, String)
+    case narrators(String)
+    case genres(String)
+    case tags(String)
+    case languages(String)
+    case publishers(String)
+    case publishedDecades(String)
+  }
+}
+
+extension LibraryPageModel.Filter: RawRepresentable, Codable {
+  enum CodingKeys: String, CodingKey {
+    case type
+    case value1
+    case value2
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let type = try container.decode(String.self, forKey: .type)
+
+    switch type {
+    case "all":
+      self = .all
+    case "progress":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .progress(value)
+    case "series":
+      let id = try container.decode(String.self, forKey: .value1)
+      let name = try container.decode(String.self, forKey: .value2)
+      self = .series(id, name)
+    case "authors":
+      let id = try container.decode(String.self, forKey: .value1)
+      let name = try container.decode(String.self, forKey: .value2)
+      self = .authors(id, name)
+    case "narrators":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .narrators(value)
+    case "genres":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .genres(value)
+    case "tags":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .tags(value)
+    case "languages":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .languages(value)
+    case "publishers":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .publishers(value)
+    case "publishedDecades":
+      let value = try container.decode(String.self, forKey: .value1)
+      self = .publishedDecades(value)
+    default:
+      throw DecodingError.dataCorrupted(
+        DecodingError.Context(
+          codingPath: decoder.codingPath,
+          debugDescription: "Unknown filter type"
+        )
+      )
+    }
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+
+    switch self {
+    case .all:
+      try container.encode("all", forKey: .type)
+    case .progress(let value):
+      try container.encode("progress", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    case .series(let id, let name):
+      try container.encode("series", forKey: .type)
+      try container.encode(id, forKey: .value1)
+      try container.encode(name, forKey: .value2)
+    case .authors(let id, let name):
+      try container.encode("authors", forKey: .type)
+      try container.encode(id, forKey: .value1)
+      try container.encode(name, forKey: .value2)
+    case .narrators(let value):
+      try container.encode("narrators", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    case .genres(let value):
+      try container.encode("genres", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    case .tags(let value):
+      try container.encode("tags", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    case .languages(let value):
+      try container.encode("languages", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    case .publishers(let value):
+      try container.encode("publishers", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    case .publishedDecades(let value):
+      try container.encode("publishedDecades", forKey: .type)
+      try container.encode(value, forKey: .value1)
+    }
+  }
+
+  public init?(rawValue: String) {
+    guard let data = rawValue.data(using: .utf8),
+      let result = try? JSONDecoder().decode(LibraryPageModel.Filter.self, from: data)
+    else {
+      return nil
+    }
+    self = result
+  }
+
+  public var rawValue: String {
+    guard let data = try? JSONEncoder().encode(self),
+      let result = String(data: data, encoding: .utf8)
+    else {
+      return ""
+    }
+    return result
   }
 }
