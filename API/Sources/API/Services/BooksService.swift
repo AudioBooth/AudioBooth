@@ -16,6 +16,9 @@ public final class BooksService {
     case size
     case duration = "media.duration"
     case updatedAt
+    case progress
+    case progressFinishedAt = "progress.finishedAt"
+    case progressCreatedAt = "progress.createdAt"
   }
 
   public func fetch(

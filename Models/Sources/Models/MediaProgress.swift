@@ -223,6 +223,11 @@ extension MediaProgress {
           local.isFinished = remote.isFinished
           local.lastUpdate = remote.lastUpdate
         }
+
+        if local.isFinished {
+          local.progress = 1.0
+        }
+
         cache[local.bookID] = local.progress
       } else {
         context.insert(remote)

@@ -74,20 +74,27 @@ final class BookCardModel: BookCard.Model {
       publishedYear = item.publishedYear
       bookCount = nil
 
+      let time: Date.FormatStyle.TimeStyle
+      if UserPreferences.shared.libraryDisplayMode == .row {
+        time = .shortened
+      } else {
+        time = .omitted
+      }
+
       switch sortBy {
       case .publishedYear:
         details = item.publishedYear.map({ "Published \($0)" })
       case .title, .authorName, .authorNameLF:
-        details = item.authorName
+        details = nil
       case .addedAt:
         details =
-          "Added \(DateFormatter.localizedString(from: item.addedAt, dateStyle: .short, timeStyle: .none))"
+          "Added \(item.addedAt.formatted(date: .numeric, time: time))"
       case .updatedAt:
         details =
-          "Updated \(DateFormatter.localizedString(from: item.updatedAt, dateStyle: .short, timeStyle: .none))"
+          "Updated \(item.updatedAt.formatted(date: .numeric, time: time))"
       case .size:
         details = item.size.map {
-          "Size \(ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file))"
+          "Size \($0.formatted(.byteCount(style: .file)))"
         }
       case .duration:
         details = Duration.seconds(item.duration).formatted(
@@ -96,6 +103,24 @@ final class BookCardModel: BookCard.Model {
             width: .narrow
           )
         )
+      case .progress:
+        if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
+          details = "Progress: \(mediaProgress.lastUpdate.formatted(date: .numeric, time: time))"
+        } else {
+          details = nil
+        }
+      case .progressFinishedAt:
+        if let mediaProgress = try? MediaProgress.fetch(bookID: item.id), mediaProgress.isFinished {
+          details = "Finished \(mediaProgress.lastUpdate.formatted(date: .numeric, time: time))"
+        } else {
+          details = nil
+        }
+      case .progressCreatedAt:
+        if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
+          details = "Started \(mediaProgress.lastPlayedAt.formatted(date: .numeric, time: time))"
+        } else {
+          details = nil
+        }
       case nil:
         details = nil
       }

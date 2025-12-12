@@ -110,6 +110,7 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func refresh() async {
+    isLoading = true
     currentPage = 0
     hasMorePages = true
     fetched.removeAll()

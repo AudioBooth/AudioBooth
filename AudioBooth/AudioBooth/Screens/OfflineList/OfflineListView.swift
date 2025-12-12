@@ -106,7 +106,6 @@ struct OfflineListView: View {
       )
     }
     .listStyle(.plain)
-    .environment(\.bookCardDisplayMode, .row)
     .environment(\.editMode, $model.editMode)
   }
 

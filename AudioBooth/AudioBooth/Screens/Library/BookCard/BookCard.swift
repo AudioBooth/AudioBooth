@@ -95,7 +95,12 @@ struct BookCard: View {
           rowMetadata(icon: "pencil", value: author)
         }
 
-        if let narrator = model.narrator {
+        if let details = model.details {
+          Text(details)
+            .font(.caption2)
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+        } else if let narrator = model.narrator {
           rowMetadata(icon: "person.wave.2.fill", value: narrator)
         }
 
@@ -182,7 +187,7 @@ struct BookCard: View {
 
   @ViewBuilder
   var details: some View {
-    if let details = model.details {
+    if let details = model.details ?? model.author {
       Text(details)
         .font(.caption2)
         .foregroundColor(.secondary)

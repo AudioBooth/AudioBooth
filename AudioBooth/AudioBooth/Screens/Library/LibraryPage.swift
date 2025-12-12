@@ -126,7 +126,7 @@ struct LibraryPage: View {
           if model.sortBy != nil {
             Divider()
 
-            Section("Sort By") {
+            Menu("Sort By") {
               sortByOption(.title)
               sortByOption(.authorName)
               sortByOption(.authorNameLF)
@@ -135,6 +135,9 @@ struct LibraryPage: View {
               sortByOption(.size)
               sortByOption(.duration)
               sortByOption(.updatedAt)
+              sortByOption(.progress)
+              sortByOption(.progressFinishedAt)
+              sortByOption(.progressCreatedAt)
             }
           }
         } label: {
@@ -159,6 +162,9 @@ struct LibraryPage: View {
       case .size: "File Size"
       case .duration: "Duration"
       case .updatedAt: "Last Updated"
+      case .progress: "Progress: Last Update"
+      case .progressFinishedAt: "Progress: Finished"
+      case .progressCreatedAt: "Progress: Started"
       }
 
     if let current = model.sortBy, current == sortBy {
@@ -199,7 +205,7 @@ extension LibraryPage {
     func onCollapseSeriesToggled() {}
 
     init(
-      isLoading: Bool = false,
+      isLoading: Bool = true,
       isRoot: Bool = true,
       sortBy: BooksService.SortBy? = .title,
       books: [BookCard.Model] = [],
