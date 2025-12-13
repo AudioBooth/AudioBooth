@@ -20,10 +20,17 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   private var book: Book?
   private var localBook: LocalBook?
 
+  var mediaProgress: MediaProgress? {
+    didSet {
+      progressChanged()
+    }
+  }
+
   init(bookID: String) {
     let canManageCollections = Audiobookshelf.shared.authentication.permissions?.update == true
     super.init(
       bookID: bookID,
+      progress: MediaProgress.progress(for: bookID),
       canManageCollections: canManageCollections,
       tabs: []
     )
@@ -185,30 +192,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       self.durationText = nil
     }
 
-    if let progress = try? MediaProgress.fetch(bookID: bookID) {
-      let remainingTime = duration * (1.0 - progress.progress)
-      if remainingTime > 0 && progress.progress > 0 && progress.progress < 1.0 {
-        if let current = PlayerManager.shared.current,
-          [book?.id, localBook?.bookID].contains(current.id)
-        {
-          self.timeRemaining = Duration.seconds(current.playbackProgress.totalTimeRemaining)
-            .formatted(
-              .units(
-                allowed: [.hours, .minutes],
-                width: .narrow
-              )
-            )
-        } else {
-          self.timeRemaining = Duration.seconds(remainingTime).formatted(
-            .units(
-              allowed: [.hours, .minutes],
-              width: .narrow
-            )
-          )
-        }
-      }
-    }
-
     if let book {
       self.bookmarks = BookmarkViewerSheetViewModel(item: .remote(book))
     } else if let localBook {
@@ -266,7 +249,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     let bookID = bookID
     progressObservation = Task { [weak self] in
       for await mediaProgress in MediaProgress.observe(where: \.bookID, equals: bookID) {
-        self?.progress = mediaProgress.progress
+        self?.mediaProgress = mediaProgress
       }
     }
   }
@@ -462,5 +445,28 @@ extension BookDetailsView.Model.SupplementaryEbook {
     }
 
     return url
+  }
+}
+
+extension BookDetailsViewModel {
+  func progressChanged() {
+    guard let mediaProgress else { return }
+
+    Task { @MainActor in
+      progress = mediaProgress.progress
+
+      let remainingTime = mediaProgress.remaining
+      if remainingTime > 0 && mediaProgress.progress > 0 {
+        if let current = PlayerManager.shared.current,
+          [book?.id, localBook?.bookID].contains(current.id)
+        {
+          timeRemaining = Duration.seconds(current.playbackProgress.totalTimeRemaining)
+            .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+        } else {
+          timeRemaining = Duration.seconds(remainingTime)
+            .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+        }
+      }
+    }
   }
 }

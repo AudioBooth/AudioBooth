@@ -318,15 +318,13 @@ extension HomePage.Model {
         title: "The Lord of the Rings",
         author: "J.R.R. Tolkien",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-        progress: 0.45,
-        lastPlayedAt: Date().addingTimeInterval(-3600)
+        progress: 0.45
       ),
       ContinueListeningCard.Model(
         title: "Dune",
         author: "Frank Herbert",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
+        progress: 0.12
       ),
     ]
 

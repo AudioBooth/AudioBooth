@@ -209,7 +209,7 @@ extension HomePageModel {
       models.append(model)
     }
 
-    let sorted = models.sorted(by: >)
+    let sorted = models.sorted(by: <)
 
     guard !sorted.isEmpty else { return nil }
 

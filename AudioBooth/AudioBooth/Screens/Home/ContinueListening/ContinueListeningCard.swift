@@ -15,12 +15,8 @@ struct ContinueListeningCard: View {
           author
         }
 
-        VStack(alignment: .leading, spacing: 4) {
-          progress
-          timeRemaining
-          lastPlayedInfo
-        }
-        .font(.caption)
+        timeRemaining
+          .font(.caption)
       }
       .frame(width: 220)
       .contentShape(Rectangle())
@@ -65,20 +61,6 @@ struct ContinueListeningCard: View {
   }
 
   @ViewBuilder
-  var progress: some View {
-    if let progress = model.progress {
-      HStack(alignment: .top) {
-        Text("Progress:")
-          .foregroundColor(.secondary)
-
-        Text(progress.formatted(.percent.precision(.fractionLength(0))))
-          .foregroundColor(.primary)
-          .frame(maxWidth: .infinity, alignment: .trailing)
-      }
-    }
-  }
-
-  @ViewBuilder
   var timeRemaining: some View {
     if let timeRemaining = model.timeRemaining {
       HStack(alignment: .top) {
@@ -95,27 +77,6 @@ struct ContinueListeningCard: View {
   }
 
   @ViewBuilder
-  var lastPlayedInfo: some View {
-    if let lastPlayedAt = model.lastPlayedAt {
-      HStack(alignment: .top) {
-        Text("Last played:")
-          .foregroundColor(.secondary)
-
-        if lastPlayedAt == .distantFuture {
-          Text("Playing now")
-            .foregroundColor(.blue)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-        } else {
-          Text(lastPlayedAt, style: .relative)
-            .foregroundColor(.primary)
-            .monospacedDigit()
-            .frame(maxWidth: .infinity, alignment: .trailing)
-        }
-      }
-    }
-  }
-
-  @ViewBuilder
   var contextMenu: some View {
     Button {
       model.onRemoveFromListTapped()
@@ -126,13 +87,13 @@ struct ContinueListeningCard: View {
 
   @ViewBuilder
   var progressBar: some View {
-    if let progress = model.progress, progress > 0 {
+    if model.progress > 0 {
       GeometryReader { geometry in
-        let progressColor: Color = progress >= 1.0 ? .green : .orange
+        let progressColor: Color = model.progress >= 1.0 ? .green : .orange
 
         Rectangle()
           .fill(progressColor)
-          .frame(width: geometry.size.width * progress, height: 8)
+          .frame(width: geometry.size.width * model.progress, height: 8)
       }
       .frame(height: 8)
     }
@@ -142,13 +103,12 @@ struct ContinueListeningCard: View {
 
 extension ContinueListeningCard {
   @Observable
-  class Model: Comparable, Identifiable, ObservableObject {
+  class Model: Identifiable, ObservableObject {
     let id: String
     let title: String
     let author: String?
     let coverURL: URL?
-    var progress: Double?
-    var lastPlayedAt: Date?
+    var progress: Double
     var timeRemaining: String?
 
     func onAppear() {}
@@ -159,8 +119,7 @@ extension ContinueListeningCard {
       title: String,
       author: String?,
       coverURL: URL?,
-      progress: Double?,
-      lastPlayedAt: Date?,
+      progress: Double,
       timeRemaining: String? = nil
     ) {
       self.id = id
@@ -168,21 +127,7 @@ extension ContinueListeningCard {
       self.author = author
       self.coverURL = coverURL
       self.progress = progress
-      self.lastPlayedAt = lastPlayedAt
       self.timeRemaining = timeRemaining
-    }
-
-    static func == (lhs: ContinueListeningCard.Model, rhs: ContinueListeningCard.Model) -> Bool {
-      lhs.id == rhs.id
-    }
-
-    static func < (lhs: ContinueListeningCard.Model, rhs: ContinueListeningCard.Model) -> Bool {
-      switch (lhs.lastPlayedAt, rhs.lastPlayedAt) {
-      case (.none, .none): false
-      case (.some, .none): false
-      case (.none, .some): true
-      case (.some(let lhs), .some(let rhs)): lhs < rhs
-      }
     }
   }
 }
@@ -193,7 +138,6 @@ extension ContinueListeningCard.Model {
     author: "J.R.R. Tolkien",
     coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
     progress: 0.45,
-    lastPlayedAt: Date().addingTimeInterval(-3600),
     timeRemaining: "8hr 32min left"
   )
 }
@@ -209,7 +153,6 @@ extension ContinueListeningCard.Model {
             author: "Frank Herbert",
             coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
             progress: 0.75,
-            lastPlayedAt: Date().addingTimeInterval(-7200),
             timeRemaining: "2hr 15min left"
           )
         )

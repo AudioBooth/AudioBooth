@@ -14,6 +14,8 @@ public final class MediaProgress {
   public var isFinished: Bool
   public var lastUpdate: Date
 
+  public var remaining: TimeInterval { max(0, duration - currentTime) }
+
   public init(
     bookID: String,
     id: String? = nil,

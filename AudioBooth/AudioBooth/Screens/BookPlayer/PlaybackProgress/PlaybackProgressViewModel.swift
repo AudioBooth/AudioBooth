@@ -49,7 +49,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   }
 
   func updateProgress() {
-    guard let totalDuration = totalDuration else {
+    guard let totalDuration else {
       progress = 0
       current = 0
       remaining = 0
