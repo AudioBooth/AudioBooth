@@ -12,7 +12,7 @@ extension User {
     public let libraryItemId: String
     public let duration: Double
     public let progress: Double
-    public let ebookProgress: Double
+    public let ebookProgress: Double?
     public let isFinished: Bool
     public let currentTime: Double
     public let lastUpdate: Int64

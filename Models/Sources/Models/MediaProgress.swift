@@ -43,7 +43,7 @@ public final class MediaProgress {
       lastPlayedAt: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000)),
       currentTime: apiProgress.currentTime,
       duration: apiProgress.duration,
-      progress: max(apiProgress.progress, apiProgress.ebookProgress),
+      progress: max(apiProgress.progress, apiProgress.ebookProgress ?? 0),
       isFinished: apiProgress.isFinished,
       lastUpdate: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
     )
