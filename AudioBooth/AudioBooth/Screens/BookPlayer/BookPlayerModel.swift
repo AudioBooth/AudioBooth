@@ -118,7 +118,7 @@ final class BookPlayerModel: BookPlayer.Model {
       return
     }
 
-    guard let player = player, player.status == .readyToPlay else {
+    guard let player, player.status == .readyToPlay else {
       pendingPlay = true
       return
     }
@@ -145,6 +145,7 @@ final class BookPlayerModel: BookPlayer.Model {
       applySmartRewind()
     }
 
+    timerSecondsCounter = 0
     player.play()
     try? audioSession.setActive(true)
   }
@@ -410,11 +411,29 @@ extension BookPlayerModel {
     }
   }
 
+  private func observeMediaProgress() {
+    withObservationTracking {
+      _ = mediaProgress.currentTime
+    } onChange: { [weak self] in
+      RunLoop.current.perform {
+        guard let self else { return }
+        if !self.isPlaying {
+          let currentTime = CMTime(seconds: self.mediaProgress.currentTime, preferredTimescale: 1000)
+          self.onTimeChanged(currentTime)
+          self.player?.seek(to: currentTime)
+        }
+        self.observeMediaProgress()
+      }
+    }
+  }
+
   private func onLoad() {
     Task {
       isLoading = true
 
       loadCover()
+
+      observeMediaProgress()
 
       await loadLocalBookIfAvailable()
 
@@ -835,43 +854,45 @@ extension BookPlayerModel {
     let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: nil) {
       [weak self] time in
-      guard let self else { return }
+      self?.onTimeChanged(time)
+    }
+  }
 
-      if time.isValid && !time.isIndefinite {
-        let currentTime = CMTimeGetSeconds(time)
-        if currentTime > 0 || self.mediaProgress.currentTime == 0 {
-          self.mediaProgress.currentTime = currentTime
-        }
-
-        if let model = self.chapters as? ChapterPickerSheetViewModel {
-          let previous = model.currentIndex
-          model.setCurrentTime(self.mediaProgress.currentTime)
-
-          if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
-            timerViewModel.onChapterChanged(
-              previous: previous,
-              current: model.currentIndex,
-              total: model.chapters.count
-            )
-          }
-        }
-
-        if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
-          playbackProgress.updateCurrentTime(self.mediaProgress.currentTime)
-        }
-
-        self.timerSecondsCounter += 1
-
-        if self.timerSecondsCounter % 20 == 0 {
-          self.updateMediaProgress()
-        }
-
-        if self.timerSecondsCounter % 2 == 0 {
-          self.syncPlayback()
-        }
-
-        self.updateNowPlayingInfo()
+  private func onTimeChanged(_ time: CMTime) {
+    if time.isValid && !time.isIndefinite {
+      let currentTime = CMTimeGetSeconds(time)
+      if currentTime > 0 || self.mediaProgress.currentTime == 0 {
+        self.mediaProgress.currentTime = currentTime
       }
+
+      if let model = self.chapters as? ChapterPickerSheetViewModel {
+        let previous = model.currentIndex
+        model.setCurrentTime(self.mediaProgress.currentTime)
+
+        if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
+          timerViewModel.onChapterChanged(
+            previous: previous,
+            current: model.currentIndex,
+            total: model.chapters.count
+          )
+        }
+      }
+
+      if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
+        playbackProgress.updateCurrentTime(self.mediaProgress.currentTime)
+      }
+
+      self.timerSecondsCounter += 1
+
+      if self.timerSecondsCounter % 20 == 0 {
+        self.updateMediaProgress()
+      }
+
+      if self.timerSecondsCounter % 2 == 0 {
+        self.syncPlayback()
+      }
+
+      self.updateNowPlayingInfo()
     }
   }
 
