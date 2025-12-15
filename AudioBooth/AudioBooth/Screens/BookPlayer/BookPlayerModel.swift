@@ -682,26 +682,26 @@ extension BookPlayerModel {
     if let artwork {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     }
+
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }
 
   private func updateNowPlayingInfo() {
+    if let chapters {
+      nowPlayingInfo[MPMediaItemPropertyTitle] =
+        chapters.current?.title ?? nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+      nowPlayingInfo[MPMediaItemPropertyArtist] = title
+    } else {
+      nowPlayingInfo[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+      nowPlayingInfo[MPMediaItemPropertyArtist] = author
+    }
+
     nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
       playbackProgress.current + playbackProgress.remaining
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
 
     nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = Double(speed.playbackSpeed)
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
-
-    if let chapters {
-      nowPlayingInfo[MPMediaItemPropertyTitle] =
-        chapters.current?.title ?? nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
-      nowPlayingInfo[MPNowPlayingInfoPropertyChapterNumber] = (chapters.currentIndex + 1)
-      nowPlayingInfo[MPNowPlayingInfoPropertyChapterCount] = chapters.chapters.count
-    } else {
-      nowPlayingInfo[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
-      nowPlayingInfo[MPNowPlayingInfoPropertyChapterNumber] = nil
-      nowPlayingInfo[MPNowPlayingInfoPropertyChapterCount] = nil
-    }
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }
