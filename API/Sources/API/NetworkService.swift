@@ -136,7 +136,7 @@ final class NetworkService {
     let urlRequest = try await buildURLRequest(from: request)
 
     AppLogger.network.info(
-      "Sending \(urlRequest.httpMethod ?? "GET") request to: \(urlRequest.url?.absoluteString ?? "unknown")"
+      "Sending \(urlRequest.httpMethod ?? "GET") request to: \(urlRequest.url?.redactedString ?? "unknown")"
     )
 
     let selectedSession = request.discretionary ? discretionarySession : session
@@ -149,8 +149,6 @@ final class NetworkService {
         server?.status = .connectionError
         throw NetworkError.invalidResponse
       }
-
-      AppLogger.network.info("Received HTTP \(httpResponse.statusCode) response")
 
       guard 200...299 ~= httpResponse.statusCode else {
         let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response body"
@@ -259,5 +257,14 @@ final class NetworkService {
     }
 
     return urlRequest
+  }
+}
+
+extension URL {
+  public var redactedString: String {
+    var components = URLComponents(url: self, resolvingAgainstBaseURL: false)
+    components?.host = "abs.invalid"
+    components?.port = nil
+    return components?.string ?? relativePath
   }
 }

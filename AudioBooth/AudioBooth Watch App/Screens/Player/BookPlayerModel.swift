@@ -229,7 +229,7 @@ final class BookPlayerModel: PlayerView.Model {
     }
 
     currentTrackIndex = track.index
-    AppLogger.player.info("Track URL: \(trackURL.absoluteString)")
+    AppLogger.player.info("Track URL: \(trackURL.relativePath)")
 
     await configureAudioSession()
 
