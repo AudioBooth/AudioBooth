@@ -65,7 +65,6 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(bookID: book.id)
     setupHistory()
     observeSpeedChanged()
-    observeSkipIntervalChanges()
     onLoad()
   }
 
@@ -92,7 +91,6 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(bookID: item.bookID)
     setupHistory()
     observeSpeedChanged()
-    observeSkipIntervalChanges()
     onLoad()
   }
 
@@ -151,7 +149,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onSkipForwardTapped(seconds: Double) {
-    guard let player = player else { return }
+    guard let player else { return }
     let currentTime = player.currentTime()
     let newTime = CMTimeAdd(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
     player.seek(to: newTime)
@@ -160,7 +158,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onSkipBackwardTapped(seconds: Double) {
-    guard let player = player else { return }
+    guard let player else { return }
     let currentTime = player.currentTime()
     let newTime = CMTimeSubtract(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
     let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
@@ -171,7 +169,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   func seekToTime(_ time: TimeInterval) {
-    guard let player = player else {
+    guard let player else {
       pendingSeekTime = time
       AppLogger.player.debug("Player not ready, storing pending seek to \(time)s")
       return
@@ -318,7 +316,6 @@ extension BookPlayerModel {
   }
 
   private func configurePlayerComponents(player: AVPlayer) {
-    configureAudioSession()
     setupPlayerObservers()
     setupTimeObserver()
 
@@ -352,7 +349,8 @@ extension BookPlayerModel {
       )
     }
 
-    setupRemoteCommandCenter()
+    configureAudioSession()
+    setupNowPlayingMetadata()
   }
 
   private func loadLocalBookIfAvailable() async {
@@ -390,17 +388,6 @@ extension BookPlayerModel {
         self?.observeSpeedChanged()
       }
     }
-  }
-
-  private func observeSkipIntervalChanges() {
-    let preferences = userPreferences
-
-    preferences.objectWillChange
-      .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
-      .sink { [weak self] _ in
-        self?.setupRemoteCommandCenter()
-      }
-      .store(in: &cancellables)
   }
 
   private func setupHistory() {
@@ -543,134 +530,6 @@ extension BookPlayerModel {
     } catch {
       AppLogger.player.error("Failed to configure audio session: \(error)")
     }
-  }
-
-  private func setupRemoteCommandCenter() {
-    let commandCenter = MPRemoteCommandCenter.shared()
-    let preferences = userPreferences
-
-    commandCenter.playCommand.isEnabled = true
-    commandCenter.playCommand.addTarget { [weak self] _ in
-      self?.onPlayTapped()
-      return .success
-    }
-
-    commandCenter.pauseCommand.isEnabled = true
-    commandCenter.pauseCommand.addTarget { [weak self] _ in
-      self?.onPauseTapped()
-      return .success
-    }
-
-    commandCenter.togglePlayPauseCommand.isEnabled = true
-    commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-      self?.onTogglePlaybackTapped()
-      return .success
-    }
-
-    commandCenter.stopCommand.isEnabled = true
-    commandCenter.stopCommand.addTarget { [weak self] _ in
-      self?.onPauseTapped()
-      return .success
-    }
-
-    let useChapterNavigation =
-      preferences.lockScreenNextPreviousUsesChapters
-      && (chapters?.chapters.count ?? 0) >= 2
-
-    commandCenter.skipForwardCommand.isEnabled = !useChapterNavigation
-    commandCenter.skipForwardCommand.preferredIntervals = [
-      NSNumber(value: preferences.skipForwardInterval)
-    ]
-    commandCenter.skipForwardCommand.addTarget { [weak self] event in
-      let interval: Double
-      if let skipEvent = event as? MPSkipIntervalCommandEvent, skipEvent.interval > 0 {
-        interval = skipEvent.interval
-      } else {
-        interval = preferences.skipForwardInterval
-      }
-
-      self?.onSkipForwardTapped(seconds: interval)
-      return .success
-    }
-
-    commandCenter.skipBackwardCommand.isEnabled = !useChapterNavigation
-    commandCenter.skipBackwardCommand.preferredIntervals = [
-      NSNumber(value: preferences.skipBackwardInterval)
-    ]
-    commandCenter.skipBackwardCommand.addTarget { [weak self] event in
-      let interval: Double
-      if let skipEvent = event as? MPSkipIntervalCommandEvent, skipEvent.interval > 0 {
-        interval = skipEvent.interval
-      } else {
-        interval = preferences.skipBackwardInterval
-      }
-
-      self?.onSkipBackwardTapped(seconds: interval)
-      return .success
-    }
-
-    commandCenter.nextTrackCommand.isEnabled = true
-    commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-      if useChapterNavigation {
-        self?.chapters?.onNextChapterTapped()
-      } else {
-        self?.onSkipForwardTapped(seconds: preferences.skipForwardInterval)
-      }
-      return .success
-    }
-
-    commandCenter.previousTrackCommand.isEnabled = true
-    commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-      if useChapterNavigation {
-        self?.chapters?.onPreviousChapterTapped()
-      } else {
-        self?.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval)
-      }
-      return .success
-    }
-
-    commandCenter.changePlaybackPositionCommand.isEnabled =
-      preferences.lockScreenAllowPlaybackPositionChange
-    commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
-      guard let positionEvent = event as? MPChangePlaybackPositionCommandEvent else {
-        return .commandFailed
-      }
-
-      let offset = self?.chapters?.current?.start ?? 0
-      self?.seekToTime(offset + positionEvent.positionTime)
-      return .success
-    }
-
-    commandCenter.changePlaybackRateCommand.isEnabled = true
-    commandCenter.changePlaybackRateCommand.supportedPlaybackRates = speed.speeds.map {
-      NSNumber(value: $0)
-    }
-    commandCenter.changePlaybackRateCommand.addTarget { [weak self] event in
-      guard let rateEvent = event as? MPChangePlaybackRateCommandEvent else {
-        return .commandFailed
-      }
-
-      self?.speed.onSpeedChanged(rateEvent.playbackRate)
-      return .success
-    }
-
-    commandCenter.seekForwardCommand.isEnabled = true
-    commandCenter.seekForwardCommand.addTarget { [weak self] _ in
-      self?.onSkipForwardTapped(seconds: preferences.skipForwardInterval)
-      return .success
-    }
-
-    commandCenter.seekBackwardCommand.isEnabled = true
-    commandCenter.seekBackwardCommand.addTarget { [weak self] _ in
-      self?.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval)
-      return .success
-    }
-
-    if nowPlayingInfo.values.isEmpty {
-      setupNowPlayingMetadata()
-    }
-
-    updateNowPlayingInfo()
   }
 
   private func setupNowPlayingMetadata() {
@@ -842,7 +701,7 @@ extension BookPlayerModel {
 
     let wasPlaying = isPlaying
     configureAudioSession()
-    setupRemoteCommandCenter()
+    setupNowPlayingMetadata()
 
     if wasPlaying {
       onPlayTapped()
