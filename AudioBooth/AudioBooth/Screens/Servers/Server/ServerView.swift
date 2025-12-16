@@ -223,6 +223,17 @@ struct ServerView: View {
         }
       }
     }
+
+    if model.canExportConnection, let connectionSharingModel = model.connectionSharingModel {
+      Section("Advanced") {
+        NavigationLink(destination: { ConnectionSharingPage(model: connectionSharingModel) }) {
+          HStack {
+            Image(systemName: "square.and.arrow.up")
+            Text("Share Connection")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -273,6 +284,8 @@ extension ServerView {
     var status: Server.Status?
     var warnings: String?
     var username: String?
+    var canExportConnection: Bool
+    var connectionSharingModel: ConnectionSharingPage.Model?
 
     var isTypingScheme: Bool {
       let lowercased = serverURL.lowercased()
@@ -306,7 +319,9 @@ extension ServerView {
       reauthenticationModel: AuthenticationView.Model? = nil,
       status: Server.Status? = nil,
       warnings: String? = nil,
-      username: String? = nil
+      username: String? = nil,
+      canExportConnection: Bool = true,
+      connectionSharingModel: ConnectionSharingPage.Model? = nil
     ) {
       self.serverURL = serverURL
       self.serverScheme = serverScheme
@@ -326,6 +341,8 @@ extension ServerView {
       self.status = status
       self.warnings = warnings
       self.username = username
+      self.canExportConnection = canExportConnection
+      self.connectionSharingModel = connectionSharingModel
     }
   }
 }

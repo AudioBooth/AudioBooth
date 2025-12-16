@@ -1,5 +1,6 @@
 import API
 import AuthenticationServices
+import CoreImage.CIFilterBuiltins
 import Foundation
 import KeychainAccess
 import Logging
@@ -37,6 +38,36 @@ final class ServerViewModel: ServerView.Model {
     }
   }
 
+  init(exportConnection: DeepLinkManager.ExportConnection) {
+    self.server = nil
+
+    let customHeadersVM = CustomHeadersViewModel(initialHeaders: exportConnection.headers)
+
+    super.init(
+      serverURL: exportConnection.url.absoluteString,
+      customHeaders: customHeadersVM,
+      selectedLibrary: nil,
+      alias: "",
+      authenticationModel: nil,
+      reauthenticationModel: nil,
+      status: nil,
+      username: nil,
+      canExportConnection: false,
+      connectionSharingModel: nil
+    )
+
+    customHeadersVM.onHeadersChanged = { [weak self] headers in
+      guard let self, let serverID = self.server?.id else { return }
+      self.audiobookshelf.authentication.updateCustomHeaders(serverID, customHeaders: headers)
+    }
+
+    let newAuthModel = NewServerAuthViewModel(parent: self)
+    newAuthModel.onAuthenticationSuccess = { [weak self] in
+      self?.authenticationModel = nil
+    }
+    authenticationModel = newAuthModel
+  }
+
   init(server: Server? = nil) {
     self.server = server
 
@@ -46,6 +77,8 @@ final class ServerViewModel: ServerView.Model {
     let alias: String
     let isActiveServer: Bool
     let username: String?
+    let canExportConnection: Bool
+    let connectionSharingModel: ConnectionSharingPage.Model?
 
     if let server {
       serverURL = server.baseURL.absoluteString
@@ -60,10 +93,14 @@ final class ServerViewModel: ServerView.Model {
       }
 
       switch server.token {
-      case .legacy(let token):
+      case .legacy:
         username = nil
+        canExportConnection = false
+        connectionSharingModel = nil
       case .bearer(let accessToken, _, _):
         username = JWT(accessToken)?.username
+        canExportConnection = true
+        connectionSharingModel = ConnectionSharingPageViewModel(server: server)
       }
     } else {
       serverURL = ""
@@ -72,6 +109,8 @@ final class ServerViewModel: ServerView.Model {
       alias = ""
       isActiveServer = false
       username = nil
+      canExportConnection = false
+      connectionSharingModel = nil
     }
 
     let authModel: AuthenticationView.Model?
@@ -107,7 +146,9 @@ final class ServerViewModel: ServerView.Model {
       authenticationModel: authModel,
       reauthenticationModel: reauthModel,
       status: server?.status,
-      username: username
+      username: username,
+      canExportConnection: canExportConnection,
+      connectionSharingModel: connectionSharingModel
     )
 
     if let customHeadersVM = self.customHeaders as? CustomHeadersViewModel {

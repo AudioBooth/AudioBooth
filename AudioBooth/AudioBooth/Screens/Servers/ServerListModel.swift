@@ -8,7 +8,7 @@ final class ServerListModel: ServerListPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private var playerManager: PlayerManager { .shared }
 
-  init() {
+  init(pendingExportConnection: DeepLinkManager.ExportConnection? = nil) {
     let allServers = audiobookshelf.authentication.servers.values
       .sorted { lhs, rhs in
         let lhsName = lhs.alias ?? (lhs.baseURL.host ?? "Unknown Server")
@@ -25,6 +25,10 @@ final class ServerListModel: ServerListPage.Model {
         selected = viewModel
       }
       return viewModel
+    }
+
+    if let exportConnection = pendingExportConnection {
+      selected = ServerViewModel(exportConnection: exportConnection)
     }
 
     super.init(
