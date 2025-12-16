@@ -57,9 +57,15 @@ public enum Credentials: Codable, Sendable {
       return "Bearer \(accessToken)"
     }
   }
+}
 
-  static func decodeJWT(_ jwt: String) -> TimeInterval? {
-    let parts = jwt.split(separator: ".")
+public struct JWT {
+  public let userID: String?
+  public let exp: TimeInterval?
+  public let username: String?
+
+  public init?(_ token: String) {
+    let parts = token.split(separator: ".")
     guard parts.count == 3 else { return nil }
 
     let payload = String(parts[1])
@@ -71,13 +77,14 @@ public enum Credentials: Codable, Sendable {
     let paddingLength = (4 - base64.count % 4) % 4
     base64 += String(repeating: "=", count: paddingLength)
 
-    guard let data = Data(base64Encoded: base64) else { return nil }
-
-    guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+    guard let data = Data(base64Encoded: base64),
+      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    else {
       return nil
     }
 
-    guard let exp = json["exp"] as? TimeInterval else { return nil }
-    return exp
+    self.userID = json["userId"] as? String
+    self.username = json["username"] as? String
+    self.exp = json["exp"] as? TimeInterval
   }
 }

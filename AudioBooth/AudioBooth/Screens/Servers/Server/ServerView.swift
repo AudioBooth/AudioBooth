@@ -17,6 +17,20 @@ struct ServerView: View {
 
   var body: some View {
     Form {
+      if let error = model.warnings {
+        Section {
+          Text(error)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .center)
+            .background(.orange.opacity(0.3))
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+      }
+
       if model.authenticationModel != nil {
         discovery
       }
@@ -46,18 +60,13 @@ struct ServerView: View {
           .focused($focusedField, equals: .serverURL)
           .submitLabel(.next)
           .onSubmit {
-            focusedField = .username
+            model.onServerURLSubmit()
           }
-
-        if model.authenticationModel != nil {
-          Toggle("Use Subdirectory", isOn: $model.useSubdirectory)
-
-          if model.useSubdirectory {
-            TextField("Subdirectory Path", text: $model.subdirectory)
-              .autocorrectionDisabled()
-              .textInputAutocapitalization(.never)
+          .onChange(of: focusedField) { oldValue, newValue in
+            if oldValue == .serverURL && newValue != .serverURL {
+              model.onServerURLSubmit()
+            }
           }
-        }
 
         customHeadersSection
       }
@@ -125,22 +134,20 @@ struct ServerView: View {
 
   @ViewBuilder
   var customHeadersSection: some View {
-    if model.authenticationModel != nil {
-      NavigationLink(
-        destination: { CustomHeadersView(model: model.customHeaders) },
-        label: {
-          HStack {
-            Image(systemName: "list.bullet.rectangle")
-            Text("Custom Headers")
-            Spacer()
-            if model.customHeaders.headers.count > 0 {
-              Text("\(model.customHeaders.headers.count)")
-                .foregroundColor(.secondary)
-            }
+    NavigationLink(
+      destination: { CustomHeadersView(model: model.customHeaders) },
+      label: {
+        HStack {
+          Image(systemName: "list.bullet.rectangle")
+          Text("Custom Headers")
+          Spacer()
+          if model.customHeaders.headers.count > 0 {
+            Text("\(model.customHeaders.headers.count)")
+              .foregroundColor(.secondary)
           }
         }
-      )
-    }
+      }
+    )
   }
 
   @ViewBuilder
@@ -178,14 +185,13 @@ struct ServerView: View {
     }
 
     Section("Account") {
-      HStack {
-        Image(
-          systemName: model.reauthenticationModel != nil
-            ? "exclamationmark.circle.fill" : "checkmark.circle.fill"
-        )
-        .foregroundColor(model.reauthenticationModel != nil ? .orange : .green)
-        Text(model.reauthenticationModel != nil ? "Authentication Required" : "Authenticated")
-          .bold()
+      if model.reauthenticationModel != nil {
+        HStack {
+          Image(systemName: "exclamationmark.circle.fill")
+            .foregroundColor(.orange)
+          Text("Authentication Required")
+            .bold()
+        }
       }
 
       if let reauthModel = model.reauthenticationModel {
@@ -197,14 +203,25 @@ struct ServerView: View {
         }
       }
 
+      if let username = model.username {
+        HStack {
+          Image(systemName: "person.circle")
+          Text(username)
+        }
+      }
+
       Button(
-        "Logout",
         role: .destructive,
         action: {
           model.onLogoutTapped()
           dismiss()
         }
-      )
+      ) {
+        HStack {
+          Image(systemName: "rectangle.portrait.and.arrow.right")
+          Text("Logout")
+        }
+      }
     }
   }
 }
@@ -254,6 +271,8 @@ extension ServerView {
     var authenticationModel: AuthenticationView.Model?
     var reauthenticationModel: AuthenticationView.Model?
     var status: Server.Status?
+    var warnings: String?
+    var username: String?
 
     var isTypingScheme: Bool {
       let lowercased = serverURL.lowercased()
@@ -267,6 +286,7 @@ extension ServerView {
     func onServerSelected(_ server: DiscoveredServer) {}
     func onLibraryTapped(_ library: Library) {}
     func onAliasChanged(_ newAlias: String) {}
+    func onServerURLSubmit() {}
 
     init(
       isDiscovering: Bool = false,
@@ -284,7 +304,9 @@ extension ServerView {
       alias: String = "",
       authenticationModel: AuthenticationView.Model? = nil,
       reauthenticationModel: AuthenticationView.Model? = nil,
-      status: Server.Status? = nil
+      status: Server.Status? = nil,
+      warnings: String? = nil,
+      username: String? = nil
     ) {
       self.serverURL = serverURL
       self.serverScheme = serverScheme
@@ -302,6 +324,8 @@ extension ServerView {
       self.authenticationModel = authenticationModel
       self.reauthenticationModel = reauthenticationModel
       self.status = status
+      self.warnings = warnings
+      self.username = username
     }
   }
 }

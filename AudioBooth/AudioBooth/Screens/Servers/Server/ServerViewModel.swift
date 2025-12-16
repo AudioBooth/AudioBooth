@@ -1,4 +1,5 @@
 import API
+import AuthenticationServices
 import Foundation
 import KeychainAccess
 import Logging
@@ -44,6 +45,7 @@ final class ServerViewModel: ServerView.Model {
     let selectedLibrary: Library?
     let alias: String
     let isActiveServer: Bool
+    let username: String?
 
     if let server {
       serverURL = server.baseURL.absoluteString
@@ -56,12 +58,20 @@ final class ServerViewModel: ServerView.Model {
       } else {
         selectedLibrary = nil
       }
+
+      switch server.token {
+      case .legacy(let token):
+        username = nil
+      case .bearer(let accessToken, _, _):
+        username = JWT(accessToken)?.username
+      }
     } else {
       serverURL = ""
       customHeaders = [:]
       selectedLibrary = nil
       alias = ""
       isActiveServer = false
+      username = nil
     }
 
     let authModel: AuthenticationView.Model?
@@ -96,8 +106,16 @@ final class ServerViewModel: ServerView.Model {
       alias: alias,
       authenticationModel: authModel,
       reauthenticationModel: reauthModel,
-      status: server?.status
+      status: server?.status,
+      username: username
     )
+
+    if let customHeadersVM = self.customHeaders as? CustomHeadersViewModel {
+      customHeadersVM.onHeadersChanged = { [weak self] headers in
+        guard let self, let serverID = self.server?.id else { return }
+        self.audiobookshelf.authentication.updateCustomHeaders(serverID, customHeaders: headers)
+      }
+    }
 
     if server == nil {
       let newAuthModel = NewServerAuthViewModel(parent: self)
@@ -233,6 +251,7 @@ final class ServerViewModel: ServerView.Model {
 
   override func onServerSelected(_ server: DiscoveredServer) {
     serverURL = server.serverURL.absoluteString
+    fetchServerStatusAndUpdateAuth()
   }
 
   override func onLibraryTapped(_ library: Library) {
@@ -271,6 +290,65 @@ final class ServerViewModel: ServerView.Model {
       connectionID,
       alias: trimmedAlias.isEmpty ? nil : trimmedAlias
     )
+  }
+
+  override func onServerURLSubmit() {
+    guard isValidServerURL() else { return }
+    fetchServerStatusAndUpdateAuth()
+  }
+
+  private func fetchServerStatusAndUpdateAuth() {
+    let fullURL = buildFullServerURL()
+    guard let serverURL = URL(string: fullURL) else { return }
+
+    Task {
+      do {
+        let status = try await audiobookshelf.networkDiscovery.fetchServerStatus(serverURL: serverURL)
+        updateAuthenticationModel(with: status)
+      } catch {
+        AppLogger.viewModel.error("Failed to fetch server status: \(error.localizedDescription)")
+      }
+    }
+  }
+
+  private func updateAuthenticationModel(with status: ServerStatus) {
+    guard let authModel = authenticationModel else { return }
+
+    if let version = status.serverVersion,
+      version.compare("2.22.0", options: .numeric) == .orderedAscending
+    {
+      warnings =
+        "Some features may be limited on server version \(version). For the best experience, please update your server."
+    } else {
+      warnings = nil
+    }
+
+    var availableMethods: [AuthenticationView.Model.AuthenticationMethod] = []
+
+    if status.supportsLocal {
+      availableMethods.append(.usernamePassword)
+    }
+
+    if status.supportsOIDC {
+      availableMethods.append(.oidc)
+    }
+
+    if availableMethods.isEmpty {
+      availableMethods = [.usernamePassword, .oidc]
+    }
+
+    authModel.availableAuthMethods = availableMethods
+    authModel.shouldAutoLaunchOIDC = status.shouldAutoLaunchOIDC
+
+    if availableMethods.contains(.oidc) && !availableMethods.contains(.usernamePassword) {
+      authModel.authenticationMethod = .oidc
+    } else if availableMethods.contains(.oidc) {
+      authModel.authenticationMethod = .oidc
+    }
+
+    if status.shouldAutoLaunchOIDC && availableMethods.contains(.oidc) {
+      authModel.onOIDCLoginTapped()
+    }
   }
 
   override func onLogoutTapped() {
@@ -333,6 +411,16 @@ final class ServerViewModel: ServerView.Model {
     isLoadingLibraries = false
   }
 
+  private func isValidServerURL() -> Bool {
+    let trimmedURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedURL.isEmpty else { return false }
+
+    let fullURL = buildFullServerURL()
+    guard let url = URL(string: fullURL) else { return false }
+
+    return url.scheme == "http" || url.scheme == "https"
+  }
+
   private func buildFullServerURL() -> String {
     let trimmedURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -373,8 +461,13 @@ extension ServerViewModel: OIDCAuthenticationDelegate {
   }
 
   func oidcAuthentication(didFailWithError error: Error) {
-    showError("SSO login failed: \(error.localizedDescription)")
-    authenticationModel?.isLoading = false
-    oidcAuthManager = nil
+    if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
+      authenticationModel?.isLoading = false
+      oidcAuthManager = nil
+    } else {
+      showError("SSO login failed: \(error.localizedDescription)")
+      authenticationModel?.isLoading = false
+      oidcAuthManager = nil
+    }
   }
 }

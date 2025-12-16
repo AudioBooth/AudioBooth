@@ -10,6 +10,19 @@ public final class NetworkDiscoveryService: @unchecked Sendable {
     self.audiobookshelf = audiobookshelf
   }
 
+  public func fetchServerStatus(serverURL: URL) async throws -> ServerStatus {
+    let client = NetworkService(baseURL: serverURL)
+
+    let request = NetworkRequest<ServerStatus>(
+      path: "/status",
+      method: .get,
+      timeout: self.timeout
+    )
+
+    let response = try await client.send(request)
+    return response.value
+  }
+
   public func discoverServers(port: Int? = nil) async -> [DiscoveredServer] {
     let discoveryPort = port ?? defaultPort
     let networkRanges = await getNetworkRanges()
@@ -62,6 +75,14 @@ public final class NetworkDiscoveryService: @unchecked Sendable {
       let app: String?
       let serverVersion: String?
       let isInit: Bool?
+      let authMethods: [String]?
+      let authFormData: AuthFormData?
+
+      struct AuthFormData: Codable {
+        let authLoginCustomMessage: String?
+        let authOpenIDButtonText: String?
+        let authOpenIDAutoLaunch: Bool?
+      }
     }
 
     do {

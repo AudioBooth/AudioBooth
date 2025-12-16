@@ -6,7 +6,7 @@ public final class Server: @unchecked Sendable {
   public let id: String
   public let baseURL: URL
   public internal(set) var token: Credentials
-  public let customHeaders: [String: String]
+  public internal(set) var customHeaders: [String: String]
   public internal(set) var alias: String?
 
   public enum Status {

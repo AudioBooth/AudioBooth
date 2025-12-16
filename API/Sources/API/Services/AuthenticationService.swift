@@ -157,7 +157,7 @@ public final class AuthenticationService: ObservableObject {
 
     let authToken: Credentials
     if let accessToken = user.accessToken, let refreshToken = user.refreshToken {
-      guard let expiresAt = Credentials.decodeJWT(accessToken) else {
+      guard let expiresAt = JWT(accessToken)?.exp else {
         throw Audiobookshelf.AudiobookshelfError.loginFailed("Failed to decode JWT token")
       }
       authToken = .bearer(
@@ -243,7 +243,7 @@ public final class AuthenticationService: ObservableObject {
 
       let authToken: Credentials
       if let accessToken = user.accessToken, let refreshToken = user.refreshToken {
-        guard let expiresAt = Credentials.decodeJWT(accessToken) else {
+        guard let expiresAt = JWT(accessToken)?.exp else {
           throw Audiobookshelf.AudiobookshelfError.loginFailed("Failed to decode JWT token")
         }
         authToken = .bearer(
@@ -301,6 +301,16 @@ public final class AuthenticationService: ObservableObject {
     guard let server = servers[serverID] else { return }
 
     server.alias = alias
+
+    var allConnections = connections
+    allConnections[serverID] = Connection(server)
+    connections = allConnections
+  }
+
+  public func updateCustomHeaders(_ serverID: String, customHeaders: [String: String]) {
+    guard let server = servers[serverID] else { return }
+
+    server.customHeaders = customHeaders
 
     var allConnections = connections
     allConnections[serverID] = Connection(server)
@@ -489,7 +499,7 @@ public final class AuthenticationService: ObservableObject {
     let response = try await networkService.send(request)
     let user = response.value.user
 
-    guard let newExpiresAt = Credentials.decodeJWT(user.accessToken) else {
+    guard let newExpiresAt = JWT(user.accessToken)?.exp else {
       throw Audiobookshelf.AudiobookshelfError.loginFailed("Failed to decode refreshed JWT token")
     }
 

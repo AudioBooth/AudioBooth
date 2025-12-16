@@ -15,14 +15,20 @@ struct AuthenticationView: View {
   @StateObject var model: Model
 
   var body: some View {
-    Section("Authentication Method") {
-      Picker("Method", selection: $model.authenticationMethod) {
-        Text("Username & Password").tag(
-          AuthenticationView.Model.AuthenticationMethod.usernamePassword
-        )
-        Text("OIDC (SSO)").tag(AuthenticationView.Model.AuthenticationMethod.oidc)
+    if model.availableAuthMethods.count > 1 {
+      Section("Authentication Method") {
+        Picker("Method", selection: $model.authenticationMethod) {
+          ForEach(model.availableAuthMethods, id: \.self) { method in
+            switch method {
+            case .usernamePassword:
+              Text("Username & Password").tag(method)
+            case .oidc:
+              Text("OIDC (SSO)").tag(method)
+            }
+          }
+        }
+        .pickerStyle(.segmented)
       }
-      .pickerStyle(.segmented)
     }
 
     if model.authenticationMethod == .usernamePassword {
@@ -82,7 +88,7 @@ struct AuthenticationView: View {
 extension AuthenticationView {
   @Observable
   class Model: ObservableObject {
-    enum AuthenticationMethod: CaseIterable {
+    enum AuthenticationMethod: CaseIterable, Hashable {
       case usernamePassword
       case oidc
     }
@@ -91,6 +97,8 @@ extension AuthenticationView {
     var username: String
     var password: String
     var authenticationMethod: AuthenticationMethod
+    var availableAuthMethods: [AuthenticationMethod]
+    var shouldAutoLaunchOIDC: Bool
     var onAuthenticationSuccess: () -> Void
 
     func onLoginTapped() {}
@@ -101,12 +109,16 @@ extension AuthenticationView {
       username: String = "",
       password: String = "",
       authenticationMethod: AuthenticationMethod = .usernamePassword,
+      availableAuthMethods: [AuthenticationMethod] = [.usernamePassword, .oidc],
+      shouldAutoLaunchOIDC: Bool = false,
       onAuthenticationSuccess: @escaping () -> Void = {}
     ) {
       self.isLoading = isLoading
       self.username = username
       self.password = password
       self.authenticationMethod = authenticationMethod
+      self.availableAuthMethods = availableAuthMethods
+      self.shouldAutoLaunchOIDC = shouldAutoLaunchOIDC
       self.onAuthenticationSuccess = onAuthenticationSuccess
     }
   }
