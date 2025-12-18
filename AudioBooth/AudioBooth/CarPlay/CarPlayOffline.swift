@@ -43,7 +43,9 @@ final class CarPlayOffline {
 
   private func buildBookItems() async -> [CPListItem] {
     do {
-      let offlineBooks = try LocalBook.fetchAll().filter(\.isDownloaded).sorted()
+      let offlineBooks = try LocalBook.fetchAll()
+        .filter({ $0.isDownloaded && $0.ebookFile == nil })
+        .sorted()
 
       return offlineBooks.map { localBook in
         createListItem(for: localBook)
