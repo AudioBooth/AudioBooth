@@ -164,21 +164,6 @@ final class BookPlayerModel: BookPlayer.Model {
     seekToTime(newTime)
   }
 
-  func seekToTime(_ time: TimeInterval) {
-    guard let player else {
-      pendingSeekTime = time
-      AppLogger.player.debug("Player not ready, storing pending seek to \(time)s")
-      return
-    }
-
-    let seekTime = CMTime(seconds: time, preferredTimescale: 1000)
-    player.seek(to: seekTime) { [weak self] _ in
-      AppLogger.player.debug("Seeked to position: \(time)s")
-      self?.updateNowPlayingInfo()
-    }
-    PlaybackHistory.record(itemID: id, action: .seek, position: time)
-  }
-
   override func onBookmarksTapped() {
     if let player {
       let time = player.currentTime()
@@ -208,6 +193,41 @@ final class BookPlayerModel: BookPlayer.Model {
       downloadState = .downloading(progress: 0)
       try? item.download()
     }
+  }
+}
+
+extension BookPlayerModel {
+  func seekToTime(_ time: TimeInterval) {
+    guard let player else {
+      pendingSeekTime = time
+      AppLogger.player.debug("Player not ready, storing pending seek to \(time)s")
+      return
+    }
+
+    let seekTime = CMTime(seconds: time, preferredTimescale: 1000)
+    player.seek(to: seekTime) { [weak self] _ in
+      AppLogger.player.debug("Seeked to position: \(time)s")
+      self?.updateNowPlayingInfo()
+    }
+    PlaybackHistory.record(itemID: id, action: .seek, position: time)
+  }
+
+  func stopPlayer() {
+    player?.pause()
+
+    PlaybackHistory.record(itemID: id, action: .pause, position: mediaProgress.currentTime)
+
+    if let timeObserver {
+      player?.removeTimeObserver(timeObserver)
+      self.timeObserver = nil
+    }
+
+    player = nil
+
+    try? audioSession.setActive(false)
+
+    itemObservation?.cancel()
+    cancellables.removeAll()
   }
 }
 
@@ -273,6 +293,97 @@ extension BookPlayerModel {
     AppLogger.player.info(
       "Smart rewind applied: rewound \(Int(currentTime - newTime))s after \(Int(timeSinceLastPlayed / 60)) minutes of pause"
     )
+  }
+
+  private func syncSessionProgress() {
+    guard sessionManager.current != nil else { return }
+
+    Task {
+      do {
+        try await sessionManager.syncProgress(currentTime: mediaProgress.currentTime)
+      } catch {
+        AppLogger.player.error("Failed to sync session progress: \(error)")
+
+        if sessionManager.current?.isRemote == true && isSessionNotFoundError(error) {
+          AppLogger.player.debug("Remote session not found (404) - triggering recovery")
+          handleStreamFailure(error: error)
+        }
+      }
+    }
+
+    WidgetCenter.shared.reloadAllTimelines()
+  }
+
+  private func isSessionNotFoundError(_ error: Error) -> Bool {
+    let errorString = error.localizedDescription.lowercased()
+    let nsError = error as NSError
+
+    return errorString.contains("404") || errorString.contains("file not found")
+      || errorString.contains("-1011") || nsError.code == -1011 || nsError.code == 404
+  }
+
+  func closeSession() {
+    Task {
+      try? await sessionManager.closeSession(
+        isDownloaded: item?.isDownloaded ?? false
+      )
+    }
+  }
+}
+
+extension BookPlayerModel {
+  private func onLoad() {
+    isLoading = true
+
+    Task {
+      loadCover()
+
+      observeMediaProgress()
+
+      await loadLocalBookIfAvailable()
+
+      do {
+        try await setupSession()
+
+        if item?.isDownloaded == false {
+          let autoDownloadMode = userPreferences.autoDownloadBooks
+          let networkMonitor = NetworkMonitor.shared
+
+          let shouldAutoDownload: Bool
+          switch autoDownloadMode {
+          case .off:
+            shouldAutoDownload = false
+          case .wifiOnly:
+            shouldAutoDownload = networkMonitor.interfaceType == .wifi
+          case .wifiAndCellular:
+            shouldAutoDownload = networkMonitor.isConnected
+          }
+
+          if shouldAutoDownload {
+            AppLogger.player.info("Auto-download starting (mode: \(autoDownloadMode.rawValue))")
+            try? item?.download()
+          } else {
+            AppLogger.player.debug(
+              "Auto-download skipped (mode: \(autoDownloadMode.rawValue))"
+            )
+          }
+        }
+      } catch {
+        AppLogger.player.error("Background session fetch failed: \(error)")
+      }
+
+      if player == nil {
+        do {
+          try await setupAudioPlayer()
+        } catch {
+          AppLogger.player.error("Failed to setup player: \(error)")
+          Toast(error: "Failed to setup audio player").show()
+          playerManager.clearCurrent()
+        }
+      }
+
+      isLoading = false
+    }
   }
 
   private func setupAudioPlayer() async throws {
@@ -384,387 +495,7 @@ extension BookPlayerModel {
     } catch {
       downloadManager.deleteDownload(for: id)
       AppLogger.player.error("Failed to load local book item: \(error)")
-      Toast(error: "Can‘t access download. Streaming instead.").show()
-    }
-  }
-
-  private func observeSpeedChanged() {
-    withObservationTracking {
-      _ = speed.playbackSpeed
-    } onChange: { [weak self] in
-      RunLoop.current.perform {
-        if let playbackProgress = self?.playbackProgress as? PlaybackProgressViewModel {
-          playbackProgress.updateProgress()
-          self?.syncPlayback()
-        }
-
-        self?.updateNowPlayingInfo()
-        self?.observeSpeedChanged()
-      }
-    }
-  }
-
-  private func observeCurrentChapter() {
-    withObservationTracking {
-      _ = chapters?.current
-    } onChange: { [weak self] in
-      RunLoop.current.perform {
-        self?.updateNowPlayingInfo()
-        self?.observeCurrentChapter()
-      }
-    }
-  }
-
-  private func setupHistory() {
-    history = PlaybackHistorySheetViewModel(
-      itemID: id,
-      title: title
-    ) { [weak self] time in
-      self?.seekToTime(time)
-    }
-  }
-
-  private func observeMediaProgress() {
-    withObservationTracking {
-      _ = mediaProgress.currentTime
-    } onChange: { [weak self] in
-      RunLoop.current.perform {
-        guard let self else { return }
-        if !self.isPlaying {
-          let currentTime = CMTime(seconds: self.mediaProgress.currentTime, preferredTimescale: 1000)
-          self.onTimeChanged(currentTime)
-          self.player?.seek(to: currentTime)
-        }
-        self.observeMediaProgress()
-      }
-    }
-  }
-
-  private func onLoad() {
-    isLoading = true
-
-    Task {
-      loadCover()
-
-      observeMediaProgress()
-
-      await loadLocalBookIfAvailable()
-
-      do {
-        try await setupSession()
-
-        if item?.isDownloaded == false {
-          let autoDownloadMode = userPreferences.autoDownloadBooks
-          let networkMonitor = NetworkMonitor.shared
-
-          let shouldAutoDownload: Bool
-          switch autoDownloadMode {
-          case .off:
-            shouldAutoDownload = false
-          case .wifiOnly:
-            shouldAutoDownload = networkMonitor.interfaceType == .wifi
-          case .wifiAndCellular:
-            shouldAutoDownload = networkMonitor.isConnected
-          }
-
-          if shouldAutoDownload {
-            AppLogger.player.info("Auto-download starting (mode: \(autoDownloadMode.rawValue))")
-            try? item?.download()
-          } else {
-            AppLogger.player.debug(
-              "Auto-download skipped (mode: \(autoDownloadMode.rawValue))"
-            )
-          }
-        }
-      } catch {
-        AppLogger.player.error("Background session fetch failed: \(error)")
-      }
-
-      if player == nil {
-        do {
-          try await setupAudioPlayer()
-        } catch {
-          AppLogger.player.error("Failed to setup player: \(error)")
-          Toast(error: "Failed to setup audio player").show()
-          playerManager.clearCurrent()
-        }
-      }
-
-      isLoading = false
-    }
-  }
-
-  func loadCover() {
-    Task {
-      do {
-        let request = ImageRequest(url: coverURL)
-        let cover = try await ImagePipeline.shared.image(for: request)
-        artwork = MPMediaItemArtwork(
-          boundsSize: cover.size,
-          requestHandler: { _ in cover }
-        )
-
-        updateNowPlayingInfo()
-      } catch {
-        AppLogger.player.error(
-          "Failed to load cover image for now playing: \(error)"
-        )
-      }
-    }
-  }
-
-  private func setupDownloadStateBinding(bookID: String) {
-    downloadManager.$currentProgress
-      .receive(on: DispatchQueue.main)
-      .map { [weak self] progress in
-        if self?.item?.isDownloaded == true || self?.downloadState == .downloaded {
-          return .downloaded
-        } else if let progress = progress[bookID] {
-          return .downloading(progress: progress)
-        } else {
-          return .notDownloaded
-        }
-      }
-      .sink { [weak self] downloadState in
-        self?.downloadState = downloadState
-      }
-      .store(in: &cancellables)
-
-    itemObservation = Task { [weak self] in
-      for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
-        guard !Task.isCancelled, let self else { continue }
-
-        self.item = updatedItem
-
-        self.downloadState = updatedItem.isDownloaded ? .downloaded : .notDownloaded
-
-        if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
-          AppLogger.player.info("Download completed, refreshing player to use local files")
-          await self.reloadPlayer()
-        }
-      }
-    }
-  }
-}
-
-extension BookPlayerModel {
-  private func configureAudioSession() {
-    do {
-      try audioSession.setCategory(.playback, mode: .spokenAudio, policy: .longFormAudio)
-      try audioSession.setActive(true)
-    } catch {
-      AppLogger.player.error("Failed to configure audio session: \(error)")
-    }
-  }
-
-  private func updateNowPlayingInfo() {
-    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = title
-    nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
-    nowPlayingInfo[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
-
-    if let artwork {
-      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
-    }
-
-    if let chapters {
-      nowPlayingInfo[MPMediaItemPropertyTitle] = chapters.current?.title ?? title
-      nowPlayingInfo[MPMediaItemPropertyArtist] = title
-    } else {
-      nowPlayingInfo[MPMediaItemPropertyTitle] = title
-      nowPlayingInfo[MPMediaItemPropertyArtist] = author
-    }
-
-    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
-      playbackProgress.current + playbackProgress.remaining
-    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
-
-    nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = Double(speed.playbackSpeed)
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
-
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-  }
-
-  private func setupPlayerObservers() {
-    guard let player else { return }
-
-    player.publisher(for: \.rate)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] rate in
-        guard let self else { return }
-
-        let isNowPlaying = rate > 0
-        self.handlePlaybackStateChange(isNowPlaying)
-        self.isPlaying = isNowPlaying
-
-        if isNowPlaying && self.timeObserver == nil {
-          AppLogger.player.info("Time observer was nil, re-setting up")
-          self.setupTimeObserver()
-        }
-
-        self.updateNowPlayingInfo()
-      }
-      .store(in: &cancellables)
-
-    if let currentItem = player.currentItem {
-      currentItem.publisher(for: \.status)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] status in
-          switch status {
-          case .readyToPlay:
-            self?.isLoading = false
-            self?.recoveryAttempts = 0
-            let duration = currentItem.duration
-            if duration.isValid && !duration.isIndefinite {
-            }
-          case .failed:
-            self?.isLoading = false
-            let errorMessage = currentItem.error?.localizedDescription ?? "Unknown error"
-            AppLogger.player.error("Player item failed: \(errorMessage)")
-            self?.handleStreamFailure(error: currentItem.error)
-          case .unknown:
-            self?.isLoading = true
-          @unknown default:
-            break
-          }
-        }
-        .store(in: &cancellables)
-
-      NotificationCenter.default.publisher(for: AVPlayerItem.playbackStalledNotification)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] _ in
-          AppLogger.player.warning("Playback stalled - attempting recovery")
-          self?.handleStreamFailure(error: nil)
-        }
-        .store(in: &cancellables)
-
-      NotificationCenter.default.publisher(for: AVPlayerItem.failedToPlayToEndTimeNotification)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] notification in
-          let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
-          AppLogger.player.error(
-            "Failed to play to end: \(error?.localizedDescription ?? "Unknown")"
-          )
-          self?.handleStreamFailure(error: error)
-        }
-        .store(in: &cancellables)
-    }
-
-    NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] notification in
-        self?.handleAudioInterruption(notification)
-      }
-      .store(in: &cancellables)
-
-    NotificationCenter.default.publisher(for: AVAudioSession.mediaServicesWereResetNotification)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in
-        self?.handleMediaServicesReset()
-      }
-      .store(in: &cancellables)
-
-    NotificationCenter.default.publisher(
-      for: AVPlayerItem.newErrorLogEntryNotification,
-      object: player.currentItem
-    )
-    .receive(on: DispatchQueue.main)
-    .sink { notification in
-      guard let item = notification.object as? AVPlayerItem,
-        let event = item.errorLog()?.events.last
-      else {
-        return
-      }
-      AppLogger.player.error(
-        "Player error \(event.errorDomain), \(event.errorStatusCode), \(event.errorComment ?? "Unknown error")"
-      )
-    }
-    .store(in: &cancellables)
-  }
-
-  private func handleAudioInterruption(_ notification: Notification) {
-    guard let userInfo = notification.userInfo,
-      let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-      let type = AVAudioSession.InterruptionType(rawValue: typeValue)
-    else {
-      return
-    }
-
-    switch type {
-    case .began:
-      AppLogger.player.info("Audio interruption began")
-      interruptionBeganAt = isPlaying ? Date() : nil
-
-    case .ended:
-      if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt,
-        AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
-      {
-        AppLogger.player.info("Audio interruption ended - resuming playback")
-        player?.play()
-      } else if let interval = interruptionBeganAt?.timeIntervalSinceNow, interval < 60 * 5 {
-        AppLogger.player.info("Audio interruption ended - resuming playback")
-        player?.play()
-      } else {
-        AppLogger.player.info("Audio interruption ended - not resuming")
-      }
-
-    @unknown default:
-      break
-    }
-  }
-
-  private func handleMediaServicesReset() {
-    AppLogger.player.warning(
-      "Media services were reset - reconfiguring audio session and remote commands"
-    )
-
-    let wasPlaying = isPlaying
-    configureAudioSession()
-    updateNowPlayingInfo()
-
-    if wasPlaying {
-      onPlayTapped()
-    }
-  }
-
-  private func setupTimeObserver() {
-    guard let player = player else { return }
-
-    let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-    timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: nil) {
-      [weak self] time in
-      self?.onTimeChanged(time)
-    }
-  }
-
-  private func onTimeChanged(_ time: CMTime) {
-    if time.isValid && !time.isIndefinite {
-      let currentTime = CMTimeGetSeconds(time)
-      if currentTime > 0 || self.mediaProgress.currentTime == 0 {
-        self.mediaProgress.currentTime = currentTime
-      }
-
-      if let model = self.chapters as? ChapterPickerSheetViewModel {
-        let previous = model.currentIndex
-        model.setCurrentTime(self.mediaProgress.currentTime)
-
-        if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
-          timerViewModel.onChapterChanged(
-            previous: previous,
-            current: model.currentIndex,
-            total: model.chapters.count
-          )
-        }
-      }
-
-      self.timerSecondsCounter += 1
-
-      if self.timerSecondsCounter % 20 == 0 {
-        self.updateMediaProgress()
-      }
-
-      if self.timerSecondsCounter % 2 == 0 {
-        self.syncPlayback()
-      }
+      Toast(error: "Can't access download. Streaming instead.").show()
     }
   }
 
@@ -892,9 +623,367 @@ extension BookPlayerModel {
     }
   }
 
+  func loadCover() {
+    Task {
+      do {
+        let request = ImageRequest(url: coverURL)
+        let cover = try await ImagePipeline.shared.image(for: request)
+        artwork = MPMediaItemArtwork(
+          boundsSize: cover.size,
+          requestHandler: { _ in cover }
+        )
+
+        updateNowPlayingInfo()
+      } catch {
+        AppLogger.player.error(
+          "Failed to load cover image for now playing: \(error)"
+        )
+      }
+    }
+  }
+}
+
+extension BookPlayerModel {
+  private func observeSpeedChanged() {
+    withObservationTracking {
+      _ = speed.playbackSpeed
+    } onChange: { [weak self] in
+      RunLoop.current.perform {
+        if let playbackProgress = self?.playbackProgress as? PlaybackProgressViewModel {
+          playbackProgress.updateProgress()
+          self?.syncPlayback()
+        }
+
+        self?.updateNowPlayingInfo()
+        self?.observeSpeedChanged()
+      }
+    }
+  }
+
+  private func observeCurrentChapter() {
+    withObservationTracking {
+      _ = chapters?.current
+    } onChange: { [weak self] in
+      RunLoop.current.perform {
+        self?.updateNowPlayingInfo()
+        self?.observeCurrentChapter()
+      }
+    }
+  }
+
+  private func setupHistory() {
+    history = PlaybackHistorySheetViewModel(
+      itemID: id,
+      title: title
+    ) { [weak self] time in
+      self?.seekToTime(time)
+    }
+  }
+
+  private func observeMediaProgress() {
+    withObservationTracking {
+      _ = mediaProgress.currentTime
+    } onChange: { [weak self] in
+      RunLoop.current.perform {
+        guard let self else { return }
+        if !self.isPlaying {
+          let currentTime = CMTime(seconds: self.mediaProgress.currentTime, preferredTimescale: 1000)
+          self.onTimeChanged(currentTime)
+          self.player?.seek(to: currentTime)
+        }
+        self.observeMediaProgress()
+      }
+    }
+  }
+
+  private func setupPlayerObservers() {
+    guard let player else { return }
+
+    player.publisher(for: \.rate)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] rate in
+        guard let self else { return }
+
+        let isNowPlaying = rate > 0
+        self.handlePlaybackStateChange(isNowPlaying)
+        self.isPlaying = isNowPlaying
+
+        if isNowPlaying && self.timeObserver == nil {
+          AppLogger.player.info("Time observer was nil, re-setting up")
+          self.setupTimeObserver()
+        }
+
+        self.updateNowPlayingInfo()
+      }
+      .store(in: &cancellables)
+
+    if let currentItem = player.currentItem {
+      currentItem.publisher(for: \.status)
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] status in
+          switch status {
+          case .readyToPlay:
+            self?.isLoading = false
+            self?.recoveryAttempts = 0
+            let duration = currentItem.duration
+            if duration.isValid && !duration.isIndefinite {
+            }
+          case .failed:
+            self?.isLoading = false
+            let errorMessage = currentItem.error?.localizedDescription ?? "Unknown error"
+            AppLogger.player.error("Player item failed: \(errorMessage)")
+            self?.handleStreamFailure(error: currentItem.error)
+          case .unknown:
+            self?.isLoading = true
+          @unknown default:
+            break
+          }
+        }
+        .store(in: &cancellables)
+
+      NotificationCenter.default.publisher(for: AVPlayerItem.playbackStalledNotification)
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] _ in
+          AppLogger.player.warning("Playback stalled - attempting recovery")
+          self?.handleStreamFailure(error: nil)
+        }
+        .store(in: &cancellables)
+
+      NotificationCenter.default.publisher(for: AVPlayerItem.failedToPlayToEndTimeNotification)
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] notification in
+          let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+          AppLogger.player.error(
+            "Failed to play to end: \(error?.localizedDescription ?? "Unknown")"
+          )
+          self?.handleStreamFailure(error: error)
+        }
+        .store(in: &cancellables)
+    }
+
+    NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] notification in
+        self?.handleAudioInterruption(notification)
+      }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: AVAudioSession.mediaServicesWereResetNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.handleMediaServicesReset()
+      }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(
+      for: AVPlayerItem.newErrorLogEntryNotification,
+      object: player.currentItem
+    )
+    .receive(on: DispatchQueue.main)
+    .sink { notification in
+      guard let item = notification.object as? AVPlayerItem,
+        let event = item.errorLog()?.events.last
+      else {
+        return
+      }
+      AppLogger.player.error(
+        "Player error \(event.errorDomain), \(event.errorStatusCode), \(event.errorComment ?? "Unknown error")"
+      )
+    }
+    .store(in: &cancellables)
+  }
+
+  private func setupTimeObserver() {
+    guard let player else { return }
+
+    let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+    timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: nil) {
+      [weak self] time in
+      self?.onTimeChanged(time)
+    }
+  }
+
+  private func onTimeChanged(_ time: CMTime) {
+    if time.isValid && !time.isIndefinite {
+      let currentTime = CMTimeGetSeconds(time)
+      if currentTime > 0 || self.mediaProgress.currentTime == 0 {
+        self.mediaProgress.currentTime = currentTime
+      }
+
+      if let model = self.chapters as? ChapterPickerSheetViewModel {
+        let previous = model.currentIndex
+        model.setCurrentTime(self.mediaProgress.currentTime)
+
+        if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
+          timerViewModel.onChapterChanged(
+            previous: previous,
+            current: model.currentIndex,
+            total: model.chapters.count
+          )
+        }
+      }
+
+      self.timerSecondsCounter += 1
+
+      if self.timerSecondsCounter % 20 == 0 {
+        self.updateMediaProgress()
+      }
+
+      if self.timerSecondsCounter % 2 == 0 {
+        self.syncPlayback()
+      }
+    }
+  }
+}
+
+extension BookPlayerModel {
+  private func setupDownloadStateBinding(bookID: String) {
+    downloadManager.$currentProgress
+      .receive(on: DispatchQueue.main)
+      .map { [weak self] progress in
+        if self?.item?.isDownloaded == true || self?.downloadState == .downloaded {
+          return .downloaded
+        } else if let progress = progress[bookID] {
+          return .downloading(progress: progress)
+        } else {
+          return .notDownloaded
+        }
+      }
+      .sink { [weak self] downloadState in
+        self?.downloadState = downloadState
+      }
+      .store(in: &cancellables)
+
+    itemObservation = Task { [weak self] in
+      for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
+        guard !Task.isCancelled, let self else { continue }
+
+        self.item = updatedItem
+
+        self.downloadState = updatedItem.isDownloaded ? .downloaded : .notDownloaded
+
+        if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
+          AppLogger.player.info("Download completed, refreshing player to use local files")
+          await self.reloadPlayer()
+        }
+      }
+    }
+  }
+}
+
+extension BookPlayerModel {
+  private func configureAudioSession() {
+    do {
+      try audioSession.setCategory(.playback, mode: .spokenAudio, policy: .longFormAudio)
+      try audioSession.setActive(true)
+    } catch {
+      AppLogger.player.error("Failed to configure audio session: \(error)")
+    }
+  }
+
+  private func handleAudioInterruption(_ notification: Notification) {
+    guard let userInfo = notification.userInfo,
+      let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+      let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+    else {
+      return
+    }
+
+    switch type {
+    case .began:
+      AppLogger.player.info("Audio interruption began")
+      interruptionBeganAt = isPlaying ? Date() : nil
+
+    case .ended:
+      if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt,
+        AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
+      {
+        AppLogger.player.info("Audio interruption ended - resuming playback")
+        player?.play()
+      } else if let interval = interruptionBeganAt?.timeIntervalSinceNow, interval < 60 * 5 {
+        AppLogger.player.info("Audio interruption ended - resuming playback")
+        player?.play()
+      } else {
+        AppLogger.player.info("Audio interruption ended - not resuming")
+      }
+
+    @unknown default:
+      break
+    }
+  }
+
+  private func handleMediaServicesReset() {
+    AppLogger.player.warning(
+      "Media services were reset - reconfiguring audio session and remote commands"
+    )
+
+    let wasPlaying = isPlaying
+    configureAudioSession()
+    updateNowPlayingInfo()
+
+    if wasPlaying {
+      onPlayTapped()
+    }
+  }
+}
+
+extension BookPlayerModel {
+  private func updateNowPlayingInfo() {
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = title
+    nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
+    nowPlayingInfo[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
+
+    if let artwork {
+      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+    }
+
+    if let chapters {
+      nowPlayingInfo[MPMediaItemPropertyTitle] = chapters.current?.title ?? title
+      nowPlayingInfo[MPMediaItemPropertyArtist] = title
+    } else {
+      nowPlayingInfo[MPMediaItemPropertyTitle] = title
+      nowPlayingInfo[MPMediaItemPropertyArtist] = author
+    }
+
+    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
+      playbackProgress.current + playbackProgress.remaining
+    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
+
+    nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = Double(speed.playbackSpeed)
+    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
+
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+  }
+}
+
+extension BookPlayerModel {
+  private func updateMediaProgress() {
+    Task { @MainActor in
+      do {
+        if isPlaying, let lastTime = lastPlaybackAt {
+          let timeListened = Date().timeIntervalSince(lastTime)
+          sessionManager.current?.pendingListeningTime += timeListened
+          lastPlaybackAt = Date()
+        }
+
+        mediaProgress.lastPlayedAt = Date()
+        mediaProgress.lastUpdate = Date()
+        if mediaProgress.duration > 0 {
+          mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
+        }
+        try mediaProgress.save()
+
+        syncSessionProgress()
+      } catch {
+        AppLogger.player.error("Failed to update playback progress: \(error)")
+        Toast(error: "Failed to update playback progress").show()
+      }
+    }
+  }
+
   private func handlePlaybackStateChange(_ isNowPlaying: Bool) {
     AppLogger.player.debug(
-      "🎵 handlePlaybackStateChange: isNowPlaying=\(isNowPlaying), current isPlaying=\(self.isPlaying)"
+      "🎵 handlePlaybackStateChange: isNowPlaying=\(isNowPlaying), current isPlaying=\(isPlaying)"
     )
 
     let now = Date()
@@ -920,7 +1009,7 @@ extension BookPlayerModel {
       sessionManager.notifyPlaybackStopped()
     } else {
       AppLogger.player.debug(
-        "🎵 State: No change (isNowPlaying=\(isNowPlaying), isPlaying=\(self.isPlaying))"
+        "🎵 State: No change (isNowPlaying=\(isNowPlaying), isPlaying=\(isPlaying))"
       )
     }
 
@@ -973,58 +1062,9 @@ extension BookPlayerModel {
       }
     }
   }
+}
 
-  private func syncSessionProgress() {
-    guard sessionManager.current != nil else { return }
-
-    Task {
-      do {
-        try await sessionManager.syncProgress(currentTime: mediaProgress.currentTime)
-      } catch {
-        AppLogger.player.error("Failed to sync session progress: \(error)")
-
-        if sessionManager.current?.isRemote == true && isSessionNotFoundError(error) {
-          AppLogger.player.debug("Remote session not found (404) - triggering recovery")
-          handleStreamFailure(error: error)
-        }
-      }
-    }
-
-    WidgetCenter.shared.reloadAllTimelines()
-  }
-
-  private func isSessionNotFoundError(_ error: Error) -> Bool {
-    let errorString = error.localizedDescription.lowercased()
-    let nsError = error as NSError
-
-    return errorString.contains("404") || errorString.contains("file not found")
-      || errorString.contains("-1011") || nsError.code == -1011 || nsError.code == 404
-  }
-
-  private func updateMediaProgress() {
-    Task { @MainActor in
-      do {
-        if isPlaying, let lastTime = lastPlaybackAt {
-          let timeListened = Date().timeIntervalSince(lastTime)
-          sessionManager.current?.pendingListeningTime += timeListened
-          lastPlaybackAt = Date()
-        }
-
-        mediaProgress.lastPlayedAt = Date()
-        mediaProgress.lastUpdate = Date()
-        if mediaProgress.duration > 0 {
-          mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
-        }
-        try mediaProgress.save()
-
-        syncSessionProgress()
-      } catch {
-        AppLogger.player.error("Failed to update playback progress: \(error)")
-        Toast(error: "Failed to update playback progress").show()
-      }
-    }
-  }
-
+extension BookPlayerModel {
   private func handleStreamFailure(error: Error?) {
     guard !isRecovering else {
       AppLogger.player.debug("Already recovering, skipping duplicate recovery attempt")
@@ -1058,7 +1098,7 @@ extension BookPlayerModel {
   }
 
   private func recoverSession() async {
-    guard let player = player else {
+    guard let player else {
       isRecovering = false
       return
     }
@@ -1103,33 +1143,9 @@ extension BookPlayerModel {
       }
     }
   }
+}
 
-  func stopPlayer() {
-    player?.pause()
-
-    PlaybackHistory.record(itemID: id, action: .pause, position: mediaProgress.currentTime)
-
-    if let timeObserver {
-      player?.removeTimeObserver(timeObserver)
-      self.timeObserver = nil
-    }
-
-    player = nil
-
-    try? audioSession.setActive(false)
-
-    itemObservation?.cancel()
-    cancellables.removeAll()
-  }
-
-  func closeSession() {
-    Task {
-      try? await sessionManager.closeSession(
-        isDownloaded: item?.isDownloaded ?? false
-      )
-    }
-  }
-
+extension BookPlayerModel {
   private func syncPlayback() {
     savePlaybackStateToWidget()
 
