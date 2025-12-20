@@ -153,6 +153,21 @@ struct PlayerPreferencesView: View {
           .bold()
       }
       .listRowSeparator(.hidden)
+
+      Section {
+        VStack(alignment: .leading) {
+          Text("Progress Display".uppercased())
+            .bold()
+
+          Text("Choose how playback progress is displayed.")
+        }
+        .font(.caption)
+
+        Toggle("Show Full Book Duration", isOn: $preferences.showFullBookDuration)
+          .font(.subheadline)
+          .bold()
+      }
+      .listRowSeparator(.hidden)
     }
     .navigationTitle("Player")
   }

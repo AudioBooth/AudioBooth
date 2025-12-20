@@ -67,7 +67,7 @@ final class BookPlayerModel: BookPlayer.Model {
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(itemID: book.id, mediaProgress: mediaProgress)
+      playbackProgress: PlaybackProgressViewModel(itemID: book.id, mediaProgress: mediaProgress, title: book.title)
     )
 
     setupDownloadStateBinding(bookID: book.id)
@@ -103,7 +103,7 @@ final class BookPlayerModel: BookPlayer.Model {
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(itemID: item.bookID, mediaProgress: mediaProgress)
+      playbackProgress: PlaybackProgressViewModel(itemID: item.bookID, mediaProgress: mediaProgress, title: item.title)
     )
 
     setupDownloadStateBinding(bookID: item.bookID)

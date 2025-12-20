@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PlaybackProgressView: View {
   @Binding var model: Model
+  @ObservedObject private var preferences = UserPreferences.shared
 
   var body: some View {
     VStack(spacing: 8) {
@@ -47,10 +48,17 @@ struct PlaybackProgressView: View {
 
         Spacer()
 
-        Text(formatTimeRemaining(model.totalTimeRemaining))
-          .font(.caption)
-          .foregroundColor(.white)
-          .fontWeight(.medium)
+        Group {
+          if preferences.showFullBookDuration {
+            Text(model.title)
+              .lineLimit(1)
+          } else {
+            Text(formatTimeRemaining(model.totalTimeRemaining))
+          }
+        }
+        .font(.caption)
+        .foregroundColor(.white)
+        .fontWeight(.medium)
 
         Spacer()
 
@@ -85,6 +93,7 @@ extension PlaybackProgressView {
     var totalProgress: Double
     var totalTimeRemaining: TimeInterval
     var isDragging: Bool
+    var title: String
 
     init(
       progress: Double,
@@ -93,7 +102,8 @@ extension PlaybackProgressView {
       total: TimeInterval,
       totalProgress: Double,
       totalTimeRemaining: TimeInterval,
-      isDragging: Bool = false
+      isDragging: Bool = false,
+      title: String
     ) {
       self.progress = progress
       self.current = current
@@ -102,6 +112,7 @@ extension PlaybackProgressView {
       self.totalProgress = totalProgress
       self.totalTimeRemaining = totalTimeRemaining
       self.isDragging = isDragging
+      self.title = title
     }
 
     func onProgressChanged(_ progress: Double) {}
@@ -115,8 +126,9 @@ extension PlaybackProgressView.Model {
       current: 600,
       remaining: 1200,
       total: 3600,
-      totalProgress: 0,
+      totalProgress: 0.5,
       totalTimeRemaining: 3000,
+      title: "Sample Book Title"
     )
   }
 }

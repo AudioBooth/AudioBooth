@@ -1,4 +1,5 @@
 import AVFoundation
+import Combine
 import Models
 import SwiftUI
 
@@ -9,10 +10,11 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var speed: SpeedPickerSheet.Model?
   private let preferences = UserPreferences.shared
   private var onSeekCompleted: (() -> Void)?
+  private var cancellables = Set<AnyCancellable>()
 
   private let mediaProgress: MediaProgress
 
-  init(itemID: String, mediaProgress: MediaProgress) {
+  init(itemID: String, mediaProgress: MediaProgress, title: String) {
     self.itemID = itemID
     self.mediaProgress = mediaProgress
 
@@ -22,10 +24,12 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       remaining: 0,
       total: mediaProgress.duration,
       totalProgress: mediaProgress.progress,
-      totalTimeRemaining: mediaProgress.remaining
+      totalTimeRemaining: mediaProgress.remaining,
+      title: title
     )
 
     observeMediaProgress()
+    observePreferenceChanges()
   }
 
   private func observeMediaProgress() {
@@ -56,7 +60,46 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   func updateProgress() {
     guard !isDragging else { return }
 
+    if preferences.showFullBookDuration {
+      updateBookProgress()
+    } else {
+      updateChapterProgress()
+    }
+  }
+
+  private func updateBookProgress() {
     let currentTime = mediaProgress.currentTime
+    let totalDuration = total
+    let overallProgress = currentTime / totalDuration
+
+    var current: TimeInterval = currentTime
+    var remaining: TimeInterval = totalDuration - currentTime
+    let progress: CGFloat = CGFloat(overallProgress)
+
+    if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
+      let playbackSpeed = Double(speed.playbackSpeed)
+      let adjustedTotal = (current + remaining) / playbackSpeed
+      current = (current / playbackSpeed).rounded()
+      remaining = adjustedTotal - current
+    }
+
+    var totalTimeRemaining = (totalDuration - currentTime)
+    if let speed, preferences.timeRemainingAdjustsWithSpeed {
+      totalTimeRemaining /= Double(speed.playbackSpeed)
+    }
+
+    self.progress = progress
+    self.current = current
+    self.remaining = remaining
+    self.totalProgress = overallProgress
+    self.totalTimeRemaining = totalTimeRemaining
+  }
+
+  private func updateChapterProgress() {
+    let currentTime = mediaProgress.currentTime
+    let totalDuration = total
+    let overallProgress = currentTime / totalDuration
+
     var current: TimeInterval
     var remaining: TimeInterval
     let progress: CGFloat
@@ -67,8 +110,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       progress = CGFloat(chapters.currentProgress(currentTime: currentTime))
     } else {
       current = currentTime
-      remaining = total - currentTime
-      progress = CGFloat(currentTime / total)
+      remaining = totalDuration - currentTime
+      progress = CGFloat(overallProgress)
     }
 
     if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
@@ -78,7 +121,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       remaining = adjustedTotal - current
     }
 
-    var totalTimeRemaining = (total - currentTime)
+    var totalTimeRemaining = (totalDuration - currentTime)
     if let speed, preferences.timeRemainingAdjustsWithSpeed {
       totalTimeRemaining /= Double(speed.playbackSpeed)
     }
@@ -86,8 +129,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     self.progress = progress
     self.current = current
     self.remaining = remaining
-    self.total = total
-    self.totalProgress = currentTime / total
+    self.totalProgress = overallProgress
     self.totalTimeRemaining = totalTimeRemaining
   }
 
@@ -108,5 +150,14 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       }
       PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     }
+  }
+
+  private func observePreferenceChanges() {
+    preferences.objectWillChange
+      .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+      .sink { [weak self] _ in
+        self?.updateProgress()
+      }
+      .store(in: &cancellables)
   }
 }

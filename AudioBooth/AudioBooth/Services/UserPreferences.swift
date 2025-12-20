@@ -52,6 +52,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("chapterProgressionAdjustsWithSpeed")
   var chapterProgressionAdjustsWithSpeed: Bool = false
 
+  @AppStorage("showFullBookDuration")
+  var showFullBookDuration: Bool = false
+
   @AppStorage("libraryDisplayMode")
   var libraryDisplayMode: BookCard.DisplayMode = .card
 
