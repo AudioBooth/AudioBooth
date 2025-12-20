@@ -34,8 +34,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private let downloadManager = DownloadManager.shared
   private let watchConnectivity = WatchConnectivityManager.shared
 
-  private var artwork: MPMediaItemArtwork?
-  private var nowPlayingInfo: [String: Any] = [:]
+  private var nowPlaying: NowPlayingManager
 
   private var recoveryAttempts = 0
   private var maxRecoveryAttempts = 3
@@ -49,6 +48,15 @@ final class BookPlayerModel: BookPlayer.Model {
     } catch {
       fatalError("Failed to create MediaProgress for book \(book.id): \(error)")
     }
+
+    nowPlaying = NowPlayingManager(
+      id: book.id,
+      title: book.title,
+      author: book.authorName,
+      coverURL: book.coverURL,
+      current: mediaProgress.currentTime,
+      duration: mediaProgress.duration
+    )
 
     super.init(
       id: book.id,
@@ -65,6 +73,7 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(bookID: book.id)
     setupHistory()
     observeSpeedChanged()
+
     onLoad()
   }
 
@@ -75,6 +84,15 @@ final class BookPlayerModel: BookPlayer.Model {
     } catch {
       fatalError("Failed to create MediaProgress for item \(item.bookID): \(error)")
     }
+
+    nowPlaying = NowPlayingManager(
+      id: item.bookID,
+      title: item.title,
+      author: item.authorNames,
+      coverURL: item.coverURL,
+      current: mediaProgress.currentTime,
+      duration: mediaProgress.duration
+    )
 
     super.init(
       id: item.bookID,
@@ -91,6 +109,7 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(bookID: item.bookID)
     setupHistory()
     observeSpeedChanged()
+
     onLoad()
   }
 
@@ -105,7 +124,7 @@ final class BookPlayerModel: BookPlayer.Model {
   override func onPauseTapped() {
     pendingPlay = false
     player?.pause()
-    updateNowPlayingInfo()
+    nowPlaying.update(rate: player?.rate ?? 0, current: playbackProgress.current)
   }
 
   override func onPlayTapped() {
@@ -147,7 +166,8 @@ final class BookPlayerModel: BookPlayer.Model {
     timerSecondsCounter = 0
     player.play()
     try? audioSession.setActive(true)
-    updateNowPlayingInfo()
+
+    nowPlaying.update(rate: player.rate, current: playbackProgress.current)
   }
 
   override func onSkipForwardTapped(seconds: Double) {
@@ -204,10 +224,16 @@ extension BookPlayerModel {
       return
     }
 
+    mediaProgress.currentTime = time
+
+    if let model = playbackProgress as? PlaybackProgressViewModel {
+      model.updateProgress()
+      nowPlaying.update(current: model.current)
+    }
+
     let seekTime = CMTime(seconds: time, preferredTimescale: 1000)
-    player.seek(to: seekTime) { [weak self] _ in
+    player.seek(to: seekTime) { _ in
       AppLogger.player.debug("Seeked to position: \(time)s")
-      self?.updateNowPlayingInfo()
     }
     PlaybackHistory.record(itemID: id, action: .seek, position: time)
   }
@@ -228,6 +254,8 @@ extension BookPlayerModel {
 
     itemObservation?.cancel()
     cancellables.removeAll()
+
+    nowPlaying.clear()
   }
 }
 
@@ -336,8 +364,6 @@ extension BookPlayerModel {
     isLoading = true
 
     Task {
-      loadCover()
-
       observeMediaProgress()
 
       await loadLocalBookIfAvailable()
@@ -451,7 +477,14 @@ extension BookPlayerModel {
     }
 
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
-      chapters = ChapterPickerSheetViewModel(itemID: id, chapters: sessionChapters, player: player)
+      let chapters = ChapterPickerSheetViewModel(
+        itemID: id,
+        chapters: sessionChapters,
+        mediaProgress: mediaProgress,
+        player: player
+      )
+
+      self.chapters = chapters
       timer.maxRemainingChapters = sessionChapters.count - 1
       observeCurrentChapter()
       AppLogger.player.debug(
@@ -468,13 +501,14 @@ extension BookPlayerModel {
         chapters: chapters,
         speed: speed,
         onSeekCompleted: { [weak self] in
-          self?.updateNowPlayingInfo()
+          if let current = self?.playbackProgress.current {
+            self?.nowPlaying.update(current: current)
+          }
         }
       )
     }
 
     configureAudioSession()
-    updateNowPlayingInfo()
   }
 
   private func loadLocalBookIfAvailable() async {
@@ -623,24 +657,6 @@ extension BookPlayerModel {
     }
   }
 
-  func loadCover() {
-    Task {
-      do {
-        let request = ImageRequest(url: coverURL)
-        let cover = try await ImagePipeline.shared.image(for: request)
-        artwork = MPMediaItemArtwork(
-          boundsSize: cover.size,
-          requestHandler: { _ in cover }
-        )
-
-        updateNowPlayingInfo()
-      } catch {
-        AppLogger.player.error(
-          "Failed to load cover image for now playing: \(error)"
-        )
-      }
-    }
-  }
 }
 
 extension BookPlayerModel {
@@ -648,14 +664,16 @@ extension BookPlayerModel {
     withObservationTracking {
       _ = speed.playbackSpeed
     } onChange: { [weak self] in
-      RunLoop.current.perform {
-        if let playbackProgress = self?.playbackProgress as? PlaybackProgressViewModel {
+      guard let self else { return }
+
+      RunLoop.main.perform {
+        if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
           playbackProgress.updateProgress()
-          self?.syncPlayback()
+          self.syncPlayback()
         }
 
-        self?.updateNowPlayingInfo()
-        self?.observeSpeedChanged()
+        self.nowPlaying.update(speed: self.speed.playbackSpeed)
+        self.observeSpeedChanged()
       }
     }
   }
@@ -664,10 +682,27 @@ extension BookPlayerModel {
     withObservationTracking {
       _ = chapters?.current
     } onChange: { [weak self] in
-      RunLoop.current.perform {
-        self?.updateNowPlayingInfo()
-        self?.observeCurrentChapter()
+      guard let self else { return }
+
+      RunLoop.main.perform {
+        if let chapters = self.chapters, let current = chapters.current {
+          self.nowPlaying.update(
+            chapter: current.title,
+            current: self.playbackProgress.current,
+            duration: current.end - current.start
+          )
+        }
+
+        self.observeCurrentChapter()
       }
+    }
+
+    if let chapters, let current = chapters.current {
+      nowPlaying.update(
+        chapter: current.title,
+        current: playbackProgress.current,
+        duration: current.end - current.start
+      )
     }
   }
 
@@ -684,7 +719,7 @@ extension BookPlayerModel {
     withObservationTracking {
       _ = mediaProgress.currentTime
     } onChange: { [weak self] in
-      RunLoop.current.perform {
+      RunLoop.main.perform {
         guard let self else { return }
         if !self.isPlaying {
           let currentTime = CMTime(seconds: self.mediaProgress.currentTime, preferredTimescale: 1000)
@@ -713,7 +748,7 @@ extension BookPlayerModel {
           self.setupTimeObserver()
         }
 
-        self.updateNowPlayingInfo()
+        nowPlaying.update(rate: rate, current: playbackProgress.current)
       }
       .store(in: &cancellables)
 
@@ -811,12 +846,9 @@ extension BookPlayerModel {
       }
 
       if let model = self.chapters as? ChapterPickerSheetViewModel {
-        let previous = model.currentIndex
-        model.setCurrentTime(self.mediaProgress.currentTime)
-
         if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
           timerViewModel.onChapterChanged(
-            previous: previous,
+            previous: model.currentIndex,
             current: model.currentIndex,
             total: model.chapters.count
           )
@@ -919,40 +951,12 @@ extension BookPlayerModel {
 
     let wasPlaying = isPlaying
     configureAudioSession()
-    updateNowPlayingInfo()
+
+    nowPlaying.update()
 
     if wasPlaying {
       onPlayTapped()
     }
-  }
-}
-
-extension BookPlayerModel {
-  private func updateNowPlayingInfo() {
-    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = title
-    nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
-    nowPlayingInfo[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
-
-    if let artwork {
-      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
-    }
-
-    if let chapters {
-      nowPlayingInfo[MPMediaItemPropertyTitle] = chapters.current?.title ?? title
-      nowPlayingInfo[MPMediaItemPropertyArtist] = title
-    } else {
-      nowPlayingInfo[MPMediaItemPropertyTitle] = title
-      nowPlayingInfo[MPMediaItemPropertyArtist] = author
-    }
-
-    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
-      playbackProgress.current + playbackProgress.remaining
-    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
-
-    nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = Double(speed.playbackSpeed)
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
-
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }
 }
 

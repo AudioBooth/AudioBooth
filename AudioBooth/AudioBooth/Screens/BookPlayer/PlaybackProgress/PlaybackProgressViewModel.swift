@@ -33,7 +33,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       _ = mediaProgress.currentTime
     } onChange: { [weak self] in
       guard let self else { return }
-      RunLoop.current.perform {
+      RunLoop.main.perform {
         self.updateProgress()
         self.observeMediaProgress()
       }

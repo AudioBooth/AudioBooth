@@ -5,11 +5,18 @@ import SwiftUI
 final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   let player: AVPlayer
 
-  private var currentTime: TimeInterval = 0
   private var itemID: String
 
-  init(itemID: String, chapters: [Models.Chapter], player: AVPlayer) {
+  private let mediaProgress: MediaProgress
+
+  init(
+    itemID: String,
+    chapters: [Models.Chapter],
+    mediaProgress: MediaProgress,
+    player: AVPlayer
+  ) {
     self.itemID = itemID
+    self.mediaProgress = mediaProgress
     self.player = player
 
     let convertedChapters = chapters.map { chapterInfo in
@@ -21,17 +28,33 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       )
     }
 
-    super.init(chapters: convertedChapters, currentIndex: 0)
+    let currentIndex = chapters.firstIndex(where: { chapter in
+      chapter.start...chapter.end ~= mediaProgress.currentTime
+    })
+
+    super.init(
+      chapters: convertedChapters,
+      currentIndex: currentIndex ?? 0
+    )
+
+    observeMediaProgress()
   }
 
-  func setCurrentTime(_ time: TimeInterval) {
-    currentTime = time
-    updateCurrentChapterFromTime()
+  private func observeMediaProgress() {
+    withObservationTracking {
+      _ = mediaProgress.currentTime
+    } onChange: { [weak self] in
+      guard let self else { return }
+      RunLoop.main.perform {
+        self.updateCurrentChapterFromTime()
+        self.observeMediaProgress()
+      }
+    }
   }
 
   private func updateCurrentChapterFromTime() {
     for (index, chapter) in chapters.enumerated() {
-      if currentTime >= chapter.start && currentTime < chapter.end {
+      if chapter.start...chapter.end ~= mediaProgress.currentTime {
         if currentIndex != index {
           currentIndex = index
         }
@@ -42,7 +65,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
 
   override func onPreviousChapterTapped() {
     let currentChapter = chapters[currentIndex]
-    let timeInCurrentChapter = currentTime - currentChapter.start
+    let timeInCurrentChapter = mediaProgress.currentTime - currentChapter.start
 
     if timeInCurrentChapter < 2.0 && currentIndex > 0 {
       let previousChapter = chapters[currentIndex - 1]
