@@ -105,6 +105,7 @@ struct HomePage: View {
           .frame(maxWidth: 250)
         }
         .accessibilityLabel("Server: \(libraries.current?.name ?? "Server"), \(connectionStatusLabel)")
+        .tint(.primary)
       }
 
       ToolbarItem(placement: .navigationBarTrailing) {
@@ -113,6 +114,7 @@ struct HomePage: View {
         } label: {
           Image(systemName: "gear")
         }
+        .tint(.primary)
       }
     }
     .sheet(isPresented: $showingSettings) {

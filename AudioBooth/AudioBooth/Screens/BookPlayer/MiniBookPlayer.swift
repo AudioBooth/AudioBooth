@@ -67,7 +67,7 @@ struct MiniBookPlayer: View, Equatable {
       Button(action: player.onTogglePlaybackTapped) {
         ZStack {
           Circle()
-            .fill(Color.blue)
+            .fill(Color.accentColor)
             .aspectRatio(1, contentMode: .fit)
 
           if player.isLoading {
@@ -149,7 +149,7 @@ struct LegacyMiniBookPlayer: View {
       Button(action: player.onTogglePlaybackTapped) {
         ZStack {
           Circle()
-            .fill(Color.blue)
+            .fill(Color.accentColor)
             .frame(width: 40, height: 40)
 
           if player.isLoading {

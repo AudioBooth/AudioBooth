@@ -22,6 +22,7 @@ struct PlaybackHistorySheet: View {
           Button(action: { dismiss() }) {
             Image(systemName: "xmark")
           }
+          .tint(.primary)
         }
       }
       .onAppear {

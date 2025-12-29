@@ -29,6 +29,7 @@ struct BookmarkViewerSheet: View {
           Button(action: { dismiss() }) {
             Image(systemName: "xmark")
           }
+          .tint(.primary)
         }
       }
       .onAppear {
@@ -89,7 +90,7 @@ struct BookmarkViewerSheet: View {
               editTitle = bookmark.title
             }) {
               Image(systemName: "pencil")
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.accentColor)
                 .font(.body)
             }
             .buttonStyle(.plain)

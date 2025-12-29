@@ -32,6 +32,7 @@ struct CollectionsRootPage: View {
           .pickerStyle(.segmented)
           .controlSize(.large)
           .font(.subheadline)
+          .tint(.primary)
         }
       }
       .navigationDestination(for: NavigationDestination.self) { destination in

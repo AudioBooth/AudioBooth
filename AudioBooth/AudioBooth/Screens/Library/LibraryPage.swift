@@ -76,6 +76,7 @@ struct LibraryPage: View {
         ToolbarItem(placement: .navigationBarTrailing) {
           if let filters = model.filters {
             FilterPicker(model: filters)
+              .tint(.primary)
           }
         }
 
@@ -143,6 +144,7 @@ struct LibraryPage: View {
         } label: {
           Image(systemName: "ellipsis")
         }
+        .tint(.primary)
       }
     }
     .onAppear {

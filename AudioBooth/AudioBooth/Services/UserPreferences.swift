@@ -79,6 +79,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("showDebugSection")
   var showDebugSection: Bool = false
 
+  @AppStorage("accentColor")
+  var accentColor: Color?
+
   private init() {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
@@ -118,5 +121,27 @@ extension Array: @retroactive RawRepresentable where Element: Codable {
       return "[]"
     }
     return result
+  }
+}
+
+extension Color: @retroactive RawRepresentable {
+  public init?(rawValue: String) {
+    guard
+      let data = Data(base64Encoded: rawValue),
+      let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: UIColor.self, from: data)
+    else {
+      return nil
+    }
+
+    self = Color(color)
+  }
+
+  public var rawValue: String {
+    guard let data = try? NSKeyedArchiver.archivedData(withRootObject: UIColor(self), requiringSecureCoding: false)
+    else {
+      return ""
+    }
+
+    return data.base64EncodedString()
   }
 }

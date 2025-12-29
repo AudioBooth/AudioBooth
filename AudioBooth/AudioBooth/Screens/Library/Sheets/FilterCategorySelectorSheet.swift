@@ -125,6 +125,7 @@ struct FilterCategorySelectorSheet: View {
           Button(action: { dismiss() }) {
             Image(systemName: "xmark")
           }
+          .tint(.primary)
         }
       }
     }

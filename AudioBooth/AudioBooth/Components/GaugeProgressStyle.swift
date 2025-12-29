@@ -8,7 +8,7 @@ struct GaugeProgressViewStyle: ProgressViewStyle {
   let tint: Color
   let lineWidth: Double
 
-  init(tint: Color = .blue, lineWidth: Double = 2) {
+  init(tint: Color = .accentColor, lineWidth: Double = 2) {
     self.tint = tint
     self.lineWidth = lineWidth
   }

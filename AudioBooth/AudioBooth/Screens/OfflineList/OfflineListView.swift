@@ -39,6 +39,7 @@ struct OfflineListView: View {
         } label: {
           Image(systemName: model.isGroupedBySeries ? "rectangle.stack.fill" : "rectangle.stack")
         }
+        .tint(.primary)
       }
 
       if #available(iOS 26.0, *) {
@@ -49,6 +50,7 @@ struct OfflineListView: View {
         Button(model.editMode == .active ? "Done" : "Select") {
           model.onEditModeTapped()
         }
+        .tint(.primary)
       }
 
       if model.editMode == .active {
@@ -93,6 +95,7 @@ struct OfflineListView: View {
             Image(systemName: "ellipsis.circle")
           }
           .disabled(model.books.isEmpty)
+          .tint(.primary)
         }
       }
     }
@@ -176,7 +179,7 @@ struct OfflineListView: View {
           Image(
             systemName: model.selectedBookIDs.contains(book.id) ? "checkmark.circle.fill" : "circle"
           )
-          .foregroundStyle(model.selectedBookIDs.contains(book.id) ? .blue : .secondary)
+          .foregroundStyle(model.selectedBookIDs.contains(book.id) ? Color.accentColor : .secondary)
           .imageScale(.large)
         }
         .buttonStyle(.plain)

@@ -61,6 +61,7 @@ struct ContentView: View {
         } label: {
           Image(systemName: "applewatch")
         }
+        .tint(.primary)
       }
     case .iphone:
       ToolbarItem(placement: .topBarTrailing) {
@@ -69,10 +70,12 @@ struct ContentView: View {
         } label: {
           Image(systemName: "iphone")
         }
+        .tint(.primary)
       }
     case .none:
       ToolbarItem(placement: .topBarTrailing) {
         EmptyView()
+          .tint(.primary)
       }
     }
   }

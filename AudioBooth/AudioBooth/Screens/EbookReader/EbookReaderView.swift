@@ -29,12 +29,14 @@ struct EbookReaderView: View {
             Label("Close", systemImage: "xmark")
           }
           .transition(.opacity)
+          .tint(.primary)
         }
       }
 
       ToolbarItem(placement: .bottomBar) {
         if !model.isLoading, model.error == nil, showControls {
           bottomControlBar
+            .tint(.primary)
         }
       }
     }
@@ -188,6 +190,7 @@ struct EbookReaderView: View {
           Button("Done") {
             showSettings = false
           }
+          .tint(.primary)
         }
       }
     }

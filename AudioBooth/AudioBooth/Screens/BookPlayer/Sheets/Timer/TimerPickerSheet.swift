@@ -35,6 +35,7 @@ struct TimerPickerSheet: View {
               model.onStartTimerTapped()
             }
             .disabled(model.selected == .none)
+            .tint(.primary)
           }
         }
       }
@@ -69,7 +70,7 @@ struct TimerPickerSheet: View {
         .frame(maxWidth: .infinity)
         .overlay {
           RoundedRectangle(cornerRadius: 8)
-            .stroke(isSelected ? .blue : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+            .stroke(isSelected ? Color.accentColor : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
         }
         .contentShape(Rectangle())
     }
@@ -151,7 +152,7 @@ struct TimerPickerSheet: View {
     }
     .overlay {
       RoundedRectangle(cornerRadius: 8)
-        .stroke(isSelected ? .blue : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+        .stroke(isSelected ? Color.accentColor : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
     }
     .padding(.horizontal, 20)
     .animation(.easeInOut(duration: 0.3), value: isSelected)
@@ -222,7 +223,7 @@ struct TimerPickerSheet: View {
     .overlay {
       RoundedRectangle(cornerRadius: 8)
         .fill(Color.clear)
-        .stroke(isSelected ? .blue : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+        .stroke(isSelected ? Color.accentColor : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
     }
     .padding(.horizontal, 20)
   }
@@ -234,7 +235,7 @@ struct TimerPickerSheet: View {
         .stroke(
           {
             if case .none = model.selected {
-              return Color.blue
+              return Color.accentColor
             }
             return .primary.opacity(0.3)
           }(),
@@ -259,9 +260,9 @@ struct TimerPickerSheet: View {
 
   private func formatCustomTime(hours: Int, minutes: Int) -> String {
     if hours > 0 {
-      return "\(hours)hr \(minutes)min"
+      "\(hours)hr \(minutes)min"
     } else {
-      return "\(minutes)min"
+      "\(minutes)min"
     }
   }
 }

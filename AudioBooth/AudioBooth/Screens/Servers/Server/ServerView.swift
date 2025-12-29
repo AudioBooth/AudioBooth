@@ -173,7 +173,7 @@ struct ServerView: View {
 
                   if library.id == model.selectedLibrary?.id {
                     Image(systemName: "checkmark.circle.fill")
-                      .foregroundColor(.blue)
+                      .foregroundColor(Color.accentColor)
                   }
                 }
               }

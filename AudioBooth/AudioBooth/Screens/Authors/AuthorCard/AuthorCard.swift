@@ -57,8 +57,8 @@ struct AuthorCard: View {
             .foregroundColor(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.blue)
-            .cornerRadius(12)
+            .background(Color.accentColor)
+            .clipShape(Capsule())
             .padding(.top, 8)
         }
       }

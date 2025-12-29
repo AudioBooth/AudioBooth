@@ -86,10 +86,10 @@ struct SeriesCard: View {
             .foregroundColor(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.orange)
-            .cornerRadius(12)
+            .background(Color.accentColor)
+            .clipShape(Capsule())
             .padding(.top, 8)
-            .padding(.trailing, 25)
+            .padding(.trailing, 8)
         }
       }
 

@@ -8,12 +8,12 @@ struct BookmarkRow: View {
     HStack(spacing: 12) {
       ZStack {
         RoundedRectangle(cornerRadius: 8)
-          .fill(Color.blue.opacity(0.1))
+          .fill(Color.accentColor.opacity(0.1))
           .frame(width: 60, height: 60)
 
         Image(systemName: "bookmark.fill")
           .font(.title2)
-          .foregroundStyle(.blue)
+          .foregroundStyle(Color.accentColor)
       }
 
       VStack(alignment: .leading, spacing: 4) {

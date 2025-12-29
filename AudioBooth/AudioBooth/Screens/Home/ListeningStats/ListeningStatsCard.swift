@@ -109,7 +109,7 @@ struct ListeningStatsCard: View {
         )
         .foregroundStyle(
           .linearGradient(
-            colors: [.blue.opacity(0.3), .blue.opacity(0.05)],
+            colors: [.accentColor.opacity(0.3), .accentColor.opacity(0.05)],
             startPoint: .top,
             endPoint: .bottom
           )
@@ -119,7 +119,7 @@ struct ListeningStatsCard: View {
           x: .value("Day", dayData.label),
           y: .value("Time", dayData.timeInSeconds / 60)
         )
-        .foregroundStyle(.blue)
+        .foregroundStyle(Color.accentColor)
         .lineStyle(StrokeStyle(lineWidth: 2))
         .symbol {
           symbol(dayData, isSelected: dayData.label == selectedDay)
@@ -141,7 +141,7 @@ struct ListeningStatsCard: View {
 
   private func symbol(_ dayData: ListeningStatsCard.Model.DayData, isSelected: Bool) -> some View {
     Circle()
-      .fill(.blue)
+      .fill(Color.accentColor)
       .frame(width: 8, height: 8)
       .overlay(
         Circle()
@@ -152,12 +152,12 @@ struct ListeningStatsCard: View {
           Text(formatTime(dayData.timeInSeconds))
             .font(.caption)
             .fontWeight(.medium)
-            .foregroundColor(.blue)
+            .foregroundColor(Color.accentColor)
             .padding(.vertical, 2)
             .padding(.horizontal, 4)
             .background(.background)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(.blue, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor, lineWidth: 1))
             .fixedSize(horizontal: true, vertical: true)
             .offset(x: 0, y: -16)
         }

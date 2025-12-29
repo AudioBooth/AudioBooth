@@ -76,7 +76,7 @@ struct SpeedPickerSheet: View {
       model.isPresented = false
     }) {
       RoundedRectangle(cornerRadius: 8)
-        .stroke(isSelected ? .blue : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+        .stroke(isSelected ? Color.accentColor : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
         .frame(height: 44)
         .overlay {
           VStack(spacing: 2) {
@@ -88,7 +88,7 @@ struct SpeedPickerSheet: View {
               Text("DEFAULT")
                 .font(.caption2)
                 .fontWeight(.semibold)
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             }
           }
         }

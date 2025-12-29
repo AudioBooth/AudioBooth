@@ -13,6 +13,7 @@ struct AudioBoothApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
   @StateObject private var libraries: LibrariesService = Audiobookshelf.shared.libraries
+  @ObservedObject private var preferences = UserPreferences.shared
 
   init() {
     AppLogger.bootstrap()
@@ -67,14 +68,17 @@ struct AudioBoothApp: App {
 
   var body: some Scene {
     WindowGroup {
-      ContentView()
-        .task {
-          if libraries.current != nil {
-            Task {
-              try? await Audiobookshelf.shared.libraries.fetchFilterData()
-            }
+      Group {
+        ContentView()
+          .tint(preferences.accentColor)
+      }
+      .task {
+        if libraries.current != nil {
+          Task {
+            try? await Audiobookshelf.shared.libraries.fetchFilterData()
           }
         }
+      }
     }
     .onChange(of: libraries.current) { _, newValue in
       if newValue != nil {

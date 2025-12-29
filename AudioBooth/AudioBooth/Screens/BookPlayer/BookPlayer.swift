@@ -39,11 +39,13 @@ struct BookPlayer: View {
               dismiss()
             }
           )
+          .tint(.primary)
         }
 
         ToolbarItem(placement: .topBarTrailing) {
           AirPlayButton()
             .frame(width: 44, height: 44)
+            .tint(.primary)
         }
       }
       .navigationDestination(for: NavigationDestination.self) { destination in

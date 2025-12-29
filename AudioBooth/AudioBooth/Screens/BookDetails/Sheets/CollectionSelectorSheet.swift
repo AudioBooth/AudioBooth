@@ -29,6 +29,7 @@ struct CollectionSelectorSheet: View {
           Button(action: { dismiss() }) {
             Image(systemName: "xmark")
           }
+          .tint(.primary)
         }
       }
       .navigationDestination(for: NavigationDestination.self) { destination in
@@ -157,7 +158,7 @@ struct CollectionSelectorSheet: View {
                 model.onAddToPlaylist(playlist)
               }) {
                 Image(systemName: "plus.circle")
-                  .foregroundStyle(.blue)
+                  .foregroundStyle(Color.accentColor)
                   .font(.title2)
               }
               .buttonStyle(.plain)

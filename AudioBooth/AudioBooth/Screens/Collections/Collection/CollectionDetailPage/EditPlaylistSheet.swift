@@ -44,6 +44,7 @@ struct EditPlaylistSheet: View {
           Button("Cancel") {
             dismiss()
           }
+          .tint(.primary)
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -54,6 +55,7 @@ struct EditPlaylistSheet: View {
             dismiss()
           }
           .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+          .tint(.primary)
         }
       }
       .onAppear {

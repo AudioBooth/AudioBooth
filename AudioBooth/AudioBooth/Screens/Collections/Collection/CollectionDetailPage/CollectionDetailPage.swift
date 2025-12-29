@@ -27,6 +27,7 @@ struct CollectionDetailPage: View {
       if model.canEdit {
         ToolbarItem(placement: .navigationBarTrailing) {
           EditButton()
+            .tint(.primary)
         }
       }
 
@@ -61,6 +62,7 @@ struct CollectionDetailPage: View {
             }
             Button("Cancel", role: .cancel) {}
           }
+          .tint(.primary)
         }
       }
     }

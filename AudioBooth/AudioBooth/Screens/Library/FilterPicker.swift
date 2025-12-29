@@ -107,6 +107,7 @@ struct FilterPicker: View {
           ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
       )
     }
+    .tint(Color.primary)
   }
 }
 

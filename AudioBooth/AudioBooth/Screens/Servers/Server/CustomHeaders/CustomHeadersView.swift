@@ -77,10 +77,12 @@ struct AddHeaderView: View {
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel", action: onCancel)
+            .tint(.primary)
         }
         ToolbarItem(placement: .confirmationAction) {
           Button("Save", action: onSave)
             .disabled(headerKey.isEmpty || headerValue.isEmpty)
+            .tint(.primary)
         }
       }
     }

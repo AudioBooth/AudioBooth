@@ -86,6 +86,7 @@ struct PlayerView: View {
           Image(systemName: "xmark")
         }
       )
+      .tint(.primary)
     }
 
     if !model.options.isHidden {
@@ -98,6 +99,7 @@ struct PlayerView: View {
             Image(systemName: "ellipsis")
           }
         )
+        .tint(.primary)
       }
     }
 
@@ -109,11 +111,13 @@ struct PlayerView: View {
         }
       )
       .disabled(model.playbackState != .ready)
+      .tint(.primary)
 
       playButton
         .frame(width: 44, height: 44)
         .overlay { progress }
         .controlSize(.large)
+        .tint(.primary)
 
       Button(
         action: model.skipForward,
@@ -122,6 +126,7 @@ struct PlayerView: View {
         }
       )
       .disabled(model.playbackState != .ready)
+      .tint(.primary)
     }
 
   }

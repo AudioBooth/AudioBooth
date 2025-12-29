@@ -21,7 +21,7 @@ struct GeneralPreferencesView: View {
 
   var body: some View {
     Form {
-      Section {
+      Section("Appearance") {
         NavigationLink {
           AppIconPickerView(model: iconModel)
         } label: {
@@ -36,6 +36,25 @@ struct GeneralPreferencesView: View {
               .frame(width: 29, height: 29)
               .cornerRadius(5)
           }
+        }
+
+        ColorPicker(
+          "Accent Color",
+          selection: Binding(
+            get: { preferences.accentColor ?? .accentColor },
+            set: { preferences.accentColor = $0 }
+          ),
+          supportsOpacity: false
+        )
+        .font(.subheadline)
+        .bold()
+
+        if preferences.accentColor != nil {
+          Button("Reset to Default") {
+            preferences.accentColor = nil
+          }
+          .font(.subheadline)
+          .foregroundStyle(.red)
         }
       }
 

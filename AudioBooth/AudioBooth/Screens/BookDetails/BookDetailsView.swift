@@ -93,6 +93,7 @@ struct BookDetailsView: View {
         } label: {
           Image(systemName: "ellipsis")
         }
+        .tint(.primary)
       }
     }
     .sheet(item: $collectionSelector) { mode in
@@ -731,7 +732,7 @@ extension BookDetailsView {
         Button(action: { model.onSupplementaryEbookTapped(ebook) }) {
           HStack {
             Image(systemName: "book.closed.fill")
-              .foregroundColor(.blue)
+              .foregroundColor(Color.accentColor)
 
             VStack(alignment: .leading, spacing: 4) {
               Text(ebook.filename)

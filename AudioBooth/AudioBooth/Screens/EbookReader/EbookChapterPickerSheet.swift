@@ -28,7 +28,7 @@ struct EbookChapterPickerSheet: View {
               .overlay(alignment: .leading) {
                 if model.currentIndex == index {
                   RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.blue)
+                    .fill(Color.accentColor)
                     .frame(width: 10, height: 20)
                     .offset(x: -20)
                 }
@@ -51,6 +51,7 @@ struct EbookChapterPickerSheet: View {
           Button("Done") {
             model.isPresented = false
           }
+          .tint(.primary)
         }
       }
     }

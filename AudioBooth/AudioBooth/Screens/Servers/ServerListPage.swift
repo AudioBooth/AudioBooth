@@ -54,7 +54,7 @@ struct ServerListPage: View {
 
                   if server.selectedLibrary != nil {
                     Image(systemName: "checkmark.circle.fill")
-                      .foregroundColor(.blue)
+                      .foregroundColor(Color.accentColor)
                   }
                 }
               }
@@ -77,6 +77,7 @@ struct ServerListPage: View {
           Button(action: { dismiss() }) {
             Image(systemName: "xmark")
           }
+          .tint(.primary)
         }
       }
       .onAppear(perform: model.onAppear)
