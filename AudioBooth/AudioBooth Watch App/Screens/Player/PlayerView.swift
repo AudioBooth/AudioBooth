@@ -138,12 +138,22 @@ struct PlayerView: View {
       ProgressView()
         .controlSize(.regular)
     case .ready:
-      Button(
-        action: model.togglePlayback,
-        label: {
-          Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
-        }
-      )
+      if #available(watchOS 11.0, *) {
+        Button(
+          action: model.togglePlayback,
+          label: {
+            Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
+          }
+        )
+        .handGestureShortcut(.primaryAction)
+      } else {
+        Button(
+          action: model.togglePlayback,
+          label: {
+            Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
+          }
+        )
+      }
     case .error(let retryable):
       if retryable {
         Button(
