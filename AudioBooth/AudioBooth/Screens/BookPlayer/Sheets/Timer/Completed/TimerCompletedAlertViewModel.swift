@@ -25,10 +25,10 @@ final class TimerCompletedAlertViewModel: TimerCompletedAlertView.Model {
   }
 
   private func setupShakeObserver() {
-    NotificationCenter.default.publisher(for: UIDevice.deviceDidShakeNotification)
-      .sink { [weak self] _ in
+    ShakeDetector.shared.shakePublisher
+      .sink { [weak self] in
         guard let self else { return }
-        if UserPreferences.shared.shakeToExtendTimer {
+        if UserPreferences.shared.shakeSensitivity.isEnabled {
           self.onExtendTapped()
         }
       }

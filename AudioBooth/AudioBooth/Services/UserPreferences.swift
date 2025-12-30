@@ -4,12 +4,6 @@ import Foundation
 import Models
 import SwiftUI
 
-enum AutoDownloadMode: String, CaseIterable {
-  case off
-  case wifiOnly
-  case wifiAndCellular
-}
-
 final class UserPreferences: ObservableObject {
   static let shared = UserPreferences()
 
@@ -31,8 +25,8 @@ final class UserPreferences: ObservableObject {
   @AppStorage("smartRewindInterval")
   var smartRewindInterval: Double = 30.0
 
-  @AppStorage("shakeToExtendTimer")
-  var shakeToExtendTimer: Bool = true
+  @AppStorage("shakeSensitivity")
+  var shakeSensitivity: ShakeSensitivity = .medium
 
   @AppStorage("customTimerMinutes")
   var customTimerMinutes: Int = 1
@@ -82,9 +76,19 @@ final class UserPreferences: ObservableObject {
   @AppStorage("accentColor")
   var accentColor: Color?
 
+  @AppStorage("autoTimerDuration")
+  var autoTimerDuration: TimeInterval = 0
+
+  @AppStorage("autoTimerWindowStart")
+  var autoTimerWindowStart: Int = 22 * 60
+
+  @AppStorage("autoTimerWindowEnd")
+  var autoTimerWindowEnd: Int = 6 * 60
+
   private init() {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
+    migrateShakeToExtendTimer()
   }
 
   private func migrateShowListeningStats() {
@@ -100,6 +104,14 @@ final class UserPreferences: ObservableObject {
       let wasEnabled = UserDefaults.standard.bool(forKey: "autoDownloadBooks")
       UserDefaults.standard.removeObject(forKey: "autoDownloadBooks")
       autoDownloadBooks = wasEnabled ? .wifiAndCellular : .off
+    }
+  }
+
+  private func migrateShakeToExtendTimer() {
+    if UserDefaults.standard.object(forKey: "shakeToExtendTimer") is Bool {
+      let wasEnabled = UserDefaults.standard.bool(forKey: "shakeToExtendTimer")
+      UserDefaults.standard.removeObject(forKey: "shakeToExtendTimer")
+      shakeSensitivity = wasEnabled ? .medium : .off
     }
   }
 }
@@ -143,5 +155,35 @@ extension Color: @retroactive RawRepresentable {
     }
 
     return data.base64EncodedString()
+  }
+}
+
+enum AutoDownloadMode: String, CaseIterable {
+  case off
+  case wifiOnly
+  case wifiAndCellular
+}
+
+enum ShakeSensitivity: String, CaseIterable {
+  case off
+  case veryLow
+  case low
+  case medium
+  case high
+  case veryHigh
+
+  var threshold: Double {
+    switch self {
+    case .off: return 0
+    case .veryLow: return 2.7
+    case .low: return 2.0
+    case .medium: return 1.5
+    case .high: return 1.3
+    case .veryHigh: return 1.1
+    }
+  }
+
+  var isEnabled: Bool {
+    self != .off
   }
 }

@@ -1,21 +1,36 @@
 import AVFoundation
+import Combine
 import Foundation
 import Logging
 import SwiftUI
 
 final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
+  private let preferences = UserPreferences.shared
+
   private weak var player: AVPlayer?
   private var sleepTimer: Timer?
   private var timerStartTime: Date?
   private var originalTimerDuration: TimeInterval = 0
   private var currentChapterIndex: Int = 0
+  private var cancellables = Set<AnyCancellable>()
 
   override init() {
     super.init()
 
-    let totalMinutes = UserPreferences.shared.customTimerMinutes
+    let totalMinutes = preferences.customTimerMinutes
     customHours = totalMinutes / 60
     customMinutes = totalMinutes % 60
+
+    ShakeDetector.shared.stopMonitoring()
+    setupShakeObserver()
+  }
+
+  private func setupShakeObserver() {
+    ShakeDetector.shared.shakePublisher
+      .sink { [weak self] in
+        self?.onShakeDetected()
+      }
+      .store(in: &cancellables)
   }
 
   func setPlayer(_ player: AVPlayer?) {
@@ -58,7 +73,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       startSleepTimer(duration: duration)
     case .custom(let duration):
       let totalMinutes = customHours * 60 + customMinutes
-      UserPreferences.shared.customTimerMinutes = totalMinutes
+      preferences.customTimerMinutes = totalMinutes
       startSleepTimer(duration: duration)
     case .chapters:
       break
@@ -81,6 +96,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
 
     RunLoop.current.add(sleepTimer!, forMode: .common)
+
+    ShakeDetector.shared.startMonitoring()
   }
 
   private func stopSleepTimer() {
@@ -88,6 +105,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     sleepTimer = nil
     timerStartTime = nil
     originalTimerDuration = 0
+
+    ShakeDetector.shared.stopMonitoring()
   }
 
   private func updateSleepTimer() {
@@ -114,7 +133,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func fadeOut(_ seconds: TimeInterval) {
-    let fadeOut = UserPreferences.shared.timerFadeOut
+    let fadeOut = preferences.timerFadeOut
     if fadeOut > 0, seconds < fadeOut {
       player?.volume = Float(seconds / fadeOut)
     }
@@ -126,7 +145,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     player?.pause()
     player?.volume = 1.0
 
-    if UserPreferences.shared.shakeToExtendTimer {
+    if preferences.shakeSensitivity.isEnabled {
       let extendAction = formatExtendButtonTitle(for: duration)
       completedAlert = TimerCompletedAlertViewModel(
         extendAction: extendAction,
@@ -177,13 +196,16 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     sleepTimer = nil
     timerStartTime = nil
     originalTimerDuration = 0
+
+    ShakeDetector.shared.stopMonitoring()
+
     AppLogger.player.info("Timer reset from alert")
   }
 
   func pauseFromChapterTimer() {
     player?.pause()
 
-    if UserPreferences.shared.shakeToExtendTimer {
+    if preferences.shakeSensitivity.isEnabled {
       completedAlert = TimerCompletedAlertViewModel(
         extendAction: "Extend to end of chapter",
         onExtend: { [weak self] in
@@ -223,5 +245,63 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
 
     currentChapterIndex = current
+  }
+
+  private func currentTimeInMinutes() -> Int {
+    let now = Date()
+    let calendar = Calendar.current
+    let hour = calendar.component(.hour, from: now)
+    let minute = calendar.component(.minute, from: now)
+    return hour * 60 + minute
+  }
+
+  private func isInAutoTimerWindow() -> Bool {
+    let currentMinutes = currentTimeInMinutes()
+    let startMinutes = preferences.autoTimerWindowStart
+    let endMinutes = preferences.autoTimerWindowEnd
+
+    if startMinutes < endMinutes {
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes
+    } else {
+      return currentMinutes >= startMinutes || currentMinutes < endMinutes
+    }
+  }
+
+  func activateAutoTimerIfNeeded() {
+    let duration = preferences.autoTimerDuration
+
+    guard duration > 0,
+      current == .none,
+      isInAutoTimerWindow()
+    else {
+      return
+    }
+
+    current = .preset(duration)
+    startSleepTimer(duration: duration)
+
+    AppLogger.player.info("Auto-timer activated: \(duration) seconds")
+  }
+
+  func onShakeDetected() {
+    guard preferences.shakeSensitivity.isEnabled, originalTimerDuration > 0 else { return }
+
+    switch current {
+    case .preset:
+      current = .preset(originalTimerDuration)
+      startSleepTimer(duration: originalTimerDuration)
+      AppLogger.player.info("Preset timer reset to \(originalTimerDuration) seconds via shake")
+
+    case .custom:
+      current = .custom(originalTimerDuration)
+      startSleepTimer(duration: originalTimerDuration)
+      AppLogger.player.info("Custom timer reset to \(originalTimerDuration) seconds via shake")
+
+    case .chapters:
+      AppLogger.player.debug("Shake detected during chapter timer - no reset action")
+
+    case .none:
+      break
+    }
   }
 }

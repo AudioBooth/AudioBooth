@@ -1,5 +1,36 @@
 import SwiftUI
 
+struct TimePicker: View {
+  @Binding var minutesSinceMidnight: Int
+
+  private var date: Binding<Date> {
+    Binding(
+      get: {
+        let calendar = Calendar.current
+        let now = Date()
+        let hours = minutesSinceMidnight / 60
+        let minutes = minutesSinceMidnight % 60
+        return calendar.date(bySettingHour: hours, minute: minutes, second: 0, of: now) ?? now
+      },
+      set: { newDate in
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: newDate)
+        let minute = calendar.component(.minute, from: newDate)
+        minutesSinceMidnight = hour * 60 + minute
+      }
+    )
+  }
+
+  var body: some View {
+    DatePicker(
+      "",
+      selection: date,
+      displayedComponents: .hourAndMinute
+    )
+    .labelsHidden()
+  }
+}
+
 struct PlayerPreferencesView: View {
   @ObservedObject var preferences = UserPreferences.shared
 
@@ -93,13 +124,21 @@ struct PlayerPreferencesView: View {
             .bold()
             .accessibilityAddTraits(.isHeader)
 
-          Text("Extends timer when you shake your phone or resume playing on your headphones.")
+          Text("Shake your phone to reset the timer during playback.")
         }
         .font(.caption)
 
-        Toggle("Shake to extend", isOn: $preferences.shakeToExtendTimer)
-          .font(.subheadline)
-          .bold()
+        Picker("Shake to Reset", selection: $preferences.shakeSensitivity) {
+          Text("Off").tag(ShakeSensitivity.off)
+          Text("Very Low").tag(ShakeSensitivity.veryLow)
+          Text("Low").tag(ShakeSensitivity.low)
+          Text("Medium").tag(ShakeSensitivity.medium)
+          Text("High").tag(ShakeSensitivity.high)
+          Text("Very High").tag(ShakeSensitivity.veryHigh)
+        }
+        .font(.subheadline)
+        .bold()
+        .accessibilityLabel("Shake to Reset Timer Sensitivity")
 
         Picker("Audio Fade Out", selection: $preferences.timerFadeOut) {
           Text("Off").tag(0.0)
@@ -110,6 +149,53 @@ struct PlayerPreferencesView: View {
         .font(.subheadline)
         .bold()
         .accessibilityLabel("Timer Audio Fade Out")
+      }
+      .listRowSeparator(.hidden)
+      .listSectionSpacing(.custom(12))
+
+      Section {
+        VStack(alignment: .leading) {
+          Text("Automatic Sleep Timer".uppercased())
+            .bold()
+            .accessibilityAddTraits(.isHeader)
+
+          Text(
+            "Automatically start a sleep timer when playing during a specific time window."
+          )
+        }
+        .font(.caption)
+
+        Picker("Sleep Timer", selection: $preferences.autoTimerDuration) {
+          Text("Off").tag(0.0)
+          Text("5 min").tag(300.0)
+          Text("10 min").tag(600.0)
+          Text("15 min").tag(900.0)
+          Text("20 min").tag(1200.0)
+          Text("30 min").tag(1800.0)
+          Text("45 min").tag(2700.0)
+          Text("60 min").tag(3600.0)
+        }
+        .font(.subheadline)
+        .bold()
+        .accessibilityLabel("Auto Timer Duration")
+
+        if preferences.autoTimerDuration > 0 {
+          HStack {
+            Text("Start Time")
+            Spacer()
+            TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowStart)
+          }
+          .font(.subheadline)
+          .bold()
+
+          HStack {
+            Text("End Time")
+            Spacer()
+            TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowEnd)
+          }
+          .font(.subheadline)
+          .bold()
+        }
       }
       .listRowSeparator(.hidden)
       .listSectionSpacing(.custom(12))

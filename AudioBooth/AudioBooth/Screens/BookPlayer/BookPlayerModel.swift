@@ -128,7 +128,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onPlayTapped() {
-    if userPreferences.shakeToExtendTimer,
+    if userPreferences.shakeSensitivity.isEnabled,
       let timer = timer as? TimerPickerSheetViewModel,
       let completedAlert = timer.completedAlert
     {
@@ -166,6 +166,10 @@ final class BookPlayerModel: BookPlayer.Model {
     timerSecondsCounter = 0
     player.play()
     try? audioSession.setActive(true)
+
+    if let timerViewModel = timer as? TimerPickerSheetViewModel {
+      timerViewModel.activateAutoTimerIfNeeded()
+    }
 
     nowPlaying.update(rate: player.rate, current: playbackProgress.current)
   }
