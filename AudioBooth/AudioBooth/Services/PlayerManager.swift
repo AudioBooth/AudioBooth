@@ -15,6 +15,7 @@ final class PlayerManager: ObservableObject, Sendable {
 
   @Published var current: BookPlayer.Model?
   @Published var isShowingFullPlayer = false
+  @Published var reader: EbookReaderView.Model?
 
   private static let currentBookIDKey = "currentBookID"
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
@@ -93,6 +94,26 @@ final class PlayerManager: ObservableObject, Sendable {
   func hideFullPlayer() {
     isShowingFullPlayer = false
   }
+
+  func openLocalBookAsEbook(_ localBook: LocalBook) {
+    if let ebookURL = localBook.ebookLocalPath {
+      reader = EbookReaderViewModel(source: .local(ebookURL), bookID: localBook.bookID)
+    } else {
+      Toast(error: "Ebook file not available").show()
+    }
+  }
+
+  func openRemoteBookAsEbook(_ book: Book) {
+    if let ebookURL = book.ebookURL {
+      reader = EbookReaderViewModel(source: .remote(ebookURL), bookID: book.id)
+    } else {
+      Toast(error: "Ebook not available").show()
+    }
+  }
+
+  func closeEbookReader() {
+    reader = nil
+  }
 }
 
 extension PlayerManager: PlayerManagerProtocol {
@@ -109,12 +130,20 @@ extension PlayerManager: PlayerManagerProtocol {
       if current?.id == bookID {
         play()
       } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-        setCurrent(localBook)
-        play()
+        if !localBook.tracks.isEmpty {
+          setCurrent(localBook)
+          play()
+        } else if localBook.ebookFile != nil {
+          openLocalBookAsEbook(localBook)
+        }
       } else {
         let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
-        setCurrent(book)
-        play()
+        if book.mediaType.contains(.audiobook) {
+          setCurrent(book)
+          play()
+        } else if book.mediaType.contains(.ebook) {
+          openRemoteBookAsEbook(book)
+        }
       }
     } catch {
       print("Failed to play book: \(error)")
@@ -126,12 +155,20 @@ extension PlayerManager: PlayerManagerProtocol {
       if current?.id == bookID {
         showFullPlayer()
       } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-        setCurrent(localBook)
-        showFullPlayer()
+        if localBook.ebookFile != nil {
+          openLocalBookAsEbook(localBook)
+        } else if !localBook.tracks.isEmpty {
+          setCurrent(localBook)
+          showFullPlayer()
+        }
       } else {
         let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
-        setCurrent(book)
-        showFullPlayer()
+        if book.mediaType.contains(.ebook) {
+          openRemoteBookAsEbook(book)
+        } else if book.mediaType.contains(.audiobook) {
+          setCurrent(book)
+          showFullPlayer()
+        }
       }
     } catch {
       print("Failed to open book: \(error)")

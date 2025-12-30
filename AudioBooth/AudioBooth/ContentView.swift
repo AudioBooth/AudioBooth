@@ -35,6 +35,11 @@ struct ContentView: View {
           .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
       }
     }
+    .fullScreenCover(item: $playerManager.reader) { reader in
+      NavigationStack {
+        EbookReaderView(model: reader)
+      }
+    }
     .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
       isKeyboardVisible = true
     }
