@@ -304,12 +304,20 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       throw URLError(.badURL)
     }
 
+    let ext: String
+    if let ebookFileExt = book.media.ebookFile?.metadata.ext {
+      ext = ebookFileExt
+    } else {
+      let pathExt = ebookURL.pathExtension
+      ext = pathExt.isEmpty ? ".epub" : ".\(pathExt)"
+    }
+
     let existingItem = try? LocalBook.fetch(bookID: bookID)
     let localBook = existingItem ?? LocalBook(from: book)
     self.book = localBook
     try? localBook.save()
 
-    try await downloadEbook(from: ebookURL)
+    try await downloadEbook(from: ebookURL, ext: ext)
 
     try? localBook.save()
   }
@@ -369,7 +377,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     }
   }
 
-  private func downloadEbook(from ebookURL: URL) async throws {
+  private func downloadEbook(from ebookURL: URL, ext: String) async throws {
     guard
       let appGroupURL = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
@@ -392,9 +400,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     resourceValues.isExcludedFromBackup = true
     try? ebooksDirectory.setResourceValues(resourceValues)
 
-    let filename = ebookURL.lastPathComponent
-    let ext = ebookURL.pathExtension.isEmpty ? ".epub" : ".\(ebookURL.pathExtension)"
-    let ebookFile = bookDirectory.appendingPathComponent(filename.hasSuffix(ext) ? filename : "\(bookID)\(ext)")
+    let ebookFile = bookDirectory.appendingPathComponent("\(bookID)\(ext)")
 
     try await withCheckedThrowingContinuation { continuation in
       let downloadTask = downloadSession.downloadTask(with: ebookURL)

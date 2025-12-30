@@ -292,9 +292,9 @@ struct BookDetailsView: View {
 
   private var headerSection: some View {
     VStack(alignment: .leading, spacing: 16) {
-      if !model.authors.isEmpty || (!model.isEbook && !model.narrators.isEmpty) {
+      if !model.authors.isEmpty || (model.hasAudio && !model.narrators.isEmpty) {
         VStack(alignment: .leading, spacing: 12) {
-          Text(model.isEbook ? "Authors" : "Authors & Narrators")
+          Text(model.hasAudio ? "Authors & Narrators" : "Authors")
             .font(.headline)
 
           FlowLayout(spacing: 4) {
@@ -309,7 +309,7 @@ struct BookDetailsView: View {
               }
             }
 
-            if !model.isEbook {
+            if model.hasAudio {
               ForEach(model.narrators, id: \.self) { narrator in
                 NavigationLink(value: NavigationDestination.narrator(name: narrator)) {
                   Chip(
@@ -420,30 +420,46 @@ struct BookDetailsView: View {
 
   private var actionButtons: some View {
     VStack(spacing: 12) {
-      Button(action: model.onPlayTapped) {
-        HStack {
-          Image(systemName: playButtonIcon)
-          Text(playButtonText)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background {
-          if let progress = model.progress, progress >= 0.01 {
-            GeometryReader { geometry in
-              ZStack(alignment: .leading) {
-                Color.accentColor.opacity(0.6)
-
-                Rectangle()
-                  .fill(Color.accentColor)
-                  .frame(width: geometry.size.width * progress)
-              }
-            }
-          } else {
-            Color.accentColor
+      if model.hasAudio {
+        Button(action: model.onPlayTapped) {
+          HStack {
+            Image(systemName: playButtonIcon)
+            Text(playButtonText)
           }
+          .frame(maxWidth: .infinity)
+          .padding()
+          .background {
+            if let progress = model.progress, progress >= 0.01 {
+              GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                  Color.accentColor.opacity(0.6)
+
+                  Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: geometry.size.width * progress)
+                }
+              }
+            } else {
+              Color.accentColor
+            }
+          }
+          .foregroundColor(.white)
+          .cornerRadius(12)
         }
-        .foregroundColor(.white)
-        .cornerRadius(12)
+      }
+
+      if model.isEbook {
+        Button(action: model.onReadTapped) {
+          HStack {
+            Image(systemName: "book.fill")
+            Text("Read")
+          }
+          .frame(maxWidth: .infinity)
+          .padding()
+          .background(Color.accentColor)
+          .foregroundColor(.white)
+          .cornerRadius(12)
+        }
       }
 
       HStack(spacing: 12) {
@@ -496,9 +512,6 @@ struct BookDetailsView: View {
   }
 
   private var playButtonText: String {
-    if model.isEbook {
-      return "Read"
-    }
     if model.isCurrentlyPlaying {
       return "Pause"
     }
@@ -797,6 +810,7 @@ extension BookDetailsView {
     var timeRemaining: String?
     var downloadState: DownloadManager.DownloadState
     var isLoading: Bool
+    var hasAudio: Bool
     var isEbook: Bool
     var isCurrentlyPlaying: Bool
     var flags: Flags
@@ -815,6 +829,7 @@ extension BookDetailsView {
 
     func onAppear() {}
     func onPlayTapped() {}
+    func onReadTapped() {}
     func onOpenTapped(_ ebook: SupplementaryEbook?) {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped() {}
@@ -835,6 +850,7 @@ extension BookDetailsView {
       timeRemaining: String? = nil,
       downloadState: DownloadManager.DownloadState = .notDownloaded,
       isLoading: Bool = true,
+      hasAudio: Bool = false,
       isEbook: Bool = false,
       isCurrentlyPlaying: Bool = false,
       flags: Flags = [],
@@ -861,6 +877,7 @@ extension BookDetailsView {
       self.timeRemaining = timeRemaining
       self.downloadState = downloadState
       self.isLoading = isLoading
+      self.hasAudio = hasAudio
       self.isEbook = isEbook
       self.isCurrentlyPlaying = isCurrentlyPlaying
       self.flags = flags
@@ -930,6 +947,7 @@ extension BookDetailsView.Model {
       timeRemaining: "6hr 52min",
       downloadState: .downloaded,
       isLoading: false,
+      hasAudio: true,
       flags: [.explicit],
       description:
         "As the Colony continues to develop and thrive, there's too much to do! Territory to seize, nests to build, Champions to train! Anthony will have his mandibles full trying to teach his new protege Brilliant while trying to keep a war from breaking out with the ka'armodo. However, when the Mother Tree comes looking for his help against a particular breed of monster, there is no way he can refuse. After all, no ant can resist a fight against their ancient nemesis... the Termite! Book 7 of the hit monster-evolution LitRPG series with nearly 30 Million views on Royal Road. Grab your copy today!",

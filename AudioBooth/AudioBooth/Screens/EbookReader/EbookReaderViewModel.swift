@@ -284,8 +284,7 @@ extension EbookReaderViewModel {
     DownloadManager.shared.startDownload(for: bookID, type: .ebook)
 
     for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
-      if updatedItem.isDownloaded {
-        guard let path = updatedItem.ebookLocalPath else { throw EbookError.downloadFailed }
+      if let path = updatedItem.ebookLocalPath {
         return path
       }
     }

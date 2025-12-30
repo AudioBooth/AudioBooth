@@ -52,19 +52,28 @@ extension Book {
   public var tracks: [Media.Track]? { media.tracks }
   public var tags: [String]? { media.tags }
 
-  public enum MediaType {
-    case audiobook
-    case ebook
+  public struct MediaType: OptionSet, Sendable {
+    public let rawValue: Int
+
+    public static let audiobook = MediaType(rawValue: 1 << 0)
+    public static let ebook = MediaType(rawValue: 1 << 1)
+
+    public init(rawValue: Int) {
+      self.rawValue = rawValue
+    }
   }
 
   public var mediaType: MediaType {
+    var types: MediaType = []
     if let numTracks = media.numTracks ?? tracks?.count, numTracks > 0 {
-      return .audiobook
+      types.insert(.audiobook)
     } else if duration > 0 {
-      return .audiobook
-    } else {
-      return .ebook
+      types.insert(.audiobook)
     }
+    if media.ebookFile != nil {
+      types.insert(.ebook)
+    }
+    return types
   }
 }
 
@@ -74,7 +83,7 @@ extension Book {
     public let metadata: Metadata
     public let addedAt: Date
     public let updatedAt: Date
-    public let fileType: FileType
+    public let fileType: FileType?
 
     public struct Metadata: Codable, Sendable {
       public let filename: String
@@ -94,6 +103,7 @@ extension Book {
     public let chapters: [Chapter]?
     public let tracks: [Track]?
     public let tags: [String]?
+    public let ebookFile: LibraryFile?
 
     public struct Metadata: Codable, Sendable {
       public let title: String

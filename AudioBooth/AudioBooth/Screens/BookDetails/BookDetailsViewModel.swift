@@ -66,6 +66,14 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           Series(id: series.id, name: series.name, sequence: series.sequence)
         }
 
+        var mediaType: Book.MediaType = []
+        if !localBook.tracks.isEmpty {
+          mediaType.insert(.audiobook)
+        }
+        if localBook.ebookFile != nil {
+          mediaType.insert(.ebook)
+        }
+
         updateUI(
           title: localBook.title,
           authors: authors,
@@ -73,7 +81,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           series: series,
           coverURL: localBook.coverURL,
           duration: localBook.duration,
-          mediaType: nil,
+          mediaType: mediaType,
           chapters: localBook.chapters,
           tracks: localBook.tracks
         )
@@ -205,11 +213,14 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     self.flags = flags
 
     if let mediaType {
-      self.isEbook = mediaType == .ebook
-      self.ereaderDevices = miscService.ereaderDevices.compactMap(\.name)
+      self.hasAudio = mediaType.contains(.audiobook)
+      self.isEbook = mediaType.contains(.ebook)
+      if mediaType.contains(.ebook) {
+        self.ereaderDevices = miscService.ereaderDevices.compactMap(\.name)
+      }
     }
 
-    if mediaType != .ebook {
+    if mediaType?.contains(.audiobook) == true {
       self.durationText = Duration.seconds(duration).formatted(
         .units(
           allowed: [.hours, .minutes],
@@ -319,15 +330,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   override func onPlayTapped() {
     if let book {
-      if book.mediaType == .ebook {
-        if let ebookURL = localBook?.ebookLocalPath {
-          ebookReader = EbookReaderViewModel(source: .local(ebookURL), bookID: bookID)
-        } else if let ebookURL = book.ebookURL {
-          ebookReader = EbookReaderViewModel(source: .remote(ebookURL), bookID: bookID)
-        } else {
-          Toast(error: "Ebook URL not available").show()
-        }
-      } else if playerManager.current?.id == bookID {
+      if playerManager.current?.id == bookID {
         if let currentPlayer = playerManager.current as? BookPlayerModel {
           currentPlayer.onTogglePlaybackTapped()
         }
@@ -346,6 +349,16 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       }
     } else {
       Toast(error: "Book not available").show()
+    }
+  }
+
+  override func onReadTapped() {
+    if let ebookURL = localBook?.ebookLocalPath {
+      ebookReader = EbookReaderViewModel(source: .local(ebookURL), bookID: bookID)
+    } else if let book, let ebookURL = book.ebookURL {
+      ebookReader = EbookReaderViewModel(source: .remote(ebookURL), bookID: bookID)
+    } else {
+      Toast(error: "Ebook URL not available").show()
     }
   }
 
