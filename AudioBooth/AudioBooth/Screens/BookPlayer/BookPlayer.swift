@@ -129,6 +129,7 @@ struct BookPlayer: View {
     HStack(spacing: 24) {
       cover
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .containerRelativeFrame(.horizontal) { width, _ in width * 0.4 }
 
       VStack(spacing: 24) {
         Spacer()
@@ -157,7 +158,6 @@ struct BookPlayer: View {
         .aspectRatio(1, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
-
     }
     .accessibilityLabel("Book details")
     .overlay(alignment: .topLeading) {
@@ -237,7 +237,7 @@ struct BookPlayer: View {
   }
 
   private var mainPlaybackControls: some View {
-    HStack(spacing: 32) {
+    HStack(spacing: 0) {
       if let chapters = model.chapters {
         let isFirstChapter = chapters.currentIndex == 0
         Button(action: { chapters.onPreviousChapterTapped() }) {
@@ -247,23 +247,27 @@ struct BookPlayer: View {
         }
         .disabled(isFirstChapter)
         .accessibilityLabel("Previous chapter")
+
+        Spacer(minLength: 16)
       }
 
       Button(action: { model.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval) }) {
         Image(
           systemName: "\(Int(preferences.skipBackwardInterval)).arrow.trianglehead.counterclockwise"
         )
-        .font(.system(size: 40, weight: .thin))
+        .font(.system(size: 36, weight: .thin))
+        .minimumScaleFactor(0.5)
         .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
       .fontWeight(.light)
       .accessibilityLabel("Skip backward \(Int(preferences.skipBackwardInterval)) seconds")
 
+      Spacer(minLength: 16)
+
       Button(action: model.onTogglePlaybackTapped) {
         ZStack {
           Circle()
             .fill(model.isLoading ? Color.white.opacity(0.3) : Color.white)
-            .frame(width: 75, height: 75)
 
           if model.isLoading {
             ProgressView()
@@ -276,18 +280,24 @@ struct BookPlayer: View {
               .offset(x: model.isPlaying ? 0 : 3)
           }
         }
+        .frame(minWidth: 60, maxWidth: 80, minHeight: 60, maxHeight: 80)
       }
       .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
 
+      Spacer(minLength: 16)
+
       Button(action: { model.onSkipForwardTapped(seconds: preferences.skipForwardInterval) }) {
         Image(systemName: "\(Int(preferences.skipForwardInterval)).arrow.trianglehead.clockwise")
-          .font(.system(size: 40, weight: .thin))
+          .font(.system(size: 36, weight: .thin))
+          .minimumScaleFactor(0.5)
           .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
       .fontWeight(.light)
       .accessibilityLabel("Skip forward \(Int(preferences.skipForwardInterval)) seconds")
 
       if let chapters = model.chapters {
+        Spacer(minLength: 16)
+
         let isLastChapter = chapters.currentIndex == chapters.chapters.count - 1
         Button(action: { chapters.onNextChapterTapped() }) {
           Image(systemName: "forward.end")
@@ -307,6 +317,7 @@ struct BookPlayer: View {
           Text("\(String(format: "%.1f", model.speed.playbackSpeed))×")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.white)
+            .frame(height: 20)
           Text("Speed")
             .font(.caption2)
             .foregroundColor(.white.opacity(0.7))
@@ -319,6 +330,7 @@ struct BookPlayer: View {
           Image(systemName: "timer")
             .font(.system(size: 20))
             .foregroundColor(.white)
+            .frame(width: 20, height: 20)
           Text("Timer")
             .font(.caption2)
             .foregroundColor(.white.opacity(0.7))
@@ -332,6 +344,7 @@ struct BookPlayer: View {
             Image(systemName: "bookmark")
               .font(.system(size: 20))
               .foregroundColor(.white)
+              .frame(width: 20, height: 20)
             Text("Bookmarks")
               .font(.caption2)
               .foregroundColor(.white.opacity(0.7))
@@ -346,6 +359,7 @@ struct BookPlayer: View {
             Image(systemName: "clock.arrow.circlepath")
               .font(.system(size: 20))
               .foregroundColor(.white)
+              .frame(width: 20, height: 20)
             Text("History")
               .font(.caption2)
               .foregroundColor(.white.opacity(0.7))
@@ -357,8 +371,9 @@ struct BookPlayer: View {
       Button(action: { model.onDownloadTapped() }) {
         VStack(spacing: 6) {
           Image(systemName: downloadIcon)
-            .font(.system(size: 16))
+            .font(.system(size: 20))
             .foregroundColor(.white)
+            .frame(width: 20, height: 20)
             .opacity([.downloaded, .notDownloaded].contains(model.downloadState) ? 1 : 0)
             .overlay {
               if case .downloading(let progress) = model.downloadState {
@@ -399,7 +414,7 @@ struct BookPlayer: View {
     case .downloading:
       return "Cancel"
     case .downloaded:
-      return "Remove from Device"
+      return "Remove"
     case .notDownloaded:
       return "Download"
     }
@@ -477,6 +492,7 @@ extension BookPlayer.Model {
       coverURL: nil,
       speed: .mock,
       timer: .mock,
+      chapters: .mock,
       playbackProgress: .mock
     )
     return model
