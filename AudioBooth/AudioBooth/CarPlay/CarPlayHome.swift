@@ -70,6 +70,7 @@ final class CarPlayHome {
       await waitForPlayerReady()
       try? await Task.sleep(for: .milliseconds(500))
 
+      PlayerManager.shared.play()
       nowPlaying?.showNowPlaying()
       completion()
       loadingCancellable = nil
@@ -89,17 +90,17 @@ final class CarPlayHome {
   private func observePlayerLoading(continuation: CheckedContinuation<Void, Never>) {
     withObservationTracking {
       _ = PlayerManager.shared.current?.isLoading
-    } onChange: {
-      Task { @MainActor [weak self] in
-        guard let self else {
-          continuation.resume()
-          return
-        }
+    } onChange: { [weak self] in
+      guard let self else {
+        continuation.resume()
+        return
+      }
 
+      RunLoop.main.perform {
         if PlayerManager.shared.current?.isLoading == false {
           continuation.resume()
         } else {
-          observePlayerLoading(continuation: continuation)
+          self.observePlayerLoading(continuation: continuation)
         }
       }
     }

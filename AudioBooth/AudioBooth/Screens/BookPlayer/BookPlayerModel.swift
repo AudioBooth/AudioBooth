@@ -123,8 +123,8 @@ final class BookPlayerModel: BookPlayer.Model {
 
   override func onPauseTapped() {
     pendingPlay = false
+    interruptionBeganAt = nil
     player?.pause()
-    nowPlaying.update(rate: player?.rate ?? 0, current: playbackProgress.current)
   }
 
   override func onPlayTapped() {
@@ -170,8 +170,6 @@ final class BookPlayerModel: BookPlayer.Model {
     if let timerViewModel = timer as? TimerPickerSheetViewModel {
       timerViewModel.activateAutoTimerIfNeeded()
     }
-
-    nowPlaying.update(rate: player.rate, current: playbackProgress.current)
   }
 
   override func onSkipForwardTapped(seconds: Double) {
@@ -235,8 +233,8 @@ extension BookPlayerModel {
       AppLogger.player.debug("Seeked to position: \(time)s")
       if player.timeControlStatus == .playing, let model = self.playbackProgress as? PlaybackProgressViewModel {
         model.updateProgress()
-        self.nowPlaying.update(rate: player.rate, current: model.current)
       }
+      self.nowPlaying.didSeek(to: time)
     }
     PlaybackHistory.record(itemID: id, action: .seek, position: time)
   }
@@ -504,16 +502,20 @@ extension BookPlayerModel {
         chapters: chapters,
         speed: speed,
         onSeekCompleted: { [weak self] in
-          if let current = self?.playbackProgress.current {
-            self?.nowPlaying.update(current: current)
-          }
+          guard let self else { return }
+          self.nowPlaying.didSeek(to: self.mediaProgress.currentTime)
         }
       )
     }
 
     configureAudioSession()
 
-    nowPlaying.update(rate: 0, current: playbackProgress.current)
+    nowPlaying.configure(
+      player: player,
+      speed: speed,
+      chapters: chapters,
+      mediaProgress: mediaProgress
+    )
   }
 
   private func loadLocalBookIfAvailable() async {
@@ -677,7 +679,6 @@ extension BookPlayerModel {
           self.syncPlayback()
         }
 
-        self.nowPlaying.update(speed: self.speed.playbackSpeed)
         self.observeSpeedChanged()
       }
     }
@@ -690,13 +691,7 @@ extension BookPlayerModel {
       guard let self else { return }
 
       RunLoop.main.perform {
-        if let chapters = self.chapters, let current = chapters.current {
-          self.nowPlaying.update(
-            chapter: current.title,
-            current: self.playbackProgress.current,
-            duration: current.end - current.start
-          )
-
+        if let chapters = self.chapters {
           if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
             timerViewModel.onChapterChanged(current: chapters.currentIndex, total: chapters.chapters.count)
           }
@@ -704,14 +699,6 @@ extension BookPlayerModel {
 
         self.observeCurrentChapter()
       }
-    }
-
-    if let chapters, let current = chapters.current {
-      nowPlaying.update(
-        chapter: current.title,
-        current: playbackProgress.current,
-        duration: current.end - current.start
-      )
     }
   }
 
@@ -728,8 +715,9 @@ extension BookPlayerModel {
     withObservationTracking {
       _ = mediaProgress.currentTime
     } onChange: { [weak self] in
+      guard let self else { return }
+
       RunLoop.main.perform {
-        guard let self else { return }
         if !self.isPlaying {
           let currentTime = CMTime(seconds: self.mediaProgress.currentTime, preferredTimescale: 1000)
           self.onTimeChanged(currentTime)
@@ -762,8 +750,6 @@ extension BookPlayerModel {
           AppLogger.player.info("Time observer was nil, re-setting up")
           self.setupTimeObserver()
         }
-
-        nowPlaying.update(rate: player.rate, current: playbackProgress.current)
       }
       .store(in: &cancellables)
 
@@ -938,12 +924,10 @@ extension BookPlayerModel {
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")
         try? audioSession.setActive(true)
-        nowPlaying.update(rate: player?.rate ?? 0, current: playbackProgress.current)
         player?.play()
-      } else if let interval = interruptionBeganAt?.timeIntervalSinceNow, interval < 60 * 5 {
-        AppLogger.player.info("Audio interruption ended - resuming playback")
+      } else if let beganAt = interruptionBeganAt, Date().timeIntervalSince(beganAt) < 60 * 5 {
+        AppLogger.player.info("Audio interruption ended - resuming playback (within 5 minutes)")
         try? audioSession.setActive(true)
-        nowPlaying.update(rate: player?.rate ?? 0, current: playbackProgress.current)
         player?.play()
       } else {
         AppLogger.player.info("Audio interruption ended - not resuming")
@@ -961,8 +945,6 @@ extension BookPlayerModel {
 
     let wasPlaying = isPlaying
     configureAudioSession()
-
-    nowPlaying.update()
 
     if wasPlaying {
       onPlayTapped()

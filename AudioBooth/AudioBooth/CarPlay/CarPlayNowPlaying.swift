@@ -72,9 +72,9 @@ final class CarPlayNowPlaying: NSObject {
   private func observePlayerChanges(for player: BookPlayer.Model) {
     withObservationTracking {
       _ = player.chapters
-    } onChange: { [weak self] in
-      Task { @MainActor [weak self] in
-        guard let self else { return }
+    } onChange: { [weak self, weak player] in
+      Task { @MainActor [weak self, weak player] in
+        guard let self, let player else { return }
         self.updateButtons()
         self.observePlayerChanges(for: player)
 
@@ -90,13 +90,11 @@ final class CarPlayNowPlaying: NSObject {
   private func observeChapterChanges(for player: BookPlayer.Model, chapters: ChapterPickerSheet.Model) {
     withObservationTracking {
       _ = chapters.currentIndex
-    } onChange: { [weak self] in
-      Task { @MainActor [weak self] in
-        self?.updateButtons()
-
-        if let chapters = player.chapters {
-          self?.observeChapterChanges(for: player, chapters: chapters)
-        }
+    } onChange: { [weak self, weak player, weak chapters] in
+      Task { @MainActor [weak self, weak player, weak chapters] in
+        guard let self, let player, let chapters else { return }
+        self.updateButtons()
+        self.observeChapterChanges(for: player, chapters: chapters)
       }
     }
   }

@@ -76,7 +76,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     var remaining: TimeInterval = totalDuration - currentTime
     let progress: CGFloat = CGFloat(overallProgress)
 
-    if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
+    if let speed, preferences.timeRemainingAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
       let playbackSpeed = Double(speed.playbackSpeed)
       let adjustedTotal = (current + remaining) / playbackSpeed
       current = (current / playbackSpeed).rounded()
