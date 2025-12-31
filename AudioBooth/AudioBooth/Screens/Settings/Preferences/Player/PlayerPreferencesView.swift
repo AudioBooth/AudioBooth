@@ -114,6 +114,9 @@ struct PlayerPreferencesView: View {
         .font(.subheadline)
         .bold()
         .accessibilityLabel("Smart Rewind Duration")
+        .accessibilityValue(
+          preferences.smartRewindInterval == 0 ? "Off" : "\(Int(preferences.smartRewindInterval)) seconds"
+        )
       }
       .listRowSeparator(.hidden)
       .listSectionSpacing(.custom(12))
@@ -139,6 +142,7 @@ struct PlayerPreferencesView: View {
         .font(.subheadline)
         .bold()
         .accessibilityLabel("Shake to Reset Timer Sensitivity")
+        .accessibilityValue(preferences.shakeSensitivity.displayText)
 
         Picker("Audio Fade Out", selection: $preferences.timerFadeOut) {
           Text("Off").tag(0.0)
@@ -149,6 +153,9 @@ struct PlayerPreferencesView: View {
         .font(.subheadline)
         .bold()
         .accessibilityLabel("Timer Audio Fade Out")
+        .accessibilityValue(
+          preferences.timerFadeOut == 0 ? "Off" : "\(Int(preferences.timerFadeOut)) seconds"
+        )
       }
       .listRowSeparator(.hidden)
       .listSectionSpacing(.custom(12))
@@ -178,6 +185,9 @@ struct PlayerPreferencesView: View {
         .font(.subheadline)
         .bold()
         .accessibilityLabel("Auto Timer Duration")
+        .accessibilityValue(
+          preferences.autoTimerDuration == 0 ? "Off" : "\(Int(preferences.autoTimerDuration / 60)) minutes"
+        )
 
         if preferences.autoTimerDuration > 0 {
           HStack {
@@ -217,6 +227,7 @@ struct PlayerPreferencesView: View {
         .font(.subheadline)
         .bold()
         .accessibilityLabel("Lock Screen Next/Previous Buttons")
+        .accessibilityValue(preferences.lockScreenNextPreviousUsesChapters ? "Chapter" : "Seconds")
 
         Toggle(
           "Allow Playback Position Change",

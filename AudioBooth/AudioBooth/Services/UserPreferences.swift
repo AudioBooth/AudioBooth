@@ -186,4 +186,15 @@ enum ShakeSensitivity: String, CaseIterable {
   var isEnabled: Bool {
     self != .off
   }
+
+  var displayText: String {
+    switch self {
+    case .off: "Off"
+    case .veryLow: "Very Low"
+    case .low: "Low"
+    case .medium: "Medium"
+    case .high: "High"
+    case .veryHigh: "Very High"
+    }
+  }
 }
