@@ -80,6 +80,10 @@ struct AuthenticationView: View {
           }
         }
         .disabled(model.isLoading)
+      } footer: {
+        Text("Add **audiobooth://oauth** to audiobookshelf server redirect URIs")
+          .textSelection(.enabled)
+          .font(.footnote)
       }
     }
   }

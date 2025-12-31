@@ -437,7 +437,9 @@ final class ServerViewModel: ServerView.Model {
       self.libraries = fetchedLibraries.map({ Library(id: $0.id, name: $0.name) })
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-      if libraries.count == 1, let singleLibrary = libraries.first, selectedLibrary == nil {
+      if libraries.count == 1, let singleLibrary = libraries.first, selectedLibrary == nil,
+        audiobookshelf.libraries.current == nil
+      {
         onLibraryTapped(singleLibrary)
       }
     } catch {
