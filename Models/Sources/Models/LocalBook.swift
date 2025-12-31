@@ -203,7 +203,7 @@ extension LocalBook {
       authors: authors,
       narrators: narrators,
       series: series,
-      coverURL: book.coverURL,
+      coverURL: book.coverURL(),
       duration: book.duration,
       tracks: book.tracks?.map(Track.init) ?? [],
       chapters: book.chapters?.map(Chapter.init) ?? [],

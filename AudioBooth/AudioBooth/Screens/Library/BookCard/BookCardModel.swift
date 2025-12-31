@@ -133,7 +133,7 @@ final class BookCardModel: BookCard.Model {
       id: id,
       title: title,
       details: details,
-      coverURL: item.coverURL,
+      coverURL: item.coverURL(),
       sequence: sequence,
       author: author,
       narrator: narrator,

@@ -358,7 +358,7 @@ extension HomePageModel {
             bookID: remoteBook.id,
             title: remoteBook.title,
             author: remoteBook.authorName ?? "",
-            coverURL: remoteBook.coverURL
+            coverURL: remoteBook.coverURL()
           )
           books.append(book)
         }

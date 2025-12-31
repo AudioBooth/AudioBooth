@@ -8,14 +8,16 @@ public struct Book: Codable, Sendable {
   public let libraryFiles: [LibraryFile]?
   public let collapsedSeries: CollapsedSeries?
 
-  public var coverURL: URL? {
+  public func coverURL(raw: Bool = false) -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     var url = serverURL.appendingPathComponent("api/items/\(id)/cover")
 
     #if os(watchOS)
     url.append(queryItems: [URLQueryItem(name: "format", value: "jpg")])
     #else
-    url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])
+    if raw {
+      url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])
+    }
     #endif
 
     return url

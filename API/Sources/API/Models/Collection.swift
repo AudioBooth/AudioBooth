@@ -10,7 +10,7 @@ public struct Collection: Codable, Sendable, CollectionLike {
   public let createdAt: Date
 
   public var covers: [URL] {
-    books.compactMap { $0.coverURL }
+    books.compactMap { $0.coverURL() }
   }
 
   private enum CodingKeys: String, CodingKey {

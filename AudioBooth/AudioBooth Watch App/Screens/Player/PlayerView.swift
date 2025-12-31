@@ -83,7 +83,7 @@ struct PlayerView: View {
           dismiss()
         },
         label: {
-          Image(systemName: "xmark")
+          Label("Close", systemImage: "xmark")
         }
       )
       .tint(.primary)

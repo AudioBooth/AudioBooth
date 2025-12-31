@@ -158,7 +158,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         authors: authors,
         narrators: narrators,
         series: series,
-        coverURL: book.coverURL,
+        coverURL: book.coverURL(raw: true),
         duration: book.duration,
         mediaType: book.mediaType,
         publisher: book.publisher,

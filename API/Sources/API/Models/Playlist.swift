@@ -15,7 +15,7 @@ public struct Playlist: Codable, Sendable, CollectionLike {
   }
 
   public var covers: [URL] {
-    items.compactMap { $0.libraryItem.coverURL }
+    items.compactMap { $0.libraryItem.coverURL() }
   }
 
   private enum CodingKeys: String, CodingKey {

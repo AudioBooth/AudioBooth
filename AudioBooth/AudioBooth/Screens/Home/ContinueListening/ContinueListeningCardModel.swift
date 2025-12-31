@@ -23,7 +23,7 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
       id: book.id,
       title: book.title,
       author: book.authorName,
-      coverURL: book.coverURL,
+      coverURL: book.coverURL(),
       progress: MediaProgress.progress(for: book.id),
       timeRemaining: timeRemaining
     )

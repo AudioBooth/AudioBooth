@@ -12,6 +12,8 @@ struct BookDetailsView: View {
   @State private var collectionSelector: CollectionMode?
   @State private var selectedTabIndex: Int = 0
   @State private var isDescriptionExpanded: Bool = false
+  @State private var isShowingFullScreenCover = false
+
   private enum CoordinateSpaces {
     case scrollView
   }
@@ -27,6 +29,11 @@ struct BookDetailsView: View {
     .fullScreenCover(item: $model.ebookReader) { model in
       NavigationStack {
         EbookReaderView(model: model)
+      }
+    }
+    .fullScreenCover(isPresented: $isShowingFullScreenCover) {
+      if let coverURL = model.coverURL {
+        FullScreenCoverView(coverURL: coverURL)
       }
     }
     .overlay {
@@ -260,6 +267,10 @@ struct BookDetailsView: View {
         .shadow(radius: 4)
         .frame(width: 250, height: 250)
         .offset(y: 40)
+        .onTapGesture {
+          guard model.coverURL != nil else { return }
+          isShowingFullScreenCover = true
+        }
       }
     }
   }
@@ -276,6 +287,10 @@ struct BookDetailsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(radius: 4)
         .padding()
+        .onTapGesture {
+          guard model.coverURL != nil else { return }
+          isShowingFullScreenCover = true
+        }
     }
     .frame(maxHeight: .infinity)
     .background {

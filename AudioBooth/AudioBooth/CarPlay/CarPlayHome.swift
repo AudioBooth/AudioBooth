@@ -222,7 +222,7 @@ extension CarPlayHome {
 
     item.isPlaying = book.id == PlayerManager.shared.current?.id
 
-    if let coverURL = book.coverURL {
+    if let coverURL = book.coverURL() {
       Task {
         if let image = await loadImage(from: coverURL) {
           item.setImage(image)
@@ -244,7 +244,7 @@ extension CarPlayHome {
       detailText: "\(bookCount) book\(bookCount == 1 ? "" : "s")"
     )
 
-    if let firstBook = series.books.first, let coverURL = firstBook.coverURL {
+    if let firstBook = series.books.first, let coverURL = firstBook.coverURL() {
       Task {
         if let image = await loadImage(from: coverURL) {
           item.setImage(image)

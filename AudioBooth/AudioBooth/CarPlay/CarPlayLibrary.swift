@@ -91,7 +91,7 @@ final class CarPlayLibrary {
 
     item.isPlaying = book.id == PlayerManager.shared.current?.id
 
-    if let coverURL = book.coverURL {
+    if let coverURL = book.coverURL() {
       Task {
         if let image = await loadImage(from: coverURL) {
           item.setImage(image)

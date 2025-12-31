@@ -8,7 +8,7 @@ final class ItemRowModel: ItemRow.Model {
       id: book.id,
       title: book.title,
       details: book.authorName,
-      coverURL: book.coverURL
+      coverURL: book.coverURL()
     )
   }
 

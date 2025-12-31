@@ -53,7 +53,7 @@ final class BookPlayerModel: BookPlayer.Model {
       id: book.id,
       title: book.title,
       author: book.authorName,
-      coverURL: book.coverURL,
+      coverURL: book.coverURL(raw: true),
       current: mediaProgress.currentTime,
       duration: mediaProgress.duration
     )
@@ -62,7 +62,7 @@ final class BookPlayerModel: BookPlayer.Model {
       id: book.id,
       title: book.title,
       author: book.authorName,
-      coverURL: book.coverURL,
+      coverURL: book.coverURL(raw: true),
       speed: SpeedPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),

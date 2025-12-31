@@ -121,7 +121,7 @@ struct SettingsView: View {
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button(action: { dismiss() }) {
-            Image(systemName: "xmark")
+            Label("Close", systemImage: "xmark")
           }
           .tint(.primary)
         }

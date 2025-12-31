@@ -52,7 +52,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         "id": book.id,
         "title": book.title,
         "author": book.authorName as Any,
-        "coverURL": watchCompatibleCoverURL(from: book.coverURL) as Any,
+        "coverURL": watchCompatibleCoverURL(from: book.coverURL()) as Any,
         "duration": book.duration,
       ])
 
@@ -363,7 +363,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
         "Created session \(playSession.id) for book \(bookID), forDownload=\(forDownload)"
       )
 
-      let coverURLString = watchCompatibleCoverURL(from: playSession.libraryItem.coverURL)
+      let coverURLString = watchCompatibleCoverURL(from: playSession.libraryItem.coverURL())
 
       replyHandler([
         "id": bookID,
