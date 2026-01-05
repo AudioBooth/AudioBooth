@@ -1,7 +1,10 @@
+import API
 import Combine
 import SwiftUI
 
 struct BookCardContextMenu: View {
+  private let audiobookshelf = Audiobookshelf.shared
+
   @ObservedObject var model: Model
 
   var body: some View {
@@ -11,18 +14,20 @@ struct BookCardContextMenu: View {
           Label("Play", systemImage: "play.fill")
         }
 
-        switch model.downloadState {
-        case .notDownloaded:
-          Button(action: model.onDownloadTapped) {
-            Label("Download", systemImage: "arrow.down.circle")
-          }
-        case .downloading:
-          Button(action: model.onCancelDownloadTapped) {
-            Label("Cancel Download", systemImage: "stop.circle")
-          }
-        case .downloaded:
-          Button(role: .destructive, action: model.onRemoveDownloadTapped) {
-            Label("Remove Download", systemImage: "trash")
+        if audiobookshelf.authentication.permissions?.download == true {
+          switch model.downloadState {
+          case .notDownloaded:
+            Button(action: model.onDownloadTapped) {
+              Label("Download", systemImage: "arrow.down.circle")
+            }
+          case .downloading:
+            Button(action: model.onCancelDownloadTapped) {
+              Label("Cancel Download", systemImage: "stop.circle")
+            }
+          case .downloaded:
+            Button(role: .destructive, action: model.onRemoveDownloadTapped) {
+              Label("Remove Download", systemImage: "trash")
+            }
           }
         }
       }

@@ -74,8 +74,10 @@ struct BookDetailsView: View {
             }
           }
 
-          Button(action: model.onDownloadTapped) {
-            Label(downloadButtonText, systemImage: downloadButtonIcon)
+          if Audiobookshelf.shared.authentication.permissions?.download == true {
+            Button(action: model.onDownloadTapped) {
+              Label(downloadButtonText, systemImage: downloadButtonIcon)
+            }
           }
 
           if let progress = model.progress, progress >= 1.0 {
@@ -478,15 +480,17 @@ struct BookDetailsView: View {
       }
 
       HStack(spacing: 12) {
-        Button(role: downloadButtonRole, action: model.onDownloadTapped) {
-          HStack {
-            Image(systemName: downloadButtonIcon)
-            Text(downloadButtonText)
+        if Audiobookshelf.shared.authentication.permissions?.download == true {
+          Button(role: downloadButtonRole, action: model.onDownloadTapped) {
+            HStack {
+              Image(systemName: downloadButtonIcon)
+              Text(downloadButtonText)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(8)
+            .background(Color.secondary.opacity(0.2))
+            .cornerRadius(12)
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .padding(8)
-          .background(Color.secondary.opacity(0.2))
-          .cornerRadius(12)
         }
 
         if let progress = model.progress, progress >= 1.0 {

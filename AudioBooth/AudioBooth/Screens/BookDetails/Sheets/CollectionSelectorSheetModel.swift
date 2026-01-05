@@ -13,7 +13,7 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
     case .playlists:
       canEdit = true
     case .collections:
-      canEdit = Audiobookshelf.shared.authentication.permissions?.update == true
+      canEdit = audiobookshelf.authentication.permissions?.update == true
     }
 
     super.init(mode: mode, canEdit: canEdit)

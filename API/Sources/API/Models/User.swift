@@ -62,5 +62,6 @@ extension User {
   public struct Permissions: Codable, Sendable {
     public let update: Bool
     public let delete: Bool
+    public let download: Bool
   }
 }
