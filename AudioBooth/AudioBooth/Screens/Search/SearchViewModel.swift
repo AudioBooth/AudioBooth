@@ -7,10 +7,11 @@ final class SearchViewModel: SearchView.Model {
 
   private var currentSearchTask: Task<Void, Never>?
 
-  private let lastSearch = ""
+  private var lastSearch = ""
 
   override func onSearchChanged(_ searchText: String) {
     guard searchText != lastSearch else { return }
+    lastSearch = searchText
 
     currentSearchTask?.cancel()
 
@@ -43,41 +44,47 @@ final class SearchViewModel: SearchView.Model {
     isLoading = true
 
     do {
+      try await Task.sleep(nanoseconds: 5 * 100_000_000)
+
+      guard !Task.isCancelled else { return }
+
       let searchResult = try await audiobookshelf.search.search(query: query)
 
-      if !Task.isCancelled {
-        books = searchResult.book.map { searchBook in
-          BookCardModel(searchBook.libraryItem, sortBy: .title)
-        }
+      guard !Task.isCancelled else { return }
 
-        series = searchResult.series.map { searchSeries in
-          SeriesCardModel(series: searchSeries)
-        }
-
-        authors = searchResult.authors.map { author in
-          AuthorCardModel(author: author)
-        }
-
-        narrators = searchResult.narrators.map { narrator in
-          narrator.name
-        }
-
-        tags = searchResult.tags.map { tag in
-          tag.name
-        }
-
-        genres = searchResult.genres.map { genre in
-          genre.name
-        }
-
-        isLoading = false
+      books = searchResult.book.map { searchBook in
+        BookCardModel(searchBook.libraryItem, sortBy: .title)
       }
+
+      series = searchResult.series.map { searchSeries in
+        SeriesCardModel(series: searchSeries)
+      }
+
+      authors = searchResult.authors.map { author in
+        AuthorCardModel(author: author)
+      }
+
+      narrators = searchResult.narrators.map { narrator in
+        narrator.name
+      }
+
+      tags = searchResult.tags.map { tag in
+        tag.name
+      }
+
+      genres = searchResult.genres.map { genre in
+        genre.name
+      }
+
+      isLoading = false
     } catch {
-      if !Task.isCancelled {
-        AppLogger.viewModel.error("Failed to perform search: \(error)")
-        Toast(error: "Search failed").show()
-        clearResults()
-      }
+      guard !Task.isCancelled else { return }
+
+      AppLogger.viewModel.error("Failed to perform search: \(error)")
+      Toast(error: "Search failed").show()
+      clearResults()
+
+      isLoading = false
     }
   }
 }
