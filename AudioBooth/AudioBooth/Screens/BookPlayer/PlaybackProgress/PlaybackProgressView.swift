@@ -6,15 +6,45 @@ struct PlaybackProgressView: View {
 
   var body: some View {
     VStack(spacing: 8) {
+      if preferences.showBookProgressBar && !preferences.showFullBookDuration && model.totalProgress != model.progress {
+        VStack(spacing: 4) {
+          GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+              RoundedRectangle(cornerRadius: 1.5)
+                .fill(Color.white.opacity(0.2))
+                .frame(height: 3)
+
+              RoundedRectangle(cornerRadius: 1.5)
+                .fill(Color.orange.opacity(0.7))
+                .frame(width: max(0, geometry.size.width * model.totalProgress), height: 3)
+            }
+          }
+          .frame(height: 3)
+
+          HStack {
+            Text(formatCurrentTime(model.total * model.totalProgress))
+              .font(.caption)
+              .foregroundColor(.white.opacity(0.7))
+
+            Spacer()
+
+            Text("-\(formatCurrentTime(model.totalTimeRemaining))")
+              .font(.caption)
+              .foregroundColor(.white.opacity(0.7))
+          }
+          .monospacedDigit()
+        }
+      }
+
       GeometryReader { geometry in
         ZStack(alignment: .leading) {
           RoundedRectangle(cornerRadius: 2)
             .fill(Color.white.opacity(0.3))
-            .frame(height: 4)
+            .frame(height: 5)
 
           RoundedRectangle(cornerRadius: 2)
             .fill(Color.orange)
-            .frame(width: max(0, geometry.size.width * model.progress), height: 4)
+            .frame(width: max(0, geometry.size.width * model.progress), height: 5)
 
           Circle()
             .fill(Color.orange)
@@ -49,7 +79,9 @@ struct PlaybackProgressView: View {
         Spacer()
 
         Group {
-          if preferences.showFullBookDuration {
+          if preferences.showFullBookDuration || preferences.showBookProgressBar
+            || model.totalProgress == model.progress
+          {
             Text(model.title)
               .lineLimit(1)
           } else {

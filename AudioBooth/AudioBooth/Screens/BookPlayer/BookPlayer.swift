@@ -108,7 +108,7 @@ struct BookPlayer: View {
 
         Spacer(minLength: 24)
 
-        VStack(spacing: 24) {
+        VStack(spacing: 32) {
           chaptersDisplay
 
           PlaybackProgressView(model: $model.playbackProgress)

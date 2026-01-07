@@ -49,6 +49,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("showFullBookDuration")
   var showFullBookDuration: Bool = false
 
+  @AppStorage("showBookProgressBar")
+  var showBookProgressBar: Bool = false
+
   @AppStorage("volumeBoost")
   var volumeBoost: VolumeBoost = .none
 

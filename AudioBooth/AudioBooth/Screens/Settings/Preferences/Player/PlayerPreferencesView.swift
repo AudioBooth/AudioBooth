@@ -279,11 +279,15 @@ struct PlayerPreferencesView: View {
             .bold()
             .accessibilityAddTraits(.isHeader)
 
-          Text("Choose how playback progress is displayed.")
+          Text("Configure how progress is displayed for books with chapters.")
         }
         .font(.caption)
 
-        Toggle("Show Full Book Duration", isOn: $preferences.showFullBookDuration)
+        Toggle("Use Book Duration (Instead of Chapter)", isOn: $preferences.showFullBookDuration)
+          .font(.subheadline)
+          .bold()
+
+        Toggle("Show Supplementary Book Progress Bar", isOn: $preferences.showBookProgressBar)
           .font(.subheadline)
           .bold()
       }
