@@ -153,10 +153,14 @@ final class BookCardModel: BookCard.Model {
   }
 
   private func setupDownloadProgressObserver() {
-    downloadStateCancellable = DownloadManager.shared.$currentProgress
-      .sink { [weak self] progressDict in
+    downloadStateCancellable = DownloadManager.shared.$downloadStates
+      .sink { [weak self] states in
         guard let self else { return }
-        self.downloadProgress = progressDict[self.id]
+        if case .downloading(let progress) = states[self.id] {
+          self.downloadProgress = progress
+        } else {
+          self.downloadProgress = nil
+        }
       }
   }
 

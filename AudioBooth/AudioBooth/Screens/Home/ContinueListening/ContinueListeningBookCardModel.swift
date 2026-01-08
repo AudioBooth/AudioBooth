@@ -3,11 +3,15 @@ import Combine
 import Foundation
 import Models
 
-final class ContinueListeningCardModel: ContinueListeningCard.Model {
-  private var onRemoved: (() -> Void)?
-  private var cancellables = Set<AnyCancellable>()
+final class ContinueListeningBookCardModel: BookCard.Model {
+  enum Item {
+    case local(LocalBook)
+    case remote(Book)
+  }
 
+  private let item: Item
   private var progressObservation: Task<Void, Never>?
+  private var downloadStateCancellable: AnyCancellable?
 
   var mediaProgress: MediaProgress? {
     didSet {
@@ -16,37 +20,53 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
   }
 
   init(book: Book, onRemoved: @escaping () -> Void) {
-    let timeRemaining = Duration.seconds(book.duration)
+    let timeRemaining =
+      Duration.seconds(book.duration)
       .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+      + " remaining"
+
+    self.item = .remote(book)
 
     super.init(
       id: book.id,
       title: book.title,
-      author: book.authorName,
+      details: timeRemaining,
       coverURL: book.coverURL(),
       progress: MediaProgress.progress(for: book.id),
-      timeRemaining: timeRemaining
+      contextMenu: BookCardContextMenuModel(
+        book,
+        onProgressChanged: nil,
+        onRemoveFromContinueListening: onRemoved
+      )
     )
 
-    self.onRemoved = onRemoved
     observeMediaProgress()
+    setupDownloadProgressObserver()
   }
 
   init(localBook: LocalBook, onRemoved: @escaping () -> Void) {
-    let timeRemaining = Duration.seconds(localBook.duration)
+    let timeRemaining =
+      Duration.seconds(localBook.duration)
       .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+      + " remaining"
+
+    self.item = .local(localBook)
 
     super.init(
       id: localBook.bookID,
       title: localBook.title,
-      author: localBook.authorNames,
+      details: timeRemaining,
       coverURL: localBook.coverURL,
       progress: MediaProgress.progress(for: localBook.bookID),
-      timeRemaining: timeRemaining
+      contextMenu: BookCardContextMenuModel(
+        localBook,
+        onProgressChanged: nil,
+        onRemoveFromContinueListening: onRemoved
+      )
     )
 
-    self.onRemoved = onRemoved
     observeMediaProgress()
+    setupDownloadProgressObserver()
   }
 
   override func onAppear() {
@@ -62,20 +82,20 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
     }
   }
 
-  override func onRemoveFromListTapped() {
-    guard
-      let progress = try? MediaProgress.fetch(bookID: id),
-      let id = progress.id
-    else { return }
-
-    Task {
-      try? await Audiobookshelf.shared.sessions.removeFromContinueListening(id)
-      onRemoved?()
-    }
+  private func setupDownloadProgressObserver() {
+    downloadStateCancellable = DownloadManager.shared.$downloadStates
+      .sink { [weak self] states in
+        guard let self else { return }
+        if case .downloading(let progress) = states[self.id] {
+          self.downloadProgress = progress
+        } else {
+          self.downloadProgress = nil
+        }
+      }
   }
 }
 
-extension ContinueListeningCardModel {
+extension ContinueListeningBookCardModel {
   func progressChanged() {
     guard let mediaProgress else { return }
 
@@ -87,11 +107,15 @@ extension ContinueListeningCardModel {
         if let current = PlayerManager.shared.current,
           [id].contains(current.id)
         {
-          timeRemaining = Duration.seconds(current.playbackProgress.totalTimeRemaining)
+          details =
+            Duration.seconds(current.playbackProgress.totalTimeRemaining)
             .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+            + " remaining"
         } else {
-          timeRemaining = Duration.seconds(remainingTime)
+          details =
+            Duration.seconds(remainingTime)
             .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+            + " remaining"
         }
       }
     }
@@ -99,8 +123,8 @@ extension ContinueListeningCardModel {
 }
 
 @MainActor
-extension ContinueListeningCardModel: Comparable {
-  static func < (lhs: ContinueListeningCardModel, rhs: ContinueListeningCardModel) -> Bool {
+extension ContinueListeningBookCardModel: Comparable {
+  static func < (lhs: ContinueListeningBookCardModel, rhs: ContinueListeningBookCardModel) -> Bool {
     switch (lhs.mediaProgress?.lastPlayedAt, rhs.mediaProgress?.lastPlayedAt) {
     case let (.some(l), .some(r)): l > r
     case (.some(_), nil): true
@@ -108,7 +132,7 @@ extension ContinueListeningCardModel: Comparable {
     }
   }
 
-  static func == (lhs: ContinueListeningCardModel, rhs: ContinueListeningCardModel) -> Bool {
+  static func == (lhs: ContinueListeningBookCardModel, rhs: ContinueListeningBookCardModel) -> Bool {
     lhs.id == rhs.id
   }
 }

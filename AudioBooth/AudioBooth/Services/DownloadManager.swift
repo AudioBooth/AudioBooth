@@ -30,9 +30,27 @@ final class DownloadManager: NSObject, ObservableObject {
 
   private var activeOperations: [String: DownloadOperation] = [:]
   private var progressTasks: [String: Task<Void, Never>] = [:]
-  @Published private(set) var currentProgress: [String: Double] = [:]
+  @Published private(set) var downloadStates: [String: DownloadState] = [:]
 
   var backgroundCompletionHandler: (() -> Void)?
+
+  override init() {
+    super.init()
+    loadDownloadedBooks()
+  }
+
+  private func loadDownloadedBooks() {
+    Task {
+      let downloadedBooks = try? LocalBook.fetchAll()
+      await MainActor.run {
+        for book in downloadedBooks ?? [] {
+          if book.isDownloaded {
+            downloadStates[book.bookID] = .downloaded
+          }
+        }
+      }
+    }
+  }
 
   func isDownloading(for bookID: String) -> Bool {
     activeOperations[bookID] != nil
@@ -43,12 +61,12 @@ final class DownloadManager: NSObject, ObservableObject {
 
     let operation = DownloadOperation(bookID: bookID, type: type)
     activeOperations[bookID] = operation
-    currentProgress[bookID] = 0
+    downloadStates[bookID] = .downloading(progress: 0)
 
     let progressTask = Task { @MainActor [weak self] in
       for await progress in operation.progress {
         guard !Task.isCancelled else { break }
-        self?.currentProgress[bookID] = progress
+        self?.downloadStates[bookID] = .downloading(progress: progress)
       }
     }
     progressTasks[bookID] = progressTask
@@ -57,7 +75,12 @@ final class DownloadManager: NSObject, ObservableObject {
       self?.progressTasks[bookID]?.cancel()
       self?.progressTasks.removeValue(forKey: bookID)
       self?.activeOperations.removeValue(forKey: bookID)
-      self?.currentProgress.removeValue(forKey: bookID)
+
+      if operation.isFinished && !operation.isCancelled {
+        self?.downloadStates[bookID] = .downloaded
+      } else {
+        self?.downloadStates.removeValue(forKey: bookID)
+      }
     }
 
     operationQueue.addOperation(operation)
@@ -90,6 +113,10 @@ extension DownloadManager {
 
       if let item = try? LocalBook.fetch(bookID: bookID) {
         try? item.delete()
+      }
+
+      Task { @MainActor in
+        downloadStates[bookID] = .notDownloaded
       }
     }
   }

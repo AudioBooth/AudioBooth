@@ -178,13 +178,13 @@ extension HomePageModel {
   }
 
   private func buildContinueListeningSection() -> Section? {
-    let existingModels: [String: ContinueListeningCardModel]
+    let existingModels: [String: ContinueListeningBookCardModel]
     if let existingSection = sections.first(where: { $0.id == "continue-listening" }),
       case .continueListening(let items) = existingSection.items
     {
       existingModels = Dictionary(
         uniqueKeysWithValues: items.compactMap { item in
-          guard let cardModel = item as? ContinueListeningCardModel else { return nil }
+          guard let cardModel = item as? ContinueListeningBookCardModel else { return nil }
           return (cardModel.id, cardModel)
         }
       )
@@ -196,7 +196,7 @@ extension HomePageModel {
       MediaProgress.progress(for: book.id) < 1.0
     }
 
-    var models: [ContinueListeningCardModel] = []
+    var models: [ContinueListeningBookCardModel] = []
 
     if let currentPlayerID = playerManager.current?.id,
       !booksToDisplay.contains(where: { $0.id == currentPlayerID }),
@@ -205,7 +205,7 @@ extension HomePageModel {
       if let existingModel = existingModels[currentPlayerID] {
         models.append(existingModel)
       } else {
-        let model = ContinueListeningCardModel(
+        let model = ContinueListeningBookCardModel(
           localBook: currentLocalBook,
           onRemoved: { [weak self] in
             guard let self else { return }
@@ -218,12 +218,12 @@ extension HomePageModel {
     }
 
     for book in booksToDisplay {
-      let model: ContinueListeningCardModel
+      let model: ContinueListeningBookCardModel
 
       if let existingModel = existingModels[book.id] {
         model = existingModel
       } else {
-        model = ContinueListeningCardModel(
+        model = ContinueListeningBookCardModel(
           book: book,
           onRemoved: { [weak self] in
             guard let self else { return }

@@ -214,8 +214,9 @@ struct HomePage: View {
 
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
-            ForEach(items) { item in
-              ContinueListeningCard(model: item)
+            ForEach(items, id: \.id) { item in
+              BookCard(model: item)
+                .frame(width: 120)
             }
           }
           .padding(.horizontal)
@@ -294,7 +295,7 @@ extension HomePage {
 
       enum Items {
         case stats
-        case continueListening([ContinueListeningCard.Model])
+        case continueListening([BookCard.Model])
         case offline([BookCard.Model])
         case books([BookCard.Model])
         case series([SeriesCard.Model])
@@ -334,16 +335,16 @@ extension HomePage {
 
 extension HomePage.Model {
   static var mock: HomePage.Model {
-    let books: [ContinueListeningCard.Model] = [
-      ContinueListeningCard.Model(
+    let books: [BookCard.Model] = [
+      BookCard.Model(
         title: "The Lord of the Rings",
-        author: "J.R.R. Tolkien",
+        details: "8hr 32min remaining",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
         progress: 0.45
       ),
-      ContinueListeningCard.Model(
+      BookCard.Model(
         title: "Dune",
-        author: "Frank Herbert",
+        details: "2hr 15min remaining",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
         progress: 0.12
       ),

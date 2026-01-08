@@ -880,16 +880,10 @@ extension BookPlayerModel {
 
 extension BookPlayerModel {
   private func setupDownloadStateBinding(bookID: String) {
-    downloadManager.$currentProgress
+    downloadManager.$downloadStates
       .receive(on: DispatchQueue.main)
-      .map { [weak self] progress in
-        if self?.item?.isDownloaded == true || self?.downloadState == .downloaded {
-          return .downloaded
-        } else if let progress = progress[bookID] {
-          return .downloading(progress: progress)
-        } else {
-          return .notDownloaded
-        }
+      .map { states in
+        states[bookID] ?? .notDownloaded
       }
       .sink { [weak self] downloadState in
         self?.downloadState = downloadState

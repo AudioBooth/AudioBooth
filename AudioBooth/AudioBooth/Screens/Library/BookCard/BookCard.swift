@@ -7,7 +7,7 @@ extension EnvironmentValues {
 }
 
 struct BookCard: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
   @Environment(\.bookCardDisplayMode) private var displayMode
 
   var body: some View {
@@ -254,7 +254,7 @@ extension BookCard {
   class Model: ObservableObject, Identifiable {
     let id: String
     let title: String
-    let details: String?
+    var details: String?
     let coverURL: URL?
     let sequence: String?
     var progress: Double?

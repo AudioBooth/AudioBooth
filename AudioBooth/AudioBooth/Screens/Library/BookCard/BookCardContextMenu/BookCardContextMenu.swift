@@ -33,19 +33,25 @@ struct BookCardContextMenu: View {
         }
       }
 
-      if !model.isFinished || model.hasProgress {
+      if !model.actions.isEmpty {
         Divider()
       }
 
-      if !model.isFinished {
+      if model.actions.contains(.markAsFinished) {
         Button(action: model.onMarkAsFinishedTapped) {
           Label("Mark as Finished", systemImage: "checkmark.circle")
         }
       }
 
-      if model.hasProgress {
+      if model.actions.contains(.resetProgress) {
         Button(action: model.onResetProgressTapped) {
           Label("Reset Progress", systemImage: "arrow.counterclockwise")
+        }
+      }
+
+      if model.actions.contains(.removeFromContinueListening) {
+        Button(action: model.onRemoveFromContinueListeningTapped) {
+          Label("Remove from continue listening", systemImage: "eye.slash")
         }
       }
 
@@ -103,9 +109,16 @@ struct BookCardContextMenu: View {
 extension BookCardContextMenu {
   @Observable
   class Model: ObservableObject {
+    struct Actions: OptionSet {
+      let rawValue: Int
+
+      static let markAsFinished = Actions(rawValue: 1 << 0)
+      static let resetProgress = Actions(rawValue: 1 << 1)
+      static let removeFromContinueListening = Actions(rawValue: 1 << 2)
+    }
+
     var downloadState: DownloadManager.DownloadState
-    var hasProgress: Bool
-    var isFinished: Bool
+    var actions: Actions
     let authorInfo: BookCard.Author?
     let narratorInfo: BookCard.Narrator?
     let seriesInfo: BookCard.Series?
@@ -117,18 +130,17 @@ extension BookCardContextMenu {
     func onPlayTapped() {}
     func onMarkAsFinishedTapped() {}
     func onResetProgressTapped() {}
+    func onRemoveFromContinueListeningTapped() {}
 
     init(
       downloadState: DownloadManager.DownloadState = .notDownloaded,
-      hasProgress: Bool = false,
-      isFinished: Bool = false,
+      actions: Actions = [],
       authorInfo: BookCard.Author? = nil,
       narratorInfo: BookCard.Narrator? = nil,
       seriesInfo: BookCard.Series? = nil
     ) {
       self.downloadState = downloadState
-      self.hasProgress = hasProgress
-      self.isFinished = isFinished
+      self.actions = actions
       self.authorInfo = authorInfo
       self.narratorInfo = narratorInfo
       self.seriesInfo = seriesInfo

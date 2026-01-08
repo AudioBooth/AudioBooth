@@ -10,10 +10,16 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
 
   private let item: Item
   private let onProgressChanged: ((Double) -> Void)?
+  private let onRemoveFromContinueListening: (() -> Void)?
 
-  init(_ item: LocalBook, onProgressChanged: ((Double) -> Void)? = nil) {
+  init(
+    _ item: LocalBook,
+    onProgressChanged: ((Double) -> Void)? = nil,
+    onRemoveFromContinueListening: (() -> Void)? = nil
+  ) {
     self.item = .local(item)
     self.onProgressChanged = onProgressChanged
+    self.onRemoveFromContinueListening = onRemoveFromContinueListening
 
     let authorInfo: BookCard.Author? = {
       guard let firstAuthor = item.authors.first else { return nil }
@@ -30,30 +36,38 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       return BookCard.Series(id: firstSeries.id, name: firstSeries.name)
     }()
 
-    let downloadState: DownloadManager.DownloadState
-    if let progress = DownloadManager.shared.currentProgress[item.bookID] {
-      downloadState = .downloading(progress: progress)
-    } else if item.isDownloaded {
-      downloadState = .downloaded
-    } else {
-      downloadState = .notDownloaded
-    }
+    let downloadState = DownloadManager.shared.downloadStates[item.bookID] ?? .notDownloaded
 
     let progress = MediaProgress.progress(for: item.bookID)
 
+    var actions: BookCardContextMenu.Model.Actions = []
+    if progress > 0 {
+      actions.insert(.resetProgress)
+    }
+    if progress < 1.0 {
+      actions.insert(.markAsFinished)
+    }
+    if onRemoveFromContinueListening != nil {
+      actions.insert(.removeFromContinueListening)
+    }
+
     super.init(
       downloadState: downloadState,
-      hasProgress: progress > 0,
-      isFinished: progress == 1.0,
+      actions: actions,
       authorInfo: authorInfo,
       narratorInfo: narratorInfo,
       seriesInfo: seriesInfo
     )
   }
 
-  init(_ item: Book, onProgressChanged: ((Double) -> Void)? = nil) {
+  init(
+    _ item: Book,
+    onProgressChanged: ((Double) -> Void)? = nil,
+    onRemoveFromContinueListening: (() -> Void)? = nil
+  ) {
     self.item = .remote(item)
     self.onProgressChanged = onProgressChanged
+    self.onRemoveFromContinueListening = onRemoveFromContinueListening
 
     lazy var filterData = Audiobookshelf.shared.libraries.getCachedFilterData()
 
@@ -113,19 +127,24 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       return nil
     }()
 
-    let downloadState: DownloadManager.DownloadState
-    if let progress = DownloadManager.shared.currentProgress[item.id] {
-      downloadState = .downloading(progress: progress)
-    } else {
-      downloadState = .notDownloaded
-    }
+    let downloadState = DownloadManager.shared.downloadStates[item.id] ?? .notDownloaded
 
     let progress = MediaProgress.progress(for: item.id)
 
+    var actions: BookCardContextMenu.Model.Actions = []
+    if progress > 0 {
+      actions.insert(.resetProgress)
+    }
+    if progress < 1.0 {
+      actions.insert(.markAsFinished)
+    }
+    if onRemoveFromContinueListening != nil {
+      actions.insert(.removeFromContinueListening)
+    }
+
     super.init(
       downloadState: downloadState,
-      hasProgress: progress > 0,
-      isFinished: progress == 1.0,
+      actions: actions,
       authorInfo: authorInfo,
       narratorInfo: narratorInfo,
       seriesInfo: seriesInfo
@@ -143,19 +162,20 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
     }
 
     let progress = MediaProgress.progress(for: bookID)
-    let localBook = try? LocalBook.fetch(bookID: bookID)
-    let isDownloaded = localBook?.isDownloaded ?? false
 
-    if let progress = DownloadManager.shared.currentProgress[bookID] {
-      downloadState = .downloading(progress: progress)
-    } else if isDownloaded {
-      downloadState = .downloaded
-    } else {
-      downloadState = .notDownloaded
+    downloadState = DownloadManager.shared.downloadStates[bookID] ?? .notDownloaded
+
+    var updatedActions: BookCardContextMenu.Model.Actions = []
+    if progress > 0 {
+      updatedActions.insert(.resetProgress)
     }
-
-    hasProgress = progress > 0
-    isFinished = progress == 1.0
+    if progress < 1.0 {
+      updatedActions.insert(.markAsFinished)
+    }
+    if onRemoveFromContinueListening != nil {
+      updatedActions.insert(.removeFromContinueListening)
+    }
+    actions = updatedActions
   }
 
   override func onDownloadTapped() {
@@ -215,6 +235,28 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
         try? await book.resetProgress()
       }
       onProgressChanged?(0)
+    }
+  }
+
+  override func onRemoveFromContinueListeningTapped() {
+    guard let onRemoveFromContinueListening else { return }
+
+    let bookID: String
+    switch item {
+    case .local(let localBook):
+      bookID = localBook.bookID
+    case .remote(let book):
+      bookID = book.id
+    }
+
+    guard
+      let progress = try? MediaProgress.fetch(bookID: bookID),
+      let id = progress.id
+    else { return }
+
+    Task {
+      try? await Audiobookshelf.shared.sessions.removeFromContinueListening(id)
+      onRemoveFromContinueListening()
     }
   }
 }

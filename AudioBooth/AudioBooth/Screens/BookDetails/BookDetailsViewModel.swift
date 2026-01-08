@@ -301,15 +301,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   }
 
   private func setupDownloadStateBinding() {
-    downloadManager.$currentProgress
+    downloadManager.$downloadStates
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] progress in
+      .sink { [weak self] states in
         guard let self else { return }
-        if let progress = progress[bookID] {
-          self.downloadState = .downloading(progress: progress)
-        } else if self.downloadState != .downloaded {
-          self.downloadState = .notDownloaded
-        }
+        self.downloadState = states[bookID] ?? .notDownloaded
       }
       .store(in: &cancellables)
   }
