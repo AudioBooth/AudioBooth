@@ -40,11 +40,11 @@ extension User {
 
   public struct Bookmark: Codable, Sendable {
     public let bookID: String
-    public let time: Int
+    public let time: Double
     public let title: String
     public let createdAt: Int64
 
-    public init(bookID: String, time: Int, title: String, createdAt: Int64) {
+    public init(bookID: String, time: Double, title: String, createdAt: Int64) {
       self.bookID = bookID
       self.time = time
       self.title = title

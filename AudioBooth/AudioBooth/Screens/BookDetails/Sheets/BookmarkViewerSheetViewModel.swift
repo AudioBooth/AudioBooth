@@ -117,7 +117,7 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
       do {
         let updatedAPIBookmark = User.Bookmark(
           bookID: bookID,
-          time: bookmark.time,
+          time: Double(bookmark.time),
           title: bookmark.title,
           createdAt: Int64(bookmark.createdAt.timeIntervalSince1970 * 1000)
         )
@@ -189,7 +189,7 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
 
         let bookmarkRowModel = BookmarkRow.Model(
           title: createdBookmark.title,
-          time: createdBookmark.time,
+          time: Int(createdBookmark.time),
           createdAt: Date(timeIntervalSince1970: TimeInterval(createdBookmark.createdAt / 1000))
         )
 

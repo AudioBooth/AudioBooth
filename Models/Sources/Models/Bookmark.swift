@@ -25,7 +25,7 @@ public final class Bookmark {
   public convenience init(from apiBookmark: User.Bookmark) {
     self.init(
       bookID: apiBookmark.bookID,
-      time: apiBookmark.time,
+      time: Int(apiBookmark.time),
       title: apiBookmark.title,
       createdAt: Date(timeIntervalSince1970: TimeInterval(apiBookmark.createdAt / 1000))
     )
@@ -103,7 +103,7 @@ extension Bookmark {
     for apiBookmark in userData.bookmarks {
       let remote = Bookmark(from: apiBookmark)
 
-      if let local = try Bookmark.fetch(bookID: apiBookmark.bookID, time: apiBookmark.time) {
+      if let local = try Bookmark.fetch(bookID: apiBookmark.bookID, time: Int(apiBookmark.time)) {
         local.title = remote.title
         local.createdAt = remote.createdAt
       } else {
