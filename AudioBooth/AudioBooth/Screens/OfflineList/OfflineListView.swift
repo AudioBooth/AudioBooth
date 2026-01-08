@@ -78,6 +78,7 @@ struct OfflineListView: View {
               } label: {
                 Label("Remove Downloads", systemImage: "trash")
               }
+              .tint(.red)
 
               Divider()
             }

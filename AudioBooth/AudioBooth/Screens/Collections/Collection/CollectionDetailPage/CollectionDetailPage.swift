@@ -48,6 +48,7 @@ struct CollectionDetailPage: View {
               } label: {
                 Label(deleteActionTitle, systemImage: "trash")
               }
+              .tint(.red)
             }
           } label: {
             Label("More", systemImage: "ellipsis")

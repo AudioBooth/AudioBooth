@@ -28,6 +28,7 @@ struct BookCardContextMenu: View {
             Button(role: .destructive, action: model.onRemoveDownloadTapped) {
               Label("Remove Download", systemImage: "trash")
             }
+            .tint(.red)
           }
         }
       }
