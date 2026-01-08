@@ -316,6 +316,29 @@ struct PlayerPreferencesView: View {
         .accessibilityValue(preferences.volumeBoost.displayText)
       }
       .listRowSeparator(.hidden)
+      .listSectionSpacing(.custom(12))
+
+      Section {
+        VStack(alignment: .leading) {
+          Text("Orientation Lock".uppercased())
+            .bold()
+            .accessibilityAddTraits(.isHeader)
+
+          Text("Lock the player screen orientation.")
+        }
+        .font(.caption)
+
+        Picker("Orientation", selection: $preferences.playerOrientation) {
+          Text("Auto").tag(PlayerOrientation.auto)
+          Text("Portrait").tag(PlayerOrientation.portrait)
+          Text("Landscape").tag(PlayerOrientation.landscape)
+        }
+        .font(.subheadline)
+        .bold()
+        .accessibilityLabel("Player Orientation")
+        .accessibilityValue(preferences.playerOrientation.displayText)
+      }
+      .listRowSeparator(.hidden)
     }
     .navigationTitle("Player")
   }

@@ -11,6 +11,17 @@ struct BookPlayer: View {
   @ObservedObject private var playerManager = PlayerManager.shared
   @ObservedObject private var preferences = UserPreferences.shared
 
+  private var supportedOrientations: UIInterfaceOrientationMask {
+    switch preferences.playerOrientation {
+    case .auto:
+      return .all
+    case .portrait:
+      return .portrait
+    case .landscape:
+      return .landscape
+    }
+  }
+
   var body: some View {
     NavigationStack {
       ZStack {
@@ -29,6 +40,7 @@ struct BookPlayer: View {
           }
         }
       }
+      .orientationLock(supportedOrientations)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           Button(

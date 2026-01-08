@@ -3,6 +3,19 @@ import UIKit
 import WidgetKit
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+  static var orientationLock = UIInterfaceOrientationMask.all {
+    didSet {
+      for scene in UIApplication.shared.connectedScenes {
+        if let windowScene = scene as? UIWindowScene {
+          windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: orientationLock))
+          for window in windowScene.windows {
+            window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+          }
+        }
+      }
+    }
+  }
+
   func application(
     _ application: UIApplication,
     handleEventsForBackgroundURLSession identifier: String,
@@ -21,5 +34,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         await SessionManager.shared.syncUnsyncedSessions()
       }
     }
+  }
+
+  func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    return AppDelegate.orientationLock
   }
 }

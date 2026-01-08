@@ -91,6 +91,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("autoTimerWindowEnd")
   var autoTimerWindowEnd: Int = 6 * 60
 
+  @AppStorage("playerOrientation")
+  var playerOrientation: PlayerOrientation = .auto
+
   private init() {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
@@ -273,6 +276,20 @@ extension AutoTimerMode: RawRepresentable {
       return "duration:\(duration)"
     case .chapters(let count):
       return "chapters:\(count)"
+    }
+  }
+}
+
+enum PlayerOrientation: String, CaseIterable {
+  case auto
+  case portrait
+  case landscape
+
+  var displayText: String {
+    switch self {
+    case .auto: "Auto"
+    case .portrait: "Portrait"
+    case .landscape: "Landscape"
     }
   }
 }
