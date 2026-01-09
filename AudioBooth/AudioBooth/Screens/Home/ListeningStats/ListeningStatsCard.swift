@@ -8,10 +8,22 @@ struct ListeningStatsCard: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Text("Your Stats")
-        .font(.title2)
-        .fontWeight(.semibold)
-        .foregroundColor(.primary)
+      NavigationLink(value: NavigationDestination.stats) {
+        HStack {
+          Text("Your Stats")
+            .font(.title2)
+            .fontWeight(.semibold)
+            .foregroundColor(.primary)
+
+          Spacer()
+
+          Image(systemName: "chevron.right")
+            .font(.body)
+            .foregroundColor(.secondary)
+        }
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
 
       HStack {
         VStack(alignment: .leading, spacing: 12) {

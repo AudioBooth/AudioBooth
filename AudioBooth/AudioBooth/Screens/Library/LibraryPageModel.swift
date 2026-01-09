@@ -73,7 +73,7 @@ final class LibraryPageModel: LibraryPage.Model {
         sortBy: nil,
         title: name
       )
-    case .book, .playlist, .collection, .offline:
+    case .book, .playlist, .collection, .offline, .stats:
       fatalError("LibraryPageModel cannot be initialized with a \(destination) destination")
     }
 

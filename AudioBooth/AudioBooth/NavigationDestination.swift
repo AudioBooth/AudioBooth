@@ -11,4 +11,5 @@ enum NavigationDestination: Hashable {
   case playlist(id: String)
   case collection(id: String)
   case offline
+  case stats
 }

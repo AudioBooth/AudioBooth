@@ -47,6 +47,9 @@ struct CollectionsRootPage: View {
           )
         case .series, .author, .narrator, .genre, .tag, .offline:
           LibraryPage(model: LibraryPageModel(destination: destination))
+
+        case .stats:
+          EmptyView()
         }
       }
     }

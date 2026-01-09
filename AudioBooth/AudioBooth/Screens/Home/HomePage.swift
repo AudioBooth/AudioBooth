@@ -55,6 +55,8 @@ struct HomePage: View {
             CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
           case .collection(let id):
             CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .collections))
+          case .stats:
+            StatsPageView(model: StatsPageViewModel())
           }
         }
     }

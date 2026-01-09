@@ -12,7 +12,7 @@ struct LibraryRootPage: View {
             OfflineListView(model: OfflineListViewModel())
           case .series, .author, .narrator, .genre, .tag:
             LibraryPage(model: LibraryPageModel(destination: destination))
-          case .playlist, .collection:
+          case .playlist, .collection, .stats:
             EmptyView()
           }
         }

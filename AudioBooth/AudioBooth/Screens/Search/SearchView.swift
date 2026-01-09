@@ -15,7 +15,7 @@ struct SearchPage: View {
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
           case .series, .author, .narrator, .genre, .tag, .offline:
             LibraryPage(model: LibraryPageModel(destination: destination))
-          case .playlist, .collection:
+          case .playlist, .collection, .stats:
             EmptyView()
           }
         }
