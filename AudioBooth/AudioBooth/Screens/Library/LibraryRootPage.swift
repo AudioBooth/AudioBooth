@@ -1,9 +1,13 @@
+import API
 import SwiftUI
 
 struct LibraryRootPage: View {
+  @ObservedObject private var libraries = Audiobookshelf.shared.libraries
+
   var body: some View {
     NavigationStack {
       LibraryPage(model: LibraryPageModel())
+        .id(libraries.current?.id)
         .navigationDestination(for: NavigationDestination.self) { destination in
           switch destination {
           case .book(let id):
