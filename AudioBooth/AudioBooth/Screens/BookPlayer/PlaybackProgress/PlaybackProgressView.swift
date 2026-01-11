@@ -15,7 +15,7 @@ struct PlaybackProgressView: View {
                 .frame(height: 3)
 
               RoundedRectangle(cornerRadius: 1.5)
-                .fill(Color.orange.opacity(0.7))
+                .fill(Color.accentColor.opacity(0.7))
                 .frame(width: max(0, geometry.size.width * model.totalProgress), height: 3)
             }
           }
@@ -43,11 +43,11 @@ struct PlaybackProgressView: View {
             .frame(height: 5)
 
           RoundedRectangle(cornerRadius: 2)
-            .fill(Color.orange)
+            .fill(Color.accentColor)
             .frame(width: max(0, geometry.size.width * model.progress), height: 5)
 
           Circle()
-            .fill(Color.orange)
+            .fill(Color.accentColor)
             .frame(width: 16, height: 16)
             .offset(x: max(0, geometry.size.width * model.progress - 8))
         }

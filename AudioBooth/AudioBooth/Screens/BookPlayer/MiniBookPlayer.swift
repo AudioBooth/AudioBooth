@@ -82,6 +82,7 @@ struct MiniBookPlayer: View, Equatable {
         }
       }
       .disabled(player.isLoading)
+      .buttonStyle(.borderless)
     }
   }
 
@@ -162,6 +163,7 @@ struct LegacyMiniBookPlayer: View {
         }
       }
       .disabled(player.isLoading)
+      .buttonStyle(.borderless)
     }
   }
 

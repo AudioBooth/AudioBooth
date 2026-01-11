@@ -172,6 +172,7 @@ struct BookDetailsView: View {
         contentTabsSection
       }
     }
+    .buttonStyle(.borderless)
   }
 
   private var title: some View {

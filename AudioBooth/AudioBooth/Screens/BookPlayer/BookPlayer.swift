@@ -260,7 +260,7 @@ struct BookPlayer: View {
         .disabled(isFirstChapter)
         .accessibilityLabel("Previous chapter")
 
-        Spacer(minLength: 16)
+        Spacer(minLength: 8)
       }
 
       Button(action: { model.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval) }) {
@@ -274,7 +274,7 @@ struct BookPlayer: View {
       .fontWeight(.light)
       .accessibilityLabel("Skip backward \(Int(preferences.skipBackwardInterval)) seconds")
 
-      Spacer(minLength: 16)
+      Spacer(minLength: 8)
 
       Button(action: model.onTogglePlaybackTapped) {
         ZStack {
@@ -290,13 +290,14 @@ struct BookPlayer: View {
               .font(.system(size: 32))
               .foregroundColor(.black)
               .offset(x: model.isPlaying ? 0 : 3)
+              .padding()
           }
         }
-        .frame(minWidth: 60, maxWidth: 80, minHeight: 60, maxHeight: 80)
       }
+      .frame(maxWidth: 80, maxHeight: 80)
       .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
 
-      Spacer(minLength: 16)
+      Spacer(minLength: 8)
 
       Button(action: { model.onSkipForwardTapped(seconds: preferences.skipForwardInterval) }) {
         Image(systemName: "\(Int(preferences.skipForwardInterval)).arrow.trianglehead.clockwise")
@@ -308,7 +309,7 @@ struct BookPlayer: View {
       .accessibilityLabel("Skip forward \(Int(preferences.skipForwardInterval)) seconds")
 
       if let chapters = model.chapters {
-        Spacer(minLength: 16)
+        Spacer(minLength: 8)
 
         let isLastChapter = chapters.currentIndex == chapters.chapters.count - 1
         Button(action: { chapters.onNextChapterTapped() }) {
@@ -320,6 +321,7 @@ struct BookPlayer: View {
         .accessibilityLabel("Next chapter")
       }
     }
+    .buttonStyle(.borderless)
   }
 
   private var bottomControlBar: some View {
@@ -410,6 +412,7 @@ struct BookPlayer: View {
       }
     }
     .padding(.vertical, 12)
+    .buttonStyle(.borderless)
   }
 
   private var downloadIcon: String {
