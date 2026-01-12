@@ -2,7 +2,7 @@ import Models
 import SwiftUI
 import WidgetKit
 
-struct AudioBoothWidgetView: View {
+struct SystemWidgetView: View {
   let entry: AudioBoothWidgetEntry
   @Environment(\.widgetFamily) var widgetFamily
 

@@ -111,12 +111,20 @@
 			);
 			target = 3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */;
 		};
+		3F7E9FE22F15654F00221DDA /* Exceptions for "AudioBoothWidget" folder in "AudioBooth" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+			);
+			target = 3FC8DC6D2E638F5E00A4B080 /* AudioBooth */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				3F7E9FE22F15654F00221DDA /* Exceptions for "AudioBoothWidget" folder in "AudioBooth" target */,
 				3F2D3C082EBE711A00D49AFF /* Exceptions for "AudioBoothWidget" folder in "AudioBoothWidgetExtension" target */,
 			);
 			path = AudioBoothWidget;

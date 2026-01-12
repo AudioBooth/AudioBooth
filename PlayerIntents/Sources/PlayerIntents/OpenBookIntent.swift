@@ -4,7 +4,7 @@ import Foundation
 public struct OpenBookIntent: AudioPlaybackIntent {
   public static let title: LocalizedStringResource = "Open audiobook"
   public static let description = IntentDescription("Opens a specific audiobook.")
-  public static let openAppWhenRun = false
+  public static let openAppWhenRun = true
 
   @Dependency
   private var playerManager: PlayerManagerProtocol
