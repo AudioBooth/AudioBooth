@@ -6,21 +6,7 @@ struct NarratorsPage: View {
   @StateObject var model: Model
 
   var body: some View {
-    NavigationStack {
-      content
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .author(let id, let name):
-            AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
-          case .series, .narrator, .genre, .tag, .offline:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          case .playlist, .collection, .stats:
-            EmptyView()
-          }
-        }
-    }
+    content
   }
 
   var content: some View {
