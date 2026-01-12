@@ -208,7 +208,7 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
         )
 
         bookmarks.append(bookmarkRowModel)
-        bookmarks.sort { $0.time < $1.time }
+        bookmarks.sort { $0.createdAt > $1.createdAt }
 
         newBookmarkTitle = ""
 

@@ -66,7 +66,7 @@ extension Bookmark {
     }
     let descriptor = FetchDescriptor<Bookmark>(
       predicate: predicate,
-      sortBy: [SortDescriptor(\.time, order: .forward)]
+      sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
     )
     let results = try context.fetch(descriptor)
     return results
