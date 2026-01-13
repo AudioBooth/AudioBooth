@@ -53,28 +53,6 @@ struct BookCard: View {
       .multilineTextAlignment(.leading)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .overlay(alignment: .topTrailing) {
-      if let bookCount = model.bookCount {
-        Text("\(bookCount)")
-          .font(.caption)
-          .fontWeight(.medium)
-          .foregroundColor(.white)
-          .padding(.horizontal, 8)
-          .padding(.vertical, 4)
-          .background(Color.accentColor)
-          .cornerRadius(12)
-          .padding(8)
-      } else if let sequence = model.sequence {
-        Text("#\(sequence)")
-          .font(.caption2)
-          .foregroundStyle(Color.white)
-          .padding(.vertical, 2)
-          .padding(.horizontal, 4)
-          .background(Color.black.opacity(0.6))
-          .clipShape(Capsule())
-          .padding(4)
-      }
-    }
     .contentShape(Rectangle())
   }
 
@@ -129,6 +107,27 @@ struct BookCard: View {
       .overlay(alignment: .bottomLeading) {
         ebookIndicator
           .padding(4)
+          .padding(.bottom, 2)
+      }
+      .overlay(alignment: .topTrailing) {
+        Group {
+          if let bookCount = model.bookCount {
+            HStack(spacing: 2) {
+              Image(systemName: "book")
+              Text("\(bookCount)")
+            }
+          } else if let sequence = model.sequence {
+            Text("#\(sequence)")
+          }
+        }
+        .font(.caption2)
+        .fontWeight(.medium)
+        .foregroundStyle(Color.white)
+        .padding(.vertical, 2)
+        .padding(.horizontal, 4)
+        .background(Color.black.opacity(0.6))
+        .clipShape(.capsule)
+        .padding(4)
       }
       .clipShape(RoundedRectangle(cornerRadius: 8))
       .overlay(
@@ -144,7 +143,21 @@ struct BookCard: View {
       .overlay { downloadProgress }
       .overlay(alignment: .bottomLeading) {
         ebookIndicator
-          .padding(2)
+          .padding(.leading, 2)
+          .padding(.bottom, 6)
+      }
+      .overlay(alignment: .topTrailing) {
+        if let sequence = model.sequence {
+          Text("#\(sequence)")
+            .font(.caption2)
+            .fontWeight(.medium)
+            .foregroundStyle(Color.white)
+            .padding(.vertical, 2)
+            .padding(.horizontal, 4)
+            .background(Color.black.opacity(0.6))
+            .clipShape(.capsule)
+            .padding(2)
+        }
       }
       .frame(width: 60, height: 60)
       .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -221,18 +234,15 @@ struct BookCard: View {
   @ViewBuilder
   var ebookIndicator: some View {
     if model.hasEbook {
-      HStack(spacing: 2) {
-        Image(systemName: "book.fill")
-          .font(.system(size: 10))
-          .foregroundColor(.white)
-      }
-      .padding(.horizontal, 4)
-      .padding(.vertical, 2)
-      .background(Color.accentColor)
-      .clipShape(RoundedRectangle(cornerRadius: 4))
+      Image(systemName: "book.fill")
+        .font(.caption2)
+        .foregroundStyle(Color.white)
+        .padding(.vertical, 2)
+        .padding(.horizontal, 4)
+        .background(Color.black.opacity(0.6))
+        .clipShape(.capsule)
     }
   }
-
 }
 
 extension BookCard {

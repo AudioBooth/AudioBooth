@@ -213,7 +213,10 @@ extension OfflineListView {
             .allowsTightening(true)
 
           if let author = book.author {
-            rowMetadata(icon: "pencil", value: author)
+            Text(author)
+              .font(.caption2)
+              .foregroundColor(.secondary)
+              .lineLimit(1)
           }
 
           if let details = book.details {
@@ -221,11 +224,7 @@ extension OfflineListView {
               .font(.caption2)
               .foregroundColor(.secondary)
               .lineLimit(1)
-          } else if let sequence = sequence {
-            rowMetadata(icon: "number", value: sequence)
           }
-
-          Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -242,6 +241,19 @@ extension OfflineListView {
     var cover: some View {
       CoverImage(url: book.coverURL)
         .overlay(alignment: .bottom) { progressBar }
+        .overlay(alignment: .topTrailing) {
+          if let sequence = sequence {
+            Text("#\(sequence)")
+              .font(.caption2)
+              .fontWeight(.medium)
+              .foregroundStyle(Color.white)
+              .padding(.vertical, 2)
+              .padding(.horizontal, 4)
+              .background(Color.black.opacity(0.6))
+              .clipShape(.capsule)
+              .padding(2)
+          }
+        }
         .frame(width: 60, height: 60)
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .overlay(

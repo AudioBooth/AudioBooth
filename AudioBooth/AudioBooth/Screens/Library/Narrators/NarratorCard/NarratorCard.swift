@@ -58,7 +58,7 @@ struct NarratorCard: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Color.accentColor)
-            .clipShape(Capsule())
+            .clipShape(.capsule)
             .padding(.top, 8)
         }
       }

@@ -213,7 +213,7 @@ struct BookPlayer: View {
     .padding(.vertical, 4)
     .background(Color.black.opacity(0.7))
     .foregroundColor(.white)
-    .clipShape(Capsule())
+    .clipShape(.capsule)
     .padding(4)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(accessibilityLabel)

@@ -25,7 +25,7 @@ final class BookCardModel: BookCard.Model {
 
     let size = item.tracks.reduce(0) { $0 + ($1.size ?? 0) }
     if size > 0 {
-      details += ", \(size.formatted(.byteCount(style: .file)))"
+      details += " • \(size.formatted(.byteCount(style: .file)))"
     }
 
     super.init(

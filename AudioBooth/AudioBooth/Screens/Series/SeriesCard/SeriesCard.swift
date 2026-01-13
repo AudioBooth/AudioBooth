@@ -80,16 +80,18 @@ struct SeriesCard: View {
         }
 
         if model.bookCount > 0 {
-          Text("\(model.bookCount)")
-            .font(.caption)
-            .fontWeight(.medium)
-            .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.accentColor)
-            .clipShape(Capsule())
-            .padding(.top, 8)
-            .padding(.trailing, 8)
+          HStack(spacing: 2) {
+            Image(systemName: "book")
+            Text("\(model.bookCount)")
+          }
+          .font(.caption2)
+          .fontWeight(.medium)
+          .foregroundStyle(Color.white)
+          .padding(.vertical, 2)
+          .padding(.horizontal, 4)
+          .background(Color.black.opacity(0.6))
+          .clipShape(.capsule)
+          .padding(4)
         }
       }
 

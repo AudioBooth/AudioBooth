@@ -13,53 +13,54 @@ struct AuthorCard: View {
 
   var content: some View {
     VStack(alignment: .leading, spacing: 8) {
-      ZStack(alignment: .topTrailing) {
-        GeometryReader { geometry in
-          let size = geometry.size.width
+      GeometryReader { geometry in
+        let size = geometry.size.width
 
-          ZStack {
-            if let imageURL = model.imageURL {
-              LazyImage(url: imageURL) { state in
-                if let image = state.image {
-                  image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                } else {
-                  Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                      Image(systemName: "person.circle")
-                        .font(.largeTitle)
-                        .foregroundColor(.gray)
-                    )
-                }
+        ZStack {
+          if let imageURL = model.imageURL {
+            LazyImage(url: imageURL) { state in
+              if let image = state.image {
+                image
+                  .resizable()
+                  .aspectRatio(contentMode: .fill)
+              } else {
+                Circle()
+                  .fill(Color.gray.opacity(0.3))
+                  .overlay(
+                    Image(systemName: "person.circle")
+                      .font(.largeTitle)
+                      .foregroundColor(.gray)
+                  )
               }
-              .frame(width: size, height: size)
-              .clipShape(Circle())
-            } else {
-              Circle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(width: size, height: size)
-                .overlay(
-                  Image(systemName: "person.circle")
-                    .font(.largeTitle)
-                    .foregroundColor(.gray)
-                )
             }
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+          } else {
+            Circle()
+              .fill(Color.gray.opacity(0.3))
+              .frame(width: size, height: size)
+              .overlay(
+                Image(systemName: "person.circle")
+                  .font(.largeTitle)
+                  .foregroundColor(.gray)
+              )
           }
         }
-        .aspectRatio(1.0, contentMode: .fit)
-
+      }
+      .aspectRatio(1.0, contentMode: .fit)
+      .overlay(alignment: .bottomTrailing) {
         if model.bookCount > 0 {
-          Text("\(model.bookCount)")
-            .font(.caption)
-            .fontWeight(.medium)
-            .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.accentColor)
-            .clipShape(Capsule())
-            .padding(.top, 8)
+          HStack(spacing: 2) {
+            Image(systemName: "book")
+            Text("\(model.bookCount)")
+          }
+          .font(.caption2)
+          .fontWeight(.medium)
+          .foregroundStyle(Color.white)
+          .padding(.vertical, 2)
+          .padding(.horizontal, 4)
+          .background(Color.black.opacity(0.6))
+          .clipShape(.capsule)
         }
       }
 

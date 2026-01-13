@@ -72,7 +72,7 @@ struct LibraryPage: View {
     }
     .toolbar {
       if model.isRoot {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarLeading) {
           Button {
             model.onFilterButtonTapped()
           } label: {
@@ -83,10 +83,6 @@ struct LibraryPage: View {
             )
           }
           .tint(.primary)
-        }
-
-        if #available(iOS 26.0, *) {
-          ToolbarSpacer(.fixed, placement: .navigationBarTrailing)
         }
       } else {
         ToolbarItem(placement: .navigationBarTrailing) {
