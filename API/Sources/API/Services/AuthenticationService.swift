@@ -219,10 +219,10 @@ public final class AuthenticationService: ObservableObject {
     }
 
     let cookieString = cookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
-    let headers = [
-      "Cookie": cookieString,
-      "x-return-tokens": "true",
-    ]
+
+    var headers = customHeaders
+    headers["Cookie"] = cookieString
+    headers["x-return-tokens"] = "true"
 
     AppLogger.authentication.info("Sending OIDC callback request to /auth/openid/callback")
     AppLogger.authentication.debug(
@@ -311,6 +311,13 @@ public final class AuthenticationService: ObservableObject {
     guard let server = servers[serverID] else { return }
 
     server.customHeaders = customHeaders
+
+    ImagePipeline.shared = ImagePipeline {
+      let configuration = DataLoader.defaultConfiguration
+      configuration.requestCachePolicy = .returnCacheDataElseLoad
+      configuration.httpAdditionalHeaders = customHeaders
+      $0.dataLoader = DataLoader(configuration: configuration)
+    }
 
     var allConnections = connections
     allConnections[serverID] = Connection(server)
@@ -508,14 +515,16 @@ public final class AuthenticationService: ObservableObject {
       let user: User
     }
 
-    let networkService = NetworkService(baseURL: server.baseURL) {
-      ["x-refresh-token": refreshToken]
-    }
+    let networkService = NetworkService(baseURL: server.baseURL)
+
+    var headers = server.customHeaders
+    headers["x-refresh-token"] = refreshToken
 
     let request = NetworkRequest<Response>(
       path: "/auth/refresh",
       method: .post,
-      body: nil
+      body: nil,
+      headers: headers
     )
 
     let response = try await networkService.send(request)

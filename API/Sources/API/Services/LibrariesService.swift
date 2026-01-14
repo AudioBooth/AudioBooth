@@ -62,8 +62,8 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
           return [:]
         }
 
-        var headers = ["Authorization": credentials.bearer]
-        headers.merge(server.customHeaders) { _, new in new }
+        var headers = server.customHeaders
+        headers["Authorization"] = credentials.bearer
         return headers
       }
     } else {

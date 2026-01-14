@@ -24,18 +24,8 @@ public struct Book: Codable, Sendable {
   }
 
   public var ebookURL: URL? {
-    guard let serverURL = Audiobookshelf.shared.serverURL,
-      let token = Audiobookshelf.shared.authentication.server?.token
-    else { return nil }
-
-    var url = serverURL.appendingPathComponent("api/items/\(id)/ebook")
-    switch token {
-    case .legacy(let token):
-      url.append(queryItems: [URLQueryItem(name: "token", value: token)])
-    case .bearer(let accessToken, _, _):
-      url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
-    }
-    return url
+    guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
+    return serverURL.appendingPathComponent("api/items/\(id)/ebook")
   }
 }
 

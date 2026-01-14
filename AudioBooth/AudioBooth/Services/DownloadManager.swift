@@ -345,7 +345,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     guard
       let serverID = Audiobookshelf.shared.authentication.server?.id,
       let serverURL = Audiobookshelf.shared.authentication.serverURL,
-      let token = Audiobookshelf.shared.authentication.server?.token
+      let credentials = try? await Audiobookshelf.shared.authentication.server?.freshToken
     else {
       AppLogger.download.error("Missing authentication credentials")
       throw URLError(.userAuthenticationRequired)
@@ -376,17 +376,14 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         throw URLError(.badURL)
       }
 
-      var trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
-      switch token {
-      case .legacy(let token):
-        trackURL.append(queryItems: [URLQueryItem(name: "token", value: token)])
-      case .bearer(let accessToken, _, _):
-        trackURL.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
-      }
+      let trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
 
       let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
 
       var request = URLRequest(url: trackURL)
+
+      request.setValue(credentials.bearer, forHTTPHeaderField: "Authorization")
+
       if let customHeaders = Audiobookshelf.shared.authentication.server?.customHeaders {
         for (key, value) in customHeaders {
           request.setValue(value, forHTTPHeaderField: key)
@@ -422,7 +419,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       throw URLError(.fileDoesNotExist)
     }
 
-    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+    guard
+      let serverID = Audiobookshelf.shared.authentication.server?.id,
+      let credentials = try? await Audiobookshelf.shared.authentication.server?.freshToken
+    else {
       AppLogger.download.error("Missing server ID for authentication")
       throw URLError(.userAuthenticationRequired)
     }
@@ -444,6 +444,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let ebookFile = bookDirectory.appendingPathComponent("\(bookID)\(ext)")
 
     var request = URLRequest(url: ebookURL)
+
+    request.setValue(credentials.bearer, forHTTPHeaderField: "Authorization")
+
     if let customHeaders = Audiobookshelf.shared.authentication.server?.customHeaders {
       for (key, value) in customHeaders {
         request.setValue(value, forHTTPHeaderField: key)

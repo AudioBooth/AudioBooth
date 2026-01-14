@@ -55,17 +55,6 @@ struct Cover: View {
 
   func progress(_ progress: Double) -> some View {
     ZStack {
-      //      Circle()
-      //        .stroke(Color.white.opacity(0.4), lineWidth: 2)
-      //
-      //      Circle()
-      //        .trim(from: 0, to: progress)
-      //        .stroke(
-      //          Color.white,
-      //          style: StrokeStyle(lineWidth: 2, lineCap: .round)
-      //        )
-      //        .rotationEffect(.degrees(-90))
-
       Text("\(Int(progress * 100))%")
         .font(.system(size: 8, weight: .bold))
         .monospacedDigit()

@@ -52,6 +52,10 @@ final class OIDCAuthenticationManager: NSObject {
       self?.handleAuthenticationResult(callbackURL: callbackURL, error: error)
     }
 
+    if #available(iOS 17.4, *) {
+      session?.additionalHeaderFields = customHeaders
+    }
+
     session?.presentationContextProvider = self
     session?.start()
   }
@@ -182,6 +186,7 @@ final class OIDCAuthenticationManager: NSObject {
 
     var request = URLRequest(url: authURL)
     request.httpMethod = "GET"
+    request.allHTTPHeaderFields = customHeaders
 
     let config = URLSessionConfiguration.ephemeral
     let session = URLSession(

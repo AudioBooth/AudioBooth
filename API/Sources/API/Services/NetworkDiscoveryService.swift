@@ -10,12 +10,16 @@ public final class NetworkDiscoveryService: @unchecked Sendable {
     self.audiobookshelf = audiobookshelf
   }
 
-  public func fetchServerStatus(serverURL: URL) async throws -> ServerStatus {
+  public func fetchServerStatus(
+    serverURL: URL,
+    headers: [String: String]
+  ) async throws -> ServerStatus {
     let client = NetworkService(baseURL: serverURL)
 
     let request = NetworkRequest<ServerStatus>(
       path: "/status",
       method: .get,
+      headers: headers,
       timeout: self.timeout
     )
 

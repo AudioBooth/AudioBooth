@@ -28,14 +28,12 @@ public final class Audiobookshelf: @unchecked Sendable {
   private init() {
     setupNetworkService()
 
-    var configuration = ImagePipeline.Configuration.withDataCache
-    configuration.dataCachePolicy = .storeAll
-
-    let dataLoader = DataLoader()
-    dataLoader.session.configuration.requestCachePolicy = .returnCacheDataElseLoad
-    configuration.dataLoader = dataLoader
-
-    ImagePipeline.shared = ImagePipeline(configuration: configuration)
+    ImagePipeline.shared = ImagePipeline {
+      let configuration = DataLoader.defaultConfiguration
+      configuration.requestCachePolicy = .returnCacheDataElseLoad
+      configuration.httpAdditionalHeaders = authentication.server?.customHeaders
+      $0.dataLoader = DataLoader(configuration: configuration)
+    }
   }
 
   public func logout(serverID: String) {
@@ -58,17 +56,13 @@ public final class Audiobookshelf: @unchecked Sendable {
     ) { [weak self] in
       guard let self = self,
         let server = self.authentication.server
-      else {
-        return [:]
-      }
+      else { return [:] }
 
       let freshToken = try? await server.freshToken
-      guard let credentials = freshToken else {
-        return [:]
-      }
+      guard let credentials = freshToken else { return [:] }
 
-      var headers = ["Authorization": credentials.bearer]
-      headers.merge(server.customHeaders) { _, new in new }
+      var headers = server.customHeaders
+      headers["Authorization"] = credentials.bearer
       return headers
     }
   }

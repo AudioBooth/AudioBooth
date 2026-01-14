@@ -344,7 +344,12 @@ final class ServerViewModel: ServerView.Model {
 
     Task {
       do {
-        let status = try await audiobookshelf.networkDiscovery.fetchServerStatus(serverURL: serverURL)
+        let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
+
+        let status = try await audiobookshelf.networkDiscovery.fetchServerStatus(
+          serverURL: serverURL,
+          headers: headers
+        )
         updateAuthenticationModel(with: status)
       } catch {
         AppLogger.viewModel.error("Failed to fetch server status: \(error.localizedDescription)")
