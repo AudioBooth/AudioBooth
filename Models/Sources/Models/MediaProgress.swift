@@ -11,6 +11,7 @@ public final class MediaProgress {
   public var currentTime: TimeInterval
   public var duration: TimeInterval
   public var progress: Double
+  public var ebookProgress: Double?
   public var ebookLocation: String?
   public var isFinished: Bool
   public var finishedAt: Date?
@@ -25,6 +26,7 @@ public final class MediaProgress {
     currentTime: TimeInterval = 0,
     duration: TimeInterval = .infinity,
     progress: Double = 0,
+    ebookProgress: Double? = nil,
     ebookLocation: String? = nil,
     isFinished: Bool = false,
     finishedAt: Date? = nil,
@@ -36,6 +38,7 @@ public final class MediaProgress {
     self.currentTime = currentTime
     self.duration = duration
     self.progress = progress
+    self.ebookProgress = ebookProgress
     self.ebookLocation = ebookLocation
     self.isFinished = isFinished
     self.finishedAt = finishedAt
@@ -43,7 +46,7 @@ public final class MediaProgress {
   }
 
   public convenience init(from apiProgress: User.MediaProgress) {
-    var progress = max(apiProgress.progress, apiProgress.ebookProgress ?? 0)
+    var progress = apiProgress.progress
     var currentTime = apiProgress.currentTime
 
     if apiProgress.isFinished {
@@ -58,6 +61,7 @@ public final class MediaProgress {
       currentTime: currentTime,
       duration: apiProgress.duration ?? 0,
       progress: progress,
+      ebookProgress: apiProgress.ebookProgress,
       ebookLocation: apiProgress.ebookLocation,
       isFinished: apiProgress.isFinished,
       finishedAt: apiProgress.finishedAt.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) },
@@ -73,7 +77,15 @@ extension MediaProgress {
   public static func initialize() -> [String: Double] {
     do {
       let allProgress = try fetchAll()
-      return Dictionary(uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.progress) })
+      return Dictionary(
+        uniqueKeysWithValues: allProgress.map {
+          if $0.progress > 0 {
+            return ($0.bookID, $0.progress)
+          } else {
+            return ($0.bookID, $0.ebookProgress ?? 0)
+          }
+        }
+      )
     } catch {
       return [:]
     }
@@ -107,22 +119,27 @@ extension MediaProgress {
   public func save() throws {
     let context = ModelContextProvider.shared.context
 
-    if let existingProgress = try MediaProgress.fetch(bookID: self.bookID) {
-      existingProgress.id = self.id
-      existingProgress.lastPlayedAt = self.lastPlayedAt
-      existingProgress.currentTime = self.currentTime
-      existingProgress.duration = self.duration
-      existingProgress.progress = self.progress
-      existingProgress.ebookLocation = self.ebookLocation
-      existingProgress.isFinished = self.isFinished
-      existingProgress.finishedAt = self.finishedAt
-      existingProgress.lastUpdate = self.lastUpdate
+    if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
+      existingProgress.id = id
+      existingProgress.lastPlayedAt = lastPlayedAt
+      existingProgress.currentTime = currentTime
+      existingProgress.duration = duration
+      existingProgress.progress = progress
+      existingProgress.ebookLocation = ebookLocation
+      existingProgress.isFinished = isFinished
+      existingProgress.finishedAt = finishedAt
+      existingProgress.lastUpdate = lastUpdate
     } else {
       context.insert(self)
     }
 
     try context.save()
-    MediaProgress.cache[self.bookID] = self.progress
+
+    if progress > 0 {
+      MediaProgress.cache[bookID] = progress
+    } else if let progress = ebookProgress {
+      MediaProgress.cache[bookID] = progress
+    }
   }
 
   public func delete() throws {
@@ -152,6 +169,7 @@ extension MediaProgress {
     -> MediaProgress
   {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
+      existingProgress.duration = duration
       return existingProgress
     } else {
       let newProgress = MediaProgress(
@@ -168,14 +186,12 @@ extension MediaProgress {
     for bookID: String,
     currentTime: TimeInterval,
     duration: TimeInterval,
-    progress: Double,
-    ebookLocation: String? = nil
+    progress: Double
   ) throws {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
       existingProgress.currentTime = currentTime
       existingProgress.duration = duration
       existingProgress.progress = progress
-      existingProgress.ebookLocation = ebookLocation
       existingProgress.lastUpdate = Date()
       existingProgress.isFinished = progress >= 1.0
       try existingProgress.save()
@@ -187,13 +203,40 @@ extension MediaProgress {
         currentTime: currentTime,
         duration: duration,
         progress: progress,
-        ebookLocation: ebookLocation,
         isFinished: progress >= 1.0,
         lastUpdate: Date()
       )
       try newProgress.save()
     }
     cache[bookID] = progress
+  }
+
+  public static func updateEbookProgress(
+    for bookID: String,
+    ebookProgress: Double,
+    ebookLocation: String? = nil
+  ) throws {
+    if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
+      existingProgress.ebookProgress = ebookProgress
+      existingProgress.ebookLocation = ebookLocation
+      existingProgress.lastUpdate = Date()
+      try existingProgress.save()
+
+      if existingProgress.progress == 0 {
+        cache[bookID] = ebookProgress
+      }
+    } else {
+      let newProgress = MediaProgress(
+        bookID: bookID,
+        id: nil,
+        lastPlayedAt: Date(),
+        ebookProgress: ebookProgress,
+        ebookLocation: ebookLocation,
+        lastUpdate: Date()
+      )
+      try newProgress.save()
+      cache[bookID] = ebookProgress
+    }
   }
 
   public static func markAsFinished(for bookID: String) throws {
@@ -256,10 +299,19 @@ extension MediaProgress {
           local.lastUpdate = remote.lastUpdate
         }
 
-        cache[local.bookID] = local.progress
+        if local.progress > 0 {
+          cache[local.bookID] = local.progress
+        } else if let progress = local.ebookProgress {
+          cache[local.bookID] = progress
+        }
       } else {
         context.insert(remote)
-        cache[remote.bookID] = remote.progress
+
+        if remote.progress > 0 {
+          cache[remote.bookID] = remote.progress
+        } else if let progress = remote.ebookProgress {
+          cache[remote.bookID] = progress
+        }
       }
     }
 

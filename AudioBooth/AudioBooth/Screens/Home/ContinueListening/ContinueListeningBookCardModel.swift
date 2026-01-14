@@ -100,7 +100,7 @@ extension ContinueListeningBookCardModel {
     guard let mediaProgress else { return }
 
     Task { @MainActor in
-      progress = mediaProgress.progress
+      progress = MediaProgress.progress(for: mediaProgress.bookID)
 
       let remainingTime = mediaProgress.remaining
       if remainingTime > 0 && mediaProgress.progress > 0 {

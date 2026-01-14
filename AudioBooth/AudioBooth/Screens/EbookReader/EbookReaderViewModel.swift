@@ -311,11 +311,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     let ebookLocation = location?.jsonString
 
-    try? MediaProgress.updateProgress(
+    try? MediaProgress.updateEbookProgress(
       for: bookID,
-      currentTime: 0,
-      duration: 0,
-      progress: progress,
+      ebookProgress: progress,
       ebookLocation: ebookLocation
     )
 

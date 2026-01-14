@@ -6,9 +6,11 @@ import RichText
 import SwiftUI
 
 struct BookDetailsView: View {
-  @ObservedObject var model: Model
-  @ObservedObject var preferences = UserPreferences.shared
   @Environment(\.verticalSizeClass) private var verticalSizeClass
+  @ObservedObject var preferences = UserPreferences.shared
+
+  @StateObject var model: Model
+
   @State private var collectionSelector: CollectionMode?
   @State private var selectedTabIndex: Int = 0
   @State private var isDescriptionExpanded: Bool = false
@@ -399,11 +401,18 @@ struct BookDetailsView: View {
           .font(.subheadline)
         }
 
-        if let progress = model.progress, progress > 0 {
+        if let audioProgress = model.audioProgress, audioProgress > 0, model.hasAudio {
           HStack {
             Image(systemName: "chart.bar.fill")
               .accessibilityHidden(true)
-            Text("**Progress:** \(progress.formatted(.percent.precision(.fractionLength(0))))")
+            Text("**Progress:** \(audioProgress.formatted(.percent.precision(.fractionLength(0))))")
+          }
+          .font(.subheadline)
+        } else if let ebookProgress = model.ebookProgress, ebookProgress > 0, model.isEbook {
+          HStack {
+            Image(systemName: "chart.bar.fill")
+              .accessibilityHidden(true)
+            Text("**Progress:** \(ebookProgress.formatted(.percent.precision(.fractionLength(0))))")
           }
           .font(.subheadline)
         }
@@ -447,14 +456,14 @@ struct BookDetailsView: View {
           .frame(maxWidth: .infinity)
           .padding()
           .background {
-            if let progress = model.progress, progress >= 0.01 {
+            if let audioProgress = model.audioProgress, audioProgress >= 0.01 {
               GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                   Color.accentColor.opacity(0.6)
 
                   Rectangle()
                     .fill(Color.accentColor)
-                    .frame(width: geometry.size.width * progress)
+                    .frame(width: geometry.size.width * audioProgress)
                 }
               }
             } else {
@@ -474,7 +483,21 @@ struct BookDetailsView: View {
           }
           .frame(maxWidth: .infinity)
           .padding()
-          .background(Color.accentColor)
+          .background {
+            if let ebookProgress = model.ebookProgress, ebookProgress >= 0.01 {
+              GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                  Color.accentColor.opacity(0.6)
+
+                  Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: geometry.size.width * ebookProgress)
+                }
+              }
+            } else {
+              Color.accentColor
+            }
+          }
           .foregroundColor(.white)
           .cornerRadius(12)
         }
@@ -535,7 +558,7 @@ struct BookDetailsView: View {
     if model.isCurrentlyPlaying {
       return "Pause"
     }
-    if let progress = model.progress, progress > 0 {
+    if let audioProgress = model.audioProgress, audioProgress > 0 {
       return "Continue Listening"
     }
     return "Play"
@@ -858,6 +881,8 @@ extension BookDetailsView {
     var series: [Series]
     var coverURL: URL?
     var progress: Double?
+    var audioProgress: Double?
+    var ebookProgress: Double?
     var durationText: String?
     var timeRemaining: String?
     var downloadState: DownloadManager.DownloadState
@@ -899,6 +924,8 @@ extension BookDetailsView {
       series: [Series] = [],
       coverURL: URL? = nil,
       progress: Double? = nil,
+      audioProgress: Double? = nil,
+      ebookProgress: Double? = nil,
       durationText: String? = nil,
       timeRemaining: String? = nil,
       downloadState: DownloadManager.DownloadState = .notDownloaded,
@@ -926,6 +953,8 @@ extension BookDetailsView {
       self.series = series
       self.coverURL = coverURL
       self.progress = progress
+      self.audioProgress = audioProgress
+      self.ebookProgress = ebookProgress
       self.durationText = durationText
       self.timeRemaining = timeRemaining
       self.downloadState = downloadState

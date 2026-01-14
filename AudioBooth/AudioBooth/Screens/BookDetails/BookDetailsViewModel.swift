@@ -29,12 +29,17 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   init(bookID: String) {
     let canManageCollections = Audiobookshelf.shared.authentication.permissions?.update == true
+    let initialMediaProgress = try? MediaProgress.fetch(bookID: bookID)
     super.init(
       bookID: bookID,
       progress: MediaProgress.progress(for: bookID),
+      audioProgress: initialMediaProgress?.progress,
+      ebookProgress: initialMediaProgress?.ebookProgress,
+      isLoading: false,
       canManageCollections: canManageCollections,
       tabs: []
     )
+    mediaProgress = initialMediaProgress
   }
 
   isolated deinit {
@@ -574,10 +579,12 @@ extension BookDetailsViewModel {
     guard let mediaProgress else { return }
 
     Task { @MainActor in
-      progress = mediaProgress.progress
+      progress = MediaProgress.progress(for: bookID)
+      audioProgress = mediaProgress.progress
+      ebookProgress = mediaProgress.ebookProgress
 
       let remainingTime = mediaProgress.remaining
-      if remainingTime > 0 && mediaProgress.progress > 0 {
+      if remainingTime > 0 && audioProgress ?? 0 > 0 {
         if let current = PlayerManager.shared.current,
           [book?.id, localBook?.bookID].contains(current.id)
         {
