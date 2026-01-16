@@ -9,6 +9,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   static let shared = WatchConnectivityManager()
 
   private var session: WCSession?
+  private var context: [String: Any] = [:]
 
   private enum Keys {
     static let watchDownloadedBookIDs = "watch_downloaded_book_ids"
@@ -34,22 +35,16 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   func syncProgress(_ bookID: String) {
-    var context = session?.applicationContext ?? [:]
+    guard let current = try? MediaProgress.fetch(bookID: bookID) else { return }
 
-    guard
-      var progress = context["progress"] as? [String: Double],
-      let current = try? MediaProgress.fetch(bookID: bookID)
-    else { return }
-
+    var progress = context["progress"] as? [String: Double] ?? [:]
     progress[bookID] = current.currentTime
 
     context["progress"] = progress
-    updateContext(context)
+    updateContext()
   }
 
   func syncContinueListening(books: [Book]) {
-    var context = session?.applicationContext ?? [:]
-
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
       uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) }
@@ -82,7 +77,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     context["continueListening"] = continueListening
     context["progress"] = progress
-    updateContext(context)
+    updateContext()
 
     AppLogger.watchConnectivity.info(
       "Synced \(continueListening.count) continue listening books"
@@ -110,9 +105,6 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   private func refreshProgress() {
-    guard let session = session else { return }
-
-    var context = session.applicationContext
     let continueListening = context["continueListening"] as? [[String: Any]] ?? []
     var progress: [String: Double] = [:]
 
@@ -141,10 +133,10 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
 
     context["progress"] = progress
-    updateContext(context)
+    updateContext()
   }
 
-  private func updateContext(_ context: [String: Any]) {
+  private func updateContext() {
     guard session?.isReachable == true else { return }
     do {
       try session?.updateApplicationContext(context)
@@ -156,9 +148,6 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   func sendPlaybackRate(_ rate: Float?) {
-    guard let session = session else { return }
-
-    var context = session.applicationContext
     if let rate {
       context["playbackRate"] = rate
       context["hasCurrentBook"] = true
@@ -167,11 +156,12 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       context.removeValue(forKey: "hasCurrentBook")
     }
 
-    updateContext(context)
+    updateContext()
   }
 
   func clearAllState() {
-    updateContext([:])
+    context = [:]
+    updateContext()
   }
 
   private func watchCompatibleCoverURL(from url: URL?) -> String? {
