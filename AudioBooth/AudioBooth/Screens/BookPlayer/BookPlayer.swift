@@ -5,8 +5,10 @@ import SwiftData
 import SwiftUI
 
 struct BookPlayer: View {
-  @Binding var model: Model
+  @ObservedObject var model: Model
+
   @Environment(\.dismiss) private var dismiss
+
   @Environment(\.verticalSizeClass) private var verticalSizeClass
   @ObservedObject private var playerManager = PlayerManager.shared
   @ObservedObject private var preferences = UserPreferences.shared
@@ -528,5 +530,5 @@ struct AirPlayButton: UIViewRepresentable {
 }
 
 #Preview {
-  BookPlayer(model: .constant(.mock))
+  BookPlayer(model: .mock)
 }

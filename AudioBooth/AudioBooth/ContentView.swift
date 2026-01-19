@@ -30,7 +30,7 @@ struct ContentView: View {
     }
     .sheet(isPresented: $playerManager.isShowingFullPlayer) {
       if let currentPlayer = playerManager.current {
-        BookPlayer(model: .constant(currentPlayer))
+        BookPlayer(model: currentPlayer)
           .presentationDetents([.large])
           .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
       }
