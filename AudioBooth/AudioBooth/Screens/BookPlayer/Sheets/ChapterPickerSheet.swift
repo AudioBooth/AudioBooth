@@ -51,7 +51,7 @@ struct ChapterPickerSheet: View {
       .navigationTitle("Chapters")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
           Button("Done") {
             model.isPresented = false
           }

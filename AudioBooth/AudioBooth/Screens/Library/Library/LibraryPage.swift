@@ -103,6 +103,10 @@ struct LibraryPage: View {
             Text("This will download all books in this collection. This may use significant storage space.")
           }
         }
+
+        if #available(iOS 26.0, *) {
+          ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
       }
 
       ToolbarItem(placement: .topBarTrailing) {

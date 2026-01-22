@@ -97,7 +97,7 @@ struct HomePage: View {
     }
     .navigationTitle(model.title)
     .toolbar {
-      ToolbarItem(placement: .navigationBarLeading) {
+      ToolbarItem(placement: .topBarLeading) {
         Button {
           showingServerPicker = true
         } label: {
@@ -114,7 +114,7 @@ struct HomePage: View {
         .tint(.primary)
       }
 
-      ToolbarItem(placement: .navigationBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
         Button {
           showingSettings = true
         } label: {

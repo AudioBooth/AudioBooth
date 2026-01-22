@@ -79,7 +79,7 @@ struct BookDetailsView: View {
         }
       }
 
-      ToolbarItem(placement: .navigationBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
         Menu {
           if model.actions.contains(.addToCollection) {
             Button(action: { collectionSelector = .collections }) {

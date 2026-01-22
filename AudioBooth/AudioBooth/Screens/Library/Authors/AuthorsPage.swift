@@ -32,7 +32,6 @@ struct AuthorsPage: View {
       }
     }
     .navigationTitle("Authors")
-    .navigationBarTitleDisplayMode(.inline)
     .refreshable {
       await model.refresh()
     }
@@ -41,11 +40,7 @@ struct AuthorsPage: View {
       prompt: "Search books, series, and authors"
     )
     .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        EmptyView()
-      }
-
-      ToolbarItem(placement: .navigationBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
         Menu {
           Picker("Sort Order", selection: $sortOrder) {
             Text("First Last").tag(SortOrder.firstLast)

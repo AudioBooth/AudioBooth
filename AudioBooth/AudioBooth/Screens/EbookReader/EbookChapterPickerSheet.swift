@@ -47,7 +47,7 @@ struct EbookChapterPickerSheet: View {
       .navigationTitle("Contents")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
           Button("Done") {
             model.isPresented = false
           }

@@ -2,14 +2,20 @@ import API
 import SwiftUI
 
 struct CollectionsRootPage: View {
-  enum CollectionType: Hashable {
+  enum CollectionType: CaseIterable {
     case series
     case collections
     case playlists
+
+    var next: CollectionType {
+      let all = CollectionType.allCases
+      let index = all.firstIndex(of: self) ?? 0
+      return all[(index + 1) % all.count]
+    }
   }
 
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
-  @State private var selectedType: CollectionType = .series
+  @Binding var selectedType: CollectionType
 
   var body: some View {
     NavigationStack {
@@ -62,5 +68,5 @@ struct CollectionsRootPage: View {
 }
 
 #Preview {
-  CollectionsRootPage()
+  CollectionsRootPage(selectedType: .constant(.series))
 }

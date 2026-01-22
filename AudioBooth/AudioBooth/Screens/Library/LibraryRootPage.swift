@@ -2,13 +2,19 @@ import API
 import SwiftUI
 
 struct LibraryRootPage: View {
-  enum LibraryType: Hashable {
+  enum LibraryType: CaseIterable {
     case library
     case authors
     case narrators
+
+    var next: LibraryType {
+      let all = LibraryType.allCases
+      let index = all.firstIndex(of: self) ?? 0
+      return all[(index + 1) % all.count]
+    }
   }
 
-  @State private var selectedType: LibraryType = .library
+  @Binding var selectedType: LibraryType
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
 
   var body: some View {

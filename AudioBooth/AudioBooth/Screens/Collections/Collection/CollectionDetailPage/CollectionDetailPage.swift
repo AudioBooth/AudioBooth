@@ -25,7 +25,7 @@ struct CollectionDetailPage: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if model.mode == .playlists {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
           Button {
             model.onTogglePin()
           } label: {
@@ -36,14 +36,14 @@ struct CollectionDetailPage: View {
       }
 
       if model.canEdit {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
           EditButton()
             .tint(.primary)
         }
       }
 
       if model.canEdit || model.canDelete {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
           Menu {
             if model.canEdit {
               Button {

@@ -11,6 +11,8 @@ struct ContentView: View {
 
   @State private var isKeyboardVisible = false
   @State private var selectedTab: TabSelection = .home
+  @State private var selectedCollectionType: CollectionsRootPage.CollectionType = .series
+  @State private var selectedLibraryType: LibraryRootPage.LibraryType = .library
 
   enum TabSelection {
     case home, library, collections, downloads, search
@@ -18,6 +20,25 @@ struct ContentView: View {
 
   private var hasSelectedLibrary: Bool {
     libraries.current != nil
+  }
+
+  private var tabSelection: Binding<TabSelection> {
+    Binding(
+      get: { selectedTab },
+      set: { newValue in
+        if newValue == selectedTab {
+          switch newValue {
+          case .library:
+            selectedLibraryType = selectedLibraryType.next
+          case .collections:
+            selectedCollectionType = selectedCollectionType.next
+          default:
+            break
+          }
+        }
+        selectedTab = newValue
+      }
+    )
   }
 
   var body: some View {
@@ -63,18 +84,18 @@ struct ContentView: View {
   @available(iOS 26.0, *)
   @ViewBuilder
   private var modernTabView: some View {
-    TabView(selection: $selectedTab) {
+    TabView(selection: tabSelection) {
       Tab("Home", systemImage: "house", value: .home) {
         HomePage(model: HomePageModel())
       }
 
       if hasSelectedLibrary {
         Tab("Library", systemImage: "books.vertical.fill", value: .library) {
-          LibraryRootPage()
+          LibraryRootPage(selectedType: $selectedLibraryType)
         }
 
         Tab("Collections", systemImage: "square.stack.3d.up.fill", value: .collections) {
-          CollectionsRootPage()
+          CollectionsRootPage(selectedType: $selectedCollectionType)
         }
 
         Tab("Downloads", systemImage: "arrow.down.circle.fill", value: .downloads) {
@@ -120,7 +141,7 @@ struct ContentView: View {
         }
 
       if hasSelectedLibrary {
-        LibraryRootPage()
+        LibraryRootPage(selectedType: $selectedLibraryType)
           .padding(.bottom, 0.5)
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
@@ -128,7 +149,7 @@ struct ContentView: View {
             Text("Library")
           }
 
-        CollectionsRootPage()
+        CollectionsRootPage(selectedType: $selectedCollectionType)
           .padding(.bottom, 0.5)
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
