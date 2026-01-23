@@ -516,25 +516,18 @@ extension BookPlayerModel {
     setupTimeObserver()
 
     speed = SpeedPickerSheetViewModel(player: player)
-    let timerViewModel = TimerPickerSheetViewModel()
-    timerViewModel.setPlayer(player)
-    timer = timerViewModel
 
     if let item {
       bookmarks = BookmarkViewerSheetViewModel(item: .local(item), initialTime: 0)
     }
 
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
-      let chapters = ChapterPickerSheetViewModel(
+      chapters = ChapterPickerSheetViewModel(
         itemID: id,
         chapters: sessionChapters,
         mediaProgress: mediaProgress,
         player: player
       )
-
-      self.chapters = chapters
-      timer.maxRemainingChapters = sessionChapters.count - 1
-      observeCurrentChapter()
       AppLogger.player.debug(
         "Loaded \(sessionChapters.count) chapters from play session info"
       )
@@ -542,6 +535,8 @@ extension BookPlayerModel {
       chapters = nil
       AppLogger.player.debug("No chapters available in play session info")
     }
+
+    timer = TimerPickerSheetViewModel(player: player, chapters: chapters, speed: speed)
 
     if let playbackProgress = playbackProgress as? PlaybackProgressViewModel {
       playbackProgress.configure(
@@ -744,24 +739,6 @@ extension BookPlayerModel {
         player.volume = Float(userPreferences.volumeLevel)
       }
       .store(in: &cancellables)
-  }
-
-  private func observeCurrentChapter() {
-    withObservationTracking {
-      _ = chapters?.current
-    } onChange: { [weak self] in
-      guard let self else { return }
-
-      RunLoop.main.perform {
-        if let chapters = self.chapters {
-          if let timerViewModel = self.timer as? TimerPickerSheetViewModel {
-            timerViewModel.onChapterChanged(current: chapters.currentIndex, total: chapters.chapters.count)
-          }
-        }
-
-        self.observeCurrentChapter()
-      }
-    }
   }
 
   private func setupHistory() {

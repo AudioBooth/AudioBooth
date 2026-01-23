@@ -180,8 +180,8 @@ struct TimerPickerSheet: View {
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.primary)
 
-          if chapterCount > 1 {
-            Text("Includes your current chapter")
+          if isSelected, let estimatedEndTime = model.estimatedEndTime {
+            Text(estimatedEndTime)
               .font(.caption)
               .foregroundColor(.secondary)
           }
@@ -283,6 +283,7 @@ extension TimerPickerSheet {
     var customMinutes: Int = 1
     var maxRemainingChapters: Int = 0
     var completedAlert: TimerCompletedAlertView.Model?
+    var estimatedEndTime: String?
 
     init() {}
 

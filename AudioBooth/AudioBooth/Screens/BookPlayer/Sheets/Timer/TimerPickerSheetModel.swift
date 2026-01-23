@@ -6,23 +6,35 @@ import SwiftUI
 
 final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private let preferences = UserPreferences.shared
+  private let player: AVPlayer
+  private let chapters: ChapterPickerSheet.Model?
+  private let speed: SpeedPickerSheet.Model
 
-  private weak var player: AVPlayer?
   private var sleepTimer: Timer?
   private var timerStartTime: Date?
   private var originalTimerDuration: TimeInterval = 0
-  private var currentChapterIndex: Int = 0
+  private var lastObservedChapterIndex: Int = 0
   private var cancellables = Set<AnyCancellable>()
 
-  override init() {
+  init(player: AVPlayer, chapters: ChapterPickerSheet.Model?, speed: SpeedPickerSheet.Model) {
+    self.player = player
+    self.chapters = chapters
+    self.speed = speed
+
     super.init()
 
     let totalMinutes = preferences.customTimerMinutes
     customHours = totalMinutes / 60
     customMinutes = totalMinutes % 60
 
+    if let chapters {
+      maxRemainingChapters = chapters.chapters.count - chapters.currentIndex - 1
+      lastObservedChapterIndex = chapters.currentIndex
+    }
+
     ShakeDetector.shared.stopMonitoring()
     setupShakeObserver()
+    observeChapterChanges()
   }
 
   private func setupShakeObserver() {
@@ -33,14 +45,47 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       .store(in: &cancellables)
   }
 
-  func setPlayer(_ player: AVPlayer?) {
-    self.player = player
+  private func observeChapterChanges() {
+    guard let chapters else { return }
+
+    withObservationTracking {
+      _ = chapters.currentIndex
+    } onChange: { [weak self] in
+      guard let self else { return }
+      RunLoop.main.perform {
+        self.handleChapterChange()
+        self.observeChapterChanges()
+      }
+    }
+  }
+
+  private func handleChapterChange() {
+    guard let chapters else { return }
+
+    let currentIndex = chapters.currentIndex
+    let total = chapters.chapters.count
+    maxRemainingChapters = total - currentIndex - 1
+
+    if case .chapters(let chaptersRemaining) = self.current {
+      if lastObservedChapterIndex < currentIndex {
+        if chaptersRemaining > 1 {
+          self.current = .chapters(chaptersRemaining - 1)
+        } else {
+          pauseFromChapterTimer()
+        }
+      }
+    }
+
+    lastObservedChapterIndex = currentIndex
   }
 
   override var isPresented: Bool {
     didSet {
       if isPresented && !oldValue {
         selected = current
+        if case .chapters(let count) = current {
+          updateEstimatedEndTime(for: count)
+        }
       }
     }
   }
@@ -48,20 +93,59 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   override func onQuickTimerSelected(_ minutes: Int) {
     let duration = TimeInterval(minutes * 60)
     selected = .preset(duration)
+    estimatedEndTime = nil
     onStartTimerTapped()
   }
 
   override func onChaptersChanged(_ value: Int) {
     selected = .chapters(value)
-    if value == 1 {
-      onStartTimerTapped()
+    updateEstimatedEndTime(for: value)
+  }
+
+  private func updateEstimatedEndTime(for chapterCount: Int) {
+    guard let chapters, chapterCount > 0 else {
+      estimatedEndTime = nil
+      return
     }
+
+    let currentTime = CMTimeGetSeconds(player.currentTime())
+    let currentIndex = chapters.currentIndex
+    let allChapters = chapters.chapters
+
+    guard currentIndex < allChapters.count else {
+      estimatedEndTime = nil
+      return
+    }
+
+    var totalSeconds: TimeInterval = 0
+
+    let currentChapter = allChapters[currentIndex]
+    totalSeconds += max(0, currentChapter.end - currentTime)
+
+    let additionalChaptersNeeded = chapterCount - 1
+    if additionalChaptersNeeded > 0 {
+      for i in 1...additionalChaptersNeeded {
+        let chapterIndex = currentIndex + i
+        guard chapterIndex < allChapters.count else { break }
+        let chapter = allChapters[chapterIndex]
+        totalSeconds += chapter.end - chapter.start
+      }
+    }
+
+    let playbackSpeed = Double(speed.playbackSpeed)
+    let adjustedSeconds = totalSeconds / playbackSpeed
+
+    let endDate = Date().addingTimeInterval(adjustedSeconds)
+    let formatter = DateFormatter()
+    formatter.dateFormat = "h:mm a"
+    estimatedEndTime = "Pauses at \(formatter.string(from: endDate))"
   }
 
   override func onOffSelected() {
     selected = .none
     current = .none
     completedAlert = nil
+    estimatedEndTime = nil
     stopSleepTimer()
     isPresented = false
   }
@@ -82,7 +166,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
     isPresented = false
 
-    player?.play()
+    player.play()
   }
 
   private func startSleepTimer(duration: TimeInterval) {
@@ -135,15 +219,15 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func fadeOut(_ seconds: TimeInterval) {
     let fadeOut = preferences.timerFadeOut
     if fadeOut > 0, seconds < fadeOut {
-      player?.volume = Float(seconds / fadeOut) * Float(preferences.volumeLevel)
+      player.volume = Float(seconds / fadeOut) * Float(preferences.volumeLevel)
     }
   }
 
   private func pauseFromTimer() {
     let duration = originalTimerDuration
 
-    player?.pause()
-    player?.volume = Float(preferences.volumeLevel)
+    player.pause()
+    player.volume = Float(preferences.volumeLevel)
 
     if preferences.shakeSensitivity.isEnabled {
       let extendAction = formatExtendButtonTitle(for: duration)
@@ -181,7 +265,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       startSleepTimer(duration: originalTimerDuration)
       current = .preset(originalTimerDuration)
 
-      player?.play()
+      player.play()
 
       AppLogger.player.info("Timer extended by \(self.originalTimerDuration) seconds")
     }
@@ -203,7 +287,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   func pauseFromChapterTimer() {
-    player?.pause()
+    player.pause()
 
     if preferences.shakeSensitivity.isEnabled {
       completedAlert = TimerCompletedAlertViewModel(
@@ -224,27 +308,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func extendChapterTimer() {
     current = .chapters(1)
 
-    player?.play()
+    player.play()
 
     AppLogger.player.info("Chapter timer extended by 1 chapter")
 
     completedAlert = nil
-  }
-
-  func onChapterChanged(current: Int, total: Int) {
-    maxRemainingChapters = total - current - 1
-
-    if case .chapters(let chapters) = self.current {
-      if currentChapterIndex < current {
-        if chapters > 1 {
-          self.current = .chapters(chapters - 1)
-        } else {
-          pauseFromChapterTimer()
-        }
-      }
-    }
-
-    currentChapterIndex = current
   }
 
   private func currentTimeInMinutes() -> Int {
@@ -295,7 +363,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   func onShakeDetected() {
     guard preferences.shakeSensitivity.isEnabled, originalTimerDuration > 0 else { return }
 
-    player?.volume = Float(preferences.volumeLevel)
+    player.volume = Float(preferences.volumeLevel)
 
     switch current {
     case .preset:
