@@ -75,9 +75,10 @@ struct SeriesCard: View {
         }
         .aspectRatio(2.0, contentMode: .fit)
         .overlay(alignment: .bottom) {
-          ProgressBarView(progress: model.progress)
-            .clipShape(UnevenRoundedRectangle(cornerRadii: .init(bottomLeading: 6, bottomTrailing: 6)))
+          ProgressOverlay(progress: model.progress)
+            .padding(4)
         }
+        .clipShape(RoundedRectangle(cornerRadius: 6))
 
         if model.bookCount > 0 {
           HStack(spacing: 2) {

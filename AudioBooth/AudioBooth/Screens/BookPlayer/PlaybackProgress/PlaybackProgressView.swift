@@ -23,15 +23,14 @@ struct PlaybackProgressView: View {
 
           HStack {
             Text(formatCurrentTime(model.total * model.totalProgress))
-              .font(.caption)
               .foregroundColor(.white.opacity(0.7))
 
             Spacer()
 
             Text("-\(formatCurrentTime(model.totalTimeRemaining))")
-              .font(.caption)
-              .foregroundColor(.white.opacity(0.7))
           }
+          .font(.caption)
+          .foregroundColor(.white.opacity(0.7))
           .monospacedDigit()
         }
       }
@@ -76,8 +75,6 @@ struct PlaybackProgressView: View {
           .font(.caption)
           .foregroundColor(.white.opacity(0.7))
 
-        Spacer()
-
         Group {
           if preferences.showFullBookDuration || preferences.showBookProgressBar
             || model.totalProgress == model.progress
@@ -91,8 +88,8 @@ struct PlaybackProgressView: View {
         .font(.caption)
         .foregroundColor(.white)
         .fontWeight(.medium)
-
-        Spacer()
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal)
 
         Text("-\(formatCurrentTime(model.remaining))")
           .font(.caption)

@@ -103,7 +103,8 @@ struct BookCard: View {
   var cover: some View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) {
-        ProgressBarView(progress: model.progress)
+        ProgressOverlay(progress: model.progress)
+          .padding(4)
       }
       .overlay { downloadProgress }
       .overlay(alignment: .bottomLeading) {
@@ -151,7 +152,8 @@ struct BookCard: View {
   var rowCover: some View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) {
-        ProgressBarView(progress: model.progress)
+        ProgressOverlay(progress: model.progress)
+          .padding(2)
       }
       .overlay { downloadProgress }
       .overlay(alignment: .bottomLeading) {

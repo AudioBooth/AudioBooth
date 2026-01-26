@@ -186,6 +186,10 @@ struct BookPlayer: View {
     }
     .accessibilityLabel("Book details")
     .overlay(alignment: .topLeading) {
+      let progress = model.playbackProgress.totalProgress.formatted(.percent.precision(.fractionLength(0)))
+      badge(text: Text(progress), accessibilityLabel: progress)
+    }
+    .overlay(alignment: .topTrailing) {
       timerOverlay
     }
     .padding(.horizontal, 30)
@@ -204,20 +208,22 @@ struct BookPlayer: View {
       )
       let remaining = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds]))
       let accessibilityLabel = "Sleep timer: \(remaining) remaining"
-      timerBadge(text: Text(text), accessibilityLabel: accessibilityLabel)
+      badge(icon: "timer", text: Text(text), accessibilityLabel: accessibilityLabel)
     case .chapters(let count):
       let label = count > 1 ? "End of \(count) chapters" : "End of chapter"
       let accessibilityLabel = "Sleep timer: \(label)"
-      timerBadge(text: Text(label), accessibilityLabel: accessibilityLabel)
+      badge(icon: "timer", text: Text(label), accessibilityLabel: accessibilityLabel)
     case .none:
       EmptyView()
     }
   }
 
   @ViewBuilder
-  private func timerBadge(text: Text, accessibilityLabel: String) -> some View {
+  private func badge(icon: String? = nil, text: Text, accessibilityLabel: String) -> some View {
     HStack(spacing: 4) {
-      Image(systemName: "timer")
+      if let icon {
+        Image(systemName: icon)
+      }
       text
     }
     .font(.footnote)

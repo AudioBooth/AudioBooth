@@ -239,7 +239,8 @@ extension OfflineListView {
     var cover: some View {
       CoverImage(url: book.coverURL)
         .overlay(alignment: .bottom) {
-          ProgressBarView(progress: book.progress)
+          ProgressOverlay(progress: book.progress)
+            .padding(2)
         }
         .overlay(alignment: .topTrailing) {
           if let sequence = sequence {

@@ -29,7 +29,8 @@ struct ItemRow: View {
   var cover: some View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) {
-        ProgressBarView(progress: model.progress)
+        ProgressOverlay(progress: model.progress)
+          .padding(2)
       }
       .frame(width: 60, height: 60)
       .clipShape(RoundedRectangle(cornerRadius: 6))

@@ -318,12 +318,6 @@ struct BookDetailsView: View {
               }
           }
         }
-        .overlay(alignment: .bottom) {
-          let progress = max(model.progress.audio, model.progress.ebook)
-          if progress > 0 {
-            ProgressBarView(progress: progress)
-          }
-        }
         .overlay { downloadProgress }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(radius: 4)
@@ -341,12 +335,6 @@ struct BookDetailsView: View {
     VStack {
       CoverImage(url: model.coverURL)
         .frame(width: 200, height: 200)
-        .overlay(alignment: .bottom) {
-          let progress = max(model.progress.audio, model.progress.ebook)
-          if progress > 0 {
-            ProgressBarView(progress: progress)
-          }
-        }
         .overlay { downloadProgress }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(radius: 4)
