@@ -168,6 +168,14 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       )
       navigator.delegate = self
       return navigator
+    } else if publication.conforms(to: .divina) {
+      let navigator = try CBZNavigatorViewController(
+        publication: publication,
+        initialLocation: initialLocation,
+        httpServer: httpServer
+      )
+      navigator.delegate = self
+      return navigator
     } else {
       throw EbookError.unsupportedFormat
     }
@@ -404,7 +412,7 @@ extension EbookReaderViewModel {
   }
 }
 
-extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
+extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate, CBZNavigatorDelegate {
   func navigator(_ navigator: Navigator, locationDidChange locator: Locator) {
     updateProgress()
     updateCurrentChapterIndex()

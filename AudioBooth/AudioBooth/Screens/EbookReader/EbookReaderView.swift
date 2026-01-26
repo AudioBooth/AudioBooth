@@ -165,7 +165,7 @@ struct EbookReaderView: View {
 
       Button(action: { model.onProgressTapped() }) {
         VStack(spacing: 6) {
-          Text("\(Int(model.progress * 100))%")
+          Text(model.progress.formatted(.percent.precision(.fractionLength(0))))
             .font(.system(size: 16, weight: .medium))
           Text("Progress")
             .font(.caption2)

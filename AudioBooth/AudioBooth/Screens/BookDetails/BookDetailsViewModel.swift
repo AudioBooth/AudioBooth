@@ -35,20 +35,10 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       isLoading: false,
       tabs: [],
       metadata: .init(),
-      progressCard: initialMediaProgress.map { Self.makeProgressCard(from: $0) }
+      progressCard: initialMediaProgress.map { ProgressCard.Model($0) }
     )
     mediaProgress = initialMediaProgress
     updateActions()
-  }
-
-  private static func makeProgressCard(from mediaProgress: MediaProgress) -> ProgressCard.Model {
-    ProgressCard.Model(
-      progress: mediaProgress.progress,
-      timeRemaining: mediaProgress.remaining,
-      startedAt: mediaProgress.startedAt,
-      finishedAt: mediaProgress.finishedAt,
-      isFinished: mediaProgress.isFinished
-    )
   }
 
   isolated deinit {
@@ -536,7 +526,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           try await localBook.resetProgress()
         }
         progress = (0, 0)
-        updateProgressCard()
+        progressCard = nil
         updateActions()
         Toast(success: "Progress reset").show()
       } catch {
@@ -602,26 +592,9 @@ extension BookDetailsViewModel {
 
     Task { @MainActor in
       progress = (mediaProgress.progress, mediaProgress.ebookProgress ?? 0)
-      updateProgressCard()
+      progressCard = ProgressCard.Model(mediaProgress)
       updateChapterStatuses()
       updateActions()
-    }
-  }
-
-  private func updateProgressCard() {
-    guard let mediaProgress else {
-      progressCard = nil
-      return
-    }
-
-    if let existingCard = progressCard {
-      existingCard.progress = mediaProgress.progress
-      existingCard.timeRemaining = mediaProgress.remaining
-      existingCard.startedAt = mediaProgress.startedAt
-      existingCard.finishedAt = mediaProgress.finishedAt
-      existingCard.isFinished = mediaProgress.isFinished
-    } else {
-      progressCard = Self.makeProgressCard(from: mediaProgress)
     }
   }
 

@@ -1,4 +1,5 @@
 import Combine
+import Models
 import SwiftUI
 
 struct ProgressCard: View {
@@ -27,11 +28,17 @@ struct ProgressCard: View {
       Text(model.progress.formatted(.percent.precision(.fractionLength(0))))
         .fontWeight(.medium)
 
-      Text("·")
-        .foregroundStyle(.secondary)
+      if model.timeRemaining.isFinite, model.timeRemaining > 0 {
+        Text("·")
+          .foregroundStyle(.secondary)
 
-      Text(formattedTimeRemaining)
+        Text(
+          Duration.seconds(model.timeRemaining).formatted(
+            .units(allowed: [.hours, .minutes], width: .abbreviated)
+          ) + " remaining"
+        )
         .foregroundStyle(.secondary)
+      }
     }
     .font(.subheadline)
   }
@@ -68,12 +75,6 @@ struct ProgressCard: View {
     }
     .font(.subheadline)
   }
-
-  private var formattedTimeRemaining: String {
-    Duration.seconds(model.timeRemaining).formatted(
-      .units(allowed: [.hours, .minutes], width: .abbreviated)
-    ) + " remaining"
-  }
 }
 
 extension ProgressCard {
@@ -87,7 +88,7 @@ extension ProgressCard {
 
     init(
       progress: Double = 0,
-      timeRemaining: TimeInterval = 0,
+      timeRemaining: TimeInterval,
       startedAt: Date = Date(),
       finishedAt: Date? = nil,
       isFinished: Bool = false
@@ -98,6 +99,18 @@ extension ProgressCard {
       self.finishedAt = finishedAt
       self.isFinished = isFinished
     }
+  }
+}
+
+extension ProgressCard.Model {
+  convenience init(_ mediaProgress: MediaProgress) {
+    self.init(
+      progress: max(mediaProgress.progress, mediaProgress.ebookProgress ?? 0),
+      timeRemaining: mediaProgress.remaining,
+      startedAt: mediaProgress.startedAt,
+      finishedAt: mediaProgress.finishedAt,
+      isFinished: mediaProgress.isFinished
+    )
   }
 }
 

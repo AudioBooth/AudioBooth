@@ -339,11 +339,9 @@ final class LibraryPageModel: LibraryPage.Model {
 
     filter = newFilter
 
-    if isRoot {
+    Task { @MainActor in
       UserPreferences.shared.libraryFilter = newFilter
-    }
 
-    Task {
       await refresh()
     }
   }
