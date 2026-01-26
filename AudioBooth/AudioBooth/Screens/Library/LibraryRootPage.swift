@@ -17,16 +17,20 @@ struct LibraryRootPage: View {
   @Binding var selectedType: LibraryType
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
 
+  @StateObject private var library = LibraryPageModel()
+  @StateObject private var authors = AuthorsPageModel()
+  @StateObject private var narrators = NarratorsPageModel()
+
   var body: some View {
     NavigationStack {
       VStack {
         switch selectedType {
         case .library:
-          LibraryPage(model: LibraryPageModel())
+          LibraryPage(model: library)
         case .authors:
-          AuthorsPage(model: AuthorsPageModel())
+          AuthorsPage(model: authors)
         case .narrators:
-          NarratorsPage(model: NarratorsPageModel())
+          NarratorsPage(model: narrators)
         }
       }
       .id(libraries.current?.id)

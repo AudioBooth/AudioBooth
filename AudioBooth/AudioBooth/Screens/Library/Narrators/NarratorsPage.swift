@@ -3,7 +3,7 @@ import NukeUI
 import SwiftUI
 
 struct NarratorsPage: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     content
@@ -42,12 +42,22 @@ struct NarratorsPage: View {
     let sortedNarrators = model.narrators.sorted { $0.name < $1.name }
 
     let grouped = Dictionary(grouping: sortedNarrators) { narrator in
-      String(narrator.name.prefix(1).uppercased())
+      sectionLetter(for: narrator.name)
     }
 
     return grouped.map { letter, narrators in
       NarratorSection(id: letter, letter: letter, narrators: narrators)
-    }.sorted { $0.letter < $1.letter }
+    }.sorted { lhs, rhs in
+      if lhs.letter == "#" { return false }
+      if rhs.letter == "#" { return true }
+      return lhs.letter < rhs.letter
+    }
+  }
+
+  private func sectionLetter(for name: String) -> String {
+    guard let firstChar = name.uppercased().first else { return "#" }
+    let validLetters: Set<Character> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    return validLetters.contains(firstChar) ? String(firstChar) : "#"
   }
 
   var narratorsRowContent: some View {
@@ -57,11 +67,16 @@ struct NarratorsPage: View {
       }
       .overlay(alignment: .trailing) {
         AlphabetScrollBar(
-          availableSections: Set(narratorSections.map(\.letter)),
-          scrollProxy: proxy
+          onLetterTapped: { model.onLetterTapped($0) }
         )
       }
       .scrollIndicators(.hidden)
+      .onChange(of: model.scrollTarget) { _, target in
+        guard let target else { return }
+        withAnimation(.easeOut(duration: 0.1)) {
+          proxy.scrollTo(target, anchor: .top)
+        }
+      }
     }
   }
 
@@ -77,6 +92,10 @@ struct NarratorsPage: View {
         }
         .id(section.letter)
       }
+
+      Color.clear
+        .frame(height: 1)
+        .id(Self.bottomScrollID)
     }
   }
 
@@ -111,6 +130,8 @@ struct NarratorsPage: View {
 }
 
 extension NarratorsPage {
+  static let bottomScrollID = "BOTTOM"
+
   struct NarratorSection: Identifiable {
     let id: String
     let letter: String
@@ -119,12 +140,14 @@ extension NarratorsPage {
 
   @Observable class Model: ObservableObject {
     var isLoading: Bool
+    var scrollTarget: String?
 
     var narrators: [NarratorCard.Model]
     var searchViewModel: SearchView.Model = SearchView.Model()
 
     func onAppear() {}
     func refresh() async {}
+    func onLetterTapped(_ letter: String) {}
 
     init(
       isLoading: Bool = false,

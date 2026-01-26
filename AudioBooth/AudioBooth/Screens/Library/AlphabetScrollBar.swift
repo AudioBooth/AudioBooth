@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct AlphabetScrollBar: View {
-  let availableSections: Set<String>
-  let scrollProxy: ScrollViewProxy
+  var onLetterTapped: ((String) -> Void)?
 
   private let allLetters = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
@@ -49,13 +48,10 @@ struct AlphabetScrollBar: View {
   }
 
   private func scrollToLetter(_ letter: String) {
-    guard availableSections.contains(letter), letter != lastScrolledLetter else { return }
+    guard letter != lastScrolledLetter else { return }
 
     lastScrolledLetter = letter
     haptics.impactOccurred()
-
-    withAnimation(.easeOut(duration: 0.1)) {
-      scrollProxy.scrollTo(letter, anchor: .top)
-    }
+    onLetterTapped?(letter)
   }
 }

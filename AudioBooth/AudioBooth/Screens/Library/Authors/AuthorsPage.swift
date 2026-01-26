@@ -4,7 +4,8 @@ import SwiftUI
 
 struct AuthorsPage: View {
   @AppStorage("authorsPageSortOrder") var sortOrder: SortOrder = .firstLast
-  @StateObject var model: Model
+
+  @ObservedObject var model: Model
 
   var body: some View {
     content
@@ -66,18 +67,29 @@ struct AuthorsPage: View {
     }
 
     let grouped = Dictionary(grouping: sortedAuthors) { author in
+      let name: String
       switch sortOrder {
       case .firstLast:
-        return String(author.name.prefix(1).uppercased())
+        name = author.name
       case .lastFirst:
-        let lastName = lastNameFirst(author.name)
-        return String(lastName.prefix(1).uppercased())
+        name = lastNameFirst(author.name)
       }
+      return sectionLetter(for: name)
     }
 
     return grouped.map { letter, authors in
       AuthorSection(id: letter, letter: letter, authors: authors)
-    }.sorted { $0.letter < $1.letter }
+    }.sorted { lhs, rhs in
+      if lhs.letter == "#" { return false }
+      if rhs.letter == "#" { return true }
+      return lhs.letter < rhs.letter
+    }
+  }
+
+  private func sectionLetter(for name: String) -> String {
+    guard let firstChar = name.uppercased().first else { return "#" }
+    let validLetters: Set<Character> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    return validLetters.contains(firstChar) ? String(firstChar) : "#"
   }
 
   private func lastNameFirst(_ name: String) -> String {
@@ -93,11 +105,16 @@ struct AuthorsPage: View {
       }
       .overlay(alignment: .trailing) {
         AlphabetScrollBar(
-          availableSections: Set(authorSections.map(\.letter)),
-          scrollProxy: proxy
+          onLetterTapped: { model.onLetterTapped($0) }
         )
       }
       .scrollIndicators(.hidden)
+      .onChange(of: model.scrollTarget) { _, scrollTarget in
+        guard let scrollTarget else { return }
+        withAnimation(.easeOut(duration: 0.1)) {
+          proxy.scrollTo(scrollTarget.target, anchor: .top)
+        }
+      }
     }
   }
 
@@ -122,6 +139,10 @@ struct AuthorsPage: View {
             model.loadNextPageIfNeeded()
           }
       }
+
+      Color.clear
+        .frame(height: 1)
+        .id(Self.bottomScrollID)
     }
   }
 
@@ -189,6 +210,8 @@ struct AuthorsPage: View {
 }
 
 extension AuthorsPage {
+  static let bottomScrollID = "BOTTOM"
+
   enum SortOrder: String {
     case firstLast = "First Last"
     case lastFirst = "Last First"
@@ -203,6 +226,17 @@ extension AuthorsPage {
   @Observable class Model: ObservableObject {
     var isLoading: Bool
     var hasMorePages: Bool
+    var scrollTarget: ScrollTarget?
+
+    struct ScrollTarget: Equatable {
+      let id: UUID
+      let target: String
+
+      init(_ target: String) {
+        self.id = UUID()
+        self.target = target
+      }
+    }
 
     var authors: [AuthorCard.Model]
     var searchViewModel: SearchView.Model = SearchView.Model()
@@ -210,6 +244,7 @@ extension AuthorsPage {
     func onAppear() {}
     func refresh() async {}
     func loadNextPageIfNeeded() {}
+    func onLetterTapped(_ letter: String) {}
 
     init(
       isLoading: Bool = false,

@@ -11,6 +11,7 @@ final class NarratorsPageModel: NarratorsPage.Model {
   }
 
   override func onAppear() {
+    guard narrators.isEmpty else { return }
     Task {
       await loadNarrators()
     }
@@ -37,5 +38,32 @@ final class NarratorsPageModel: NarratorsPage.Model {
     }
 
     isLoading = false
+  }
+
+  override func onLetterTapped(_ letter: String) {
+    let availableSections = Set(narrators.map { sectionLetter(for: $0.name) })
+
+    if availableSections.contains(letter) {
+      scrollTarget = letter
+    } else if let nextLetter = findNextAvailableLetter(after: letter, in: availableSections) {
+      scrollTarget = .init(nextLetter)
+    }
+  }
+}
+
+extension NarratorsPageModel {
+  private func findNextAvailableLetter(after letter: String, in sections: Set<String>) -> String? {
+    if letter == "#" { return AuthorsPage.bottomScrollID }
+    let sortedSections = sections.filter { $0 != "#" }.sorted()
+    if let next = sortedSections.first(where: { $0 > letter }) {
+      return next
+    }
+    return sections.contains("#") ? "#" : NarratorsPage.bottomScrollID
+  }
+
+  private func sectionLetter(for name: String) -> String {
+    guard let firstChar = name.uppercased().first else { return "#" }
+    let validLetters: Set<Character> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    return validLetters.contains(firstChar) ? String(firstChar) : "#"
   }
 }

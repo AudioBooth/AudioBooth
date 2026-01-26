@@ -3,8 +3,9 @@ import Combine
 import SwiftUI
 
 struct LibraryPage: View {
-  @StateObject var model: Model
   @ObservedObject private var preferences = UserPreferences.shared
+
+  @ObservedObject var model: Model
 
   var body: some View {
     if model.isRoot {
