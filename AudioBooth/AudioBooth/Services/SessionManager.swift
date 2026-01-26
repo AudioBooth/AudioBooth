@@ -198,6 +198,16 @@ final class SessionManager {
       return item
     }
 
+    if downloadManager.downloadStates[itemID] == .downloaded, let item {
+      startLocalSession(
+        libraryItemID: itemID,
+        item: item,
+        mediaProgress: mediaProgress
+      )
+      AppLogger.session.info("Created local session for offline stats tracking")
+      return item
+    }
+
     do {
       let result = try await startSession(
         itemID: itemID,
@@ -208,18 +218,7 @@ final class SessionManager {
       return result.updatedItem
     } catch {
       AppLogger.session.warning("Failed to create remote session: \(error)")
-
-      if downloadManager.downloadStates[itemID] == .downloaded, let item {
-        try startLocalSession(
-          libraryItemID: itemID,
-          item: item,
-          mediaProgress: mediaProgress
-        )
-        AppLogger.session.info("Created local session for offline stats tracking")
-        return item
-      } else {
-        throw error
-      }
+      throw error
     }
   }
 
@@ -227,7 +226,7 @@ final class SessionManager {
     libraryItemID: String,
     item: LocalBook,
     mediaProgress: MediaProgress
-  ) throws {
+  ) {
     let session = PlaybackSession(
       libraryItemID: libraryItemID,
       startTime: mediaProgress.currentTime,
@@ -236,7 +235,7 @@ final class SessionManager {
       displayTitle: item.title,
       displayAuthor: item.authorNames
     )
-    try session.save()
+    try? session.save()
     current = session
     AppLogger.session.info("Started local session: \(session.id)")
   }
@@ -272,8 +271,19 @@ final class SessionManager {
         AppLogger.session.info("Successfully synced remote session: \(session.id)")
         return
       } catch {
-        try session.save()
         AppLogger.session.error("Failed to sync remote session: \(error)")
+        throw error
+      }
+    } else {
+      do {
+        try await audiobookshelf.sessions.syncLocalSession(SessionSync(session))
+        session.timeListening += session.pendingListeningTime
+        session.pendingListeningTime = 0
+        try session.save()
+        AppLogger.session.info("Successfully synced local session: \(session.id)")
+      } catch {
+        lastSyncAt = now.advanced(by: min(session.pendingListeningTime * 2, 600))
+        AppLogger.session.error("Failed to sync local session: \(error)")
         throw error
       }
     }
