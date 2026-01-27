@@ -420,6 +420,7 @@ public final class AuthenticationService: ObservableObject {
       let authorize = response.value
       permissions = authorize.user.permissions
       audiobookshelf.misc.ereaderDevices = authorize.ereaderDevices
+      audiobookshelf.libraries.sortingIgnorePrefix = authorize.serverSettings.sortingIgnorePrefix
       return authorize
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(

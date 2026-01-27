@@ -74,7 +74,13 @@ final class BookCardModel: BookCard.Model {
       publishedYear = nil
     } else {
       id = item.id
-      title = item.title
+
+      if sortBy == .title, Audiobookshelf.shared.libraries.sortingIgnorePrefix {
+        title = item.titleIgnorePrefix
+      } else {
+        title = item.title
+      }
+
       sequence = item.series?.first?.sequence
       author = item.authorName
       narrator = item.media.metadata.narratorName

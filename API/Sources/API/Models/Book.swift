@@ -31,6 +31,7 @@ public struct Book: Codable, Sendable {
 
 extension Book {
   public var title: String { media.metadata.title }
+  public var titleIgnorePrefix: String { media.metadata.titleIgnorePrefix }
   public var authorName: String? { media.metadata.authorName }
   public var publishedYear: String? { media.metadata.publishedYear }
   public var publisher: String? { media.metadata.publisher }
@@ -100,6 +101,7 @@ extension Book {
 
     public struct Metadata: Sendable {
       public let title: String
+      public let titleIgnorePrefix: String
       public let subtitle: String?
       public let authors: [Author]?
       public let narrators: [String]?
@@ -192,6 +194,7 @@ extension Book.Media.Metadata: Codable {
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     title = try container.decode(String.self, forKey: .title)
+    titleIgnorePrefix = try container.decodeIfPresent(String.self, forKey: .titleIgnorePrefix) ?? title
     subtitle = try container.decodeIfPresent(String.self, forKey: .subtitle)
     authors = try container.decodeIfPresent([Book.Media.Author].self, forKey: .authors)
     narrators = try container.decodeIfPresent([String].self, forKey: .narrators)
