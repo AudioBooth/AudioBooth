@@ -163,11 +163,11 @@ struct PlayerPreferencesView: View {
 
         Picker("Shake to Reset", selection: $preferences.shakeSensitivity) {
           Text("Off").tag(ShakeSensitivity.off)
-          Text("Very Low").tag(ShakeSensitivity.veryLow)
-          Text("Low").tag(ShakeSensitivity.low)
-          Text("Medium").tag(ShakeSensitivity.medium)
-          Text("High").tag(ShakeSensitivity.high)
-          Text("Very High").tag(ShakeSensitivity.veryHigh)
+          Text("Very Vigorous").tag(ShakeSensitivity.veryLow)
+          Text("Vigorous").tag(ShakeSensitivity.low)
+          Text("Moderate").tag(ShakeSensitivity.medium)
+          Text("Gentle").tag(ShakeSensitivity.high)
+          Text("Very Gentle").tag(ShakeSensitivity.veryHigh)
         }
         .font(.subheadline)
         .bold()
