@@ -136,17 +136,20 @@ struct EbookReaderView: View {
     }
   }
 
+  @ViewBuilder
   private var bottomControlBar: some View {
     HStack(alignment: .bottom, spacing: 0) {
-      Button(action: { model.onTableOfContentsTapped() }) {
-        VStack(spacing: 6) {
-          Image(systemName: "list.bullet")
-            .font(.system(size: 20))
-          Text("Contents")
-            .font(.caption2)
+      if model.chapters != nil {
+        Button(action: { model.onTableOfContentsTapped() }) {
+          VStack(spacing: 6) {
+            Image(systemName: "list.bullet")
+              .font(.system(size: 20))
+            Text("Contents")
+              .font(.caption2)
+          }
         }
+        .frame(maxWidth: .infinity)
       }
-      .frame(maxWidth: .infinity)
 
       if model.supportsSettings {
         Button(action: {

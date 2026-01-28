@@ -112,16 +112,7 @@ extension LocalBook {
       existingItem.duration = self.duration
       existingItem.chapters = self.chapters
       existingItem.publishedYear = self.publishedYear
-
-      if self.tracks.isEmpty {
-        existingItem.tracks = []
-        // Preserve ebookFile if set
-        if self.ebookFile != nil || existingItem.ebookFile != nil {
-          existingItem.ebookFile = self.ebookFile ?? existingItem.ebookFile
-        }
-        try context.save()
-        return
-      }
+      existingItem.ebookFile = self.ebookFile
 
       var mergedTracks: [Track] = []
       for newTrack in self.tracks {

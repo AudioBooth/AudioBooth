@@ -410,7 +410,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       updatedActions.insert(isInQueue ? .removeFromQueue : .addToQueue)
     }
 
-    let currentProgress = max(progress.audio, progress.ebook)
+    let currentProgress = progress.audio > 0 ? progress.audio : progress.ebook
     if currentProgress < 1.0 {
       updatedActions.insert(.markAsFinished)
     }
