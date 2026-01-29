@@ -47,7 +47,7 @@ final class LibraryPageModel: LibraryPage.Model {
         sortBy: nil,
         title: name
       )
-    case .author(let id, let name):
+    case .authorLibrary(let id, let name):
       self.filter = .authors(id, name)
       super.init(
         hasMorePages: true,
@@ -79,7 +79,7 @@ final class LibraryPageModel: LibraryPage.Model {
         sortBy: nil,
         title: name
       )
-    case .book, .playlist, .collection, .offline, .stats:
+    case .author, .book, .playlist, .collection, .offline, .stats:
       fatalError("LibraryPageModel cannot be initialized with a \(destination) destination")
     }
 

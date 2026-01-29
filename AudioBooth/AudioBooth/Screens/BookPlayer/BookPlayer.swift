@@ -76,7 +76,7 @@ struct BookPlayer: View {
         switch destination {
         case .book(let id):
           BookDetailsView(model: BookDetailsViewModel(bookID: id))
-        case .series, .author, .narrator, .genre, .tag, .offline:
+        case .series, .author, .narrator, .genre, .tag, .offline, .authorLibrary:
           LibraryPage(model: LibraryPageModel(destination: destination))
         case .playlist, .collection, .stats:
           EmptyView()
