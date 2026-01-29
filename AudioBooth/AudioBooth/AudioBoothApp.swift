@@ -48,6 +48,10 @@ struct AudioBoothApp: App {
       await Audiobookshelf.shared.authentication.checkServersHealth()
     }
 
+    Task { @MainActor in
+      await StorageManager.shared.cleanupUnusedDownloads()
+    }
+
     endAllLiveActivities()
   }
 

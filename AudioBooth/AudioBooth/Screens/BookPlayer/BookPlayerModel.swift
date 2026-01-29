@@ -456,14 +456,51 @@ extension BookPlayerModel {
       shouldAutoDownload = networkMonitor.isConnected
     }
 
-    if shouldAutoDownload {
+    guard shouldAutoDownload else {
+      AppLogger.player.debug("Auto-download skipped (mode: \(mode.rawValue))")
+      return
+    }
+
+    let delay = userPreferences.autoDownloadDelay
+    if delay == .none {
       AppLogger.player.info("Auto-download starting (mode: \(mode.rawValue))")
       try? item.download()
     } else {
-      AppLogger.player.debug(
-        "Auto-download skipped (mode: \(mode.rawValue))"
-      )
+      AppLogger.player.info("Auto-download will start after \(delay.displayName) of listening")
     }
+  }
+
+  private func checkAutoDownloadAfterListening() {
+    let mode = userPreferences.autoDownloadBooks
+    let delay = userPreferences.autoDownloadDelay
+
+    guard let item,
+      !item.isDownloaded,
+      mode != .off,
+      delay != .none,
+      downloadManager.downloadStates[id] == .notDownloaded,
+      !downloadManager.isDownloading(for: id),
+      let session = sessionManager.current
+    else { return }
+
+    let listeningSeconds = Int(session.timeListening + session.pendingListeningTime)
+    guard listeningSeconds >= delay.rawValue else { return }
+
+    let networkMonitor = NetworkMonitor.shared
+    let shouldDownload: Bool
+    switch mode {
+    case .off:
+      return
+    case .wifiOnly:
+      shouldDownload = networkMonitor.interfaceType == .wifi
+    case .wifiAndCellular:
+      shouldDownload = networkMonitor.isConnected
+    }
+
+    guard shouldDownload else { return }
+
+    AppLogger.player.info("Auto-download starting after \(listeningSeconds)s of listening")
+    try? item.download()
   }
 
   private func setupAudioPlayer() async throws {
@@ -897,6 +934,7 @@ extension BookPlayerModel {
 
       if self.timerSecondsCounter % 20 == 0 {
         self.updateMediaProgress()
+        self.checkAutoDownloadAfterListening()
       }
     }
   }

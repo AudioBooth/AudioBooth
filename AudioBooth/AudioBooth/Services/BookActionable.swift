@@ -82,16 +82,24 @@ extension BookActionable {
       details += " • \(size.formatted(.byteCount(style: .file)))"
     }
 
-    DownloadManager.shared.startDownload(
-      for: bookID,
-      type: downloadType,
-      info: .init(
-        title: title,
-        details: details,
-        coverURL: coverURL,
-        startedAt: Date()
+    Task {
+      let canDownload = await StorageManager.shared.canDownload(additionalBytes: size)
+      guard canDownload else {
+        Toast(error: "Storage limit reached").show()
+        return
+      }
+
+      DownloadManager.shared.startDownload(
+        for: bookID,
+        type: downloadType,
+        info: .init(
+          title: title,
+          details: details,
+          coverURL: coverURL,
+          startedAt: Date()
+        )
       )
-    )
+    }
   }
 
   public func removeDownload() {

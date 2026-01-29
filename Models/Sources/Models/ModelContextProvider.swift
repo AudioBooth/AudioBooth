@@ -45,6 +45,17 @@ public final class ModelContextProvider {
 
   private init() {}
 
+  public func context(for serverID: String) throws -> ModelContext {
+    if let context = contexts[serverID] {
+      return context
+    }
+
+    let container = try createContainer(for: serverID)
+    containers[serverID] = container
+    contexts[serverID] = container.mainContext
+    return container.mainContext
+  }
+
   public func switchToServer(_ serverID: String, serverURL: URL) throws {
     if containers[serverID] == nil {
       let container = try createContainer(for: serverID)
