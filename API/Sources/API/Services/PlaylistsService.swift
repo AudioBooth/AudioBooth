@@ -2,9 +2,24 @@ import Foundation
 
 public final class PlaylistsService {
   private let audiobookshelf: Audiobookshelf
+  private let pinnedPlaylistKey = "cached_pinned_playlist"
 
   init(audiobookshelf: Audiobookshelf) {
     self.audiobookshelf = audiobookshelf
+  }
+
+  public var pinnedPlaylist: Playlist? {
+    get {
+      guard let data = UserDefaults.standard.data(forKey: pinnedPlaylistKey) else { return nil }
+      return try? JSONDecoder().decode(Playlist.self, from: data)
+    }
+    set {
+      if let newValue, let data = try? JSONEncoder().encode(newValue) {
+        UserDefaults.standard.set(data, forKey: pinnedPlaylistKey)
+      } else {
+        UserDefaults.standard.removeObject(forKey: pinnedPlaylistKey)
+      }
+    }
   }
 
   public func fetch(
