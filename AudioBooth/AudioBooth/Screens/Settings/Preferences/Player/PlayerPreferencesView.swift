@@ -161,7 +161,7 @@ struct PlayerPreferencesView: View {
         }
         .font(.caption)
 
-        Picker("Shake to Reset", selection: $preferences.shakeSensitivity) {
+        Picker("Shake Sensitivity to Reset", selection: $preferences.shakeSensitivity) {
           Text("Off").tag(ShakeSensitivity.off)
           Text("Very Low").tag(ShakeSensitivity.veryLow)
           Text("Low").tag(ShakeSensitivity.low)
