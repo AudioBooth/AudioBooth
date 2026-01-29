@@ -71,7 +71,12 @@ extension TimerCompletedAlertView {
   @Observable
   class Model: ObservableObject, Identifiable {
     let id = UUID()
+    let createdAt = Date()
     var extendAction: String
+
+    var isExpired: Bool {
+      Date().timeIntervalSince(createdAt) > 5 * 60
+    }
 
     func onExtendTapped() {}
     func onResetTapped() {}

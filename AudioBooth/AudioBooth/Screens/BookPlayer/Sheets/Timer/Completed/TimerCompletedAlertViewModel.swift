@@ -14,6 +14,7 @@ final class TimerCompletedAlertViewModel: TimerCompletedAlertView.Model {
     super.init(extendAction: extendAction)
 
     setupShakeObserver()
+    setupForegroundObserver()
   }
 
   override func onExtendTapped() {
@@ -22,6 +23,15 @@ final class TimerCompletedAlertViewModel: TimerCompletedAlertView.Model {
 
   override func onResetTapped() {
     onReset()
+  }
+
+  private func setupForegroundObserver() {
+    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+      .sink { [weak self] _ in
+        guard let self, self.isExpired else { return }
+        self.onResetTapped()
+      }
+      .store(in: &cancellables)
   }
 
   private func setupShakeObserver() {

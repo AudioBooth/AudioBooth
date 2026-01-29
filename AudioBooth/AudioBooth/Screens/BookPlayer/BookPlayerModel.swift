@@ -132,7 +132,8 @@ final class BookPlayerModel: BookPlayer.Model {
   override func onPlayTapped() {
     if userPreferences.shakeSensitivity.isEnabled,
       let timer = timer as? TimerPickerSheetViewModel,
-      let completedAlert = timer.completedAlert
+      let completedAlert = timer.completedAlert,
+      !completedAlert.isExpired
     {
       completedAlert.onExtendTapped()
       return
