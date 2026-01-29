@@ -147,9 +147,7 @@ struct AuthorDetailsView: View {
 
   private var allBooksSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      NavigationLink {
-        LibraryPage(model: LibraryPageModel(destination: .author(id: model.authorID, name: model.name)))
-      } label: {
+      NavigationLink(value: NavigationDestination.authorLibrary(id: model.authorID, name: model.name)) {
         HStack {
           Text("^[\(model.allBooks.count) Book](inflect: true)")
             .font(.title2)
