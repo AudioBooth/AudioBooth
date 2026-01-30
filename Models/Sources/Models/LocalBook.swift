@@ -14,6 +14,14 @@ public final class LocalBook {
   public var tracks: [Track]
   public var chapters: [Chapter]
   public var publishedYear: String?
+  public var subtitle: String?
+  public var bookDescription: String?
+  public var genres: [String]?
+  public var tags: [String]?
+  public var isExplicit: Bool = false
+  public var isAbridged: Bool = false
+  public var publisher: String?
+  public var language: String?
   public var displayOrder: Int = 0
   public var createdAt: Date = Date()
   public var ebookFile: URL?
@@ -63,6 +71,14 @@ public final class LocalBook {
     tracks: [Track] = [],
     chapters: [Chapter] = [],
     publishedYear: String? = nil,
+    subtitle: String? = nil,
+    bookDescription: String? = nil,
+    genres: [String]? = nil,
+    tags: [String]? = nil,
+    isExplicit: Bool = false,
+    isAbridged: Bool = false,
+    publisher: String? = nil,
+    language: String? = nil,
     displayOrder: Int = 0,
     createdAt: Date = Date(),
     ebookFile: URL? = nil
@@ -77,6 +93,14 @@ public final class LocalBook {
     self.tracks = tracks
     self.chapters = chapters
     self.publishedYear = publishedYear
+    self.subtitle = subtitle
+    self.bookDescription = bookDescription
+    self.genres = genres
+    self.tags = tags
+    self.isExplicit = isExplicit
+    self.isAbridged = isAbridged
+    self.publisher = publisher
+    self.language = language
     self.displayOrder = displayOrder
     self.createdAt = createdAt
     self.ebookFile = ebookFile
@@ -112,6 +136,14 @@ extension LocalBook {
       existingItem.duration = self.duration
       existingItem.chapters = self.chapters
       existingItem.publishedYear = self.publishedYear
+      existingItem.subtitle = self.subtitle
+      existingItem.bookDescription = self.bookDescription
+      existingItem.genres = self.genres
+      existingItem.tags = self.tags
+      existingItem.isExplicit = self.isExplicit
+      existingItem.isAbridged = self.isAbridged
+      existingItem.publisher = self.publisher
+      existingItem.language = self.language
       existingItem.ebookFile = self.ebookFile
 
       var mergedTracks: [Track] = []
@@ -210,7 +242,15 @@ extension LocalBook {
       duration: book.duration,
       tracks: book.tracks?.map(Track.init) ?? [],
       chapters: book.chapters?.map(Chapter.init) ?? [],
-      publishedYear: book.publishedYear
+      publishedYear: book.publishedYear,
+      subtitle: book.media.metadata.subtitle,
+      bookDescription: book.description,
+      genres: book.genres,
+      tags: book.tags,
+      isExplicit: book.media.metadata.explicit ?? false,
+      isAbridged: book.media.metadata.abridged ?? false,
+      publisher: book.publisher,
+      language: book.media.metadata.language
     )
   }
 }

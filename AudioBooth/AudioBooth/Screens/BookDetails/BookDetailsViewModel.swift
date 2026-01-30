@@ -88,14 +88,26 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           chapters = nil
         }
 
+        var flags: BookDetailsView.Model.Flags = []
+        if localBook.isExplicit { flags.insert(.explicit) }
+        if localBook.isAbridged { flags.insert(.abridged) }
+
         updateUI(
           title: localBook.title,
+          subtitle: localBook.subtitle,
           authors: authors,
           narrators: localBook.narrators,
           series: series,
           coverURL: localBook.coverURL(raw: true),
           duration: localBook.duration,
           mediaType: mediaType,
+          publisher: localBook.publisher,
+          publishedYear: localBook.publishedYear,
+          language: localBook.language,
+          genres: localBook.genres,
+          tags: localBook.tags,
+          description: localBook.bookDescription,
+          flags: flags,
           chapters: chapters,
           tracks: localBook.tracks
         )
