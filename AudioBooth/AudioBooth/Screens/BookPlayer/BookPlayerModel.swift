@@ -972,7 +972,6 @@ extension BookPlayerModel {
   private func configureAudioSession() {
     do {
       try audioSession.setCategory(.playback, mode: .spokenAudio, policy: .longFormAudio)
-      try audioSession.setActive(true)
     } catch {
       AppLogger.player.error("Failed to configure audio session: \(error)")
     }

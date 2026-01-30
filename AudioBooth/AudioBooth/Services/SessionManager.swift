@@ -371,7 +371,7 @@ final class SessionManager {
 
     let nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
     let playbackRate = nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0.0
-    let carPlayConnected = isCarPlayConnected()
+    let carPlayConnected = AVAudioSession.sharedInstance().isCarPlayConnected
 
     if playbackRate > 0 {
       AppLogger.session.info("Playback is still active, rescheduling session close")
@@ -468,7 +468,7 @@ final class SessionManager {
 
         let nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
         let playbackRate = nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0.0
-        let carPlayConnected = isCarPlayConnected()
+        let carPlayConnected = AVAudioSession.sharedInstance().isCarPlayConnected
 
         if playbackRate > 0 {
           AppLogger.session.info(
@@ -495,12 +495,6 @@ final class SessionManager {
   private func cancelInactivityTask() {
     inactivityTask?.cancel()
     inactivityTask = nil
-  }
-
-  private func isCarPlayConnected() -> Bool {
-    AVAudioSession.sharedInstance().currentRoute.outputs.contains { output in
-      output.portType == AVAudioSession.Port.carAudio
-    }
   }
 
   enum SessionError: Error {
