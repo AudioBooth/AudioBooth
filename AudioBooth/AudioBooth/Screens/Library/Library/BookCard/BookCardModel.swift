@@ -28,15 +28,20 @@ final class BookCardModel: BookCard.Model {
       details += " • \(size.formatted(.byteCount(style: .file)))"
     }
 
+    let cover = Cover.Model(
+      url: item.coverURL,
+      title: item.title,
+      author: item.authorNames,
+      progress: MediaProgress.progress(for: id)
+    )
+
     super.init(
       id: id,
       title: item.title,
       details: details,
-      coverURL: item.coverURL,
-      progress: MediaProgress.progress(for: id),
+      cover: cover,
       author: item.authorNames,
       publishedYear: item.publishedYear,
-      downloadProgress: nil,
       hasEbook: item.ebookFile != nil
     )
 
@@ -45,7 +50,7 @@ final class BookCardModel: BookCard.Model {
     contextMenu = BookCardContextMenuModel(
       item,
       onProgressChanged: { [weak self] progress in
-        self?.progress = progress
+        self?.cover.progress = progress
       }
     )
   }
@@ -149,17 +154,22 @@ final class BookCardModel: BookCard.Model {
       initialProgress = MediaProgress.progress(for: id)
     }
 
+    let cover = Cover.Model(
+      url: item.coverURL(),
+      title: title,
+      author: author,
+      progress: initialProgress
+    )
+
     super.init(
       id: id,
       title: title,
       details: details,
-      coverURL: item.coverURL(),
+      cover: cover,
       sequence: sequence,
-      progress: initialProgress,
       author: author,
       narrator: narrator,
       publishedYear: publishedYear,
-      downloadProgress: nil,
       bookCount: bookCount,
       hasEbook: item.media.ebookFile != nil || item.media.ebookFormat != nil
     )
@@ -169,7 +179,7 @@ final class BookCardModel: BookCard.Model {
     contextMenu = BookCardContextMenuModel(
       item,
       onProgressChanged: { [weak self] progress in
-        self?.progress = progress
+        self?.cover.progress = progress
       }
     )
   }
@@ -179,18 +189,18 @@ final class BookCardModel: BookCard.Model {
       .sink { [weak self] states in
         guard let self else { return }
         if case .downloading(let progress) = states[self.id] {
-          self.downloadProgress = progress
+          self.cover.downloadProgress = progress
         } else {
-          self.downloadProgress = nil
+          self.cover.downloadProgress = nil
         }
       }
   }
 
   override func onAppear() {
     if case .remote(let book) = item, let collapsedSeries = book.collapsedSeries {
-      progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
+      cover.progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
     } else {
-      progress = MediaProgress.progress(for: id)
+      cover.progress = MediaProgress.progress(for: id)
     }
   }
 

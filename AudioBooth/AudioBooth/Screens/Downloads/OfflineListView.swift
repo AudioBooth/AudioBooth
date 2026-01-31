@@ -126,13 +126,8 @@ struct OfflineListView: View {
           } label: {
             HStack(spacing: 12) {
               if let coverURL = group.coverURL {
-                CoverImage(url: coverURL)
+                Cover(url: coverURL)
                   .frame(width: 60, height: 60)
-                  .clipShape(RoundedRectangle(cornerRadius: 6))
-                  .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                      .stroke(.gray.opacity(0.3), lineWidth: 1)
-                  )
               }
 
               VStack(alignment: .leading, spacing: 4) {
@@ -237,11 +232,7 @@ extension OfflineListView {
     }
 
     var cover: some View {
-      CoverImage(url: book.coverURL)
-        .overlay(alignment: .bottom) {
-          ProgressOverlay(progress: book.progress)
-            .padding(2)
-        }
+      Cover(model: book.cover)
         .overlay(alignment: .topTrailing) {
           if let sequence = sequence {
             Text("#\(sequence)")
@@ -256,11 +247,6 @@ extension OfflineListView {
           }
         }
         .frame(width: 60, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .overlay(
-          RoundedRectangle(cornerRadius: 6)
-            .stroke(.gray.opacity(0.3), lineWidth: 1)
-        )
     }
 
     func rowMetadata(icon: String, value: String) -> some View {
@@ -369,17 +355,17 @@ extension OfflineListView {
     BookCard.Model(
       title: "The Lord of the Rings",
       details: "J.R.R. Tolkien",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
     ),
     BookCard.Model(
       title: "Dune",
       details: "Frank Herbert",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
     ),
     BookCard.Model(
       title: "The Foundation",
       details: "Isaac Asimov",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
     ),
   ]
 
@@ -393,12 +379,12 @@ extension OfflineListView {
     BookCard.Model(
       title: "The Lord of the Rings",
       details: "J.R.R. Tolkien",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
     ),
     BookCard.Model(
       title: "Dune",
       details: "Frank Herbert",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
     ),
   ]
 

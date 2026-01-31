@@ -345,14 +345,18 @@ extension HomePage.Model {
       BookCard.Model(
         title: "The Lord of the Rings",
         details: "8hr 32min remaining",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-        progress: 0.45
+        cover: Cover.Model(
+          url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+          progress: 0.45
+        )
       ),
       BookCard.Model(
         title: "Dune",
         details: "2hr 15min remaining",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12
+        cover: Cover.Model(
+          url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+          progress: 0.12
+        )
       ),
     ]
 

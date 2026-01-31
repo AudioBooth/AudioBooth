@@ -101,12 +101,7 @@ struct BookCard: View {
   }
 
   var cover: some View {
-    CoverImage(url: model.coverURL)
-      .overlay(alignment: .bottom) {
-        ProgressOverlay(progress: model.progress)
-          .padding(4)
-      }
-      .overlay { downloadProgress }
+    Cover(model: model.cover)
       .overlay(alignment: .bottomLeading) {
         ebookIndicator
           .padding(4)
@@ -128,11 +123,6 @@ struct BookCard: View {
           }
         }
       }
-      .clipShape(RoundedRectangle(cornerRadius: 8))
-      .overlay(
-        RoundedRectangle(cornerRadius: 8)
-          .stroke(.gray.opacity(0.3), lineWidth: 1)
-      )
       .contentShape(Rectangle())
   }
 
@@ -150,12 +140,7 @@ struct BookCard: View {
   }
 
   var rowCover: some View {
-    CoverImage(url: model.coverURL)
-      .overlay(alignment: .bottom) {
-        ProgressOverlay(progress: model.progress)
-          .padding(2)
-      }
-      .overlay { downloadProgress }
+    Cover(model: model.cover)
       .overlay(alignment: .bottomLeading) {
         ebookIndicator
           .padding(.leading, 2)
@@ -175,23 +160,6 @@ struct BookCard: View {
         }
       }
       .frame(width: 60, height: 60)
-      .clipShape(RoundedRectangle(cornerRadius: 6))
-      .overlay(
-        RoundedRectangle(cornerRadius: 6)
-          .stroke(.gray.opacity(0.3), lineWidth: 1)
-      )
-  }
-
-  @ViewBuilder
-  var downloadProgress: some View {
-    if let downloadProgress = model.downloadProgress {
-      ZStack {
-        Color.black.opacity(0.6)
-        ProgressView(value: downloadProgress)
-          .progressViewStyle(GaugeProgressViewStyle(tint: .white, lineWidth: 4))
-          .frame(width: 20, height: 20)
-      }
-    }
   }
 
   func rowMetadata(icon: String, value: String) -> some View {
@@ -283,13 +251,11 @@ extension BookCard {
     let id: String
     let title: String
     var details: String?
-    let coverURL: URL?
+    let cover: Cover.Model
     let sequence: String?
-    var progress: Double?
     let author: String?
     let narrator: String?
     let publishedYear: String?
-    var downloadProgress: Double?
     let bookCount: Int?
     var contextMenu: BookCardContextMenu.Model?
     let hasEbook: Bool
@@ -299,14 +265,12 @@ extension BookCard {
     init(
       id: String = UUID().uuidString,
       title: String,
-      details: String?,
-      coverURL: URL?,
+      details: String? = nil,
+      cover: Cover.Model = Cover.Model(url: nil),
       sequence: String? = nil,
-      progress: Double? = nil,
       author: String? = nil,
       narrator: String? = nil,
       publishedYear: String? = nil,
-      downloadProgress: Double? = nil,
       bookCount: Int? = nil,
       contextMenu: BookCardContextMenu.Model? = nil,
       hasEbook: Bool = false
@@ -314,13 +278,11 @@ extension BookCard {
       self.id = id
       self.title = title
       self.details = details
-      self.coverURL = coverURL
+      self.cover = cover
       self.sequence = sequence
-      self.progress = progress
       self.author = author
       self.narrator = narrator
       self.publishedYear = publishedYear
-      self.downloadProgress = downloadProgress
       self.bookCount = bookCount
       self.contextMenu = contextMenu
       self.hasEbook = hasEbook
@@ -332,7 +294,7 @@ extension BookCard.Model {
   static let mock = BookCard.Model(
     title: "The Lord of the Rings",
     details: "J.R.R. Tolkien",
-    coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+    cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
   )
 }
 
@@ -350,22 +312,24 @@ extension BookCard.Model {
         model: BookCard.Model(
           title: "The Lord of the Rings",
           details: "J.R.R. Tolkien",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-          progress: 0.5
+          cover: Cover.Model(
+            url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+            progress: 0.5
+          )
         )
       )
       BookCard(
         model: BookCard.Model(
           title: "Dune",
           details: "Frank Herbert",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+          cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
         )
       )
       BookCard(
         model: BookCard.Model(
           title: "The Foundation",
           details: "Isaac Asimov",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+          cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
         )
       )
     }
@@ -381,9 +345,11 @@ extension BookCard.Model {
           model: BookCard.Model(
             title: "The Lord of the Rings",
             details: "J.R.R. Tolkien",
-            coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+            cover: Cover.Model(
+              url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+              progress: 0.5
+            ),
             sequence: "1",
-            progress: 0.5,
             author: "J.R.R. Tolkien",
             narrator: "Rob Inglis",
             publishedYear: "1954"
@@ -393,7 +359,7 @@ extension BookCard.Model {
           model: BookCard.Model(
             title: "Dune",
             details: "Frank Herbert",
-            coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+            cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")),
             author: "Frank Herbert",
             narrator: "Scott Brick, Orlagh Cassidy, Euan Morton",
             publishedYear: "1965"
@@ -403,7 +369,7 @@ extension BookCard.Model {
           model: BookCard.Model(
             title: "The Foundation",
             details: "Isaac Asimov",
-            coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"),
+            cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")),
             author: "Isaac Asimov",
             narrator: "Scott Brick",
             publishedYear: "1951"

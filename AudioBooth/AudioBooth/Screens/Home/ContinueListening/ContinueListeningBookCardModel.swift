@@ -31,8 +31,12 @@ final class ContinueListeningBookCardModel: BookCard.Model {
       id: book.id,
       title: book.title,
       details: timeRemaining,
-      coverURL: book.coverURL(),
-      progress: MediaProgress.progress(for: book.id),
+      cover: Cover.Model(
+        url: book.coverURL(),
+        title: book.title,
+        author: book.authorName,
+        progress: MediaProgress.progress(for: book.id)
+      ),
       contextMenu: BookCardContextMenuModel(
         book,
         onProgressChanged: nil,
@@ -56,8 +60,12 @@ final class ContinueListeningBookCardModel: BookCard.Model {
       id: localBook.bookID,
       title: localBook.title,
       details: timeRemaining,
-      coverURL: localBook.coverURL,
-      progress: MediaProgress.progress(for: localBook.bookID),
+      cover: Cover.Model(
+        url: localBook.coverURL,
+        title: localBook.title,
+        author: localBook.authorNames,
+        progress: MediaProgress.progress(for: localBook.bookID)
+      ),
       contextMenu: BookCardContextMenuModel(
         localBook,
         onProgressChanged: nil,
@@ -87,9 +95,9 @@ final class ContinueListeningBookCardModel: BookCard.Model {
       .sink { [weak self] states in
         guard let self else { return }
         if case .downloading(let progress) = states[self.id] {
-          self.downloadProgress = progress
+          self.cover.downloadProgress = progress
         } else {
-          self.downloadProgress = nil
+          self.cover.downloadProgress = nil
         }
       }
   }
@@ -100,7 +108,7 @@ extension ContinueListeningBookCardModel {
     guard let mediaProgress else { return }
 
     Task { @MainActor in
-      progress = MediaProgress.progress(for: mediaProgress.bookID)
+      cover.progress = MediaProgress.progress(for: mediaProgress.bookID)
 
       let remainingTime = mediaProgress.remaining
       if remainingTime > 0 && mediaProgress.progress > 0 {

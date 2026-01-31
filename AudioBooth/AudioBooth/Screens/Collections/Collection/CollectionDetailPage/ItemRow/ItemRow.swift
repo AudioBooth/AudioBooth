@@ -27,17 +27,14 @@ struct ItemRow: View {
   }
 
   var cover: some View {
-    CoverImage(url: model.coverURL)
-      .overlay(alignment: .bottom) {
-        ProgressOverlay(progress: model.progress)
-          .padding(2)
-      }
-      .frame(width: 60, height: 60)
-      .clipShape(RoundedRectangle(cornerRadius: 6))
-      .overlay(
-        RoundedRectangle(cornerRadius: 6)
-          .stroke(.gray.opacity(0.3), lineWidth: 1)
+    Cover(
+      model: Cover.Model(
+        url: model.coverURL,
+        title: model.title,
+        progress: model.progress
       )
+    )
+    .frame(width: 60, height: 60)
   }
 }
 

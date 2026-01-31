@@ -178,10 +178,9 @@ struct BookPlayer: View {
 
   private var cover: some View {
     NavigationLink(value: NavigationDestination.book(id: model.id)) {
-      CoverImage(url: model.coverURL)
+      Cover(url: model.coverURL, style: .plain)
         .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
         .aspectRatio(1, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
     }
     .accessibilityLabel("Book details")

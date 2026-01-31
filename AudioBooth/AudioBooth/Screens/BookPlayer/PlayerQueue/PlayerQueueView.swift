@@ -104,13 +104,8 @@ extension PlayerQueueView {
     }
 
     private var cover: some View {
-      CoverImage(url: item.coverURL)
+      Cover(url: item.coverURL)
         .frame(width: 40, height: 40)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-          RoundedRectangle(cornerRadius: 8)
-            .stroke(.gray.opacity(0.3), lineWidth: 1)
-        )
     }
 
     private var info: some View {
@@ -176,13 +171,8 @@ extension PlayerQueueView {
     }
 
     private var cover: some View {
-      CoverImage(url: item.coverURL)
+      Cover(url: item.coverURL)
         .frame(width: 40, height: 40)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-          RoundedRectangle(cornerRadius: 8)
-            .stroke(.gray.opacity(0.3), lineWidth: 1)
-        )
     }
 
     private var info: some View {
