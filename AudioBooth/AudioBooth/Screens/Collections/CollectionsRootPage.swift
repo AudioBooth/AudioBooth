@@ -1,4 +1,5 @@
 import API
+import Combine
 import SwiftUI
 
 struct CollectionsRootPage: View {
@@ -14,18 +15,17 @@ struct CollectionsRootPage: View {
     }
   }
 
+  @ObservedObject var model: Model
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
 
-  @Binding var selectedType: CollectionType
-
   var body: some View {
-    NavigationStack {
-      CollectionsRootContent(selectedType: $selectedType)
+    NavigationStack(path: $model.path) {
+      CollectionsRootContent(selected: $model.selected)
         .id(libraries.current?.id)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .principal) {
-            Picker("Collection Type", selection: $selectedType) {
+            Picker("Collection Type", selection: $model.selected) {
               Text("Series").tag(CollectionType.series)
               Text("Collections").tag(CollectionType.collections)
               Text("Playlists").tag(CollectionType.playlists)
@@ -60,14 +60,14 @@ struct CollectionsRootPage: View {
 }
 
 private struct CollectionsRootContent: View {
-  @Binding var selectedType: CollectionsRootPage.CollectionType
+  @Binding var selected: CollectionsRootPage.CollectionType
 
   @StateObject private var series = SeriesPageModel()
   @StateObject private var collections = CollectionsPageModel(mode: .collections)
   @StateObject private var playlists = CollectionsPageModel(mode: .playlists)
 
   var body: some View {
-    switch selectedType {
+    switch selected {
     case .series:
       SeriesPage(model: series)
     case .collections:
@@ -78,6 +78,22 @@ private struct CollectionsRootContent: View {
   }
 }
 
+extension CollectionsRootPage {
+  @Observable
+  class Model: ObservableObject {
+    var selected: CollectionType = .series
+    var path = NavigationPath()
+
+    func onTabItemTapped() {
+      if path.isEmpty {
+        selected = selected.next
+      } else {
+        path = NavigationPath()
+      }
+    }
+  }
+}
+
 #Preview {
-  CollectionsRootPage(selectedType: .constant(.series))
+  CollectionsRootPage(model: CollectionsRootPage.Model())
 }

@@ -1,4 +1,5 @@
 import API
+import Combine
 import SwiftUI
 
 struct LibraryRootPage: View {
@@ -14,17 +15,17 @@ struct LibraryRootPage: View {
     }
   }
 
-  @Binding var selectedType: LibraryType
+  @ObservedObject var model: Model
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
 
   var body: some View {
-    NavigationStack {
-      LibraryRootContent(selectedType: $selectedType)
+    NavigationStack(path: $model.path) {
+      LibraryRootContent(selected: $model.selected)
         .id(libraries.current?.id)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .principal) {
-            Picker("Library Type", selection: $selectedType) {
+            Picker("Library Type", selection: $model.selected) {
               Text("Library").tag(LibraryType.library)
               Text("Authors").tag(LibraryType.authors)
               Text("Narrators").tag(LibraryType.narrators)
@@ -54,20 +55,36 @@ struct LibraryRootPage: View {
 }
 
 private struct LibraryRootContent: View {
-  @Binding var selectedType: LibraryRootPage.LibraryType
+  @Binding var selected: LibraryRootPage.LibraryType
 
   @StateObject private var library = LibraryPageModel()
   @StateObject private var authors = AuthorsPageModel()
   @StateObject private var narrators = NarratorsPageModel()
 
   var body: some View {
-    switch selectedType {
+    switch selected {
     case .library:
       LibraryPage(model: library)
     case .authors:
       AuthorsPage(model: authors)
     case .narrators:
       NarratorsPage(model: narrators)
+    }
+  }
+}
+
+extension LibraryRootPage {
+  @Observable
+  class Model: ObservableObject {
+    var selected: LibraryType = .library
+    var path = NavigationPath()
+
+    func onTabItemTapped() {
+      if path.isEmpty {
+        selected = selected.next
+      } else {
+        path = NavigationPath()
+      }
     }
   }
 }

@@ -11,8 +11,8 @@ struct ContentView: View {
 
   @State private var isKeyboardVisible = false
   @State private var selectedTab: TabSelection = .home
-  @State private var selectedCollectionType: CollectionsRootPage.CollectionType = .series
-  @State private var selectedLibraryType: LibraryRootPage.LibraryType = .library
+  @StateObject private var libraryModel = LibraryRootPage.Model()
+  @StateObject private var collectionsModel = CollectionsRootPage.Model()
 
   enum TabSelection {
     case home, library, collections, downloads, search
@@ -29,9 +29,9 @@ struct ContentView: View {
         if newValue == selectedTab {
           switch newValue {
           case .library:
-            selectedLibraryType = selectedLibraryType.next
+            libraryModel.onTabItemTapped()
           case .collections:
-            selectedCollectionType = selectedCollectionType.next
+            collectionsModel.onTabItemTapped()
           default:
             break
           }
@@ -91,11 +91,11 @@ struct ContentView: View {
 
       if hasSelectedLibrary {
         Tab("Library", systemImage: "books.vertical.fill", value: .library) {
-          LibraryRootPage(selectedType: $selectedLibraryType)
+          LibraryRootPage(model: libraryModel)
         }
 
         Tab("Collections", systemImage: "square.stack.3d.up.fill", value: .collections) {
-          CollectionsRootPage(selectedType: $selectedCollectionType)
+          CollectionsRootPage(model: collectionsModel)
         }
 
         Tab("Downloads", systemImage: "arrow.down.circle.fill", value: .downloads) {
@@ -141,7 +141,7 @@ struct ContentView: View {
         }
 
       if hasSelectedLibrary {
-        LibraryRootPage(selectedType: $selectedLibraryType)
+        LibraryRootPage(model: libraryModel)
           .padding(.bottom, 0.5)
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
@@ -149,7 +149,7 @@ struct ContentView: View {
             Text("Library")
           }
 
-        CollectionsRootPage(selectedType: $selectedCollectionType)
+        CollectionsRootPage(model: collectionsModel)
           .padding(.bottom, 0.5)
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
