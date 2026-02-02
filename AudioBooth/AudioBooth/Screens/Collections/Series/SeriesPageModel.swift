@@ -44,8 +44,9 @@ final class SeriesPageModel: SeriesPage.Model {
         ascending: true
       )
 
+      let ignorePrefix = Audiobookshelf.shared.libraries.sortingIgnorePrefix
       let seriesCards = response.results.map { series in
-        SeriesCardModel(series: series)
+        SeriesCardModel(series: series, sortingIgnorePrefix: ignorePrefix)
       }
 
       if currentPage == 0 {

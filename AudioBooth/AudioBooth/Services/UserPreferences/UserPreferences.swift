@@ -16,6 +16,15 @@ final class UserPreferences: ObservableObject {
   @AppStorage("removeDownloadOnCompletion")
   var removeDownloadOnCompletion: Bool = false
 
+  @AppStorage("autoDownloadDelay")
+  var autoDownloadDelay: AutoDownloadDelay = .none
+
+  @AppStorage("maxDownloadStorage")
+  var maxDownloadStorage: MaxDownloadStorage = .unlimited
+
+  @AppStorage("removeAfterUnused")
+  var removeAfterUnused: RemoveAfterUnused = .never
+
   @AppStorage("skipForwardInterval")
   var skipForwardInterval: Double = 30.0
 
@@ -197,6 +206,81 @@ enum AutoDownloadMode: String, CaseIterable {
   case off
   case wifiOnly
   case wifiAndCellular
+
+  var displayName: String {
+    switch self {
+    case .off: "Off"
+    case .wifiOnly: "Wi-Fi Only"
+    case .wifiAndCellular: "Wi-Fi & Cellular"
+    }
+  }
+}
+
+enum AutoDownloadDelay: Int, CaseIterable {
+  case none = 0
+  case oneMinute = 60
+  case fiveMinutes = 300
+  case tenMinutes = 600
+  case thirtyMinutes = 1800
+  case oneHour = 3600
+
+  var displayName: String {
+    switch self {
+    case .none: "None"
+    case .oneMinute: "1 Minute"
+    case .fiveMinutes: "5 Minutes"
+    case .tenMinutes: "10 Minutes"
+    case .thirtyMinutes: "30 Minutes"
+    case .oneHour: "1 Hour"
+    }
+  }
+}
+
+enum MaxDownloadStorage: Int, CaseIterable {
+  case unlimited = 0
+  case oneGB = 1
+  case twoGB = 2
+  case fiveGB = 5
+  case tenGB = 10
+  case twentyGB = 20
+  case fiftyGB = 50
+
+  var displayName: String {
+    switch self {
+    case .unlimited: "Unlimited"
+    case .oneGB: "1 GB"
+    case .twoGB: "2 GB"
+    case .fiveGB: "5 GB"
+    case .tenGB: "10 GB"
+    case .twentyGB: "20 GB"
+    case .fiftyGB: "50 GB"
+    }
+  }
+
+  var bytes: Int64? {
+    guard self != .unlimited else { return nil }
+    return Int64(rawValue) * 1_000_000_000
+  }
+}
+
+enum RemoveAfterUnused: Int, CaseIterable {
+  case never = 0
+  case oneDay = 1
+  case fiveDays = 5
+  case sevenDays = 7
+  case fourteenDays = 14
+  case thirtyDays = 30
+
+  var displayName: String {
+    switch self {
+    case .never: "Never"
+    case .oneDay: "1 Day"
+    case .fiveDays: "5 Days"
+    case .sevenDays: "7 Days"
+    case .fourteenDays: "14 Days"
+    case .thirtyDays: "30 Days"
+    }
+  }
 }
 
 enum ShakeSensitivity: String, CaseIterable {

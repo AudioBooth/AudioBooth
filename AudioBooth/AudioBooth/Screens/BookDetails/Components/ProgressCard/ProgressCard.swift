@@ -17,7 +17,7 @@ struct ProgressCard: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
     .background(.fill.tertiary)
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    .clipShape(RoundedRectangle(cornerRadius: 8))
   }
 
   private var progressRow: some View {
@@ -105,7 +105,7 @@ extension ProgressCard {
 extension ProgressCard.Model {
   convenience init(_ mediaProgress: MediaProgress) {
     self.init(
-      progress: max(mediaProgress.progress, mediaProgress.ebookProgress ?? 0),
+      progress: mediaProgress.progress > 0 ? mediaProgress.progress : mediaProgress.ebookProgress ?? 0,
       timeRemaining: mediaProgress.remaining,
       startedAt: mediaProgress.startedAt,
       finishedAt: mediaProgress.finishedAt,

@@ -157,7 +157,7 @@ struct AuthorsPage: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
           if author.bookCount > 0 {
-            Text("\(author.bookCount) \(author.bookCount == 1 ? "book" : "books")")
+            Text("^[\(author.bookCount) book](inflect: true)")
               .font(.caption)
               .foregroundColor(.secondary)
           }

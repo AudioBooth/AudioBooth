@@ -295,6 +295,13 @@ struct BookDetailsView: View {
     }
   }
 
+  private var coverDownloadProgress: Double? {
+    if case .downloading(let progress) = model.downloadState {
+      return progress
+    }
+    return nil
+  }
+
   private func cover(offset: CGFloat) -> some View {
     ParallaxHeader(coordinateSpace: CoordinateSpaces.scrollView) {
       ZStack(alignment: .center) {
@@ -306,22 +313,16 @@ struct BookDetailsView: View {
             .opacity(0.3)
         }
 
-        LazyImage(url: model.coverURL) { state in
-          if let image = state.image {
-            image
-              .resizable()
-              .aspectRatio(contentMode: .fit)
-          } else {
-            Color.gray.opacity(0.3)
-              .overlay {
-                Image(systemName: "book.closed")
-                  .foregroundColor(.gray)
-                  .font(.title2)
-              }
-          }
-        }
-        .overlay { downloadProgress }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        Cover(
+          model: Cover.Model(
+            url: model.coverURL,
+            title: model.title,
+            author: model.authors.map(\.name).joined(separator: ", "),
+            progress: model.progress.audio > 0 ? model.progress.audio : model.progress.ebook,
+            downloadProgress: coverDownloadProgress
+          ),
+          style: .plain
+        )
         .shadow(radius: 4)
         .frame(width: 250, height: 250)
         .offset(y: offset / 2 - 8)
@@ -335,16 +336,23 @@ struct BookDetailsView: View {
 
   private var simpleCover: some View {
     VStack {
-      CoverImage(url: model.coverURL)
-        .frame(width: 200, height: 200)
-        .overlay { downloadProgress }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(radius: 4)
-        .padding()
-        .onTapGesture {
-          guard model.coverURL != nil else { return }
-          isShowingFullScreenCover = true
-        }
+      Cover(
+        model: Cover.Model(
+          url: model.coverURL,
+          title: model.title,
+          author: model.authors.map(\.name).joined(separator: ", "),
+          progress: model.progress.audio > 0 ? model.progress.audio : model.progress.ebook,
+          downloadProgress: coverDownloadProgress
+        ),
+        style: .plain
+      )
+      .frame(width: 200, height: 200)
+      .shadow(radius: 4)
+      .padding()
+      .onTapGesture {
+        guard model.coverURL != nil else { return }
+        isShowingFullScreenCover = true
+      }
     }
     .frame(maxHeight: .infinity)
     .background {
@@ -357,33 +365,6 @@ struct BookDetailsView: View {
       }
     }
     .ignoresSafeArea(edges: .vertical)
-  }
-
-  @ViewBuilder
-  var downloadProgress: some View {
-    if case .downloading(let progress) = model.downloadState {
-      ZStack {
-        Color.black.opacity(0.6)
-
-        Button(
-          action: { model.onDownloadTapped() },
-          label: {
-            ProgressView(value: progress)
-              .progressViewStyle(GaugeProgressViewStyle(tint: .white, lineWidth: 6))
-              .frame(width: 100, height: 100)
-              .overlay {
-                Text(progress.formatted(.percent.precision(.fractionLength(0))))
-                  .font(.system(size: 20))
-                  .fontWeight(.medium)
-                  .foregroundStyle(Color.white)
-              }
-              .frame(maxWidth: .infinity, maxHeight: .infinity)
-              .contentShape(Rectangle())
-          }
-        )
-        .buttonStyle(.plain)
-      }
-    }
   }
 
   private var headerSection: some View {
@@ -730,10 +711,10 @@ extension BookDetailsView.Model {
 
     var title: String {
       switch self {
-      case .chapters: "Chapters"
-      case .tracks: "Tracks"
-      case .ebooks: "eBooks"
-      case .sessions: "Sessions"
+      case .chapters: String(localized: "Chapters")
+      case .tracks: String(localized: "Tracks")
+      case .ebooks: String(localized: "eBooks")
+      case .sessions: String(localized: "Sessions")
       }
     }
   }

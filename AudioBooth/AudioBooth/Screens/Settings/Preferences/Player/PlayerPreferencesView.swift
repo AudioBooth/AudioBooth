@@ -22,12 +22,8 @@ struct TimePicker: View {
   }
 
   var body: some View {
-    DatePicker(
-      "",
-      selection: date,
-      displayedComponents: .hourAndMinute
-    )
-    .labelsHidden()
+    DatePicker(selection: date, displayedComponents: .hourAndMinute) {}
+      .labelsHidden()
   }
 }
 
@@ -37,11 +33,11 @@ struct PlayerPreferencesView: View {
   private var autoTimerModeAccessibilityValue: String {
     switch preferences.autoTimerMode {
     case .off:
-      return "Off"
+      return String(localized: "Off")
     case .duration(let seconds):
-      return "\(Int(seconds / 60)) minutes"
+      return String(localized: "\(Int(seconds / 60)) minutes")
     case .chapters(let count):
-      return "End of \(count) \(count == 1 ? "chapter" : "chapters")"
+      return String(localized: "End of \(count) \(count == 1 ? "chapter" : "chapters")")
     }
   }
 
@@ -49,7 +45,8 @@ struct PlayerPreferencesView: View {
     Form {
       Section {
         VStack(alignment: .leading) {
-          Text("Skip forward and back".uppercased())
+          Text("Skip forward and back")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -103,7 +100,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Smart Rewind".uppercased())
+          Text("Smart Rewind")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -153,7 +151,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Timer".uppercased())
+          Text("Timer")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -192,7 +191,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Automatic Sleep Timer".uppercased())
+          Text("Automatic Sleep Timer")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -245,7 +245,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Lock Screen Controls".uppercased())
+          Text("Lock Screen Controls")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -274,7 +275,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Playback Speed Adjustments".uppercased())
+          Text("Playback Speed Adjustments")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -294,7 +296,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Playback Display".uppercased())
+          Text("Playback Display")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -319,7 +322,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Volume Level".uppercased())
+          Text("Volume Level")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 
@@ -344,7 +348,8 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Orientation Lock".uppercased())
+          Text("Orientation Lock")
+            .textCase(.uppercase)
             .bold()
             .accessibilityAddTraits(.isHeader)
 

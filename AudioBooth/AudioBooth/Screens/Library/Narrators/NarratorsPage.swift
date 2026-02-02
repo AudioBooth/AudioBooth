@@ -107,7 +107,7 @@ struct NarratorsPage: View {
           .frame(maxWidth: .infinity, alignment: .leading)
 
         if narrator.bookCount > 0 {
-          Text("\(narrator.bookCount) \(narrator.bookCount == 1 ? "book" : "books")")
+          Text("^[\(narrator.bookCount) book](inflect: true)")
             .font(.caption)
             .foregroundColor(.secondary)
         }

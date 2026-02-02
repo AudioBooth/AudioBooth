@@ -145,9 +145,9 @@ struct PlaybackSessionListView: View {
   private func formatDate(_ date: Date) -> String {
     let calendar = Calendar.current
     if calendar.isDateInToday(date) {
-      return "Today"
+      return String(localized: "Today")
     } else if calendar.isDateInYesterday(date) {
-      return "Yesterday"
+      return String(localized: "Yesterday")
     } else {
       return date.formatted(.dateTime.month().day())
     }

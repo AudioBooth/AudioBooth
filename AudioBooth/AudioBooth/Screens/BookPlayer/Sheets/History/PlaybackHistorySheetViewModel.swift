@@ -59,9 +59,9 @@ final class PlaybackHistorySheetViewModel: PlaybackHistorySheet.Model {
 
   private func sectionTitle(for date: Date, calendar: Calendar, now: Date) -> String {
     if calendar.isDateInToday(date) {
-      return "Today"
+      return String(localized: "Today")
     } else if calendar.isDateInYesterday(date) {
-      return "Yesterday"
+      return String(localized: "Yesterday")
     } else {
       let formatter = DateFormatter()
       formatter.dateStyle = .medium

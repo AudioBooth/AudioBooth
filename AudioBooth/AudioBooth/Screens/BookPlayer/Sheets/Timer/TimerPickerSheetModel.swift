@@ -300,7 +300,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
         width: .narrow
       )
     )
-    return "Extend \(formattedDuration)"
+    return String(localized: "Extend \(formattedDuration)")
   }
 
   private func extendTimer() {

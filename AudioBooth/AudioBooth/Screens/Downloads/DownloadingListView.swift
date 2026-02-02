@@ -59,13 +59,8 @@ extension DownloadingListView {
     }
 
     var cover: some View {
-      CoverImage(url: book.coverURL)
+      Cover(url: book.coverURL)
         .frame(width: 60, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .overlay(
-          RoundedRectangle(cornerRadius: 6)
-            .stroke(.gray.opacity(0.3), lineWidth: 1)
-        )
     }
   }
 }

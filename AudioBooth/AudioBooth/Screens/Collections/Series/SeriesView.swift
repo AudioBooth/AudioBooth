@@ -36,40 +36,46 @@ struct SeriesView: View {
       title: "He Who Fights with Monsters",
       bookCount: 10,
       bookCovers: [
-        URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-        URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"), title: "Book 1"),
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"), title: "Book 2"),
       ]
     ),
     SeriesCard.Model(
       title: "First Immortal",
       bookCount: 4,
-      bookCovers: [URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")]
+      bookCovers: [
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"), title: "Book 1")
+      ]
     ),
     SeriesCard.Model(
       title: "He Who Fights with Monsters",
       bookCount: 10,
       bookCovers: [
-        URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-        URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"), title: "Book 1"),
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"), title: "Book 2"),
       ]
     ),
     SeriesCard.Model(
       title: "First Immortal",
       bookCount: 4,
-      bookCovers: [URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")]
+      bookCovers: [
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"), title: "Book 1")
+      ]
     ),
     SeriesCard.Model(
       title: "He Who Fights with Monsters",
       bookCount: 10,
       bookCovers: [
-        URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-        URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"), title: "Book 1"),
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"), title: "Book 2"),
       ]
     ),
     SeriesCard.Model(
       title: "First Immortal",
       bookCount: 4,
-      bookCovers: [URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")]
+      bookCovers: [
+        Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"), title: "Book 1")
+      ]
     ),
   ]
 

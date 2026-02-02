@@ -4,6 +4,12 @@ import Foundation
 import Models
 
 final class BookCardModel: BookCard.Model {
+  struct Options: OptionSet {
+    let rawValue: Int
+    static let ignorePrefix = Options(rawValue: 1 << 0)
+    static let showSequence = Options(rawValue: 1 << 1)
+  }
+
   enum Item {
     case local(LocalBook)
     case remote(Book)
@@ -11,7 +17,7 @@ final class BookCardModel: BookCard.Model {
   private let item: Item
   private var downloadStateCancellable: AnyCancellable?
 
-  init(_ item: LocalBook) {
+  init(_ item: LocalBook, options: Options = []) {
     let id = item.bookID
 
     self.item = .local(item)
@@ -28,15 +34,21 @@ final class BookCardModel: BookCard.Model {
       details += " • \(size.formatted(.byteCount(style: .file)))"
     }
 
+    let cover = Cover.Model(
+      url: item.coverURL,
+      title: item.title,
+      author: item.authorNames,
+      progress: MediaProgress.progress(for: id)
+    )
+
     super.init(
       id: id,
       title: item.title,
       details: details,
-      coverURL: item.coverURL,
-      progress: MediaProgress.progress(for: id),
+      cover: cover,
+      sequence: options.contains(.showSequence) ? item.series.first?.sequence : nil,
       author: item.authorNames,
       publishedYear: item.publishedYear,
-      downloadProgress: nil,
       hasEbook: item.ebookFile != nil
     )
 
@@ -45,14 +57,15 @@ final class BookCardModel: BookCard.Model {
     contextMenu = BookCardContextMenuModel(
       item,
       onProgressChanged: { [weak self] progress in
-        self?.progress = progress
+        self?.cover.progress = progress
       }
     )
   }
 
   init(
     _ item: Book,
-    sortBy: BooksService.SortBy?
+    sortBy: BooksService.SortBy?,
+    options: Options = []
   ) {
     let id: String
     let title: String
@@ -74,8 +87,14 @@ final class BookCardModel: BookCard.Model {
       publishedYear = nil
     } else {
       id = item.id
-      title = item.title
-      sequence = item.series?.first?.sequence
+
+      if sortBy == .title, options.contains(.ignorePrefix) {
+        title = item.titleIgnorePrefix
+      } else {
+        title = item.title
+      }
+
+      sequence = options.contains(.showSequence) ? item.series?.first?.sequence : nil
       author = item.authorName
       narrator = item.media.metadata.narratorName
       publishedYear = item.publishedYear
@@ -143,17 +162,22 @@ final class BookCardModel: BookCard.Model {
       initialProgress = MediaProgress.progress(for: id)
     }
 
+    let cover = Cover.Model(
+      url: item.coverURL(),
+      title: title,
+      author: author,
+      progress: initialProgress
+    )
+
     super.init(
       id: id,
       title: title,
       details: details,
-      coverURL: item.coverURL(),
+      cover: cover,
       sequence: sequence,
-      progress: initialProgress,
       author: author,
       narrator: narrator,
       publishedYear: publishedYear,
-      downloadProgress: nil,
       bookCount: bookCount,
       hasEbook: item.media.ebookFile != nil || item.media.ebookFormat != nil
     )
@@ -163,7 +187,7 @@ final class BookCardModel: BookCard.Model {
     contextMenu = BookCardContextMenuModel(
       item,
       onProgressChanged: { [weak self] progress in
-        self?.progress = progress
+        self?.cover.progress = progress
       }
     )
   }
@@ -173,18 +197,18 @@ final class BookCardModel: BookCard.Model {
       .sink { [weak self] states in
         guard let self else { return }
         if case .downloading(let progress) = states[self.id] {
-          self.downloadProgress = progress
+          self.cover.downloadProgress = progress
         } else {
-          self.downloadProgress = nil
+          self.cover.downloadProgress = nil
         }
       }
   }
 
   override func onAppear() {
     if case .remote(let book) = item, let collapsedSeries = book.collapsedSeries {
-      progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
+      cover.progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
     } else {
-      progress = MediaProgress.progress(for: id)
+      cover.progress = MediaProgress.progress(for: id)
     }
   }
 

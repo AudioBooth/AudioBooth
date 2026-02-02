@@ -117,8 +117,8 @@ struct OfflineListView: View {
 
         case .series(let group):
           DisclosureGroup {
-            ForEach(group.books) { seriesBook in
-              bookRow(seriesBook.book, sequence: seriesBook.sequence)
+            ForEach(group.books) { book in
+              bookRow(book)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -126,13 +126,8 @@ struct OfflineListView: View {
           } label: {
             HStack(spacing: 12) {
               if let coverURL = group.coverURL {
-                CoverImage(url: coverURL)
+                Cover(url: coverURL)
                   .frame(width: 60, height: 60)
-                  .clipShape(RoundedRectangle(cornerRadius: 6))
-                  .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                      .stroke(.gray.opacity(0.3), lineWidth: 1)
-                  )
               }
 
               VStack(alignment: .leading, spacing: 4) {
@@ -167,12 +162,13 @@ struct OfflineListView: View {
     }
     .listStyle(.plain)
     .environment(\.editMode, $model.editMode)
+    .environment(\.bookCardDisplayMode, .row)
   }
 
   @ViewBuilder
-  private func bookRow(_ book: BookCard.Model, sequence: String? = nil) -> some View {
-    if model.editMode == .active {
-      HStack(spacing: 12) {
+  private func bookRow(_ book: BookCard.Model) -> some View {
+    HStack(spacing: 12) {
+      if model.editMode == .active {
         Button {
           model.onSelectBook(id: book.id)
         } label: {
@@ -183,96 +179,9 @@ struct OfflineListView: View {
           .imageScale(.large)
         }
         .buttonStyle(.plain)
-
-        Row(book: book, sequence: sequence)
       }
-    } else {
-      NavigationLink(value: NavigationDestination.book(id: book.id)) {
-        Row(book: book, sequence: sequence)
-      }
-      .buttonStyle(.plain)
-    }
-  }
-}
 
-extension OfflineListView {
-  struct Row: View {
-    let book: BookCard.Model
-    let sequence: String?
-
-    var body: some View {
-      HStack(spacing: 12) {
-        cover
-
-        VStack(alignment: .leading, spacing: 6) {
-          Text(book.title)
-            .font(.caption)
-            .fontWeight(.medium)
-            .lineLimit(1)
-            .allowsTightening(true)
-
-          if let author = book.author {
-            Text(author)
-              .font(.caption2)
-              .lineLimit(1)
-          }
-
-          if let details = book.details {
-            Text(details)
-              .font(.caption2)
-              .lineLimit(1)
-          }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-
-        if let publishedYear = book.publishedYear {
-          Text(publishedYear)
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-      .foregroundColor(.primary)
-      .contentShape(Rectangle())
-      .onAppear(perform: book.onAppear)
-    }
-
-    var cover: some View {
-      CoverImage(url: book.coverURL)
-        .overlay(alignment: .bottom) {
-          ProgressOverlay(progress: book.progress)
-            .padding(2)
-        }
-        .overlay(alignment: .topTrailing) {
-          if let sequence = sequence {
-            Text("#\(sequence)")
-              .font(.caption2)
-              .fontWeight(.medium)
-              .foregroundStyle(Color.white)
-              .padding(.vertical, 2)
-              .padding(.horizontal, 4)
-              .background(Color.black.opacity(0.6))
-              .clipShape(.capsule)
-              .padding(2)
-          }
-        }
-        .frame(width: 60, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .overlay(
-          RoundedRectangle(cornerRadius: 6)
-            .stroke(.gray.opacity(0.3), lineWidth: 1)
-        )
-    }
-
-    func rowMetadata(icon: String, value: String) -> some View {
-      HStack(spacing: 4) {
-        Image(systemName: icon)
-          .font(.caption2)
-          .foregroundColor(.secondary)
-        Text(value)
-          .font(.caption2)
-          .foregroundColor(.primary)
-      }
-      .lineLimit(1)
+      BookListCard(model: book)
     }
   }
 }
@@ -289,22 +198,11 @@ enum OfflineListItem: Identifiable {
   }
 }
 
-struct SeriesBookItem: Identifiable {
-  let book: BookCard.Model
-  let sequence: String
-
-  var id: String { book.id }
-}
-
 struct SeriesGroup: Identifiable {
   let id: String
   let name: String
-  let books: [SeriesBookItem]
+  let books: [BookCard.Model]
   let coverURL: URL?
-
-  var displayName: String {
-    "\(name) (\(books.count) \(books.count == 1 ? "book" : "books"))"
-  }
 }
 
 extension OfflineListView {
@@ -369,17 +267,17 @@ extension OfflineListView {
     BookCard.Model(
       title: "The Lord of the Rings",
       details: "J.R.R. Tolkien",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
     ),
     BookCard.Model(
       title: "Dune",
       details: "Frank Herbert",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
     ),
     BookCard.Model(
       title: "The Foundation",
       details: "Isaac Asimov",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
     ),
   ]
 
@@ -393,12 +291,12 @@ extension OfflineListView {
     BookCard.Model(
       title: "The Lord of the Rings",
       details: "J.R.R. Tolkien",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
     ),
     BookCard.Model(
       title: "Dune",
       details: "Frank Herbert",
-      coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
     ),
   ]
 

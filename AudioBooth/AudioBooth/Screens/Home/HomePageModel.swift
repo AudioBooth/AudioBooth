@@ -101,16 +101,16 @@ extension HomePageModel {
   private func fetchPinnedPlaylist() async {
     guard let playlistID = pinnedPlaylistManager.pinnedPlaylistID else {
       pinnedPlaylist = nil
+      Audiobookshelf.shared.playlists.pinnedPlaylist = nil
       return
     }
 
     do {
       let playlist = try await Audiobookshelf.shared.playlists.fetch(id: playlistID)
       pinnedPlaylist = playlist
+      Audiobookshelf.shared.playlists.pinnedPlaylist = playlist
     } catch {
       AppLogger.viewModel.error("Failed to fetch pinned playlist: \(error)")
-      pinnedPlaylist = nil
-      pinnedPlaylistManager.unpin()
     }
   }
 }
@@ -145,6 +145,8 @@ extension HomePageModel {
     for section in personalizedSections {
       guard enabledSections.contains(section.id) else { continue }
 
+      let title = HomeSection(rawValue: section.id)?.displayName ?? section.label
+
       switch section.entities {
       case .books(let items):
         if section.id == "continue-listening" {
@@ -153,14 +155,21 @@ extension HomePageModel {
           let books = items.map({ BookCardModel($0, sortBy: .title) })
           sectionsByID[section.id] = .init(
             id: section.id,
-            title: section.label,
+            title: title,
             items: .continueBooks(books)
+          )
+        } else if section.id == "continue-series" {
+          let books = items.map({ BookCardModel($0, sortBy: .title, options: .showSequence) })
+          sectionsByID[section.id] = .init(
+            id: section.id,
+            title: title,
+            items: .books(books)
           )
         } else {
           let books = items.map({ BookCardModel($0, sortBy: .title) })
           sectionsByID[section.id] = .init(
             id: section.id,
-            title: section.label,
+            title: title,
             items: .books(books)
           )
         }
@@ -169,7 +178,7 @@ extension HomePageModel {
         let series = items.map { SeriesCardModel(series: $0) }
         sectionsByID[section.id] = .init(
           id: section.id,
-          title: section.label,
+          title: title,
           items: .series(series)
         )
 
@@ -177,7 +186,7 @@ extension HomePageModel {
         let authors = items.map { AuthorCardModel(author: $0) }
         sectionsByID[section.id] = .init(
           id: section.id,
-          title: section.label,
+          title: title,
           items: .authors(authors)
         )
 
@@ -284,7 +293,7 @@ extension HomePageModel {
 
     return Section(
       id: "continue-listening",
-      title: "Continue Listening",
+      title: String(localized: "Continue Listening"),
       items: .continueBooks(sorted)
     )
   }
@@ -306,6 +315,12 @@ extension HomePageModel {
 extension HomePageModel {
   private func loadCachedContent() {
     guard Audiobookshelf.shared.isAuthenticated else { return }
+
+    if let cachedPlaylist = Audiobookshelf.shared.playlists.pinnedPlaylist,
+      cachedPlaylist.id == pinnedPlaylistManager.pinnedPlaylistID
+    {
+      pinnedPlaylist = cachedPlaylist
+    }
 
     guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
       return

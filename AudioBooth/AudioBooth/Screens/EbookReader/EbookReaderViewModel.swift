@@ -191,7 +191,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private func setupChapters() async {
     guard let publication = publication else { return }
 
-    if let toc = try? await publication.tableOfContents().get() {
+    if let toc = try? await publication.tableOfContents().get(), !toc.isEmpty {
       let chapterItems = toc.map { link in
         EbookChapterPickerSheet.Model.Chapter(
           id: link.url().path,

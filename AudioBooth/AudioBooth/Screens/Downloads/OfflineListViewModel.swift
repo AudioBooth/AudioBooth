@@ -29,11 +29,13 @@ final class OfflineListViewModel: OfflineListView.Model {
   }
 
   override func onEditModeTapped() {
-    if editMode == .active {
-      selectedBookIDs.removeAll()
-      editMode = .inactive
-    } else {
-      editMode = .active
+    withAnimation {
+      if editMode == .active {
+        selectedBookIDs.removeAll()
+        editMode = .inactive
+      } else {
+        editMode = .active
+      }
     }
   }
 
@@ -162,10 +164,7 @@ final class OfflineListViewModel: OfflineListView.Model {
       }
 
       let seriesBooks = sortedBooks.map { localBook in
-        SeriesBookItem(
-          book: BookCardModel(localBook),
-          sequence: localBook.series.first?.sequence ?? ""
-        )
+        BookCardModel(localBook, options: .showSequence)
       }
 
       let coverURL = sortedBooks.first?.coverURL

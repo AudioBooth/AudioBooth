@@ -1,5 +1,6 @@
 import API
 import Combine
+import NukeUI
 import SwiftUI
 
 struct AuthorDetailsView: View {
@@ -56,13 +57,17 @@ struct AuthorDetailsView: View {
   private var header: some View {
     VStack(spacing: 16) {
       if let imageURL = model.imageURL {
-        CoverImage(url: imageURL)
-          .frame(width: 200, height: 200)
-          .clipShape(Circle())
-          .overlay(
-            Circle()
-              .stroke(.gray.opacity(0.3), lineWidth: 1)
-          )
+        LazyImage(url: imageURL) { state in
+          if let image = state.image {
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+          } else {
+            Color(.systemGray5)
+          }
+        }
+        .frame(width: 200, height: 200)
+        .clipShape(Circle())
       } else {
         Circle()
           .fill(Color.secondary.opacity(0.2))
@@ -147,9 +152,7 @@ struct AuthorDetailsView: View {
 
   private var allBooksSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      NavigationLink {
-        LibraryPage(model: LibraryPageModel(destination: .author(id: model.authorID, name: model.name)))
-      } label: {
+      NavigationLink(value: NavigationDestination.authorLibrary(id: model.authorID, name: model.name)) {
         HStack {
           Text("^[\(model.allBooks.count) Book](inflect: true)")
             .font(.title2)
@@ -246,14 +249,14 @@ extension AuthorDetailsView.Model {
               id: "book-1",
               title: "Master Class",
               details: "Annabelle Hawthorne, Virgil Knightley",
-              coverURL: nil,
+              cover: Cover.Model(url: nil),
               sequence: "1"
             ),
             BookCard.Model(
               id: "book-2",
               title: "Master Class 2",
               details: "Annabelle Hawthorne, Virgil Knightley",
-              coverURL: nil,
+              cover: Cover.Model(url: nil),
               sequence: "2"
             ),
           ]
@@ -266,7 +269,7 @@ extension AuthorDetailsView.Model {
               id: "book-3",
               title: "Coven King 1",
               details: "Virgil Knightley, Edgar Riggs",
-              coverURL: nil,
+              cover: Cover.Model(url: nil),
               sequence: "1"
             )
           ]
@@ -277,7 +280,7 @@ extension AuthorDetailsView.Model {
           id: "book-4",
           title: "Standalone Book",
           details: "Virgil Knightley",
-          coverURL: nil
+          cover: Cover.Model(url: nil)
         )
       ],
       isLoading: false

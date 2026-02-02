@@ -103,7 +103,7 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
             items: bookIDs
           )
           books = updatedPlaylist.books.map { book in
-            ItemRowModel(book)
+            BookCardModel(book, sortBy: nil)
           }
         case .collections:
           let updatedCollection = try await audiobookshelf.collections.update(
@@ -111,7 +111,7 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
             items: bookIDs
           )
           books = updatedCollection.books.map { book in
-            ItemRowModel(book)
+            BookCardModel(book, sortBy: nil)
           }
         }
       } catch {
@@ -148,7 +148,7 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
         }
 
         books = updatedCollection.books.map { book in
-          ItemRowModel(book)
+          BookCardModel(book, sortBy: nil)
         }
       } catch {
         print("Failed to remove items: \(error)")
@@ -189,7 +189,7 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
       collectionDescription = collection.description
 
       books = collection.books.map { book in
-        ItemRowModel(book)
+        BookCardModel(book, sortBy: nil)
       }
     } catch {
       guard !Task.isCancelled else {

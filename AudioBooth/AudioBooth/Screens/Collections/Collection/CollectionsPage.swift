@@ -27,18 +27,18 @@ struct CollectionsPage: View {
   private var emptyStateTitle: String {
     switch model.mode {
     case .playlists:
-      return "No Playlists"
+      return String(localized: "No Playlists")
     case .collections:
-      return "No Collections"
+      return String(localized: "No Collections")
     }
   }
 
   private var emptyStateMessage: String {
     switch model.mode {
     case .playlists:
-      return "Create your first playlist to get started."
+      return String(localized: "Create your first playlist to get started.")
     case .collections:
-      return "No collections available."
+      return String(localized: "No collections available.")
     }
   }
 

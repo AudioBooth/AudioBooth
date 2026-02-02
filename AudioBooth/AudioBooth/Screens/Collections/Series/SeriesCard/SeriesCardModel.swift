@@ -3,13 +3,26 @@ import Models
 import SwiftUI
 
 final class SeriesCardModel: SeriesCard.Model {
-  init(series: API.Series) {
-    let bookCovers = series.books.prefix(10).map { $0.coverURL() }
+  init(series: API.Series, sortingIgnorePrefix: Bool = false) {
+    let bookCovers = series.books.prefix(10).map { book in
+      Cover.Model(
+        url: book.coverURL(),
+        title: book.title,
+        author: book.authorName
+      )
+    }
     let progress = Self.progress(books: series.books)
+
+    let title: String
+    if sortingIgnorePrefix {
+      title = series.nameIgnorePrefix
+    } else {
+      title = series.name
+    }
 
     super.init(
       id: series.id,
-      title: series.name,
+      title: title,
       bookCount: series.books.count,
       bookCovers: Array(bookCovers),
       progress: progress

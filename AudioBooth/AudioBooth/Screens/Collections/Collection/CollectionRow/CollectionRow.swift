@@ -1,4 +1,5 @@
 import Combine
+import NukeUI
 import SwiftUI
 
 struct CollectionRow: View {
@@ -24,10 +25,6 @@ struct CollectionRow: View {
       coverGrid
         .frame(width: 60, height: 60)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-          RoundedRectangle(cornerRadius: 8)
-            .stroke(.gray.opacity(0.3), lineWidth: 1)
-        )
 
       VStack(alignment: .leading, spacing: 4) {
         Text(model.name)
@@ -41,7 +38,7 @@ struct CollectionRow: View {
             .lineLimit(2)
         }
 
-        Text("\(model.count) \(model.count == 1 ? "book" : "books")")
+        Text("^[\(model.count) book](inflect: true)")
           .font(.caption)
           .foregroundStyle(.tertiary)
       }
@@ -60,19 +57,33 @@ struct CollectionRow: View {
             .font(.title2)
         }
     } else if gridCovers.count == 1 {
-      CoverImage(url: gridCovers[0])
+      coverImage(gridCovers[0])
     } else {
       Grid(horizontalSpacing: 1, verticalSpacing: 1) {
         GridRow {
-          CoverImage(url: gridCovers[0])
-          CoverImage(url: gridCovers[1])
+          coverImage(gridCovers[0])
+          coverImage(gridCovers[1])
         }
         GridRow {
-          CoverImage(url: gridCovers[2])
-          CoverImage(url: gridCovers[3])
+          coverImage(gridCovers[2])
+          coverImage(gridCovers[3])
         }
       }
     }
+  }
+
+  private func coverImage(_ url: URL) -> some View {
+    LazyImage(url: url) { state in
+      if let image = state.image {
+        image
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+      } else {
+        Color(.systemGray5)
+      }
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .clipped()
   }
 }
 

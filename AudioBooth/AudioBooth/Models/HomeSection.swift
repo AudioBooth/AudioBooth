@@ -16,16 +16,16 @@ public enum HomeSection: String, CaseIterable, Identifiable, Codable {
 
   public var displayName: String {
     switch self {
-    case .listeningStats: return "Listening Stats"
-    case .pinnedPlaylist: return "Pinned Playlist"
-    case .continueListening: return "Continue Listening"
-    case .continueReading: return "Continue Reading"
-    case .continueSeries: return "Continue Series"
-    case .recentlyAdded: return "Recently Added"
-    case .recentSeries: return "Recent Series"
-    case .discover: return "Discover"
-    case .listenAgain: return "Listen Again"
-    case .newestAuthors: return "Newest Authors"
+    case .listeningStats: String(localized: "Listening Stats")
+    case .pinnedPlaylist: String(localized: "Pinned Playlist")
+    case .continueListening: String(localized: "Continue Listening")
+    case .continueReading: String(localized: "Continue Reading")
+    case .continueSeries: String(localized: "Continue Series")
+    case .recentlyAdded: String(localized: "Recently Added")
+    case .recentSeries: String(localized: "Recent Series")
+    case .discover: String(localized: "Discover")
+    case .listenAgain: String(localized: "Listen Again")
+    case .newestAuthors: String(localized: "Newest Authors")
     }
   }
 

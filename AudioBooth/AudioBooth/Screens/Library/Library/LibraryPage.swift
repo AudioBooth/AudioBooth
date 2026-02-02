@@ -175,6 +175,10 @@ struct LibraryPage: View {
     .onAppear {
       model.onAppear()
     }
+    .onChange(of: preferences.libraryFilter) { _, newFilter in
+      guard model.isRoot else { return }
+      model.onFilterPreferenceChanged(newFilter)
+    }
   }
 
   @ViewBuilder
@@ -253,6 +257,7 @@ extension LibraryPage {
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
     func onFilterButtonTapped() {}
+    func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
 
     init(
       isLoading: Bool = true,
@@ -292,17 +297,17 @@ extension LibraryPage.Model {
       BookCard.Model(
         title: "The Lord of the Rings",
         details: "J.R.R. Tolkien",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
       ),
       BookCard.Model(
         title: "Dune",
         details: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
       ),
       BookCard.Model(
         title: "The Foundation",
         details: "Isaac Asimov",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
       ),
     ]
 

@@ -8,7 +8,8 @@ struct AdvancedPreferencesView: View {
     Form {
       Section {
         VStack(alignment: .leading) {
-          Text("iCloud Sync".uppercased())
+          Text("iCloud")
+            .textCase(.uppercase)
             .bold()
 
           Text(
@@ -33,7 +34,8 @@ struct AdvancedPreferencesView: View {
       if NFCNDEFReaderSession.readingAvailable {
         Section {
           VStack(alignment: .leading) {
-            Text("NFC Tag Writing".uppercased())
+            Text("NFC Tag Writing")
+              .textCase(.uppercase)
               .bold()
 
             Text(

@@ -61,6 +61,8 @@ final class NowPlayingManager {
     Task {
       do {
         let audioSession = AVAudioSession.sharedInstance()
+        guard !audioSession.secondaryAudioShouldBeSilencedHint else { return }
+
         try audioSession.setCategory(.playback, mode: .spokenAudio)
         try audioSession.setActive(true)
 
@@ -68,8 +70,7 @@ final class NowPlayingManager {
         let player = AVPlayer(url: url)
         player.volume = 0
         player.play()
-        try? await Task.sleep(for: .milliseconds(100))
-        player.pause()
+        try? await Task.sleep(for: .milliseconds(500))
       } catch {
         AppLogger.player.debug("Failed to prime Now Playing: \(error)")
       }

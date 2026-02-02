@@ -30,7 +30,7 @@ struct HomePreferencesView: View {
               Spacer()
 
               if section.canBeDisabled {
-                Toggle("", isOn: binding(for: section))
+                Toggle(isOn: binding(for: section)) {}
               }
             }
           }

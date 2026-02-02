@@ -88,14 +88,26 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           chapters = nil
         }
 
+        var flags: BookDetailsView.Model.Flags = []
+        if localBook.isExplicit { flags.insert(.explicit) }
+        if localBook.isAbridged { flags.insert(.abridged) }
+
         updateUI(
           title: localBook.title,
+          subtitle: localBook.subtitle,
           authors: authors,
           narrators: localBook.narrators,
           series: series,
           coverURL: localBook.coverURL(raw: true),
           duration: localBook.duration,
           mediaType: mediaType,
+          publisher: localBook.publisher,
+          publishedYear: localBook.publishedYear,
+          language: localBook.language,
+          genres: localBook.genres,
+          tags: localBook.tags,
+          description: localBook.bookDescription,
+          flags: flags,
           chapters: chapters,
           tracks: localBook.tracks
         )
@@ -253,7 +265,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     self.coverURL = coverURL
     self.genres = genres
     self.tags = tags
-    self.description = description
+    self.description = description?.replacingOccurrences(of: "\n", with: "<br>")
     self.flags = flags
 
     let hasAudio = mediaType?.contains(.audiobook) == true
@@ -410,7 +422,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       updatedActions.insert(isInQueue ? .removeFromQueue : .addToQueue)
     }
 
-    let currentProgress = max(progress.audio, progress.ebook)
+    let currentProgress = progress.audio > 0 ? progress.audio : progress.ebook
     if currentProgress < 1.0 {
       updatedActions.insert(.markAsFinished)
     }

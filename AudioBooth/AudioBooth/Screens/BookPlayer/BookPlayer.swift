@@ -76,7 +76,7 @@ struct BookPlayer: View {
         switch destination {
         case .book(let id):
           BookDetailsView(model: BookDetailsViewModel(bookID: id))
-        case .series, .author, .narrator, .genre, .tag, .offline:
+        case .series, .author, .narrator, .genre, .tag, .offline, .authorLibrary:
           LibraryPage(model: LibraryPageModel(destination: destination))
         case .playlist, .collection, .stats:
           EmptyView()
@@ -178,10 +178,9 @@ struct BookPlayer: View {
 
   private var cover: some View {
     NavigationLink(value: NavigationDestination.book(id: model.id)) {
-      CoverImage(url: model.coverURL)
+      Cover(url: model.coverURL, style: .plain)
         .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
         .aspectRatio(1, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
     }
     .accessibilityLabel("Book details")
@@ -447,22 +446,22 @@ struct BookPlayer: View {
   private var downloadIcon: String {
     switch model.downloadState {
     case .downloading:
-      return "stop.circle"
+      "stop.circle"
     case .downloaded:
-      return "internaldrive"
+      "internaldrive"
     case .notDownloaded:
-      return "icloud.and.arrow.down"
+      "icloud.and.arrow.down"
     }
   }
 
   private var downloadText: String {
     switch model.downloadState {
     case .downloading:
-      return "Cancel"
+      String(localized: "Cancel")
     case .downloaded:
-      return "Remove"
+      String(localized: "Remove")
     case .notDownloaded:
-      return "Download"
+      String(localized: "Download")
     }
   }
 }

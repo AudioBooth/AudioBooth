@@ -2,37 +2,54 @@ import API
 import Foundation
 
 final class FilterPickerModel: FilterPicker.Model {
-  private let onFilterApplied: (LibraryPageModel.Filter) -> Void
-  private let onFilterCleared: () -> Void
+  private let audiobookshelf = Audiobookshelf.shared
 
-  init(
-    filterData: FilterData,
-    currentFilter: LibraryPageModel.Filter?,
-    onFilterApplied: @escaping (LibraryPageModel.Filter) -> Void,
-    onFilterCleared: @escaping () -> Void
-  ) {
-    self.onFilterApplied = onFilterApplied
-    self.onFilterCleared = onFilterCleared
-
+  init(currentFilter: LibraryPageModel.Filter?) {
     super.init(
       progressOptions: ["Finished", "In Progress", "Not Started", "Not Finished"],
-      authors: filterData.authors,
-      genres: filterData.genres.sorted(),
-      narrators: filterData.narrators.sorted(),
-      series: filterData.series,
-      tags: filterData.tags.sorted(),
-      languages: filterData.languages.sorted(),
-      publishers: filterData.publishers.sorted(),
-      publishedDecades: filterData.publishedDecades.sorted(by: >),
       selectedFilter: currentFilter
     )
+
+    Task {
+      await fetchFilterData()
+    }
   }
 
   override func onFilterChanged() {
-    if let selectedFilter {
-      onFilterApplied(selectedFilter)
-    } else {
-      onFilterCleared()
+    Task { @MainActor in
+      if let selectedFilter {
+        UserPreferences.shared.libraryFilter = selectedFilter
+      } else {
+        UserPreferences.shared.libraryFilter = .all
+      }
     }
+  }
+
+  override func refresh() async {
+    await fetchFilterData()
+  }
+
+  private func fetchFilterData() async {
+    if let cached = audiobookshelf.libraries.getCachedFilterData() {
+      applyFilterData(cached)
+    }
+
+    do {
+      let data = try await audiobookshelf.libraries.fetchFilterData()
+      applyFilterData(data)
+    } catch {
+      print("Failed to fetch filter data: \(error)")
+    }
+  }
+
+  private func applyFilterData(_ data: FilterData) {
+    authors = data.authors
+    genres = data.genres.sorted()
+    narrators = data.narrators.sorted()
+    series = data.series
+    tags = data.tags.sorted()
+    languages = data.languages.sorted()
+    publishers = data.publishers.sorted()
+    publishedDecades = data.publishedDecades.sorted(by: >)
   }
 }

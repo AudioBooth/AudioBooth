@@ -1,4 +1,3 @@
-import NukeUI
 import SwiftUI
 
 @available(iOS 26.0, *)
@@ -58,8 +57,7 @@ struct MiniBookPlayer: View, Equatable {
   }
 
   private var cover: some View {
-    CoverImage(url: player.coverURL)
-      .clipShape(RoundedRectangle(cornerRadius: 12))
+    Cover(url: player.coverURL)
   }
 
   @ViewBuilder
@@ -189,8 +187,7 @@ struct LegacyMiniBookPlayer: View {
   }
 
   private var cover: some View {
-    CoverImage(url: player.coverURL)
-      .clipShape(RoundedRectangle(cornerRadius: 12))
+    Cover(url: player.coverURL)
   }
 
   private func formatTimeRemaining(_ duration: TimeInterval) -> String {

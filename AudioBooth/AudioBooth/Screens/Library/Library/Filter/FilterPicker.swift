@@ -326,6 +326,7 @@ extension FilterPicker {
     }
 
     func onFilterChanged() {}
+    func refresh() async {}
 
     init(
       progressOptions: [String] = [],

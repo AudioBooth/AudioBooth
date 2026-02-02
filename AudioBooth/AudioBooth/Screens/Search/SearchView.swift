@@ -15,7 +15,7 @@ struct SearchPage: View {
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
           case .author(let id, let name):
             AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
-          case .series, .narrator, .genre, .tag, .offline:
+          case .series, .narrator, .genre, .tag, .offline, .authorLibrary:
             LibraryPage(model: LibraryPageModel(destination: destination))
           case .playlist, .collection, .stats:
             EmptyView()
@@ -292,17 +292,17 @@ extension SearchView.Model {
       BookCard.Model(
         title: "The Lord of the Rings",
         details: "J.R.R. Tolkien",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
       ),
       BookCard.Model(
         title: "Dune",
         details: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
       ),
       BookCard.Model(
         title: "The Foundation",
         details: "Isaac Asimov",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
       ),
     ]
     model.series = [.mock, .mock]

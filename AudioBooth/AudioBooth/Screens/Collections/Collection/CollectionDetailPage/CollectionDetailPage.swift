@@ -4,11 +4,15 @@ import SwiftUI
 
 struct CollectionDetailPage: View {
   @Environment(\.dismiss) var dismiss
-  @Environment(\.editMode) var editMode
+  @ObservedObject private var preferences = UserPreferences.shared
 
   @StateObject var model: Model
   @State private var showDeleteConfirmation = false
   @State private var showEditSheet = false
+
+  private var isCardMode: Bool {
+    preferences.libraryDisplayMode == .card
+  }
 
   var body: some View {
     Group {
@@ -17,11 +21,12 @@ struct CollectionDetailPage: View {
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else if model.books.isEmpty && !model.isLoading {
         emptyStateView
+      } else if isCardMode {
+        cardView
       } else {
         listView
       }
     }
-    .listStyle(.plain)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if model.mode == .playlists {
@@ -35,47 +40,67 @@ struct CollectionDetailPage: View {
         }
       }
 
-      if model.canEdit {
+      if model.canEdit && !isCardMode {
         ToolbarItem(placement: .topBarTrailing) {
           EditButton()
             .tint(.primary)
         }
       }
 
-      if model.canEdit || model.canDelete {
-        ToolbarItem(placement: .topBarTrailing) {
-          Menu {
-            if model.canEdit {
-              Button {
-                showEditSheet = true
-              } label: {
-                Label("Rename", systemImage: "pencil")
-              }
-            }
-
-            if model.canDelete {
-              Button(role: .destructive) {
-                showDeleteConfirmation = true
-              } label: {
-                Label(deleteActionTitle, systemImage: "trash")
-              }
-              .tint(.red)
-            }
-          } label: {
-            Label("More", systemImage: "ellipsis")
-          }
-          .confirmationDialog(
-            deleteConfirmationMessage,
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Toggle(
+            isOn: Binding(
+              get: { preferences.libraryDisplayMode == .card },
+              set: { if $0 { preferences.libraryDisplayMode = .card } }
+            )
           ) {
-            Button(deleteActionTitle, role: .destructive) {
-              model.onDeleteCollection()
-            }
-            Button("Cancel", role: .cancel) {}
+            Label("Grid View", systemImage: "square.grid.2x2")
           }
-          .tint(.primary)
+
+          Toggle(
+            isOn: Binding(
+              get: { preferences.libraryDisplayMode == .row },
+              set: { if $0 { preferences.libraryDisplayMode = .row } }
+            )
+          ) {
+            Label("List View", systemImage: "list.bullet")
+          }
+
+          if model.canEdit {
+            Divider()
+
+            Button {
+              showEditSheet = true
+            } label: {
+              Label("Rename", systemImage: "pencil")
+            }
+          }
+
+          if model.canDelete {
+            Divider()
+
+            Button(role: .destructive) {
+              showDeleteConfirmation = true
+            } label: {
+              Label(deleteActionTitle, systemImage: "trash")
+            }
+            .tint(.red)
+          }
+        } label: {
+          Label("More", systemImage: "ellipsis")
         }
+        .confirmationDialog(
+          deleteConfirmationMessage,
+          isPresented: $showDeleteConfirmation,
+          titleVisibility: .visible
+        ) {
+          Button(deleteActionTitle, role: .destructive) {
+            model.onDeleteCollection()
+          }
+          Button("Cancel", role: .cancel) {}
+        }
+        .tint(.primary)
       }
     }
     .refreshable {
@@ -101,27 +126,27 @@ struct CollectionDetailPage: View {
   private var emptyStateMessage: String {
     switch model.mode {
     case .playlists:
-      return "This playlist is empty."
+      String(localized: "This playlist is empty.")
     case .collections:
-      return "This collection is empty."
+      String(localized: "This collection is empty.")
     }
   }
 
   private var deleteActionTitle: String {
     switch model.mode {
     case .playlists:
-      return "Delete Playlist"
+      String(localized: "Delete Playlist")
     case .collections:
-      return "Delete Collection"
+      String(localized: "Delete Collection")
     }
   }
 
   private var deleteConfirmationMessage: String {
     switch model.mode {
     case .playlists:
-      return "Are you sure you want to remove your playlist \"\(model.collectionName)\"?"
+      String(localized: "Are you sure you want to remove your playlist \"\(model.collectionName)\"?")
     case .collections:
-      return "Are you sure you want to remove this collection?"
+      String(localized: "Are you sure you want to remove this collection?")
     }
   }
 
@@ -131,6 +156,26 @@ struct CollectionDetailPage: View {
       systemImage: "music.note.list",
       description: Text(emptyStateMessage)
     )
+  }
+
+  private var cardView: some View {
+    ScrollView {
+      VStack(alignment: .leading) {
+        titleHeader
+
+        LazyVGrid(
+          columns: [GridItem(.adaptive(minimum: 100), spacing: 20)],
+          spacing: 20
+        ) {
+          ForEach(model.books) { book in
+            BookCard(model: book)
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+          }
+        }
+        .padding(.horizontal)
+      }
+    }
+    .environment(\.bookCardDisplayMode, .card)
   }
 
   private var listView: some View {
@@ -144,13 +189,7 @@ struct CollectionDetailPage: View {
 
       Section {
         ForEach(model.books) { book in
-          ZStack {
-            NavigationLink(value: NavigationDestination.book(id: book.id)) {
-              EmptyView()
-            }
-            .opacity(editMode?.wrappedValue.isEditing == true ? 0 : 1)
-            ItemRow(model: book)
-          }
+          BookListCard(model: book)
         }
         .onMove { source, destination in
           model.onMove(from: source, to: destination)
@@ -160,6 +199,8 @@ struct CollectionDetailPage: View {
         }
       }
     }
+    .listStyle(.plain)
+    .environment(\.bookCardDisplayMode, .row)
   }
 
   private var titleHeader: some View {
@@ -178,7 +219,7 @@ struct CollectionDetailPage: View {
         }
       }
 
-      Text("\(model.books.count) \(model.books.count == 1 ? "book" : "books")")
+      Text("^[\(model.books.count) book](inflect: true)")
         .font(.caption)
         .foregroundStyle(.tertiary)
     }
@@ -193,7 +234,7 @@ extension CollectionDetailPage {
     var isLoading: Bool
     var collectionName: String
     var collectionDescription: String?
-    var books: [ItemRow.Model]
+    var books: [BookCard.Model]
     var mode: CollectionMode
     var canEdit: Bool
     var canDelete: Bool
@@ -211,7 +252,7 @@ extension CollectionDetailPage {
       isLoading: Bool = false,
       collectionName: String = "",
       collectionDescription: String? = nil,
-      books: [ItemRow.Model] = [],
+      books: [BookCard.Model] = [],
       mode: CollectionMode = .playlists,
       canEdit: Bool = false,
       canDelete: Bool = false,
@@ -245,19 +286,22 @@ extension CollectionDetailPage.Model {
       collectionName: "My Favorites",
       collectionDescription: "My favorite audiobooks to listen to",
       books: [
-        ItemRow.Model(
+        BookCard.Model(
           id: "1",
           title: "The Name of the Wind",
-          details: "Patrick Rothfuss",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")!,
-          progress: 0.45
+          cover: Cover.Model(
+            url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+            progress: 0.45
+          ),
+          author: "Patrick Rothfuss"
         ),
-        ItemRow.Model(
+        BookCard.Model(
           id: "2",
           title: "Project Hail Mary",
-          details: "Andy Weir",
-          coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")!,
-          progress: 0.0
+          cover: Cover.Model(
+            url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+          ),
+          author: "Andy Weir"
         ),
       ]
     )

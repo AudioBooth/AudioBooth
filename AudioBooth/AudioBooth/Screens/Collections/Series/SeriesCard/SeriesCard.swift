@@ -31,7 +31,7 @@ struct SeriesCard: View {
 
           ZStack(alignment: bookCount == 1 ? .center : .leading) {
             if let firstCover = model.bookCovers.first {
-              LazyImage(url: firstCover) { state in
+              LazyImage(url: firstCover.url) { state in
                 if let image = state.image {
                   image
                     .resizable()
@@ -39,36 +39,25 @@ struct SeriesCard: View {
                     .blur(radius: 5)
                     .opacity(0.3)
                 } else {
-                  RoundedRectangle(cornerRadius: 12)
+                  RoundedRectangle(cornerRadius: 8)
                     .fill(Color.gray.opacity(0.2))
                 }
               }
               .frame(width: availableWidth, height: coverSize)
               .clipped()
-              .cornerRadius(12)
+              .cornerRadius(8)
             }
 
             ForEach(Array(model.bookCovers.prefix(10).enumerated()), id: \.offset) {
               index,
-              cover in
-              LazyImage(url: cover) { state in
-                if let image = state.image {
-                  image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                } else {
-                  RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.gray.opacity(0.3))
+              bookCover in
+              Cover(model: bookCover, style: .plain)
+                .frame(width: coverSize, height: coverSize)
+                .shadow(radius: 2)
+                .zIndex(Double(10 - index))
+                .alignmentGuide(.leading) { _ in
+                  bookCount == 1 ? 0 : CGFloat(-index) * spacing
                 }
-              }
-              .frame(width: coverSize, height: coverSize)
-              .clipped()
-              .cornerRadius(6)
-              .shadow(radius: 2)
-              .zIndex(Double(10 - index))
-              .alignmentGuide(.leading) { _ in
-                bookCount == 1 ? 0 : CGFloat(-index) * spacing
-              }
             }
           }
           .frame(height: coverSize)
@@ -78,7 +67,7 @@ struct SeriesCard: View {
           ProgressOverlay(progress: model.progress)
             .padding(4)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
 
         if model.bookCount > 0 {
           HStack(spacing: 2) {
@@ -113,14 +102,14 @@ extension SeriesCard {
     var id: String
     var title: String
     var bookCount: Int
-    var bookCovers: [URL?]
+    var bookCovers: [Cover.Model]
     var progress: Double?
 
     init(
       id: String = UUID().uuidString,
       title: String = "",
       bookCount: Int = 0,
-      bookCovers: [URL?] = [],
+      bookCovers: [Cover.Model] = [],
       progress: Double? = nil
     ) {
       self.id = id
@@ -134,10 +123,19 @@ extension SeriesCard {
 
 extension SeriesCard.Model {
   static var mock: SeriesCard.Model {
-    let mockCovers: [URL?] = [
-      URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-      URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-      URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"),
+    let mockCovers: [Cover.Model] = [
+      Cover.Model(
+        url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+        title: "Book 1"
+      ),
+      Cover.Model(
+        url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
+        title: "Book 2"
+      ),
+      Cover.Model(
+        url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"),
+        title: "Book 3"
+      ),
     ]
 
     return SeriesCard.Model(
