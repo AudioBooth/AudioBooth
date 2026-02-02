@@ -362,6 +362,7 @@
 				en,
 				Base,
 				fr,
+				da,
 				de,
 				"zh-tw",
 			);
