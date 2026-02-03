@@ -15,7 +15,7 @@ final class SeriesCardModel: SeriesCard.Model {
 
     let title: String
     if sortingIgnorePrefix {
-      title = series.nameIgnorePrefix
+      title = series.nameIgnorePrefix ?? series.name
     } else {
       title = series.name
     }

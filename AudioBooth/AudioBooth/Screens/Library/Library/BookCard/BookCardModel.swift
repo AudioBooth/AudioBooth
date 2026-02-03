@@ -78,7 +78,14 @@ final class BookCardModel: BookCard.Model {
 
     if let collapsedSeries = item.collapsedSeries {
       id = collapsedSeries.id
-      title = collapsedSeries.name
+
+      if sortBy == .title, options.contains(.ignorePrefix) {
+        title = collapsedSeries.nameIgnorePrefix ?? collapsedSeries.name
+      } else {
+        title = collapsedSeries.name
+
+      }
+
       bookCount = collapsedSeries.numBooks
       details = nil
       sequence = nil
