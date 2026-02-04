@@ -11,7 +11,7 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.fontFamily") var fontFamily: FontFamily = .system
   @AppStorage("ebookReader.theme") var theme: Theme = .light
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
-  @AppStorage("ebookReader.scroll") var scroll: Bool = false
+  @AppStorage("ebookReader.scroll") var verticalScrolling: Bool = false
   @AppStorage("ebookReader.tapToNavigate") var tapToNavigate: Bool = true
 
   @AppStorage("ebookReader.publisherStyles") var publisherStyles: Bool = true
@@ -76,7 +76,7 @@ extension EbookReaderPreferences {
     prefs.fontFamily = fontFamily.readiumFontFamily
     prefs.theme = theme.toReadiumTheme()
     prefs.pageMargins = pageMargins.value
-    prefs.scroll = scroll
+    prefs.scroll = verticalScrolling
 
     prefs.publisherStyles = publisherStyles
     if !publisherStyles {

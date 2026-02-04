@@ -36,7 +36,7 @@ struct EbookReaderPreferencesView: View {
         }
 
         Section("Layout") {
-          Toggle("Scroll Mode", isOn: $preferences.scroll)
+          Toggle("Vertical Scrolling", isOn: $preferences.verticalScrolling)
           Toggle("Tap to Navigate", isOn: $preferences.tapToNavigate)
 
           Picker("Page Margins", selection: $preferences.pageMargins) {

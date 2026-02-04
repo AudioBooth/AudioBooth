@@ -166,6 +166,16 @@ struct EbookReaderView: View {
         .frame(maxWidth: .infinity)
       }
 
+      Button(action: { withAnimation { model.preferences.verticalScrolling.toggle() } }) { 
+        VStack(spacing: 6) { 
+          Image(systemName: model.preferences.verticalScrolling ? "arrow.up.and.down.text.horizontal" : "book.pages") 
+            .font(.system(size: 20)) 
+          Text(model.preferences.verticalScrolling ? "Scrolling" : "Paginated") 
+            .font(.caption2) 
+        } 
+      } 
+      .frame(maxWidth: .infinity) 
+
       Button(action: { model.onProgressTapped() }) {
         VStack(spacing: 6) {
           Text(model.progress.formatted(.percent.precision(.fractionLength(0))))
