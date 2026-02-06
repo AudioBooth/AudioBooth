@@ -106,8 +106,9 @@ extension PlaybackHistorySheet.Model {
       .init(actionType: .play, position: 12971, timestamp: now.addingTimeInterval(-3600)),
       .init(actionType: .seek, position: 23443, timestamp: now.addingTimeInterval(-3660)),
       .init(actionType: .seek, position: 18306, timestamp: now.addingTimeInterval(-3720)),
-      .init(actionType: .pause, position: 8542, timestamp: now.addingTimeInterval(-7200)),
-      .init(actionType: .play, position: 8530, timestamp: now.addingTimeInterval(-7260)),
+      .init(actionType: .timerCompleted, position: 8542, timestamp: now.addingTimeInterval(-7200)),
+      .init(actionType: .timerExtended, position: 8530, timestamp: now.addingTimeInterval(-7260)),
+      .init(actionType: .timerStarted, position: 8530, timestamp: now.addingTimeInterval(-7320)),
     ]
 
     let yesterdayEntries: [PlaybackHistoryRow.Model] = [

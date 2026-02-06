@@ -69,9 +69,9 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   }
 
   override func onNextChapterTapped() {
-    guard currentIndex < chapters.count - 2 else { return }
-    let nextChapter = chapters[currentIndex + 1]
+    guard currentIndex < chapters.count - 1 else { return }
     currentIndex += 1
+    let nextChapter = chapters[currentIndex]
     let seekTime = nextChapter.start + 0.1
     player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
     record(chapter: nextChapter, position: seekTime)
@@ -97,10 +97,13 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
 
 extension Array where Element == ChapterPickerSheet.Model.Chapter {
   func index(for time: TimeInterval) -> Int {
-    for (index, chapter) in enumerated() where chapter.start..<chapter.end ~= time {
-      return index
+    var end: TimeInterval = .infinity
+    for (index, chapter) in enumerated().reversed() {
+      if chapter.start..<end ~= time {
+        return index
+      }
+      end = chapter.start
     }
-
-    return Swift.max(0, count - 1)
+    return 0
   }
 }

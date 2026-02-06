@@ -38,6 +38,9 @@ extension PlaybackHistory {
     case seek
     case sync
     case chapter
+    case timerStarted
+    case timerCompleted
+    case timerExtended
   }
 }
 
