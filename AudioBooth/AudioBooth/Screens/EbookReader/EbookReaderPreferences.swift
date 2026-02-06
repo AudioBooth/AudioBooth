@@ -70,7 +70,7 @@ extension EbookReaderPreferences {
   func toEPUBPreferences() -> EPUBPreferences {
     var prefs = EPUBPreferences()
 
-    prefs.fontSize = fontSize
+    prefs.fontSize = max(0.1, fontSize)
     prefs.fontWeight = fontWeight
     prefs.textNormalization = textNormalization
     prefs.fontFamily = fontFamily.readiumFontFamily

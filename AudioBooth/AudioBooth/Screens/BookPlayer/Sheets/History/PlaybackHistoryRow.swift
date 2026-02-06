@@ -67,16 +67,22 @@ extension PlaybackHistory.ActionType {
     case .seek: "slider.horizontal.below.rectangle"
     case .sync: "arrow.triangle.2.circlepath"
     case .chapter: "list.dash"
+    case .timerStarted: "timer"
+    case .timerCompleted: "timer.circle.fill"
+    case .timerExtended: "timer.circle"
     }
   }
 
   var displayName: String {
     switch self {
-    case .play: "Play"
-    case .pause: "Pause"
-    case .seek: "Seek"
-    case .sync: "Sync"
-    case .chapter: "Chapter"
+    case .play: String(localized: "Play")
+    case .pause: String(localized: "Pause")
+    case .seek: String(localized: "Seek")
+    case .sync: String(localized: "Sync")
+    case .chapter: String(localized: "Chapter")
+    case .timerStarted: String(localized: "Timer Started")
+    case .timerCompleted: String(localized: "Timer Completed")
+    case .timerExtended: String(localized: "Timer Extended")
     }
   }
 
@@ -87,6 +93,9 @@ extension PlaybackHistory.ActionType {
     case .seek: .blue
     case .sync: .purple
     case .chapter: .brown
+    case .timerStarted: .indigo
+    case .timerCompleted: .red
+    case .timerExtended: .teal
     }
   }
 }
@@ -98,5 +107,8 @@ extension PlaybackHistory.ActionType {
     PlaybackHistoryRow(model: .init(actionType: .seek, position: 30000, timestamp: Date()))
     PlaybackHistoryRow(model: .init(actionType: .sync, position: 40000, timestamp: Date()))
     PlaybackHistoryRow(model: .init(actionType: .chapter, position: 50000, timestamp: Date()))
+    PlaybackHistoryRow(model: .init(actionType: .timerStarted, position: 60000, timestamp: Date()))
+    PlaybackHistoryRow(model: .init(actionType: .timerCompleted, position: 70000, timestamp: Date()))
+    PlaybackHistoryRow(model: .init(actionType: .timerExtended, position: 75000, timestamp: Date()))
   }
 }
