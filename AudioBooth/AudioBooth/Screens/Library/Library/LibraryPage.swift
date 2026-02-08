@@ -133,7 +133,7 @@ struct LibraryPage: View {
             Label("List View", systemImage: "list.bullet")
           }
 
-          if model.isRoot {
+          if model.showCollapseSeries {
             Divider()
 
             Toggle(isOn: $preferences.collapseSeriesInLibrary) {
@@ -144,21 +144,21 @@ struct LibraryPage: View {
             }
           }
 
-          if model.sortBy != nil {
+          if !model.sortOptions.isEmpty {
             Divider()
 
             Menu("Sort By") {
-              sortByOption(.title)
-              sortByOption(.authorName)
-              sortByOption(.authorNameLF)
-              sortByOption(.publishedYear)
-              sortByOption(.addedAt)
-              sortByOption(.size)
-              sortByOption(.duration)
-              sortByOption(.updatedAt)
-              sortByOption(.progress)
-              sortByOption(.progressFinishedAt)
-              sortByOption(.progressCreatedAt)
+              ForEach(model.sortOptions, id: \.self) { sortBy in
+                if model.currentSort == sortBy {
+                  Button(
+                    sortBy.displayTitle,
+                    systemImage: model.ascending ? "chevron.up" : "chevron.down",
+                    action: { model.onSortOptionTapped(sortBy) }
+                  )
+                } else {
+                  Button(sortBy.displayTitle, action: { model.onSortOptionTapped(sortBy) })
+                }
+              }
             }
           }
         } label: {
@@ -173,34 +173,6 @@ struct LibraryPage: View {
     .onChange(of: preferences.libraryFilter) { _, newFilter in
       guard model.isRoot else { return }
       model.onFilterPreferenceChanged(newFilter)
-    }
-  }
-
-  @ViewBuilder
-  private func sortByOption(_ sortBy: BooksService.SortBy) -> some View {
-    let title: String =
-      switch sortBy {
-      case .title: "Title"
-      case .authorName: "Author Name"
-      case .authorNameLF: "Author (Last, First)"
-      case .publishedYear: "Published Year"
-      case .addedAt: "Date Added"
-      case .size: "File Size"
-      case .duration: "Duration"
-      case .updatedAt: "Last Updated"
-      case .progress: "Progress: Last Update"
-      case .progressFinishedAt: "Progress: Finished"
-      case .progressCreatedAt: "Progress: Started"
-      }
-
-    if let current = model.sortBy, current == sortBy {
-      Button(
-        title,
-        systemImage: model.ascending ? "chevron.up" : "chevron.down",
-        action: { model.onSortByTapped(sortBy) }
-      )
-    } else {
-      Button(title, action: { model.onSortByTapped(sortBy) })
     }
   }
 
@@ -231,7 +203,8 @@ extension LibraryPage {
 
     var isRoot: Bool
 
-    var sortBy: BooksService.SortBy?
+    var sortOptions: [SortBy]
+    var currentSort: SortBy?
     var ascending: Bool = true
 
     var title: String
@@ -239,12 +212,14 @@ extension LibraryPage {
     var books: [BookCard.Model]
     var search: SearchView.Model
 
+    var showCollapseSeries: Bool
+
     var filters: FilterPicker.Model?
     var showingFilterSelection: Bool = false
 
     func onAppear() {}
     func refresh() async {}
-    func onSortByTapped(_ sortBy: BooksService.SortBy) {}
+    func onSortOptionTapped(_ sortBy: SortBy) {}
     func onSearchChanged(_ searchText: String) {}
     func loadNextPageIfNeeded() {}
     func onDisplayModeTapped() {}
@@ -257,7 +232,9 @@ extension LibraryPage {
       isLoading: Bool = true,
       hasMorePages: Bool = false,
       isRoot: Bool = true,
-      sortBy: BooksService.SortBy? = .title,
+      sortOptions: [SortBy] = [],
+      currentSort: SortBy? = nil,
+      showCollapseSeries: Bool = false,
       books: [BookCard.Model] = [],
       search: SearchView.Model = SearchView.Model(),
       filters: FilterPicker.Model? = nil,
@@ -266,7 +243,9 @@ extension LibraryPage {
       self.isLoading = isLoading
       self.hasMorePages = hasMorePages
       self.isRoot = isRoot
-      self.sortBy = sortBy
+      self.sortOptions = sortOptions
+      self.showCollapseSeries = showCollapseSeries
+      self.currentSort = currentSort
       self.books = books
       self.search = search
       self.filters = filters
@@ -306,6 +285,29 @@ extension LibraryPage.Model {
     ]
 
     return LibraryPage.Model(books: sampleBooks)
+  }
+}
+
+extension SortBy {
+  var displayTitle: String {
+    switch self {
+    case .title: "Title"
+    case .authorName: "Author Name"
+    case .authorNameLF: "Author (Last, First)"
+    case .author: "Author"
+    case .publishedYear: "Published Year"
+    case .addedAt: "Date Added"
+    case .size: "File Size"
+    case .duration: "Duration"
+    case .numEpisodes: "# of Episodes"
+    case .updatedAt: "Last Updated"
+    case .progress: "Progress: Last Update"
+    case .progressFinishedAt: "Progress: Finished"
+    case .progressCreatedAt: "Progress: Started"
+    case .birthtime: "File Birthtime"
+    case .modified: "File Modified"
+    case .random: "Randomly"
+    }
   }
 }
 

@@ -80,7 +80,7 @@ final class UserPreferences: ObservableObject {
   var groupSeriesInOffline: Bool = false
 
   @AppStorage("librarySortBy")
-  var librarySortBy: BooksService.SortBy = .title
+  var librarySortBy: SortBy = .title
 
   @AppStorage("librarySortAscending")
   var librarySortAscending: Bool = true

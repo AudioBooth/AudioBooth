@@ -7,14 +7,6 @@ public final class PodcastsService {
     self.audiobookshelf = audiobookshelf
   }
 
-  public enum SortBy: String {
-    case title = "media.metadata.title"
-    case author = "media.metadata.author"
-    case addedAt
-    case size
-    case updatedAt
-  }
-
   public func fetch(
     limit: Int? = nil,
     page: Int? = nil,

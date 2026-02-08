@@ -64,7 +64,7 @@ final class BookCardModel: BookCard.Model {
 
   init(
     _ item: Book,
-    sortBy: BooksService.SortBy?,
+    sortBy: SortBy?,
     options: Options = []
   ) {
     let id: String
@@ -155,7 +155,7 @@ final class BookCardModel: BookCard.Model {
         } else {
           details = nil
         }
-      case nil:
+      default:
         details = nil
       }
     }

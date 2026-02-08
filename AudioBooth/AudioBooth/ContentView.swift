@@ -12,14 +12,11 @@ struct ContentView: View {
   @State private var isKeyboardVisible = false
   @State private var selectedTab: TabSelection = .home
   @StateObject private var libraryModel = LibraryRootPage.Model()
+  @StateObject private var podcastsModel = PodcastsRootPage.Model()
   @StateObject private var collectionsModel = CollectionsRootPage.Model()
 
   enum TabSelection {
     case home, library, collections, downloads, search
-  }
-
-  private var hasSelectedLibrary: Bool {
-    libraries.current != nil
   }
 
   private var tabSelection: Binding<TabSelection> {
@@ -29,7 +26,11 @@ struct ContentView: View {
         if newValue == selectedTab {
           switch newValue {
           case .library:
-            libraryModel.onTabItemTapped()
+            if libraries.current?.mediaType == .podcast {
+              podcastsModel.onTabItemTapped()
+            } else {
+              libraryModel.onTabItemTapped()
+            }
           case .collections:
             collectionsModel.onTabItemTapped()
           default:
@@ -89,13 +90,19 @@ struct ContentView: View {
         HomePage(model: HomePageModel())
       }
 
-      if hasSelectedLibrary {
-        Tab("Library", systemImage: "books.vertical.fill", value: .library) {
-          LibraryRootPage(model: libraryModel)
-        }
+      if let current = libraries.current {
+        if current.mediaType == .podcast {
+          Tab("Library", systemImage: "antenna.radiowaves.left.and.right", value: .library) {
+            PodcastsRootPage(model: podcastsModel)
+          }
+        } else {
+          Tab("Library", systemImage: "books.vertical.fill", value: .library) {
+            LibraryRootPage(model: libraryModel)
+          }
 
-        Tab("Collections", systemImage: "square.stack.3d.up.fill", value: .collections) {
-          CollectionsRootPage(model: collectionsModel)
+          Tab("Collections", systemImage: "square.stack.3d.up.fill", value: .collections) {
+            CollectionsRootPage(model: collectionsModel)
+          }
         }
 
         Tab("Downloads", systemImage: "arrow.down.circle.fill", value: .downloads) {
@@ -140,22 +147,32 @@ struct ContentView: View {
           Text("Home")
         }
 
-      if hasSelectedLibrary {
-        LibraryRootPage(model: libraryModel)
-          .padding(.bottom, 0.5)
-          .safeAreaInset(edge: .bottom) { miniPlayer }
-          .tabItem {
-            Image(systemName: "books.vertical.fill")
-            Text("Library")
-          }
+      if let current = libraries.current {
+        if current.mediaType == .podcast {
+          PodcastsRootPage(model: podcastsModel)
+            .padding(.bottom, 0.5)
+            .safeAreaInset(edge: .bottom) { miniPlayer }
+            .tabItem {
+              Image(systemName: "antenna.radiowaves.left.and.right")
+              Text("Library")
+            }
+        } else {
+          LibraryRootPage(model: libraryModel)
+            .padding(.bottom, 0.5)
+            .safeAreaInset(edge: .bottom) { miniPlayer }
+            .tabItem {
+              Image(systemName: "books.vertical.fill")
+              Text("Library")
+            }
 
-        CollectionsRootPage(model: collectionsModel)
-          .padding(.bottom, 0.5)
-          .safeAreaInset(edge: .bottom) { miniPlayer }
-          .tabItem {
-            Image(systemName: "square.stack.3d.up.fill")
-            Text("Collections")
-          }
+          CollectionsRootPage(model: collectionsModel)
+            .padding(.bottom, 0.5)
+            .safeAreaInset(edge: .bottom) { miniPlayer }
+            .tabItem {
+              Image(systemName: "square.stack.3d.up.fill")
+              Text("Collections")
+            }
+        }
 
         DownloadsRootPage()
           .padding(.bottom, 0.5)

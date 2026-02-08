@@ -9,6 +9,7 @@ final class LibraryPageModel: LibraryPage.Model {
   private var fetched: [BookCard.Model] = []
 
   private var filter: Filter?
+  private var sortBy: SortBy?
 
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
@@ -17,11 +18,14 @@ final class LibraryPageModel: LibraryPage.Model {
   init() {
     let preferences = UserPreferences.shared
     self.filter = preferences.libraryFilter == .all ? nil : preferences.libraryFilter
+    self.sortBy = preferences.librarySortBy
 
     super.init(
       hasMorePages: true,
       isRoot: true,
-      sortBy: preferences.librarySortBy,
+      sortOptions: SortBy.bookOptions,
+      currentSort: preferences.librarySortBy,
+      showCollapseSeries: true,
       search: SearchViewModel(),
       title: "Library"
     )
@@ -38,7 +42,6 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
-        sortBy: nil,
         title: name
       )
     case .authorLibrary(let id, let name):
@@ -46,7 +49,6 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
-        sortBy: nil,
         title: name
       )
     case .narrator(let name):
@@ -54,7 +56,6 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
-        sortBy: nil,
         title: name
       )
     case .genre(let name):
@@ -62,7 +63,6 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
-        sortBy: nil,
         title: name
       )
     case .tag(let name):
@@ -70,7 +70,6 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
-        sortBy: nil,
         title: name
       )
     case .author, .book, .playlist, .collection, .offline, .stats:
@@ -102,11 +101,12 @@ final class LibraryPageModel: LibraryPage.Model {
     await loadBooks()
   }
 
-  override func onSortByTapped(_ sortBy: BooksService.SortBy) {
+  override func onSortOptionTapped(_ sortBy: SortBy) {
     if self.sortBy == sortBy {
       ascending.toggle()
     } else {
       self.sortBy = sortBy
+      currentSort = sortBy
       ascending = true
     }
 
