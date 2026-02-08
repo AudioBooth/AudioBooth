@@ -38,7 +38,7 @@ struct CollectionSelectorSheet: View {
           CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
         case .book(let id):
           BookDetailsView(model: BookDetailsViewModel(bookID: id))
-        case .series, .author, .narrator, .genre, .tag, .offline, .collection, .stats, .authorLibrary:
+        case .series, .author, .narrator, .genre, .tag, .offline, .collection, .stats, .authorLibrary, .podcast:
           EmptyView()
         }
       }

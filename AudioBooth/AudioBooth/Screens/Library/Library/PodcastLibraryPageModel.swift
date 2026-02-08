@@ -27,6 +27,27 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
     self.filters = FilterPickerModel(currentFilter: filter)
   }
 
+  init(destination: NavigationDestination) {
+    switch destination {
+    case .genre(let name):
+      self.filter = .genres(name)
+      super.init(
+        hasMorePages: true,
+        isRoot: false,
+        title: name
+      )
+    case .tag(let name):
+      self.filter = .tags(name)
+      super.init(
+        hasMorePages: true,
+        isRoot: false,
+        title: name
+      )
+    default:
+      fatalError("PodcastLibraryPageModel cannot be initialized with a \(destination) destination")
+    }
+  }
+
   override func onAppear() {
     guard fetched.isEmpty else { return }
 

@@ -3,6 +3,7 @@ import SwiftUI
 
 enum NavigationDestination: Hashable {
   case book(id: String)
+  case podcast(id: String)
   case series(id: String, name: String)
   case author(id: String, name: String)
   case authorLibrary(id: String, name: String)

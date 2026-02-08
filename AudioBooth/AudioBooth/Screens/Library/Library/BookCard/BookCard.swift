@@ -25,6 +25,8 @@ struct BookCard: View {
   private var navigationDestination: NavigationDestination {
     if model.bookCount != nil {
       .series(id: model.id, name: model.title)
+    } else if model.isPodcast {
+      .podcast(id: model.id)
     } else {
       .book(id: model.id)
     }
@@ -59,6 +61,8 @@ struct BookListCard: View {
   private var navigationDestination: NavigationDestination {
     if model.bookCount != nil {
       .series(id: model.id, name: model.title)
+    } else if model.isPodcast {
+      .podcast(id: model.id)
     } else {
       .book(id: model.id)
     }
@@ -306,6 +310,7 @@ extension BookCard {
     let bookCount: Int?
     var contextMenu: BookCardContextMenu.Model?
     let hasEbook: Bool
+    let isPodcast: Bool
 
     func onAppear() {}
 
@@ -320,7 +325,8 @@ extension BookCard {
       publishedYear: String? = nil,
       bookCount: Int? = nil,
       contextMenu: BookCardContextMenu.Model? = nil,
-      hasEbook: Bool = false
+      hasEbook: Bool = false,
+      isPodcast: Bool = false
     ) {
       self.id = id
       self.title = title
@@ -333,6 +339,7 @@ extension BookCard {
       self.bookCount = bookCount
       self.contextMenu = contextMenu
       self.hasEbook = hasEbook
+      self.isPodcast = isPodcast
     }
   }
 }

@@ -46,6 +46,8 @@ struct LibraryRootPage: View {
             AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
           case .series, .narrator, .genre, .tag, .authorLibrary:
             LibraryPage(model: LibraryPageModel(destination: destination))
+          case .podcast(let id):
+            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id))
           case .playlist, .collection, .stats:
             EmptyView()
           }

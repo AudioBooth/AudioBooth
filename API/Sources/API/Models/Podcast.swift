@@ -29,7 +29,7 @@ extension Podcast {
   public var author: String? { media.metadata.author }
   public var description: String? { media.metadata.description }
   public var genres: [String]? { media.metadata.genres }
-  public var numEpisodes: Int { media.numEpisodes }
+  public var numEpisodes: Int { media.numEpisodes ?? media.episodes?.count ?? 0 }
   public var size: Int64? { media.size }
   public var tags: [String]? { media.tags }
   public var language: String? { media.metadata.language }
@@ -40,7 +40,7 @@ extension Podcast {
 extension Podcast {
   public struct Media: Sendable {
     public let metadata: Metadata
-    public let numEpisodes: Int
+    public let numEpisodes: Int?
     public let autoDownloadEpisodes: Bool?
     public let autoDownloadSchedule: String?
     public let lastEpisodeCheck: Date?
@@ -49,6 +49,7 @@ extension Podcast {
     public let size: Int64?
     public let coverPath: String?
     public let tags: [String]?
+    public let episodes: [PodcastEpisode]?
 
     public struct Metadata: Sendable {
       public let title: String
@@ -72,7 +73,7 @@ extension Podcast.Media: Codable {
   enum CodingKeys: String, CodingKey {
     case metadata, numEpisodes, autoDownloadEpisodes, autoDownloadSchedule
     case lastEpisodeCheck, maxEpisodesToKeep, maxNewEpisodesToDownload
-    case size, coverPath, tags
+    case size, coverPath, tags, episodes
   }
 }
 

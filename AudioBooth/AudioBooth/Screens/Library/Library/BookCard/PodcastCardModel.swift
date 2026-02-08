@@ -44,7 +44,8 @@ final class PodcastCardModel: BookCard.Model {
       title: title,
       details: details,
       cover: cover,
-      author: author
+      author: author,
+      isPodcast: true
     )
   }
 }
