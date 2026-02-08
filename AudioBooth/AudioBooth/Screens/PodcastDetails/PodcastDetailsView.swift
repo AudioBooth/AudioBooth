@@ -366,7 +366,7 @@ struct PodcastDetailsView: View {
 
   private func episodeRow(_ episode: Model.Episode) -> some View {
     HStack(spacing: 12) {
-      VStack(alignment: .leading, spacing: 4) {
+      VStack(alignment: .leading, spacing: 6) {
         HStack(spacing: 6) {
           if let season = episode.season, !season.isEmpty, let ep = episode.episode, !ep.isEmpty {
             Text("S\(season)E\(ep)")
@@ -387,35 +387,21 @@ struct PodcastDetailsView: View {
             .multilineTextAlignment(.leading)
         }
 
-        HStack(spacing: 8) {
-          if let publishedAt = episode.publishedAt {
-            Text(publishedAt.formatted(date: .abbreviated, time: .omitted))
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-
-          if let duration = episode.durationText {
-            Text(duration)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
+        if let publishedAt = episode.publishedAt {
+          Text(publishedAt.formatted(date: .abbreviated, time: .omitted))
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
 
-        if episode.progress > 0, episode.progress < 1.0 {
-          ProgressView(value: episode.progress)
+        episodePlayButton(episode)
+
+        if episode.progress > 0 {
+          ProgressView(value: min(episode.progress, 1.0))
             .tint(.accentColor)
         }
       }
 
       Spacer(minLength: 0)
-
-      if episode.isCompleted {
-        Image(systemName: "checkmark.circle.fill")
-          .foregroundStyle(.green)
-      } else if episode.isInProgress {
-        Image(systemName: "play.circle.fill")
-          .foregroundStyle(Color.accentColor)
-      }
 
       Image(systemName: "chevron.right")
         .font(.caption)
@@ -423,6 +409,57 @@ struct PodcastDetailsView: View {
     }
     .padding(.vertical, 10)
     .contentShape(Rectangle())
+  }
+
+  private func episodePlayButton(_ episode: Model.Episode) -> some View {
+    let isCurrentEpisode = episode.id == model.currentlyPlayingEpisodeID
+    let isCurrentlyPlaying = isCurrentEpisode && model.isPlaying
+
+    return Button {
+      model.onPlayEpisode(episode)
+    } label: {
+      Label {
+        Text(episodePlayButtonText(for: episode, isCurrentlyPlaying: isCurrentlyPlaying))
+      } icon: {
+        Image(systemName: isCurrentlyPlaying ? "pause.fill" : "play.fill")
+      }
+      .font(.caption)
+      .fontWeight(.medium)
+      .padding(.horizontal, 10)
+      .padding(.vertical, 6)
+      .foregroundStyle(isCurrentlyPlaying ? .white : Color.accentColor)
+      .background(isCurrentlyPlaying ? Color.accentColor : Color.accentColor.opacity(0.15))
+      .clipShape(Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func episodePlayButtonText(
+    for episode: Model.Episode,
+    isCurrentlyPlaying: Bool
+  ) -> String {
+    if isCurrentlyPlaying {
+      return "Pause"
+    }
+    if episode.isCompleted {
+      return "Played"
+    }
+    guard let duration = episode.duration, duration > 0 else {
+      return "Play"
+    }
+    let seconds: Double
+    if episode.progress > 0 {
+      seconds = duration * (1 - episode.progress)
+    } else {
+      seconds = duration
+    }
+    let text = Duration.seconds(seconds).formatted(
+      .units(allowed: [.hours, .minutes], width: .narrow)
+    )
+    if episode.progress > 0 {
+      return "\(text) left"
+    }
+    return text
   }
 }
 
@@ -451,6 +488,9 @@ extension PodcastDetailsView {
     var selectedFilter: EpisodeFilter
     var selectedSort: EpisodeSort
     var ascending: Bool
+
+    var currentlyPlayingEpisodeID: String?
+    var isPlaying: Bool
 
     var episodesTitle: String {
       let filtered = filteredEpisodes.count
@@ -481,7 +521,7 @@ extension PodcastDetailsView {
       case .complete:
         result = result.filter { $0.isCompleted }
       case .inProgress:
-        result = result.filter { $0.isInProgress }
+        result = result.filter { $0.progress > 0 && !$0.isCompleted }
       }
 
       switch selectedSort {
@@ -519,6 +559,7 @@ extension PodcastDetailsView {
     }
 
     func onAppear() {}
+    func onPlayEpisode(_ episode: Episode) {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
       if selectedSort == sort {
         ascending.toggle()
@@ -547,7 +588,9 @@ extension PodcastDetailsView {
       searchText: String = "",
       selectedFilter: EpisodeFilter = .all,
       selectedSort: EpisodeSort = .pubDate,
-      ascending: Bool = false
+      ascending: Bool = false,
+      currentlyPlayingEpisodeID: String? = nil,
+      isPlaying: Bool = false
     ) {
       self.podcastID = podcastID
       self.title = title
@@ -568,6 +611,8 @@ extension PodcastDetailsView {
       self.selectedFilter = selectedFilter
       self.selectedSort = selectedSort
       self.ascending = ascending
+      self.currentlyPlayingEpisodeID = currentlyPlayingEpisodeID
+      self.isPlaying = isPlaying
     }
   }
 }
@@ -584,7 +629,6 @@ extension PodcastDetailsView.Model {
     let duration: Double?
     let description: String?
     let isCompleted: Bool
-    let isInProgress: Bool
     let progress: Double
     let chapters: [Chapter]
 
@@ -684,7 +728,6 @@ extension PodcastDetailsView.Model {
           duration: 1800,
           description: "A deep dive into an untold story.",
           isCompleted: true,
-          isInProgress: false,
           progress: 1.0,
           chapters: [
             Chapter(id: 0, start: 0, end: 600, title: "Introduction"),
@@ -701,7 +744,6 @@ extension PodcastDetailsView.Model {
           duration: 2400,
           description: "Today's top headlines explained.",
           isCompleted: false,
-          isInProgress: true,
           progress: 0.45,
           chapters: []
         ),
@@ -714,7 +756,6 @@ extension PodcastDetailsView.Model {
           duration: 3600,
           description: nil,
           isCompleted: false,
-          isInProgress: false,
           progress: 0,
           chapters: []
         ),

@@ -5,6 +5,7 @@ import SwiftData
 public final class PlaybackSession {
   @Attribute(.unique) public var id: String
   public var libraryItemID: String
+  public var episodeID: String?
 
   public var startTime: TimeInterval
   public var currentTime: TimeInterval
@@ -21,6 +22,7 @@ public final class PlaybackSession {
   public init(
     id: String = UUID().uuidString,
     libraryItemID: String,
+    episodeID: String? = nil,
     startTime: TimeInterval,
     currentTime: TimeInterval,
     timeListening: TimeInterval = 0,
@@ -34,6 +36,7 @@ public final class PlaybackSession {
   ) {
     self.id = id
     self.libraryItemID = libraryItemID
+    self.episodeID = episodeID
     self.startTime = startTime
     self.currentTime = currentTime
     self.timeListening = timeListening

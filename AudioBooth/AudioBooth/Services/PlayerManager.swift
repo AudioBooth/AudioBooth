@@ -13,7 +13,15 @@ final class PlayerManager: ObservableObject, Sendable {
 
   static let shared = PlayerManager()
 
-  @Published var current: BookPlayer.Model?
+  @Published var current: BookPlayer.Model? {
+    didSet {
+      if let current {
+        UserDefaults.standard.set(current.id, forKey: Self.currentIDKey)
+      } else {
+        UserDefaults.standard.removeObject(forKey: Self.currentIDKey)
+      }
+    }
+  }
   @Published var isShowingFullPlayer = false
   @Published var isShowingQueue = false
   @Published var reader: EbookReaderView.Model?
@@ -24,7 +32,7 @@ final class PlayerManager: ObservableObject, Sendable {
     }
   }
 
-  private static let currentBookIDKey = "currentBookID"
+  private static let currentIDKey = "currentBookID"
   private static let queueKey = "playerQueue"
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
 
@@ -39,13 +47,16 @@ final class PlayerManager: ObservableObject, Sendable {
     guard
       current == nil,
       ModelContextProvider.shared.activeServerID != nil,
-      let savedBookID = UserDefaults.standard.string(forKey: Self.currentBookIDKey),
-      let book = try? LocalBook.fetch(bookID: savedBookID)
+      let savedID = UserDefaults.standard.string(forKey: Self.currentIDKey)
     else {
       return
     }
 
-    setCurrent(book)
+    if let book = try? LocalBook.fetch(bookID: savedID) {
+      setCurrent(book)
+    } else if let episode = try? LocalEpisode.fetch(episodeID: savedID) {
+      setCurrent(episode)
+    }
   }
 
   var hasActivePlayer: Bool {
@@ -65,7 +76,6 @@ final class PlayerManager: ObservableObject, Sendable {
       }
       removeFromQueue(bookID: book.bookID)
       current = BookPlayerModel(book)
-      UserDefaults.standard.set(book.bookID, forKey: Self.currentBookIDKey)
       WidgetCenter.shared.reloadAllTimelines()
     }
   }
@@ -79,8 +89,41 @@ final class PlayerManager: ObservableObject, Sendable {
       }
       removeFromQueue(bookID: book.id)
       current = BookPlayerModel(book)
-      UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
       WidgetCenter.shared.reloadAllTimelines()
+    }
+  }
+
+  func setCurrent(
+    episode: PodcastEpisode,
+    podcastID: String,
+    podcastTitle: String,
+    podcastAuthor: String?,
+    coverURL: URL?
+  ) {
+    if episode.id == current?.id {
+      isShowingFullPlayer = true
+    } else {
+      if let currentPlayer = current as? BookPlayerModel {
+        currentPlayer.stopPlayer()
+      }
+      current = BookPlayerModel(
+        episode,
+        podcastID: podcastID,
+        podcastTitle: podcastTitle,
+        podcastAuthor: podcastAuthor,
+        coverURL: coverURL
+      )
+    }
+  }
+
+  func setCurrent(_ episode: LocalEpisode) {
+    if episode.episodeID == current?.id {
+      isShowingFullPlayer = true
+    } else {
+      if let currentPlayer = current as? BookPlayerModel {
+        currentPlayer.stopPlayer()
+      }
+      current = BookPlayerModel(episode)
     }
   }
 
@@ -91,7 +134,6 @@ final class PlayerManager: ObservableObject, Sendable {
     }
     current = nil
     isShowingFullPlayer = false
-    UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)
     sharedDefaults?.removeObject(forKey: "playbackState")
     watchConnectivity.sendPlaybackRate(nil)
     SessionManager.shared.clearSession()

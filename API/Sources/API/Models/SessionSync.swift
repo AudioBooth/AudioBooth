@@ -3,6 +3,7 @@ import Foundation
 public struct SessionSync: Codable, Sendable {
   public let id: String
   public let libraryItemId: String
+  public let episodeId: String?
   public let mediaType: String
   public let duration: TimeInterval
   public let startTime: TimeInterval
@@ -37,6 +38,8 @@ public struct SessionSync: Codable, Sendable {
   public init(
     id: String,
     libraryItemId: String,
+    episodeId: String? = nil,
+    mediaType: String = "book",
     duration: TimeInterval,
     startTime: TimeInterval,
     currentTime: TimeInterval,
@@ -46,7 +49,8 @@ public struct SessionSync: Codable, Sendable {
   ) {
     self.id = id
     self.libraryItemId = libraryItemId
-    self.mediaType = "book"
+    self.episodeId = episodeId
+    self.mediaType = mediaType
     self.duration = duration
     self.startTime = startTime
     self.currentTime = currentTime

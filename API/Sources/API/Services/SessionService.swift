@@ -45,6 +45,7 @@ public final class SessionService {
 
   public func start(
     itemID: String,
+    episodeID: String? = nil,
     forceTranscode: Bool = false,
     sessionType: SessionType = .player,
     timeout: TimeInterval
@@ -93,8 +94,13 @@ public final class SessionService {
       }
     }
 
+    var path = "/api/items/\(itemID)/play"
+    if let episodeID {
+      path += "/\(episodeID)"
+    }
+
     let request = NetworkRequest<PlaySession>(
-      path: "/api/items/\(itemID)/play",
+      path: path,
       method: .post,
       body: PlayRequest(
         forceDirectPlay: !forceTranscode,

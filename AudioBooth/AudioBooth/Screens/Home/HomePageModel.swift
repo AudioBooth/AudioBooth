@@ -15,6 +15,7 @@ final class HomePageModel: HomePage.Model {
   private var cancellables = Set<AnyCancellable>()
 
   private var continueListeningBooks: [Book] = []
+  private var continueListeningEpisodes: [Podcast] = []
   private var personalizedSections: [Personalized.Section] = []
   private var pinnedPlaylist: Playlist?
   private var isFetchingRemoteContent = false
@@ -61,6 +62,7 @@ final class HomePageModel: HomePage.Model {
     playerManager.clearQueue()
 
     continueListeningBooks = []
+    continueListeningEpisodes = []
     personalizedSections = []
     pinnedPlaylist = nil
     sections = []
@@ -124,6 +126,8 @@ extension HomePageModel {
         if case .books(let items) = section.entities {
           continueListeningBooks = items
           WatchConnectivityManager.shared.syncContinueListening(books: items)
+        } else if case .episodes(let items) = section.entities {
+          continueListeningEpisodes = items
         }
         break
       }
@@ -201,11 +205,7 @@ extension HomePageModel {
       case .episodes(let items):
         let podcasts = items.map { PodcastCardModel($0, sortBy: nil) }
         if section.id == "continue-listening" {
-          sectionsByID[section.id] = .init(
-            id: section.id,
-            title: title,
-            items: .continueBooks(podcasts)
-          )
+          continue
         } else {
           sectionsByID[section.id] = .init(
             id: section.id,
@@ -219,7 +219,7 @@ extension HomePageModel {
       }
     }
 
-    let continueListeningSection = buildContinueListeningSection()
+    let continueListeningSection = buildBooksContinueListeningSection() ?? buildEpisodesContinueListeningSection()
     let pinnedPlaylistSection = buildPinnedPlaylistSection()
 
     var orderedSections: [Section] = []
@@ -237,8 +237,6 @@ extension HomePageModel {
       case .continueListening:
         if let continueListeningSection {
           orderedSections.append(continueListeningSection)
-        } else if let section = sectionsByID[sectionID.rawValue] {
-          orderedSections.append(section)
         }
 
       default:
@@ -254,7 +252,7 @@ extension HomePageModel {
     saveRecentBooksToWidget()
   }
 
-  private func buildContinueListeningSection() -> Section? {
+  private func buildBooksContinueListeningSection() -> Section? {
     let existingModels: [String: ContinueListeningBookCardModel]
     if let existingSection = sections.first(where: { $0.id == "continue-listening" }),
       case .continueBooks(let items) = existingSection.items
@@ -321,6 +319,48 @@ extension HomePageModel {
       id: "continue-listening",
       title: String(localized: "Continue Listening"),
       items: .continueBooks(sorted)
+    )
+  }
+
+  private func buildEpisodesContinueListeningSection() -> Section? {
+    let existingModels: [String: BookCard.Model]
+    if let existingSection = sections.first(where: { $0.id == "continue-listening" }),
+      case .continueBooks(let items) = existingSection.items
+    {
+      existingModels = Dictionary(
+        uniqueKeysWithValues: items.map { ($0.id, $0) }
+      )
+    } else {
+      existingModels = [:]
+    }
+
+    var models: [BookCard.Model] = []
+
+    if let currentPlayerID = playerManager.current?.id,
+      !continueListeningEpisodes.contains(where: { ($0.recentEpisode?.id ?? $0.id) == currentPlayerID })
+    {
+      if let existingModel = existingModels[currentPlayerID] {
+        models.append(existingModel)
+      } else if let episode = try? LocalEpisode.fetch(episodeID: currentPlayerID) {
+        models.append(ContinueListeningBookCardModel(localEpisode: episode))
+      }
+    }
+
+    for podcast in continueListeningEpisodes {
+      let id = podcast.recentEpisode?.id ?? podcast.id
+      if let existingModel = existingModels[id] {
+        models.append(existingModel)
+      } else {
+        models.append(PodcastCardModel(podcast, sortBy: nil))
+      }
+    }
+
+    guard !models.isEmpty else { return nil }
+
+    return Section(
+      id: "continue-listening",
+      title: String(localized: "Continue Listening"),
+      items: .continueBooks(models)
     )
   }
 

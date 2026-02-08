@@ -255,6 +255,11 @@ extension LocalBook {
   }
 }
 
+extension LocalBook: PlayableItem {
+  public var itemID: String { bookID }
+  public var details: String { authorNames }
+}
+
 extension LocalBook: Comparable {
   public static func < (lhs: LocalBook, rhs: LocalBook) -> Bool {
     if lhs.displayOrder != rhs.displayOrder {

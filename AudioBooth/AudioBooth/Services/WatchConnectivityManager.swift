@@ -344,7 +344,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
           sessionType: .watch,
           timeout: 30
         )
-        book = playSession.libraryItem
+        switch playSession.libraryItem {
+        case .book(let b): book = b
+        case .podcast: throw NSError(domain: "WatchConnectivity", code: -1)
+        }
         sessionID = playSession.id
         audioTracks = playSession.audioTracks ?? []
       }
@@ -449,7 +452,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
             timeout: 30
           )
 
-          PlayerManager.shared.setCurrent(session.libraryItem)
+          if case .book(let book) = session.libraryItem {
+            PlayerManager.shared.setCurrent(book)
+          }
           PlayerManager.shared.current?.onPlayTapped()
           PlayerManager.shared.showFullPlayer()
         }

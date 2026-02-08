@@ -7,6 +7,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
   enum Item {
     case local(LocalBook)
     case remote(Book)
+    case localEpisode(LocalEpisode)
   }
 
   private let item: Item
@@ -75,6 +76,30 @@ final class ContinueListeningBookCardModel: BookCard.Model {
 
     observeMediaProgress()
     setupDownloadProgressObserver()
+  }
+
+  init(localEpisode episode: LocalEpisode) {
+    let timeRemaining =
+      Duration.seconds(episode.duration)
+      .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+      + " remaining"
+
+    self.item = .localEpisode(episode)
+
+    super.init(
+      id: episode.episodeID,
+      podcastID: episode.podcastID,
+      title: episode.title,
+      details: timeRemaining,
+      cover: Cover.Model(
+        url: episode.coverURL,
+        title: episode.title,
+        author: episode.podcastAuthor,
+        progress: MediaProgress.progress(for: episode.episodeID)
+      )
+    )
+
+    observeMediaProgress()
   }
 
   override func onAppear() {

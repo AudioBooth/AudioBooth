@@ -21,9 +21,10 @@ final class BookPlayerModel: BookPlayer.Model {
 
   private var timeObserver: Any?
   private var cancellables = Set<AnyCancellable>()
-  private var item: LocalBook?
+  private var item: (any PlayableItem)?
   private var itemObservation: Task<Void, Never>?
   private var mediaProgress: MediaProgress
+  private var episodeID: String?
   private var timerSecondsCounter = 0
   private var pendingPlay: Bool = false
   private var pendingSeekTime: TimeInterval?
@@ -108,6 +109,101 @@ final class BookPlayerModel: BookPlayer.Model {
     )
 
     setupDownloadStateBinding(bookID: item.bookID)
+    setupHistory()
+    observeSpeedChanged()
+    observeVolumeLevelChanged()
+
+    onLoad()
+  }
+
+  init(_ episode: LocalEpisode) {
+    self.item = episode
+    self.episodeID = episode.episodeID
+
+    do {
+      self.mediaProgress = try MediaProgress.getOrCreate(for: episode.episodeID, duration: episode.duration)
+    } catch {
+      fatalError("Failed to create MediaProgress for episode \(episode.episodeID): \(error)")
+    }
+
+    nowPlaying = NowPlayingManager(
+      id: episode.episodeID,
+      title: episode.title,
+      author: episode.podcastAuthor,
+      coverURL: episode.coverURL,
+      current: mediaProgress.currentTime,
+      duration: mediaProgress.duration
+    )
+
+    super.init(
+      id: episode.episodeID,
+      podcastID: episode.podcastID,
+      title: episode.title,
+      author: episode.podcastAuthor,
+      coverURL: episode.coverURL,
+      speed: SpeedPickerSheet.Model(),
+      timer: TimerPickerSheet.Model(),
+      bookmarks: nil,
+      history: PlaybackHistorySheet.Model(),
+      playbackProgress: PlaybackProgressViewModel(
+        itemID: episode.episodeID,
+        mediaProgress: mediaProgress,
+        title: episode.title
+      )
+    )
+
+    setupHistory()
+    observeSpeedChanged()
+    observeVolumeLevelChanged()
+
+    onLoad()
+  }
+
+  init(
+    _ episode: PodcastEpisode,
+    podcastID: String,
+    podcastTitle: String,
+    podcastAuthor: String?,
+    coverURL: URL?
+  ) {
+    self.item = nil
+    self.episodeID = episode.id
+
+    do {
+      self.mediaProgress = try MediaProgress.getOrCreate(
+        for: episode.id,
+        duration: episode.duration ?? 0
+      )
+    } catch {
+      fatalError("Failed to create MediaProgress for episode \(episode.id): \(error)")
+    }
+
+    nowPlaying = NowPlayingManager(
+      id: episode.id,
+      title: episode.title,
+      author: podcastAuthor,
+      coverURL: coverURL,
+      current: mediaProgress.currentTime,
+      duration: mediaProgress.duration
+    )
+
+    super.init(
+      id: episode.id,
+      podcastID: podcastID,
+      title: episode.title,
+      author: podcastAuthor,
+      coverURL: coverURL,
+      speed: SpeedPickerSheet.Model(),
+      timer: TimerPickerSheet.Model(),
+      bookmarks: nil,
+      history: PlaybackHistorySheet.Model(),
+      playbackProgress: PlaybackProgressViewModel(
+        itemID: episode.id,
+        mediaProgress: mediaProgress,
+        title: episode.title
+      )
+    )
+
     setupHistory()
     observeSpeedChanged()
     observeVolumeLevelChanged()
@@ -224,7 +320,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onDownloadTapped() {
-    guard let item else { return }
+    guard let item = item as? LocalBook else { return }
 
     switch downloadState {
     case .downloading:
@@ -288,7 +384,8 @@ extension BookPlayerModel {
 extension BookPlayerModel {
   private func setupSession(forceTranscode: Bool) async throws {
     item = try await sessionManager.ensureSession(
-      itemID: id,
+      itemID: podcastID ?? id,
+      episodeID: episodeID,
       item: item,
       mediaProgress: mediaProgress,
       forceTranscode: forceTranscode
@@ -437,6 +534,8 @@ extension BookPlayerModel {
   }
 
   private func autoDownloadIfNeeded() {
+    guard episodeID == nil else { return }
+
     let mode = userPreferences.autoDownloadBooks
 
     guard let item, !item.isDownloaded, mode != .off else { return }
@@ -459,15 +558,17 @@ extension BookPlayerModel {
     }
 
     let delay = userPreferences.autoDownloadDelay
-    if delay == .none {
+    if delay == .none, let localBook = item as? LocalBook {
       AppLogger.player.info("Auto-download starting (mode: \(mode.rawValue))")
-      try? item.download()
+      try? localBook.download()
     } else {
       AppLogger.player.info("Auto-download will start after \(delay.displayName) of listening")
     }
   }
 
   private func checkAutoDownloadAfterListening() {
+    guard episodeID == nil else { return }
+
     let mode = userPreferences.autoDownloadBooks
     let delay = userPreferences.autoDownloadDelay
 
@@ -497,7 +598,9 @@ extension BookPlayerModel {
     guard shouldDownload else { return }
 
     AppLogger.player.info("Auto-download starting after \(listeningSeconds)s of listening")
-    try? item.download()
+    if let localBook = item as? LocalBook {
+      try? localBook.download()
+    }
   }
 
   private func setupAudioPlayer() async throws {
@@ -557,8 +660,8 @@ extension BookPlayerModel {
 
     speed = SpeedPickerSheetViewModel(player: player)
 
-    if let item {
-      bookmarks = BookmarkViewerSheetViewModel(item: .local(item), initialTime: 0)
+    if let localBook = item as? LocalBook {
+      bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook), initialTime: 0)
     }
 
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
@@ -597,6 +700,8 @@ extension BookPlayerModel {
   }
 
   private func loadLocalBookIfAvailable() async {
+    guard episodeID == nil else { return }
+
     do {
       if let existingItem = try LocalBook.fetch(bookID: id) {
         AppLogger.player.info("Book is downloaded, loading local files instantly")
@@ -953,7 +1058,7 @@ extension BookPlayerModel {
       for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
         guard !Task.isCancelled, let self else { continue }
 
-        self.item = updatedItem
+        self.item = updatedItem as any PlayableItem
 
         if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
           AppLogger.player.info("Download completed, refreshing player to use local files")
@@ -1114,8 +1219,10 @@ extension BookPlayerModel {
       mediaProgress.remaining <= 60
     else { return }
 
-    Task {
-      try? await item?.markAsFinished()
+    if let localBook = item as? LocalBook {
+      Task {
+        try? await localBook.markAsFinished()
+      }
     }
 
     ReviewRequestManager.shared.recordBookCompletion()
@@ -1210,10 +1317,10 @@ extension BookPlayerModel {
     guard let item else { return }
 
     let state = PlaybackState(
-      bookID: item.bookID,
+      bookID: item.itemID,
       title: item.title,
-      author: item.authorNames,
-      coverURL: item.coverURL,
+      author: item.details,
+      coverURL: item.coverURL(raw: false),
       currentTime: mediaProgress.currentTime,
       duration: mediaProgress.duration,
       isPlaying: isPlaying,
@@ -1227,6 +1334,6 @@ extension BookPlayerModel {
       WidgetCenter.shared.reloadAllTimelines()
     }
 
-    WatchConnectivityManager.shared.syncProgress(item.bookID)
+    WatchConnectivityManager.shared.syncProgress(item.itemID)
   }
 }

@@ -179,7 +179,11 @@ struct BookPlayer: View {
   }
 
   private var cover: some View {
-    NavigationLink(value: NavigationDestination.book(id: model.id)) {
+    NavigationLink(
+      value: model.podcastID != nil
+        ? NavigationDestination.podcast(id: model.podcastID ?? model.id)
+        : NavigationDestination.book(id: model.id)
+    ) {
       Cover(url: model.coverURL, style: .plain)
         .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
         .aspectRatio(1, contentMode: .fit)
@@ -413,30 +417,6 @@ struct BookPlayer: View {
       }
 
       if Audiobookshelf.shared.authentication.permissions?.download == true {
-        let downloadLabel = VStack(spacing: 6) {
-          Image(systemName: downloadIcon)
-            .font(.system(size: 20))
-            .foregroundColor(.white)
-            .frame(width: 20, height: 20)
-            .opacity([.downloaded, .notDownloaded].contains(model.downloadState) ? 1 : 0)
-            .overlay {
-              if case .downloading(let progress) = model.downloadState {
-                ProgressView(value: progress)
-                  .progressViewStyle(GaugeProgressViewStyle(tint: .white))
-              }
-            }
-          Text(downloadText)
-            .font(.caption2)
-            .lineLimit(1)
-            .hidden()
-            .overlay(alignment: .top) {
-              Text(downloadText)
-                .font(.caption2)
-                .foregroundColor(.white.opacity(0.7))
-                .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-
         if model.downloadState == .downloaded {
           ConfirmationButton(
             confirmation: .init(title: "Remove Download", action: "Delete"),
@@ -457,25 +437,44 @@ struct BookPlayer: View {
     .buttonStyle(.borderless)
   }
 
-  private var downloadIcon: String {
+  private var downloadLabel: some View {
+    var icon: String
+    var title: String
     switch model.downloadState {
     case .downloading:
-      "stop.circle"
+      icon = "stop.circle"
+      title = String(localized: "Cancel")
     case .downloaded:
-      "internaldrive"
+      icon = "internaldrive"
+      title = String(localized: "Remove")
     case .notDownloaded:
-      "icloud.and.arrow.down"
+      icon = "icloud.and.arrow.down"
+      title = String(localized: "Download")
     }
-  }
 
-  private var downloadText: String {
-    switch model.downloadState {
-    case .downloading:
-      String(localized: "Cancel")
-    case .downloaded:
-      String(localized: "Remove")
-    case .notDownloaded:
-      String(localized: "Download")
+    return VStack(spacing: 6) {
+      Image(systemName: icon)
+        .font(.system(size: 20))
+        .foregroundColor(.white)
+        .frame(width: 20, height: 20)
+        .opacity([.downloaded, .notDownloaded].contains(model.downloadState) ? 1 : 0)
+        .overlay {
+          if case .downloading(let progress) = model.downloadState {
+            ProgressView(value: progress)
+              .progressViewStyle(GaugeProgressViewStyle(tint: .white))
+          }
+        }
+
+      Text(title)
+        .font(.caption2)
+        .lineLimit(1)
+        .hidden()
+        .overlay(alignment: .top) {
+          Text(title)
+            .font(.caption2)
+            .foregroundColor(.white.opacity(0.7))
+            .fixedSize(horizontal: false, vertical: true)
+        }
     }
   }
 }
@@ -484,6 +483,8 @@ extension BookPlayer {
   @Observable
   class Model: ObservableObject {
     let id: String
+    let podcastID: String?
+
     let title: String
     let author: String?
     let coverURL: URL?
@@ -513,6 +514,7 @@ extension BookPlayer {
 
     init(
       id: String = UUID().uuidString,
+      podcastID: String? = nil,
       title: String,
       author: String?,
       coverURL: URL?,
@@ -527,6 +529,7 @@ extension BookPlayer {
       downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
       self.id = id
+      self.podcastID = podcastID
       self.title = title
       self.author = author
       self.coverURL = coverURL

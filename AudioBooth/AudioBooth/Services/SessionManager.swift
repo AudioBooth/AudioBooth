@@ -40,10 +40,11 @@ final class SessionManager {
 extension SessionManager {
   func ensureSession(
     itemID: String,
-    item: LocalBook?,
+    episodeID: String? = nil,
+    item: (any PlayableItem)?,
     mediaProgress: MediaProgress,
     forceTranscode: Bool
-  ) async throws -> LocalBook {
+  ) async throws -> any PlayableItem {
     if let current, current.libraryItemID != itemID {
       AppLogger.session.info(
         "Session exists for different book, server will close old session when starting new one"
@@ -62,6 +63,7 @@ extension SessionManager {
     if downloadManager.downloadStates[itemID] == .downloaded, let item {
       startLocalSession(
         libraryItemID: itemID,
+        episodeID: episodeID,
         item: item,
         mediaProgress: mediaProgress
       )
@@ -72,6 +74,7 @@ extension SessionManager {
     do {
       let result = try await startSession(
         itemID: itemID,
+        episodeID: episodeID,
         item: item,
         mediaProgress: mediaProgress,
         forceTranscode: forceTranscode
@@ -85,14 +88,16 @@ extension SessionManager {
 
   private func startSession(
     itemID: String,
-    item: LocalBook?,
+    episodeID: String? = nil,
+    item: (any PlayableItem)?,
     mediaProgress: MediaProgress,
     forceTranscode: Bool
-  ) async throws -> (session: Session, updatedItem: LocalBook) {
+  ) async throws -> (session: Session, updatedItem: any PlayableItem) {
     AppLogger.session.info("Fetching session from server...")
 
     let audiobookshelfSession = try await audiobookshelf.sessions.start(
       itemID: itemID,
+      episodeID: episodeID,
       forceTranscode: forceTranscode,
       timeout: item == nil ? 30 : 10
     )
@@ -101,16 +106,47 @@ extension SessionManager {
       throw SessionError.failedToCreateSession
     }
 
-    let updatedItem: LocalBook
+    let updatedItem: any PlayableItem
 
     if let item {
-      item.chapters = audiobookshelfSession.chapters?.map(Chapter.init) ?? []
+      if let localBook = item as? LocalBook {
+        localBook.chapters = audiobookshelfSession.chapters?.map(Chapter.init) ?? []
+      }
       updatedItem = item
       AppLogger.session.debug("Updated session with chapters")
-    } else {
-      let newItem = LocalBook(from: audiobookshelfSession.libraryItem)
+    } else if let episodeID = audiobookshelfSession.episodeId {
+      let podcast: Podcast
+      switch audiobookshelfSession.libraryItem {
+      case .podcast(let p): podcast = p
+      case .book: throw SessionError.failedToCreateSession
+      }
+
+      let episode = podcast.media.episodes?.first { $0.id == episodeID }
+      let newItem = LocalEpisode(
+        episodeID: episodeID,
+        podcastID: podcast.id,
+        podcastTitle: podcast.title,
+        podcastAuthor: podcast.author,
+        title: episode?.title ?? podcast.title,
+        duration: audiobookshelfSession.duration,
+        season: episode?.season,
+        episode: episode?.episode,
+        coverURL: podcast.coverURL(),
+        track: audiobookshelfSession.audioTracks?.first.map(Track.init),
+        chapters: audiobookshelfSession.chapters?.map(Chapter.init) ?? []
+      )
       try? newItem.save()
       updatedItem = newItem
+      AppLogger.session.debug("Created new episode from session")
+    } else {
+      switch audiobookshelfSession.libraryItem {
+      case .book(let book):
+        let newItem = LocalBook(from: book)
+        try? newItem.save()
+        updatedItem = newItem
+      case .podcast:
+        throw SessionError.failedToCreateSession
+      }
       AppLogger.session.debug("Created new item from session")
     }
 
@@ -124,12 +160,13 @@ extension SessionManager {
     let playbackSession = PlaybackSession(
       id: session.id,
       libraryItemID: itemID,
+      episodeID: episodeID,
       startTime: mediaProgress.currentTime,
       currentTime: mediaProgress.currentTime,
       duration: updatedItem.duration,
       baseURL: session.url,
       displayTitle: updatedItem.title,
-      displayAuthor: updatedItem.authorNames
+      displayAuthor: updatedItem.details
     )
     try playbackSession.save()
     current = playbackSession
@@ -143,16 +180,18 @@ extension SessionManager {
 
   private func startLocalSession(
     libraryItemID: String,
-    item: LocalBook,
+    episodeID: String? = nil,
+    item: any PlayableItem,
     mediaProgress: MediaProgress
   ) {
     let session = PlaybackSession(
       libraryItemID: libraryItemID,
+      episodeID: episodeID,
       startTime: mediaProgress.currentTime,
       currentTime: mediaProgress.currentTime,
       duration: item.duration,
       displayTitle: item.title,
-      displayAuthor: item.authorNames
+      displayAuthor: item.details
     )
     try? session.save()
     current = session
@@ -313,6 +352,7 @@ extension SessionManager {
     if !Calendar.current.isDate(session.startedAt, inSameDayAs: .now) {
       let newSession = PlaybackSession(
         libraryItemID: session.libraryItemID,
+        episodeID: session.episodeID,
         startTime: session.currentTime,
         currentTime: session.currentTime,
         duration: session.duration,
@@ -538,6 +578,8 @@ extension SessionSync {
     self.init(
       id: session.id,
       libraryItemId: session.libraryItemID,
+      episodeId: session.episodeID,
+      mediaType: session.episodeID != nil ? "podcast" : "book",
       duration: session.duration,
       startTime: session.startTime,
       currentTime: session.currentTime,
