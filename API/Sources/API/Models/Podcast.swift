@@ -6,6 +6,7 @@ public struct Podcast: Codable, Sendable {
   public let addedAt: Date
   public let updatedAt: Date
   public let numEpisodesIncomplete: Int?
+  public let recentEpisode: PodcastEpisode?
 
   public func coverURL(raw: Bool = false) -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }

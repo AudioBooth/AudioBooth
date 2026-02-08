@@ -1,5 +1,6 @@
 import API
 import Foundation
+import Models
 
 final class PodcastCardModel: BookCard.Model {
   private let podcast: Podcast
@@ -7,7 +8,9 @@ final class PodcastCardModel: BookCard.Model {
   init(_ podcast: Podcast, sortBy: SortBy?) {
     self.podcast = podcast
 
-    let title = podcast.title
+    let id = podcast.recentEpisode?.id ?? podcast.id
+
+    let title = podcast.recentEpisode?.title ?? podcast.title
     let author = podcast.author
 
     let details: String?
@@ -36,16 +39,17 @@ final class PodcastCardModel: BookCard.Model {
     let cover = Cover.Model(
       url: podcast.coverURL(),
       title: title,
-      author: author
+      author: author,
+      progress: MediaProgress.progress(for: id)
     )
 
     super.init(
-      id: podcast.id,
+      id: id,
+      podcastID: podcast.id,
       title: title,
       details: details,
       cover: cover,
-      author: author,
-      isPodcast: true
+      author: author
     )
   }
 }

@@ -10,6 +10,7 @@ extension User {
   public struct MediaProgress: Codable, Sendable {
     public let id: String
     public let libraryItemId: String
+    public let episodeId: String?
     public let duration: Double?
     public let progress: Double
     public let ebookProgress: Double?
@@ -23,6 +24,7 @@ extension User {
     public init(
       id: String,
       libraryItemId: String,
+      episodeId: String? = nil,
       duration: Double,
       progress: Double,
       ebookProgress: Double,
@@ -35,6 +37,7 @@ extension User {
     ) {
       self.id = id
       self.libraryItemId = libraryItemId
+      self.episodeId = episodeId
       self.duration = duration
       self.progress = progress
       self.ebookProgress = ebookProgress
@@ -50,6 +53,7 @@ extension User {
       let container = try decoder.container(keyedBy: CodingKeys.self)
       self.id = try container.decode(String.self, forKey: .id)
       self.libraryItemId = try container.decode(String.self, forKey: .libraryItemId)
+      self.episodeId = try container.decodeIfPresent(String.self, forKey: .episodeId)
       self.duration = try container.decodeIfPresent(Double.self, forKey: .duration)
       self.progress = try container.decode(Double.self, forKey: .progress)
       self.ebookProgress = try container.decodeIfPresent(Double.self, forKey: .ebookProgress)

@@ -61,7 +61,7 @@ public final class MediaProgress {
     let startedAt = Date(timeIntervalSince1970: TimeInterval(apiProgress.startedAt / 1000))
 
     self.init(
-      bookID: apiProgress.libraryItemId,
+      bookID: apiProgress.episodeId ?? apiProgress.libraryItemId,
       id: apiProgress.id,
       lastPlayedAt: lastUpdate,
       currentTime: currentTime,
@@ -272,7 +272,7 @@ extension MediaProgress {
     let context = ModelContextProvider.shared.context
 
     let allLocalProgress = try MediaProgress.fetchAll()
-    let remoteBookIDs = Set(userData.mediaProgress.map(\.libraryItemId))
+    let remoteBookIDs = Set(userData.mediaProgress.map { $0.episodeId ?? $0.libraryItemId })
     let localProgressMap = Dictionary(
       uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) }
     )
@@ -280,7 +280,7 @@ extension MediaProgress {
     for apiProgress in userData.mediaProgress {
       let remote = MediaProgress(from: apiProgress)
 
-      if let local = localProgressMap[apiProgress.libraryItemId] {
+      if let local = localProgressMap[apiProgress.episodeId ?? apiProgress.libraryItemId] {
         local.id = remote.id
         local.duration = remote.duration
         local.startedAt = remote.startedAt

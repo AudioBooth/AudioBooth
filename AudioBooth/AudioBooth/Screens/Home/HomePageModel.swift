@@ -190,6 +190,30 @@ extension HomePageModel {
           items: .authors(authors)
         )
 
+      case .podcasts(let items):
+        let podcasts = items.map { PodcastCardModel($0, sortBy: nil) }
+        sectionsByID[section.id] = .init(
+          id: section.id,
+          title: title,
+          items: .books(podcasts)
+        )
+
+      case .episodes(let items):
+        let podcasts = items.map { PodcastCardModel($0, sortBy: nil) }
+        if section.id == "continue-listening" {
+          sectionsByID[section.id] = .init(
+            id: section.id,
+            title: title,
+            items: .continueBooks(podcasts)
+          )
+        } else {
+          sectionsByID[section.id] = .init(
+            id: section.id,
+            title: title,
+            items: .books(podcasts)
+          )
+        }
+
       case .unknown:
         continue
       }
@@ -213,6 +237,8 @@ extension HomePageModel {
       case .continueListening:
         if let continueListeningSection {
           orderedSections.append(continueListeningSection)
+        } else if let section = sectionsByID[sectionID.rawValue] {
+          orderedSections.append(section)
         }
 
       default:

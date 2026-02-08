@@ -21,6 +21,8 @@ extension Personalized {
       case books([Book])
       case series([Series])
       case authors([Author])
+      case podcasts([Podcast])
+      case episodes([Podcast])
       case unknown
     }
     public let entities: Entities
@@ -35,6 +37,8 @@ extension Personalized {
         case book
         case series
         case authors
+        case podcast
+        case episode
       }
 
       let typeString = try container.decode(String.self, forKey: .type)
@@ -50,6 +54,12 @@ extension Personalized {
       case .authors:
         let authors = try container.decode([Author].self, forKey: .entities)
         entities = .authors(authors)
+      case .podcast:
+        let podcasts = try container.decode([Podcast].self, forKey: .entities)
+        entities = .podcasts(podcasts)
+      case .episode:
+        let podcasts = try container.decode([Podcast].self, forKey: .entities)
+        entities = .episodes(podcasts)
       case .none:
         entities = .unknown
       }
@@ -74,6 +84,12 @@ extension Personalized {
       case .authors(let authors):
         try container.encode("authors", forKey: .type)
         try container.encode(authors, forKey: .entities)
+      case .podcasts(let podcasts):
+        try container.encode("podcast", forKey: .type)
+        try container.encode(podcasts, forKey: .entities)
+      case .episodes(let podcasts):
+        try container.encode("episode", forKey: .type)
+        try container.encode(podcasts, forKey: .entities)
       case .unknown:
         try container.encode("unknown", forKey: .type)
         try container.encode([String](), forKey: .entities)
