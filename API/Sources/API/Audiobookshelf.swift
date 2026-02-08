@@ -12,6 +12,7 @@ public final class Audiobookshelf: @unchecked Sendable {
   public lazy var libraries = LibrariesService(audiobookshelf: self)
   public lazy var sessions = SessionService(audiobookshelf: self)
   public lazy var books = BooksService(audiobookshelf: self)
+  public lazy var podcasts = PodcastsService(audiobookshelf: self)
   public lazy var series = SeriesService(audiobookshelf: self)
   public lazy var authors = AuthorsService(audiobookshelf: self)
   public lazy var narrators = NarratorsService(audiobookshelf: self)
