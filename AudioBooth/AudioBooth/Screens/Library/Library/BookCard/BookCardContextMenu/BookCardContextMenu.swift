@@ -49,7 +49,7 @@ struct BookCardContextMenu: View {
 
       if model.actions.contains(.markAsFinished) {
         Button(action: model.onMarkAsFinishedTapped) {
-          Label("Mark as Finished", systemImage: "checkmark.circle")
+          Label("Mark as Finished", systemImage: "checkmark.shield")
         }
       }
 

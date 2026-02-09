@@ -40,6 +40,58 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
     }
   }
 
+  override func onToggleEpisodeFinished(_ episode: Episode) {
+    let episodeProgressID = "\(podcastID)/\(episode.id)"
+
+    Task {
+      do {
+        if episode.isCompleted {
+          let progress = try MediaProgress.fetch(bookID: episode.id)
+          let progressID: String
+
+          if let progress, let id = progress.id {
+            progressID = id
+          } else {
+            let apiProgress = try await Audiobookshelf.shared.libraries.fetchMediaProgress(
+              bookID: episodeProgressID
+            )
+            progressID = apiProgress.id
+          }
+
+          try await Audiobookshelf.shared.libraries.resetBookProgress(progressID: progressID)
+
+          if let progress {
+            try progress.delete()
+          }
+        } else {
+          try MediaProgress.markAsFinished(for: episode.id)
+          try await Audiobookshelf.shared.libraries.markAsFinished(bookID: episodeProgressID)
+        }
+        updateEpisodeProgress(episode.id)
+      } catch {
+        AppLogger.viewModel.error("Failed to toggle episode finished: \(error)")
+      }
+    }
+  }
+
+  private func updateEpisodeProgress(_ episodeID: String) {
+    guard let index = episodes.firstIndex(where: { $0.id == episodeID }) else { return }
+    let progress = MediaProgress.progress(for: episodeID)
+    let old = episodes[index]
+    episodes[index] = Episode(
+      id: old.id,
+      title: old.title,
+      season: old.season,
+      episode: old.episode,
+      publishedAt: old.publishedAt,
+      duration: old.duration,
+      description: old.description,
+      isCompleted: progress >= 1.0,
+      progress: progress,
+      chapters: old.chapters
+    )
+  }
+
   private func observePlayer() {
     playerManager.$current
       .sink { [weak self] newCurrent in

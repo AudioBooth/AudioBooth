@@ -393,7 +393,10 @@ struct PodcastDetailsView: View {
             .foregroundStyle(.secondary)
         }
 
-        episodePlayButton(episode)
+        HStack(spacing: 8) {
+          episodePlayButton(episode)
+          episodeFinishedButton(episode)
+        }
 
         if episode.progress > 0 {
           ProgressView(value: min(episode.progress, 1.0))
@@ -460,6 +463,17 @@ struct PodcastDetailsView: View {
       return "\(text) left"
     }
     return text
+  }
+
+  private func episodeFinishedButton(_ episode: Model.Episode) -> some View {
+    Button {
+      model.onToggleEpisodeFinished(episode)
+    } label: {
+      Image(systemName: episode.isCompleted ? "checkmark.shield.fill" : "checkmark.shield")
+        .font(.title3)
+        .foregroundStyle(episode.isCompleted ? .green : .secondary)
+    }
+    .buttonStyle(.plain)
   }
 }
 
@@ -560,6 +574,7 @@ extension PodcastDetailsView {
 
     func onAppear() {}
     func onPlayEpisode(_ episode: Episode) {}
+    func onToggleEpisodeFinished(_ episode: Episode) {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
       if selectedSort == sort {
         ascending.toggle()
