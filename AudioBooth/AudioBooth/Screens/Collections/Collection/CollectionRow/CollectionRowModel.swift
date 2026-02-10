@@ -7,7 +7,7 @@ final class CollectionRowModel: CollectionRow.Model {
       id: collection.id,
       name: collection.name,
       description: collection.description,
-      count: collection.books.count,
+      count: collection.itemCount,
       covers: collection.covers
     )
   }

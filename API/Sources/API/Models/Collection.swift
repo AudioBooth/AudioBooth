@@ -9,6 +9,8 @@ public struct Collection: Codable, Sendable, CollectionLike {
   public let lastUpdate: Date
   public let createdAt: Date
 
+  public var itemCount: Int { books.count }
+
   public var covers: [URL] {
     books.compactMap { $0.coverURL() }
   }

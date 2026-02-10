@@ -73,15 +73,24 @@ public final class PlaylistsService {
     return response.value
   }
 
-  public func removeItem(playlistID: String, libraryItemID: String) async throws -> Playlist {
+  public func removeItem(
+    playlistID: String,
+    libraryItemID: String,
+    episodeID: String? = nil
+  ) async throws -> Playlist {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Network service not configured. Please login first."
       )
     }
 
+    var path = "/api/playlists/\(playlistID)/item/\(libraryItemID)"
+    if let episodeID {
+      path += "/\(episodeID)"
+    }
+
     let request = NetworkRequest<Playlist>(
-      path: "/api/playlists/\(playlistID)/item/\(libraryItemID)",
+      path: path,
       method: .delete
     )
 
@@ -123,7 +132,7 @@ public final class PlaylistsService {
     return response.value
   }
 
-  public func create(name: String, items: [String]) async throws -> Playlist {
+  public func create(name: String, items: [String], episodeID: String? = nil) async throws -> Playlist {
     struct PlaylistItem: Codable {
       let libraryItemID: String
       let episodeID: String?
@@ -158,7 +167,7 @@ public final class PlaylistsService {
       )
     }
 
-    let playlistItems = items.map { PlaylistItem(libraryItemID: $0, episodeID: nil) }
+    let playlistItems = items.map { PlaylistItem(libraryItemID: $0, episodeID: episodeID) }
     let requestBody = CreatePlaylistRequest(
       items: playlistItems,
       libraryID: library.id,
@@ -175,7 +184,7 @@ public final class PlaylistsService {
     return response.value
   }
 
-  public func addItems(playlistID: String, items: [String]) async throws -> Playlist {
+  public func addItems(playlistID: String, items: [String], episodeID: String? = nil) async throws -> Playlist {
     struct PlaylistItem: Codable {
       let libraryItemID: String
       let episodeID: String?
@@ -196,7 +205,7 @@ public final class PlaylistsService {
       )
     }
 
-    let playlistItems = items.map { PlaylistItem(libraryItemID: $0, episodeID: nil) }
+    let playlistItems = items.map { PlaylistItem(libraryItemID: $0, episodeID: episodeID) }
     let requestBody = AddItemsRequest(items: playlistItems)
 
     let request = NetworkRequest<Playlist>(

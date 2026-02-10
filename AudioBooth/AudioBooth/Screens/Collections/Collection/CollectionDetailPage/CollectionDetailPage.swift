@@ -189,7 +189,11 @@ struct CollectionDetailPage: View {
 
       Section {
         ForEach(model.books) { book in
-          BookListCard(model: book)
+          if book.podcastID != nil {
+            episodeRow(book)
+          } else {
+            BookListCard(model: book)
+          }
         }
         .onMove { source, destination in
           model.onMove(from: source, to: destination)
@@ -201,6 +205,52 @@ struct CollectionDetailPage: View {
     }
     .listStyle(.plain)
     .environment(\.bookCardDisplayMode, .row)
+  }
+
+  private func episodeRow(_ book: BookCard.Model) -> some View {
+    HStack(spacing: 12) {
+      Cover(model: book.cover, size: .small)
+        .frame(width: 60, height: 60)
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(book.title)
+          .font(.caption)
+          .foregroundColor(.primary)
+          .fontWeight(.medium)
+          .lineLimit(1)
+
+        if let author = book.author {
+          Text(author)
+            .font(.caption2)
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+        }
+
+        if let details = book.details {
+          Text(details)
+            .font(.caption2)
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+        }
+
+        Spacer(minLength: 0)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      Button {
+        model.onPlayItem(book)
+      } label: {
+        Image(systemName: "play.fill")
+          .font(.title3)
+          .foregroundStyle(Color.accentColor)
+      }
+      .buttonStyle(.plain)
+    }
+    .contentShape(Rectangle())
+    .overlay {
+      NavigationLink(value: NavigationDestination.podcast(id: book.podcastID ?? book.id)) {}
+        .opacity(0)
+    }
   }
 
   private var titleHeader: some View {
@@ -219,7 +269,7 @@ struct CollectionDetailPage: View {
         }
       }
 
-      Text("^[\(model.books.count) book](inflect: true)")
+      Text("^[\(model.books.count) item](inflect: true)")
         .font(.caption)
         .foregroundStyle(.tertiary)
     }
@@ -247,6 +297,7 @@ extension CollectionDetailPage {
     func onMove(from source: IndexSet, to destination: Int) {}
     func onDelete(at indexSet: IndexSet) {}
     func onTogglePin() {}
+    func onPlayItem(_ item: BookCard.Model) {}
 
     init(
       isLoading: Bool = false,

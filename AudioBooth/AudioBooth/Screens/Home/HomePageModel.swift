@@ -366,9 +366,38 @@ extension HomePageModel {
 
   private func buildPinnedPlaylistSection() -> Section? {
     guard let playlist = pinnedPlaylist else { return nil }
-    guard !playlist.books.isEmpty else { return nil }
+    guard !playlist.items.isEmpty else { return nil }
 
-    let models = playlist.books.map { BookCardModel($0, sortBy: .title) }
+    let models: [BookCard.Model] = playlist.items.map { item in
+      switch item.libraryItem {
+      case .book(let book):
+        return BookCardModel(book, sortBy: .title)
+      case .podcast(let podcast):
+        if let episode = item.episode {
+          let durationText = episode.duration.map {
+            Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+          }
+          return BookCard.Model(
+            id: episode.id,
+            podcastID: item.libraryItemID,
+            title: episode.title,
+            details: durationText,
+            cover: Cover.Model(
+              url: podcast.coverURL(raw: true),
+              progress: MediaProgress.progress(for: episode.id)
+            ),
+            author: podcast.title
+          )
+        } else {
+          return BookCard.Model(
+            id: podcast.id,
+            title: podcast.title,
+            cover: Cover.Model(url: podcast.coverURL(raw: true)),
+            author: podcast.author
+          )
+        }
+      }
+    }
 
     return Section(
       id: "pinned-playlist",

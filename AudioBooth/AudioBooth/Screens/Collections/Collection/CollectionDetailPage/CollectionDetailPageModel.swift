@@ -1,12 +1,15 @@
 import API
 import Foundation
+import Models
 import SwiftUI
 
 final class CollectionDetailPageModel: CollectionDetailPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
+  private let playerManager = PlayerManager.shared
   private let pinnedPlaylistManager = PinnedPlaylistManager.shared
   private let collectionID: String
   private var loadTask: Task<Void, Never>?
+  private var playlistItems: [PlaylistItem] = []
 
   var onDeleted: (() -> Void)?
 
@@ -102,9 +105,7 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
             playlistID: collectionID,
             items: bookIDs
           )
-          books = updatedPlaylist.books.map { book in
-            BookCardModel(book, sortBy: nil)
-          }
+          books = mapPlaylistItems(updatedPlaylist)
         case .collections:
           let updatedCollection = try await audiobookshelf.collections.update(
             collectionID: collectionID,
@@ -126,29 +127,28 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
 
     Task {
       do {
-        let updatedCollection: any CollectionLike
-
         switch mode {
         case .playlists:
-          updatedCollection = try await audiobookshelf.playlists.removeItems(
+          let updatedPlaylist = try await audiobookshelf.playlists.removeItems(
             playlistID: collectionID,
             items: idsToRemove
           )
 
-          if updatedCollection.books.isEmpty, mode == .playlists {
+          if updatedPlaylist.items.isEmpty {
             onDeleted?()
             return
           }
 
+          books = mapPlaylistItems(updatedPlaylist)
+
         case .collections:
-          updatedCollection = try await audiobookshelf.collections.removeItems(
+          let updatedCollection = try await audiobookshelf.collections.removeItems(
             collectionID: collectionID,
             items: idsToRemove
           )
-        }
-
-        books = updatedCollection.books.map { book in
-          BookCardModel(book, sortBy: nil)
+          books = updatedCollection.books.map { book in
+            BookCardModel(book, sortBy: nil)
+          }
         }
       } catch {
         print("Failed to remove items: \(error)")
@@ -167,29 +167,59 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
     }
   }
 
+  override func onPlayItem(_ item: BookCard.Model) {
+    guard let podcastID = item.podcastID,
+      let playlistItem = playlistItems.first(where: { $0.episodeID == item.id }),
+      let episode = playlistItem.episode
+    else { return }
+
+    if playerManager.current?.id == item.id {
+      if let currentPlayer = playerManager.current as? BookPlayerModel {
+        currentPlayer.onTogglePlaybackTapped()
+      }
+    } else {
+      let podcast: Podcast? = if case .podcast(let p) = playlistItem.libraryItem { p } else { nil }
+      playerManager.setCurrent(
+        episode: episode,
+        podcastID: podcastID,
+        podcastTitle: podcast?.title ?? "",
+        podcastAuthor: podcast?.author,
+        coverURL: item.cover.url
+      )
+      playerManager.play()
+    }
+  }
+
   private func loadCollection() async {
     isLoading = true
 
     do {
-      let collection: any CollectionLike
-
       switch mode {
       case .playlists:
-        collection = try await audiobookshelf.playlists.fetch(id: collectionID)
+        let playlist = try await audiobookshelf.playlists.fetch(id: collectionID)
+
+        guard !Task.isCancelled else {
+          isLoading = false
+          return
+        }
+
+        collectionName = playlist.name
+        collectionDescription = playlist.description
+        books = mapPlaylistItems(playlist)
+
       case .collections:
-        collection = try await audiobookshelf.collections.fetch(id: collectionID)
-      }
+        let collection = try await audiobookshelf.collections.fetch(id: collectionID)
 
-      guard !Task.isCancelled else {
-        isLoading = false
-        return
-      }
+        guard !Task.isCancelled else {
+          isLoading = false
+          return
+        }
 
-      collectionName = collection.name
-      collectionDescription = collection.description
-
-      books = collection.books.map { book in
-        BookCardModel(book, sortBy: nil)
+        collectionName = collection.name
+        collectionDescription = collection.description
+        books = collection.books.map { book in
+          BookCardModel(book, sortBy: nil)
+        }
       }
     } catch {
       guard !Task.isCancelled else {
@@ -203,5 +233,35 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
 
     isLoading = false
     loadTask = nil
+  }
+
+  private func mapPlaylistItems(_ playlist: Playlist) -> [BookCard.Model] {
+    playlistItems = playlist.items
+    return playlist.items.map { item in
+      if let episode = item.episode {
+        let durationText = episode.duration.map {
+          Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+        }
+        return BookCard.Model(
+          id: episode.id,
+          podcastID: item.libraryItemID,
+          title: episode.title,
+          details: durationText,
+          cover: Cover.Model(
+            url: item.coverURL,
+            progress: MediaProgress.progress(for: episode.id)
+          ),
+          author: item.title
+        )
+      } else if case .book(let book) = item.libraryItem {
+        return BookCardModel(book, sortBy: nil)
+      } else {
+        return BookCard.Model(
+          id: item.libraryItemID,
+          title: item.title,
+          cover: Cover.Model(url: item.coverURL)
+        )
+      }
+    }
   }
 }

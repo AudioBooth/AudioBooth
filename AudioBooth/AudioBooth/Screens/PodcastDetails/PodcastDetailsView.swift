@@ -11,6 +11,7 @@ struct PodcastDetailsView: View {
 
   @State private var isDescriptionExpanded = false
   @State private var isShowingFullScreenCover = false
+  @State private var playlistEpisode: Model.Episode?
 
   private enum CoordinateSpaces {
     case scrollView
@@ -47,6 +48,15 @@ struct PodcastDetailsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)
       }
+    }
+    .sheet(item: $playlistEpisode) { episode in
+      CollectionSelectorSheet(
+        model: CollectionSelectorSheetModel(
+          bookID: model.podcastID,
+          episodeID: episode.id,
+          mode: .playlists
+        )
+      )
     }
     .onAppear(perform: model.onAppear)
   }
@@ -396,6 +406,7 @@ struct PodcastDetailsView: View {
         HStack(spacing: 8) {
           episodePlayButton(episode)
           episodeFinishedButton(episode)
+          episodePlaylistButton(episode)
         }
 
         if episode.progress > 0 {
@@ -472,6 +483,17 @@ struct PodcastDetailsView: View {
       Image(systemName: episode.isCompleted ? "checkmark.shield.fill" : "checkmark.shield")
         .font(.title3)
         .foregroundStyle(episode.isCompleted ? .green : .secondary)
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func episodePlaylistButton(_ episode: Model.Episode) -> some View {
+    Button {
+      playlistEpisode = episode
+    } label: {
+      Image(systemName: "text.badge.plus")
+        .font(.title3)
+        .foregroundStyle(Color.accentColor)
     }
     .buttonStyle(.plain)
   }

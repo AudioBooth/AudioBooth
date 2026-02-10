@@ -4,9 +4,11 @@ import Foundation
 final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private let bookID: String
+  private let episodeID: String?
 
-  init(bookID: String, mode: CollectionMode = .playlists) {
+  init(bookID: String, episodeID: String? = nil, mode: CollectionMode = .playlists) {
     self.bookID = bookID
+    self.episodeID = episodeID
 
     let canEdit: Bool
     switch mode {
@@ -34,7 +36,8 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
         case .playlists:
           updatedCollection = try await audiobookshelf.playlists.addItems(
             playlistID: playlist.id,
-            items: [bookID]
+            items: [bookID],
+            episodeID: episodeID
           )
         case .collections:
           updatedCollection = try await audiobookshelf.collections.addItems(
@@ -62,7 +65,8 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
         case .playlists:
           updatedCollection = try await audiobookshelf.playlists.removeItem(
             playlistID: playlist.id,
-            libraryItemID: bookID
+            libraryItemID: bookID,
+            episodeID: episodeID
           )
         case .collections:
           updatedCollection = try await audiobookshelf.collections.removeItem(
@@ -74,7 +78,7 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
         playlistsContainingBook.remove(playlist.id)
 
         if let index = playlists.firstIndex(where: { $0.id == playlist.id }) {
-          if updatedCollection.books.isEmpty, mode == .playlists {
+          if updatedCollection.itemCount == 0, mode == .playlists {
             playlists.remove(at: index)
           } else {
             playlists[index] = CollectionRowModel(collection: updatedCollection)
@@ -98,7 +102,8 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
         case .playlists:
           newCollection = try await audiobookshelf.playlists.create(
             name: name,
-            items: [bookID]
+            items: [bookID],
+            episodeID: episodeID
           )
         case .collections:
           newCollection = try await audiobookshelf.collections.create(
@@ -130,11 +135,19 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
           CollectionRowModel(collection: playlist)
         }
 
-        playlistsContainingBook = Set(
-          response.results
-            .filter { $0.books.contains { $0.id == bookID } }
-            .map { $0.id }
-        )
+        if let episodeID {
+          playlistsContainingBook = Set(
+            response.results
+              .filter { $0.items.contains { $0.libraryItemID == bookID && $0.episodeID == episodeID } }
+              .map { $0.id }
+          )
+        } else {
+          playlistsContainingBook = Set(
+            response.results
+              .filter { $0.books.contains { $0.id == bookID } }
+              .map { $0.id }
+          )
+        }
 
       case .collections:
         let response = try await audiobookshelf.collections.fetch(limit: 100, page: 0)

@@ -88,7 +88,7 @@ struct BookDetailsView: View {
           }
 
           Button(action: { collectionSelector = .playlists }) {
-            Label("Add to Playlist", systemImage: "music.note.list")
+            Label("Add to Playlist", systemImage: "text.badge.plus")
           }
 
           if model.actions.contains(.viewBookmarks) {

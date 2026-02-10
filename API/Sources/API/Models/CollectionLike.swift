@@ -6,6 +6,7 @@ public protocol CollectionLike {
   var libraryID: String { get }
   var description: String? { get }
   var books: [Book] { get }
+  var itemCount: Int { get }
   var covers: [URL] { get }
   var lastUpdate: Date { get }
   var createdAt: Date { get }
