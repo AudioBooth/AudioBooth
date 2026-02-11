@@ -137,9 +137,9 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   private func updateContext() {
-    guard session?.isReachable == true else { return }
+    guard let session, session.activationState == .activated else { return }
     do {
-      try session?.updateApplicationContext(context)
+      try session.updateApplicationContext(context)
     } catch {
       AppLogger.watchConnectivity.error(
         "Failed to sync context to watch: \(error)"

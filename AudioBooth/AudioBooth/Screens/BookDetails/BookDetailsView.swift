@@ -265,8 +265,8 @@ struct BookDetailsView: View {
     VStack(alignment: .leading, spacing: 12) {
       if model.tabs.count > 1 {
         Picker("Content", selection: $selectedTabIndex) {
-          ForEach(model.tabs.indices, id: \.self) { index in
-            Text(model.tabs[index].title).tag(index)
+          ForEach(Array(model.tabs.enumerated()), id: \.offset) { index, tab in
+            Text(tab.title).tag(index)
           }
         }
         .pickerStyle(.segmented)
