@@ -80,13 +80,25 @@ final class HomePageModel: HomePage.Model {
 
 extension HomePageModel {
   private func updateDownloadStates() {
-    guard Audiobookshelf.shared.isAuthenticated, let books = try? LocalBook.fetchAll() else { return }
+    guard Audiobookshelf.shared.isAuthenticated else { return }
 
-    for book in books {
-      if book.isDownloaded {
-        downloadManager.downloadStates[book.bookID] = .downloaded
-      } else {
-        downloadManager.downloadStates[book.bookID] = .notDownloaded
+    if let books = try? LocalBook.fetchAll() {
+      for book in books {
+        if book.isDownloaded {
+          downloadManager.downloadStates[book.bookID] = .downloaded
+        } else {
+          downloadManager.downloadStates[book.bookID] = .notDownloaded
+        }
+      }
+    }
+
+    if let episodes = try? LocalEpisode.fetchAll() {
+      for episode in episodes {
+        if episode.isDownloaded {
+          downloadManager.downloadStates[episode.episodeID] = .downloaded
+        } else {
+          downloadManager.downloadStates[episode.episodeID] = .notDownloaded
+        }
       }
     }
   }

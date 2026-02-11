@@ -10,14 +10,14 @@ struct OfflineListView: View {
 
   var content: some View {
     Group {
-      if model.isLoading && model.books.isEmpty {
-        ProgressView("Loading offline books...")
+      if model.isLoading && model.items.isEmpty {
+        ProgressView("Loading downloads...")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if model.books.isEmpty {
+      } else if model.items.isEmpty {
         ContentUnavailableView(
-          "No Downloaded Books",
+          "No Downloads",
           systemImage: "arrow.down.circle",
-          description: Text("Books you download will appear here.")
+          description: Text("Books and episodes you download will appear here.")
         )
       } else {
         list
@@ -35,7 +35,7 @@ struct OfflineListView: View {
       }
     }
     .navigationTitle("Downloaded")
-    .searchable(text: $model.searchText, prompt: "Filter books")
+    .searchable(text: $model.searchText, prompt: "Filter downloads")
     .toolbar {
       ToolbarItem(placement: .topBarLeading) {
         Button {
@@ -60,7 +60,7 @@ struct OfflineListView: View {
 
         ToolbarItem(placement: .topBarTrailing) {
           Menu {
-            if !model.selectedBookIDs.isEmpty {
+            if !model.selectedIDs.isEmpty {
               Button {
                 model.onMarkFinishedSelected()
               } label: {
@@ -87,15 +87,15 @@ struct OfflineListView: View {
               model.onSelectAllTapped()
             } label: {
               Label(
-                model.selectedBookIDs.count == model.books.count ? "Unselect All" : "Select All",
-                systemImage: model.selectedBookIDs.count == model.books.count
+                model.selectedIDs.count == model.selectableCount ? "Unselect All" : "Select All",
+                systemImage: model.selectedIDs.count == model.selectableCount
                   ? "circle" : "checkmark.circle"
               )
             }
           } label: {
             Image(systemName: "ellipsis.circle")
           }
-          .disabled(model.books.isEmpty)
+          .disabled(model.selectableCount == 0)
           .tint(.primary)
         }
       }
@@ -124,23 +124,26 @@ struct OfflineListView: View {
                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
             }
           } label: {
-            HStack(spacing: 12) {
-              if let coverURL = group.coverURL {
-                Cover(url: coverURL)
-                  .frame(width: 60, height: 60)
-              }
+            groupLabel(name: group.name, count: group.books.count, coverURL: group.coverURL)
+          }
+          .listRowBackground(Color.clear)
 
-              VStack(alignment: .leading, spacing: 4) {
-                Text(group.name)
-                  .font(.subheadline)
-                  .fontWeight(.medium)
-                  .foregroundColor(.primary)
+        case .episode(let episodeModel):
+          episodeRow(episodeModel)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
 
-                Text("^[\(group.books.count) book](inflect: true)")
-                  .font(.caption)
-                  .foregroundColor(.secondary)
-              }
+        case .podcast(let group):
+          DisclosureGroup {
+            ForEach(group.episodes) { episode in
+              episodeRow(episode)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
             }
+          } label: {
+            groupLabel(name: group.name, count: group.episodes.count, coverURL: group.coverURL)
           }
           .listRowBackground(Color.clear)
         }
@@ -165,17 +168,96 @@ struct OfflineListView: View {
     .environment(\.bookCardDisplayMode, .row)
   }
 
+  private func groupLabel(name: String, count: Int, coverURL: URL?) -> some View {
+    HStack(spacing: 12) {
+      if let coverURL {
+        Cover(url: coverURL)
+          .frame(width: 60, height: 60)
+      }
+
+      VStack(alignment: .leading, spacing: 4) {
+        Text(name)
+          .font(.subheadline)
+          .fontWeight(.medium)
+          .foregroundColor(.primary)
+
+        Text("^[\(count) item](inflect: true)")
+          .font(.caption)
+          .foregroundColor(.secondary)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func episodeRow(_ episode: BookCard.Model) -> some View {
+    HStack(spacing: 12) {
+      if model.editMode == .active {
+        Button {
+          model.onSelectItem(id: episode.id)
+        } label: {
+          Image(
+            systemName: model.selectedIDs.contains(episode.id) ? "checkmark.circle.fill" : "circle"
+          )
+          .foregroundStyle(model.selectedIDs.contains(episode.id) ? Color.accentColor : .secondary)
+          .imageScale(.large)
+        }
+        .buttonStyle(.plain)
+      }
+
+      HStack(spacing: 12) {
+        Cover(model: episode.cover, size: .small)
+          .frame(width: 60, height: 60)
+
+        VStack(alignment: .leading, spacing: 6) {
+          Text(episode.title)
+            .font(.caption)
+            .foregroundColor(.primary)
+            .fontWeight(.medium)
+            .lineLimit(1)
+
+          if let author = episode.author {
+            Text(author)
+              .font(.caption2)
+              .foregroundColor(.secondary)
+              .lineLimit(1)
+          }
+
+          if let details = episode.details {
+            Text(details)
+              .font(.caption2)
+              .foregroundColor(.secondary)
+              .lineLimit(1)
+          }
+
+          Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+        Image(systemName: "chevron.right")
+          .font(.caption)
+          .foregroundColor(.secondary)
+      }
+      .contentShape(Rectangle())
+      .overlay {
+        if model.editMode != .active {
+          NavigationLink(value: NavigationDestination.podcast(id: episode.podcastID ?? episode.id)) {}
+            .opacity(0)
+        }
+      }
+    }
+  }
+
   @ViewBuilder
   private func bookRow(_ book: BookCard.Model) -> some View {
     HStack(spacing: 12) {
       if model.editMode == .active {
         Button {
-          model.onSelectBook(id: book.id)
+          model.onSelectItem(id: book.id)
         } label: {
           Image(
-            systemName: model.selectedBookIDs.contains(book.id) ? "checkmark.circle.fill" : "circle"
+            systemName: model.selectedIDs.contains(book.id) ? "checkmark.circle.fill" : "circle"
           )
-          .foregroundStyle(model.selectedBookIDs.contains(book.id) ? Color.accentColor : .secondary)
+          .foregroundStyle(model.selectedIDs.contains(book.id) ? Color.accentColor : .secondary)
           .imageScale(.large)
         }
         .buttonStyle(.plain)
@@ -189,11 +271,15 @@ struct OfflineListView: View {
 enum OfflineListItem: Identifiable {
   case book(BookCard.Model)
   case series(SeriesGroup)
+  case episode(BookCard.Model)
+  case podcast(PodcastGroup)
 
   var id: String {
     switch self {
     case .book(let model): return model.id
     case .series(let group): return group.id
+    case .episode(let model): return model.id
+    case .podcast(let group): return group.id
     }
   }
 }
@@ -205,21 +291,28 @@ struct SeriesGroup: Identifiable {
   let coverURL: URL?
 }
 
+struct PodcastGroup: Identifiable {
+  let id: String
+  let name: String
+  let episodes: [BookCard.Model]
+  let coverURL: URL?
+}
+
 extension OfflineListView {
   @Observable
   class Model: ObservableObject {
-    var books: [BookCard.Model]
     var items: [OfflineListItem]
+    var selectableCount: Int
     var isLoading: Bool
     var isPerformingBatchAction: Bool
     var editMode: EditMode
-    var selectedBookIDs: Set<String>
+    var selectedIDs: Set<String>
     var searchText: String
     var isGroupedBySeries: Bool
 
     func onAppear() {}
     func onEditModeTapped() {}
-    func onSelectBook(id: String) {}
+    func onSelectItem(id: String) {}
     func onDeleteSelected() {}
     func onMarkFinishedSelected() {}
     func onResetProgressSelected() {}
@@ -229,21 +322,21 @@ extension OfflineListView {
     func onGroupSeriesToggled() {}
 
     init(
-      books: [BookCard.Model] = [],
       items: [OfflineListItem] = [],
+      selectableCount: Int = 0,
       isLoading: Bool = false,
       isPerformingBatchAction: Bool = false,
       editMode: EditMode = .inactive,
-      selectedBookIDs: Set<String> = [],
+      selectedIDs: Set<String> = [],
       searchText: String = "",
       isGroupedBySeries: Bool = false
     ) {
-      self.books = books
       self.items = items
+      self.selectableCount = selectableCount
       self.isLoading = isLoading
       self.isPerformingBatchAction = isPerformingBatchAction
       self.editMode = editMode
-      self.selectedBookIDs = selectedBookIDs
+      self.selectedIDs = selectedIDs
       self.searchText = searchText
       self.isGroupedBySeries = isGroupedBySeries
     }
@@ -262,50 +355,63 @@ extension OfflineListView {
   }
 }
 
-#Preview("OfflineListView - With Books") {
-  let sampleBooks: [BookCard.Model] = [
-    BookCard.Model(
-      title: "The Lord of the Rings",
-      details: "J.R.R. Tolkien",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+#Preview("OfflineListView - With Items") {
+  let sampleItems: [OfflineListItem] = [
+    .book(
+      BookCard.Model(
+        title: "The Lord of the Rings",
+        details: "J.R.R. Tolkien",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+      )
     ),
-    BookCard.Model(
-      title: "Dune",
-      details: "Frank Herbert",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+    .book(
+      BookCard.Model(
+        title: "Dune",
+        details: "Frank Herbert",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+      )
     ),
-    BookCard.Model(
-      title: "The Foundation",
-      details: "Isaac Asimov",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
+    .episode(
+      BookCard.Model(
+        podcastID: "pod1",
+        title: "Episode 1: The Beginning",
+        details: "30min",
+        author: "The Daily"
+      )
     ),
   ]
 
   NavigationStack {
-    OfflineListView(model: .init(books: sampleBooks))
+    OfflineListView(model: .init(items: sampleItems, selectableCount: 3))
   }
 }
 
 #Preview("OfflineListView - Edit Mode") {
-  let sampleBooks: [BookCard.Model] = [
-    BookCard.Model(
-      title: "The Lord of the Rings",
-      details: "J.R.R. Tolkien",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+  let sampleItems: [OfflineListItem] = [
+    .book(
+      BookCard.Model(
+        id: "book1",
+        title: "The Lord of the Rings",
+        details: "J.R.R. Tolkien",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+      )
     ),
-    BookCard.Model(
-      title: "Dune",
-      details: "Frank Herbert",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+    .book(
+      BookCard.Model(
+        title: "Dune",
+        details: "Frank Herbert",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+      )
     ),
   ]
 
   NavigationStack {
     OfflineListView(
       model: .init(
-        books: sampleBooks,
+        items: sampleItems,
+        selectableCount: 2,
         editMode: .active,
-        selectedBookIDs: [sampleBooks[0].id]
+        selectedIDs: ["book1"]
       )
     )
   }

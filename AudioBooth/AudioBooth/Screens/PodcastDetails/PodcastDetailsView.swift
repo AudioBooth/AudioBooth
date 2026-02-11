@@ -406,6 +406,7 @@ struct PodcastDetailsView: View {
         HStack(spacing: 8) {
           episodePlayButton(episode)
           episodeFinishedButton(episode)
+          episodeDownloadButton(episode)
           episodePlaylistButton(episode)
         }
 
@@ -483,6 +484,28 @@ struct PodcastDetailsView: View {
       Image(systemName: episode.isCompleted ? "checkmark.shield.fill" : "checkmark.shield")
         .font(.title3)
         .foregroundStyle(episode.isCompleted ? .green : .secondary)
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func episodeDownloadButton(_ episode: Model.Episode) -> some View {
+    Button {
+      model.onDownloadEpisode(episode)
+    } label: {
+      Group {
+        switch episode.downloadState {
+        case .notDownloaded:
+          Image(systemName: "arrow.down.circle")
+            .foregroundStyle(.secondary)
+        case .downloading:
+          Image(systemName: "stop.circle")
+            .foregroundStyle(.orange)
+        case .downloaded:
+          Image(systemName: "arrow.down.circle.fill")
+            .foregroundStyle(.green)
+        }
+      }
+      .font(.title3)
     }
     .buttonStyle(.plain)
   }
@@ -597,6 +620,7 @@ extension PodcastDetailsView {
     func onAppear() {}
     func onPlayEpisode(_ episode: Episode) {}
     func onToggleEpisodeFinished(_ episode: Episode) {}
+    func onDownloadEpisode(_ episode: Episode) {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
       if selectedSort == sort {
         ascending.toggle()
@@ -664,10 +688,12 @@ extension PodcastDetailsView.Model {
     let episode: String?
     let publishedAt: Date?
     let duration: Double?
+    let size: Int64?
     let description: String?
     let isCompleted: Bool
     let progress: Double
     let chapters: [Chapter]
+    var downloadState: DownloadManager.DownloadState
 
     var durationText: String? {
       guard let duration, duration > 0 else { return nil }
@@ -763,6 +789,7 @@ extension PodcastDetailsView.Model {
           episode: "1",
           publishedAt: Date(),
           duration: 1800,
+          size: nil,
           description: "A deep dive into an untold story.",
           isCompleted: true,
           progress: 1.0,
@@ -770,7 +797,8 @@ extension PodcastDetailsView.Model {
             Chapter(id: 0, start: 0, end: 600, title: "Introduction"),
             Chapter(id: 1, start: 600, end: 1200, title: "The Discovery"),
             Chapter(id: 2, start: 1200, end: 1800, title: "Conclusion"),
-          ]
+          ],
+          downloadState: .notDownloaded
         ),
         Episode(
           id: "ep2",
@@ -779,10 +807,12 @@ extension PodcastDetailsView.Model {
           episode: "2",
           publishedAt: Calendar.current.date(byAdding: .day, value: -1, to: Date()),
           duration: 2400,
+          size: nil,
           description: "Today's top headlines explained.",
           isCompleted: false,
           progress: 0.45,
-          chapters: []
+          chapters: [],
+          downloadState: .downloading(progress: 0.45)
         ),
         Episode(
           id: "ep3",
@@ -791,10 +821,12 @@ extension PodcastDetailsView.Model {
           episode: "3",
           publishedAt: Calendar.current.date(byAdding: .day, value: -2, to: Date()),
           duration: 3600,
+          size: nil,
           description: nil,
           isCompleted: false,
           progress: 0,
-          chapters: []
+          chapters: [],
+          downloadState: .downloaded
         ),
       ]
     )

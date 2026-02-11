@@ -5,9 +5,7 @@ import SwiftData
 @Model
 public final class LocalEpisode {
   @Attribute(.unique) public var episodeID: String
-  public var podcastID: String
-  public var podcastTitle: String
-  public var podcastAuthor: String?
+  public var podcast: LocalPodcast?
   public var title: String
   public var duration: TimeInterval
   public var season: String?
@@ -18,7 +16,7 @@ public final class LocalEpisode {
   public var track: Track?
   public var chapters: [Chapter]
 
-  public var isDownloaded: Bool { false }
+  public var isDownloaded: Bool { track?.relativePath != nil }
 
   public var orderedTracks: [Track] {
     if let track { return [track] } else { return [] }
@@ -48,9 +46,7 @@ public final class LocalEpisode {
 
   public init(
     episodeID: String,
-    podcastID: String,
-    podcastTitle: String,
-    podcastAuthor: String? = nil,
+    podcast: LocalPodcast,
     title: String,
     duration: TimeInterval,
     season: String? = nil,
@@ -62,9 +58,7 @@ public final class LocalEpisode {
     chapters: [Chapter] = []
   ) {
     self.episodeID = episodeID
-    self.podcastID = podcastID
-    self.podcastTitle = podcastTitle
-    self.podcastAuthor = podcastAuthor
+    self.podcast = podcast
     self.title = title
     self.duration = duration
     self.season = season
@@ -79,7 +73,7 @@ public final class LocalEpisode {
 
 extension LocalEpisode: PlayableItem {
   public var itemID: String { episodeID }
-  public var details: String { podcastAuthor ?? "" }
+  public var details: String { podcast?.author ?? "" }
 }
 
 @MainActor
@@ -103,9 +97,7 @@ extension LocalEpisode {
     let context = ModelContextProvider.shared.context
 
     if let existing = try LocalEpisode.fetch(episodeID: self.episodeID) {
-      existing.podcastID = self.podcastID
-      existing.podcastTitle = self.podcastTitle
-      existing.podcastAuthor = self.podcastAuthor
+      existing.podcast = self.podcast
       existing.title = self.title
       existing.duration = self.duration
       existing.season = self.season
@@ -113,8 +105,15 @@ extension LocalEpisode {
       existing.episodeDescription = self.episodeDescription
       existing.publishedAt = self.publishedAt
       existing.coverURL = self.coverURL
-      existing.track = self.track
       existing.chapters = self.chapters
+
+      if let newTrack = self.track {
+        let existingRelativePath = existing.track?.relativePath
+        existing.track = newTrack
+        if existingRelativePath != nil && newTrack.relativePath == nil {
+          existing.track?.relativePath = existingRelativePath
+        }
+      }
     } else {
       context.insert(self)
     }

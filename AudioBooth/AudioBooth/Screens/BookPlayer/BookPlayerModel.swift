@@ -129,7 +129,7 @@ final class BookPlayerModel: BookPlayer.Model {
     nowPlaying = NowPlayingManager(
       id: episode.episodeID,
       title: episode.title,
-      author: episode.podcastAuthor,
+      author: episode.podcast?.author,
       coverURL: episode.coverURL,
       current: mediaProgress.currentTime,
       duration: mediaProgress.duration
@@ -137,9 +137,9 @@ final class BookPlayerModel: BookPlayer.Model {
 
     super.init(
       id: episode.episodeID,
-      podcastID: episode.podcastID,
+      podcastID: episode.podcast?.podcastID,
       title: episode.title,
-      author: episode.podcastAuthor,
+      author: episode.podcast?.author,
       coverURL: episode.coverURL,
       speed: SpeedPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
@@ -152,6 +152,7 @@ final class BookPlayerModel: BookPlayer.Model {
       )
     )
 
+    setupDownloadStateBinding(episodeID: episode.episodeID)
     setupHistory()
     observeSpeedChanged()
     observeVolumeLevelChanged()
@@ -204,6 +205,7 @@ final class BookPlayerModel: BookPlayer.Model {
       )
     )
 
+    setupDownloadStateBinding(episodeID: episode.id)
     setupHistory()
     observeSpeedChanged()
     observeVolumeLevelChanged()
@@ -320,19 +322,33 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onDownloadTapped() {
-    guard let item = item as? LocalBook else { return }
-
-    switch downloadState {
-    case .downloading:
-      downloadState = .notDownloaded
-      downloadManager.cancelDownload(for: id)
-
-    case .downloaded:
-      item.removeDownload()
-
-    case .notDownloaded:
-      downloadState = .downloading(progress: 0)
-      try? item.download()
+    if let localBook = item as? LocalBook {
+      switch downloadState {
+      case .downloading:
+        downloadState = .notDownloaded
+        downloadManager.cancelDownload(for: id)
+      case .downloaded:
+        localBook.removeDownload()
+      case .notDownloaded:
+        downloadState = .downloading(progress: 0)
+        try? localBook.download()
+      }
+    } else if let episodeID, let podcastID {
+      switch downloadState {
+      case .downloading:
+        downloadState = .notDownloaded
+        downloadManager.cancelDownload(for: episodeID)
+      case .downloaded:
+        downloadManager.deleteEpisodeDownload(episodeID: episodeID, podcastID: podcastID)
+      case .notDownloaded:
+        let size = item?.orderedTracks.first?.size ?? 0
+        downloadState = .downloading(progress: 0)
+        downloadManager.startDownload(
+          for: episodeID,
+          type: .episode(podcastID: podcastID, episodeID: episodeID),
+          info: .init(title: title, details: nil, coverURL: coverURL, startedAt: Date())
+        )
+      }
     }
   }
 }
@@ -427,7 +443,8 @@ extension BookPlayerModel {
 
   func closeSession() {
     Task {
-      let isDownloaded = downloadManager.downloadStates[id] == .downloaded
+      let downloadKey = episodeID ?? id
+      let isDownloaded = downloadManager.downloadStates[downloadKey] == .downloaded
       try? await sessionManager.closeSession(isDownloaded: isDownloaded)
     }
   }
@@ -510,6 +527,7 @@ extension BookPlayerModel {
       observeMediaProgress()
 
       await loadLocalBookIfAvailable()
+      await loadLocalEpisodeIfAvailable()
 
       do {
         try await setupSession(forceTranscode: false)
@@ -720,6 +738,26 @@ extension BookPlayerModel {
       downloadManager.deleteDownload(for: id)
       AppLogger.player.error("Failed to load local book item: \(error)")
       Toast(error: "Can't access download. Streaming instead.").show()
+    }
+  }
+
+  private func loadLocalEpisodeIfAvailable() async {
+    guard let episodeID else { return }
+
+    do {
+      if let existingEpisode = try LocalEpisode.fetch(episodeID: episodeID),
+        existingEpisode.isDownloaded
+      {
+        AppLogger.player.info("Episode is downloaded, loading local file instantly")
+        self.item = existingEpisode
+
+        if downloadManager.downloadStates[episodeID] == .downloaded {
+          try await setupAudioPlayer()
+          isLoading = false
+        }
+      }
+    } catch {
+      AppLogger.player.error("Failed to load local episode: \(error)")
     }
   }
 
@@ -1067,6 +1105,31 @@ extension BookPlayerModel {
       }
     }
   }
+
+  private func setupDownloadStateBinding(episodeID: String) {
+    downloadManager.$downloadStates
+      .receive(on: DispatchQueue.main)
+      .map { states in
+        states[episodeID] ?? .notDownloaded
+      }
+      .sink { [weak self] downloadState in
+        self?.downloadState = downloadState
+      }
+      .store(in: &cancellables)
+
+    itemObservation = Task { [weak self] in
+      for await updatedEpisode in LocalEpisode.observe(where: \.episodeID, equals: episodeID) {
+        guard !Task.isCancelled, let self else { continue }
+
+        self.item = updatedEpisode as any PlayableItem
+
+        if updatedEpisode.isDownloaded, self.isPlayerUsingRemoteURL() {
+          AppLogger.player.info("Episode download completed, refreshing player to use local file")
+          await self.reloadPlayer()
+        }
+      }
+    }
+  }
 }
 
 extension BookPlayerModel {
@@ -1245,7 +1308,8 @@ extension BookPlayerModel {
       return
     }
 
-    let isDownloaded = downloadManager.downloadStates[id] == .downloaded
+    let downloadKey = episodeID ?? id
+    let isDownloaded = downloadManager.downloadStates[downloadKey] == .downloaded
     guard !isDownloaded else {
       AppLogger.player.debug("Book is downloaded, cannot recover from stream failure")
       return
@@ -1270,7 +1334,8 @@ extension BookPlayerModel {
 
     recoveryAttempts += 1
 
-    let isDownloaded = downloadManager.downloadStates[id] == .downloaded
+    let downloadKey = episodeID ?? id
+    let isDownloaded = downloadManager.downloadStates[downloadKey] == .downloaded
 
     player.pause()
     isLoading = true

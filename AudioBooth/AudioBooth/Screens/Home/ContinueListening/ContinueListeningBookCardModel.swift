@@ -88,13 +88,13 @@ final class ContinueListeningBookCardModel: BookCard.Model {
 
     super.init(
       id: episode.episodeID,
-      podcastID: episode.podcastID,
+      podcastID: episode.podcast?.podcastID,
       title: episode.title,
       details: timeRemaining,
       cover: Cover.Model(
         url: episode.coverURL,
         title: episode.title,
-        author: episode.podcastAuthor,
+        author: episode.podcast?.author,
         progress: MediaProgress.progress(for: episode.episodeID)
       )
     )

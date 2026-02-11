@@ -60,7 +60,8 @@ extension SessionManager {
       return item
     }
 
-    if downloadManager.downloadStates[itemID] == .downloaded, let item {
+    let downloadKey = episodeID ?? itemID
+    if downloadManager.downloadStates[downloadKey] == .downloaded, let item {
       startLocalSession(
         libraryItemID: itemID,
         episodeID: episodeID,
@@ -121,12 +122,21 @@ extension SessionManager {
       case .book: throw SessionError.failedToCreateSession
       }
 
+      let localPodcast: LocalPodcast
+      if let existing = try? LocalPodcast.fetch(podcastID: podcast.id) {
+        existing.title = podcast.title
+        existing.author = podcast.author
+        existing.coverURL = podcast.coverURL()
+        localPodcast = existing
+      } else {
+        localPodcast = LocalPodcast(from: podcast)
+      }
+      try? localPodcast.save()
+
       let episode = podcast.media.episodes?.first { $0.id == episodeID }
       let newItem = LocalEpisode(
         episodeID: episodeID,
-        podcastID: podcast.id,
-        podcastTitle: podcast.title,
-        podcastAuthor: podcast.author,
+        podcast: localPodcast,
         title: episode?.title ?? podcast.title,
         duration: audiobookshelfSession.duration,
         season: episode?.season,

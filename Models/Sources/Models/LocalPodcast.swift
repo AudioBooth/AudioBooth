@@ -13,6 +13,8 @@ public final class LocalPodcast {
   public var feedURL: String?
   public var language: String?
   public var podcastType: String?
+  @Relationship(deleteRule: .cascade, inverse: \LocalEpisode.podcast)
+  public var episodes: [LocalEpisode] = []
 
   public func coverURL(raw: Bool = false) -> URL? {
     guard var url = coverURL else { return nil }

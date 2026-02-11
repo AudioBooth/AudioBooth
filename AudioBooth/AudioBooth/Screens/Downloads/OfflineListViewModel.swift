@@ -10,7 +10,10 @@ final class OfflineListViewModel: OfflineListView.Model {
 
   private var allBooks: [LocalBook] = []
   private var filteredBooks: [LocalBook] = []
+  private var allEpisodes: [LocalEpisode] = []
+  private var filteredEpisodes: [LocalEpisode] = []
   private var booksObservation: Task<Void, Never>?
+  private var episodesObservation: Task<Void, Never>?
   private var isReordering = false
   private var groupingEnabled: Bool = false
 
@@ -21,17 +24,18 @@ final class OfflineListViewModel: OfflineListView.Model {
   }
 
   override func onAppear() {
-    if allBooks.isEmpty {
+    if allBooks.isEmpty && allEpisodes.isEmpty {
       isLoading = true
     }
 
     setupBooksObservation()
+    setupEpisodesObservation()
   }
 
   override func onEditModeTapped() {
     withAnimation {
       if editMode == .active {
-        selectedBookIDs.removeAll()
+        selectedIDs.removeAll()
         editMode = .inactive
       } else {
         editMode = .active
@@ -39,70 +43,71 @@ final class OfflineListViewModel: OfflineListView.Model {
     }
   }
 
-  override func onSelectBook(id: String) {
-    if selectedBookIDs.contains(id) {
-      selectedBookIDs.remove(id)
+  override func onSelectItem(id: String) {
+    if selectedIDs.contains(id) {
+      selectedIDs.remove(id)
     } else {
-      selectedBookIDs.insert(id)
+      selectedIDs.insert(id)
     }
   }
 
   override func onDeleteSelected() {
-    guard !selectedBookIDs.isEmpty else { return }
+    guard !selectedIDs.isEmpty else { return }
 
     Task {
-      await deleteSelectedBooks()
+      await deleteSelected()
     }
   }
 
   override func onMarkFinishedSelected() {
-    guard !selectedBookIDs.isEmpty else { return }
+    guard !selectedIDs.isEmpty else { return }
 
     Task {
-      await markSelectedBooksAsFinished()
+      await markSelectedAsFinished()
     }
   }
 
   override func onResetProgressSelected() {
-    guard !selectedBookIDs.isEmpty else { return }
+    guard !selectedIDs.isEmpty else { return }
 
     Task {
-      await resetSelectedBooksProgress()
+      await resetSelectedProgress()
     }
   }
 
   override func onSelectAllTapped() {
-    if selectedBookIDs.count == books.count {
-      selectedBookIDs.removeAll()
+    if selectedIDs.count == selectableCount {
+      selectedIDs.removeAll()
     } else {
-      selectedBookIDs = Set(books.map(\.id))
+      let bookIDs = filteredBooks.map(\.bookID)
+      let episodeIDs = filteredEpisodes.map(\.episodeID)
+      selectedIDs = Set(bookIDs + episodeIDs)
     }
   }
 
   override func onReorder(from source: IndexSet, to destination: Int) {
     isReordering = true
 
-    var reorderedBooks = books
+    var reorderedBooks = filteredBooks
     reorderedBooks.move(fromOffsets: source, toOffset: destination)
-    books = reorderedBooks
+    filteredBooks = reorderedBooks
 
-    var reorderedLocalBooks = filteredBooks
-    reorderedLocalBooks.move(fromOffsets: source, toOffset: destination)
-    filteredBooks = reorderedLocalBooks
+    updateDisplayedItems()
 
-    items = buildDisplayItems(from: filteredBooks)
-
-    Task { @MainActor in
+    Task {
       await saveDisplayOrder()
     }
   }
 
   override func onDelete(at indexSet: IndexSet) {
-    let booksToDelete = indexSet.map { books[$0] }
-    let bookIDsToDelete = Set(booksToDelete.map(\.id))
+    let flatItems = buildFlatItems()
+    let idsToDelete = indexSet.compactMap { index -> String? in
+      guard index < flatItems.count else { return nil }
+      return flatItems[index].id
+    }
 
     Task {
-      await deleteBooks(bookIDsToDelete)
+      await deleteItems(Set(idsToDelete))
     }
   }
 
@@ -110,29 +115,78 @@ final class OfflineListViewModel: OfflineListView.Model {
     groupingEnabled.toggle()
     isGroupedBySeries = groupingEnabled
     UserPreferences.shared.groupSeriesInOffline = groupingEnabled
-    updateDisplayedBooks()
+    updateDisplayedItems()
   }
+
+  // MARK: - Observations
 
   private func setupBooksObservation() {
     booksObservation = Task { [weak self] in
       for await books in LocalBook.observeAll() {
         guard !Task.isCancelled, let self else { break }
 
-        Task { @MainActor in
-          if !self.isReordering {
-            self.allBooks = books.filter { $0.isDownloaded }.sorted()
-            self.filteredBooks = self.allBooks
-            self.updateDisplayedBooks()
-          }
-
-          self.isReordering = false
-          self.isLoading = false
+        if !self.isReordering {
+          self.allBooks = books.filter { $0.isDownloaded }.sorted()
+          self.filteredBooks = self.allBooks
+          self.updateDisplayedItems()
         }
+
+        self.isReordering = false
+        self.isLoading = false
       }
     }
   }
 
-  private func buildDisplayItems(from localBooks: [LocalBook]) -> [OfflineListItem] {
+  private func setupEpisodesObservation() {
+    episodesObservation = Task { [weak self] in
+      for await episodes in LocalEpisode.observeAll() {
+        guard !Task.isCancelled, let self else { break }
+
+        self.allEpisodes = episodes.filter { $0.isDownloaded }
+        self.filteredEpisodes = self.allEpisodes
+        self.updateDisplayedItems()
+        self.isLoading = false
+      }
+    }
+  }
+
+  // MARK: - Display
+
+  private func updateDisplayedItems() {
+    let searchTerm = searchText.lowercased().trimmingCharacters(in: .whitespaces)
+
+    let booksToDisplay: [LocalBook]
+    let episodesToDisplay: [LocalEpisode]
+
+    if searchTerm.isEmpty {
+      booksToDisplay = filteredBooks
+      episodesToDisplay = filteredEpisodes
+    } else {
+      booksToDisplay = filteredBooks.filter { book in
+        book.title.lowercased().contains(searchTerm)
+          || book.authorNames.lowercased().contains(searchTerm)
+      }
+      episodesToDisplay = filteredEpisodes.filter { episode in
+        episode.title.lowercased().contains(searchTerm)
+          || (episode.podcast?.title.lowercased().contains(searchTerm) ?? false)
+          || (episode.podcast?.author?.lowercased().contains(searchTerm) ?? false)
+      }
+    }
+
+    items = buildDisplayItems(books: booksToDisplay, episodes: episodesToDisplay)
+    selectableCount = booksToDisplay.count + episodesToDisplay.count
+  }
+
+  private func buildDisplayItems(
+    books: [LocalBook],
+    episodes: [LocalEpisode]
+  ) -> [OfflineListItem] {
+    var displayItems = buildBookItems(from: books)
+    displayItems += buildEpisodeItems(from: episodes)
+    return displayItems
+  }
+
+  private func buildBookItems(from localBooks: [LocalBook]) -> [OfflineListItem] {
     guard groupingEnabled else {
       return localBooks.map { .book(BookCardModel($0)) }
     }
@@ -186,22 +240,78 @@ final class OfflineListViewModel: OfflineListView.Model {
     return displayItems
   }
 
-  private func updateDisplayedBooks() {
-    let searchTerm = searchText.lowercased().trimmingCharacters(in: .whitespaces)
+  private func buildEpisodeItems(from localEpisodes: [LocalEpisode]) -> [OfflineListItem] {
+    guard !localEpisodes.isEmpty else { return [] }
 
-    let booksToDisplay: [LocalBook]
-    if searchTerm.isEmpty {
-      booksToDisplay = filteredBooks
-    } else {
-      booksToDisplay = filteredBooks.filter { book in
-        book.title.lowercased().contains(searchTerm)
-          || book.authorNames.lowercased().contains(searchTerm)
-      }
+    guard groupingEnabled else {
+      return localEpisodes.map { .episode(makeEpisodeCardModel($0)) }
     }
 
-    items = buildDisplayItems(from: booksToDisplay)
-    books = booksToDisplay.map { BookCardModel($0) }
+    var podcastGroups: [String: (podcastID: String, podcastTitle: String, coverURL: URL?, episodes: [LocalEpisode])] =
+      [:]
+
+    for episode in localEpisodes {
+      let key = episode.podcast?.podcastID ?? episode.episodeID
+      if podcastGroups[key] == nil {
+        podcastGroups[key] = (
+          key,
+          episode.podcast?.title ?? episode.title,
+          episode.podcast?.coverURL ?? episode.coverURL,
+          []
+        )
+      }
+      podcastGroups[key]?.episodes.append(episode)
+    }
+
+    var displayItems: [OfflineListItem] = []
+
+    let sortedGroups = podcastGroups.sorted { $0.value.podcastTitle < $1.value.podcastTitle }
+
+    for (_, groupData) in sortedGroups {
+      let sortedEpisodes = groupData.episodes.sorted {
+        ($0.publishedAt ?? .distantPast) > ($1.publishedAt ?? .distantPast)
+      }
+
+      let episodeModels = sortedEpisodes.map { makeEpisodeCardModel($0) }
+
+      let group = PodcastGroup(
+        id: groupData.podcastID,
+        name: groupData.podcastTitle,
+        episodes: episodeModels,
+        coverURL: groupData.coverURL
+      )
+
+      displayItems.append(.podcast(group))
+    }
+
+    return displayItems
   }
+
+  private func makeEpisodeCardModel(_ episode: LocalEpisode) -> BookCard.Model {
+    let durationText = Duration.seconds(episode.duration).formatted(
+      .units(allowed: [.hours, .minutes], width: .narrow)
+    )
+
+    return BookCard.Model(
+      id: episode.episodeID,
+      podcastID: episode.podcast?.podcastID,
+      title: episode.title,
+      details: durationText,
+      cover: Cover.Model(
+        url: episode.coverURL,
+        progress: MediaProgress.progress(for: episode.episodeID)
+      ),
+      author: episode.podcast?.title
+    )
+  }
+
+  private func buildFlatItems() -> [OfflineListItem] {
+    let bookItems: [OfflineListItem] = filteredBooks.map { .book(BookCardModel($0)) }
+    let episodeItems: [OfflineListItem] = filteredEpisodes.map { .episode(makeEpisodeCardModel($0)) }
+    return bookItems + episodeItems
+  }
+
+  // MARK: - Display Order
 
   private func saveDisplayOrder() async {
     let bookIDs = filteredBooks.map(\.bookID)
@@ -213,55 +323,95 @@ final class OfflineListViewModel: OfflineListView.Model {
     }
   }
 
-  private func deleteSelectedBooks() async {
+  // MARK: - Batch Actions
+
+  private func deleteSelected() async {
     isPerformingBatchAction = true
-    await deleteBooks(selectedBookIDs)
-    selectedBookIDs.removeAll()
+    await deleteItems(selectedIDs)
+    selectedIDs.removeAll()
     editMode = .inactive
     isPerformingBatchAction = false
   }
 
-  private func deleteBooks(_ bookIDs: Set<String>) async {
-    for bookID in bookIDs {
-      guard let book = allBooks.first(where: { $0.bookID == bookID }) else { continue }
-      book.removeDownload()
+  private func deleteItems(_ ids: Set<String>) async {
+    for id in ids {
+      if let book = allBooks.first(where: { $0.bookID == id }) {
+        book.removeDownload()
+      } else if let episode = allEpisodes.first(where: { $0.episodeID == id }),
+        let podcastID = episode.podcast?.podcastID
+      {
+        downloadManager.deleteEpisodeDownload(episodeID: episode.episodeID, podcastID: podcastID)
+      }
     }
   }
 
-  private func markSelectedBooksAsFinished() async {
+  private func markSelectedAsFinished() async {
     isPerformingBatchAction = true
-    let selectedIDs = Array(selectedBookIDs)
+    let ids = Array(selectedIDs)
 
-    for bookID in selectedIDs {
-      guard let book = allBooks.first(where: { $0.bookID == bookID }) else { continue }
-
-      do {
-        try await book.markAsFinished()
-      } catch {
-        print("Failed to mark book \(bookID) as finished: \(error)")
+    for id in ids {
+      if let book = allBooks.first(where: { $0.bookID == id }) {
+        do {
+          try await book.markAsFinished()
+        } catch {
+          print("Failed to mark book \(id) as finished: \(error)")
+        }
+      } else if let episode = allEpisodes.first(where: { $0.episodeID == id }) {
+        do {
+          let podcastID = episode.podcast?.podcastID ?? ""
+          let episodeProgressID = "\(podcastID)/\(episode.episodeID)"
+          try MediaProgress.markAsFinished(for: episode.episodeID)
+          try await audiobookshelf.libraries.markAsFinished(bookID: episodeProgressID)
+        } catch {
+          print("Failed to mark episode \(id) as finished: \(error)")
+        }
       }
     }
 
-    selectedBookIDs.removeAll()
+    selectedIDs.removeAll()
     editMode = .inactive
     isPerformingBatchAction = false
   }
 
-  private func resetSelectedBooksProgress() async {
+  private func resetSelectedProgress() async {
     isPerformingBatchAction = true
-    let selectedIDs = Array(selectedBookIDs)
+    let ids = Array(selectedIDs)
 
-    for bookID in selectedIDs {
-      guard let book = allBooks.first(where: { $0.bookID == bookID }) else { continue }
+    for id in ids {
+      if let book = allBooks.first(where: { $0.bookID == id }) {
+        do {
+          try await book.resetProgress()
+        } catch {
+          print("Failed to reset progress for book \(id): \(error)")
+        }
+      } else if let episode = allEpisodes.first(where: { $0.episodeID == id }) {
+        do {
+          let podcastID = episode.podcast?.podcastID ?? ""
+          let episodeProgressID = "\(podcastID)/\(episode.episodeID)"
+          let progress = try MediaProgress.fetch(bookID: episode.episodeID)
+          let progressID: String
 
-      do {
-        try await book.resetProgress()
-      } catch {
-        print("Failed to reset progress for book \(bookID): \(error)")
+          if let progress, let progressIDValue = progress.id {
+            progressID = progressIDValue
+          } else {
+            let apiProgress = try await audiobookshelf.libraries.fetchMediaProgress(
+              bookID: episodeProgressID
+            )
+            progressID = apiProgress.id
+          }
+
+          try await audiobookshelf.libraries.resetBookProgress(progressID: progressID)
+
+          if let progress {
+            try progress.delete()
+          }
+        } catch {
+          print("Failed to reset progress for episode \(id): \(error)")
+        }
       }
     }
 
-    selectedBookIDs.removeAll()
+    selectedIDs.removeAll()
     editMode = .inactive
     isPerformingBatchAction = false
   }
