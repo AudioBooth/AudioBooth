@@ -298,8 +298,6 @@ extension BookPlayerModel {
       mediaProgress.currentTime = pendingSeekTime
       self.pendingSeekTime = nil
       AppLogger.player.info("Using pending seek time: \(pendingSeekTime)s")
-    } else {
-      applySmartRewind(reason: .afterPause)
     }
   }
 
@@ -384,15 +382,13 @@ extension BookPlayerModel {
     let currentTime = mediaProgress.currentTime
     var rewindTarget = currentTime - interval
 
-    if let chapters = item?.orderedChapters, !chapters.isEmpty {
-      if let currentChapter = chapters.first(where: { chapter in
-        currentTime >= chapter.start && currentTime < chapter.end
-      }) {
-        rewindTarget = max(currentChapter.start, rewindTarget)
-        AppLogger.player.debug(
-          "Smart rewind bounded by chapter '\(currentChapter.title)' starting at \(currentChapter.start)s"
-        )
-      }
+    if let chapters = chapters?.chapters, !chapters.isEmpty {
+      let index = chapters.index(for: currentTime)
+      let chapter = chapters[index]
+      rewindTarget = max(chapter.start, rewindTarget)
+      AppLogger.player.debug(
+        "Smart rewind bounded by chapter '\(chapter.title)' starting at \(chapter.start)s"
+      )
     }
 
     let newTime = max(0, rewindTarget)
