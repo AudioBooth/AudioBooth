@@ -341,7 +341,6 @@ final class BookPlayerModel: BookPlayer.Model {
       case .downloaded:
         downloadManager.deleteEpisodeDownload(episodeID: episodeID, podcastID: podcastID)
       case .notDownloaded:
-        let size = item?.orderedTracks.first?.size ?? 0
         downloadState = .downloading(progress: 0)
         downloadManager.startDownload(
           for: episodeID,
@@ -1260,6 +1259,10 @@ extension BookPlayerModel {
       }
       lastPlaybackAt = nil
 
+      if mediaProgress.duration > 0 {
+        mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
+      }
+
       recordBookCompletionIfNeeded()
       sessionManager.notifyPlaybackStopped()
     } else {
@@ -1285,6 +1288,12 @@ extension BookPlayerModel {
     if let localBook = item as? LocalBook {
       Task {
         try? await localBook.markAsFinished()
+      }
+    } else if let episodeID, let podcastID {
+      Task {
+        try? MediaProgress.markAsFinished(for: episodeID)
+        let episodeProgressID = "\(podcastID)/\(episodeID)"
+        try? await audiobookshelf.libraries.markAsFinished(bookID: episodeProgressID)
       }
     }
 
