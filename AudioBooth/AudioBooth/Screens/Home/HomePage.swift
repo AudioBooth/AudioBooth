@@ -57,8 +57,8 @@ struct HomePage: View {
             CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
           case .collection(let id):
             CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .collections))
-          case .podcast(let id):
-            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id))
+          case .podcast(let id, let episodeID):
+            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
           case .stats:
             StatsPageView(model: StatsPageViewModel())
           }

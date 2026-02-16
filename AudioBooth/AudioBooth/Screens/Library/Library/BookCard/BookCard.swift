@@ -26,7 +26,7 @@ struct BookCard: View {
     if model.bookCount != nil {
       .series(id: model.id, name: model.title)
     } else if let id = model.podcastID {
-      .podcast(id: id)
+      .podcast(id: id, episodeID: model.id)
     } else {
       .book(id: model.id)
     }
@@ -62,7 +62,7 @@ struct BookListCard: View {
     if model.bookCount != nil {
       .series(id: model.id, name: model.title)
     } else if let id = model.podcastID {
-      .podcast(id: id)
+      .podcast(id: id, episodeID: model.id)
     } else {
       .book(id: model.id)
     }

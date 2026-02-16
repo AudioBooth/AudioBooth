@@ -240,8 +240,10 @@ struct OfflineListView: View {
       .contentShape(Rectangle())
       .overlay {
         if model.editMode != .active {
-          NavigationLink(value: NavigationDestination.podcast(id: episode.podcastID ?? episode.id)) {}
-            .opacity(0)
+          NavigationLink(
+            value: NavigationDestination.podcast(id: episode.podcastID ?? episode.id, episodeID: episode.id)
+          ) {}
+          .opacity(0)
         }
       }
     }

@@ -78,8 +78,8 @@ struct BookPlayer: View {
           BookDetailsView(model: BookDetailsViewModel(bookID: id))
         case .series, .author, .narrator, .genre, .tag, .offline, .authorLibrary:
           LibraryPage(model: LibraryPageModel(destination: destination))
-        case .podcast(let id):
-          PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id))
+        case .podcast(let id, let episodeID):
+          PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
         case .playlist, .collection, .stats:
           EmptyView()
         }

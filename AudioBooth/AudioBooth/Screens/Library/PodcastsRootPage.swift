@@ -38,8 +38,8 @@ struct PodcastsRootPage: View {
           switch destination {
           case .book(let id):
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .podcast(let id):
-            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id))
+          case .podcast(let id, let episodeID):
+            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
           case .playlist(let id):
             CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
           case .genre, .tag:

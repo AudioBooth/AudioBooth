@@ -61,21 +61,39 @@ struct PodcastDetailsView: View {
     .onAppear(perform: model.onAppear)
   }
 
+  private func scrollToEpisode(id: String?, proxy: ScrollViewProxy) {
+    guard let id else { return }
+    Task {
+      try? await Task.sleep(for: .milliseconds(300))
+      withAnimation {
+        proxy.scrollTo(id, anchor: .center)
+      }
+      try? await Task.sleep(for: .milliseconds(400))
+      withAnimation { model.highlightedEpisodeID = id }
+      model.scrollToEpisodeID = nil
+    }
+  }
+
   private var portraitLayout: some View {
     GeometryReader { proxy in
-      ScrollView {
-        VStack(spacing: 0) {
-          cover(offset: proxy.safeAreaInsets.top)
-            .frame(height: 266 + proxy.safeAreaInsets.top)
+      ScrollViewReader { scrollProxy in
+        ScrollView {
+          VStack(spacing: 0) {
+            cover(offset: proxy.safeAreaInsets.top)
+              .frame(height: 266 + proxy.safeAreaInsets.top)
 
-          contentSections
-            .padding()
-            .background()
+            contentSections
+              .padding(.vertical)
+              .background()
+          }
+          .padding(.vertical)
         }
-        .padding(.vertical)
+        .coordinateSpace(name: CoordinateSpaces.scrollView)
+        .ignoresSafeArea(edges: .top)
+        .onChange(of: model.scrollToEpisodeID) { _, id in
+          scrollToEpisode(id: id, proxy: scrollProxy)
+        }
       }
-      .coordinateSpace(name: CoordinateSpaces.scrollView)
-      .ignoresSafeArea(edges: .top)
     }
   }
 
@@ -84,29 +102,37 @@ struct PodcastDetailsView: View {
       simpleCover
         .frame(width: 300)
 
-      ScrollView {
-        contentSections
-          .padding()
+      ScrollViewReader { scrollProxy in
+        ScrollView {
+          contentSections
+            .padding(.vertical)
+        }
+        .background(.background)
+        .onChange(of: model.scrollToEpisodeID) { _, id in
+          scrollToEpisode(id: id, proxy: scrollProxy)
+        }
       }
-      .background(.background)
     }
   }
 
   private var contentSections: some View {
     VStack(spacing: 16) {
-      title
+      VStack(spacing: 16) {
+        title
 
-      metadataSection
+        metadataSection
 
-      if let description = model.description {
-        descriptionSection(description)
+        if let description = model.description {
+          descriptionSection(description)
+        }
+        if let genres = model.genres, !genres.isEmpty {
+          genresSection(genres)
+        }
+        if let tags = model.tags, !tags.isEmpty {
+          tagsSection(tags)
+        }
       }
-      if let genres = model.genres, !genres.isEmpty {
-        genresSection(genres)
-      }
-      if let tags = model.tags, !tags.isEmpty {
-        tagsSection(tags)
-      }
+      .padding(.horizontal)
 
       episodesSection
     }
@@ -322,6 +348,7 @@ struct PodcastDetailsView: View {
     VStack(alignment: .leading, spacing: 12) {
       Text(model.episodesTitle)
         .font(.headline)
+        .padding(.horizontal)
 
       HStack {
         Picker("Filter", selection: $model.selectedFilter) {
@@ -356,18 +383,28 @@ struct PodcastDetailsView: View {
           .font(.subheadline)
         }
       }
+      .padding(.horizontal)
 
       TextField("Search episodes", text: $model.searchText)
         .textFieldStyle(.roundedBorder)
+        .padding(.horizontal)
 
-      LazyVStack(spacing: 0) {
+      VStack(spacing: 0) {
         ForEach(model.filteredEpisodes) { episode in
           NavigationLink {
-            PodcastEpisodeDetailView(model: PodcastEpisodeDetailView.Model(episode: episode))
+            PodcastEpisodeDetailView(model: PodcastEpisodeDetailViewModel(podcastModel: model, episode: episode))
           } label: {
             episodeRow(episode)
+              .padding(.horizontal)
           }
           .buttonStyle(.plain)
+          .background(
+            episode.id == model.highlightedEpisodeID
+              ? Color.accentColor.opacity(0.15)
+              : Color.clear
+          )
+          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .id(episode.id)
           Divider()
         }
       }
@@ -550,6 +587,9 @@ extension PodcastDetailsView {
 
     var currentlyPlayingEpisodeID: String?
     var isPlaying: Bool
+
+    var scrollToEpisodeID: String?
+    var highlightedEpisodeID: String?
 
     var episodesTitle: String {
       let filtered = filteredEpisodes.count

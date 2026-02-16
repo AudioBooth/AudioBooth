@@ -11,14 +11,17 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
   private var apiEpisodes: [PodcastEpisode] = []
   private var localPodcast: LocalPodcast?
   private var cancellables = Set<AnyCancellable>()
+  private let episodeID: String?
 
-  init(podcastID: String) {
+  init(podcastID: String, episodeID: String? = nil) {
+    self.episodeID = episodeID
     super.init(podcastID: podcastID)
     observePlayer()
     observeDownloadStates()
   }
 
   override func onAppear() {
+    guard apiEpisodes.isEmpty else { return }
     Task {
       loadLocalPodcast()
       await loadPodcast()
@@ -255,6 +258,7 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       }
 
       isLoading = false
+      scrollToEpisodeID = episodeID
     } catch {
       AppLogger.viewModel.error("Failed to load local podcast: \(error)")
     }
@@ -326,6 +330,7 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
 
       error = nil
       isLoading = false
+      scrollToEpisodeID = episodeID
     } catch {
       if localPodcast == nil {
         isLoading = false

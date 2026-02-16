@@ -1,8 +1,9 @@
+import Combine
 import RichText
 import SwiftUI
 
 struct PodcastEpisodeDetailView: View {
-  let model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     ScrollView {
@@ -51,8 +52,53 @@ struct PodcastEpisodeDetailView: View {
             .foregroundStyle(.secondary)
         }
       }
+
+      playButton
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  private var playButton: some View {
+    Button(action: model.onPlay) {
+      Label {
+        Text(episodePlayButtonText)
+      } icon: {
+        Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
+      }
+      .font(.caption)
+      .fontWeight(.medium)
+      .padding(.horizontal, 10)
+      .padding(.vertical, 6)
+      .foregroundStyle(model.isPlaying ? .white : Color.accentColor)
+      .background(model.isPlaying ? Color.accentColor : Color.accentColor.opacity(0.15))
+      .clipShape(Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var episodePlayButtonText: String {
+    if model.isPlaying {
+      return "Pause"
+    }
+    if model.isCompleted {
+      return "Played"
+    }
+    guard let duration = model.duration, duration > 0 else {
+      return "Play"
+    }
+    let seconds: Double
+    if model.progress > 0 {
+      seconds = duration * (1 - model.progress)
+    } else {
+      seconds = duration
+    }
+    let text = Duration.seconds(seconds).formatted(
+      .units(allowed: [.hours, .minutes], width: .narrow)
+    )
+    if model.progress > 0 {
+      return "\(text) left"
+    }
+    return text
   }
 
   private func descriptionSection(_ description: String) -> some View {
@@ -104,7 +150,8 @@ struct PodcastEpisodeDetailView: View {
 }
 
 extension PodcastEpisodeDetailView {
-  struct Model {
+  @Observable
+  class Model: ObservableObject {
     let title: String
     let description: String?
     let publishedAt: Date?
@@ -112,6 +159,10 @@ extension PodcastEpisodeDetailView {
     let season: String?
     let episode: String?
     let chapters: [PodcastDetailsView.Model.Chapter]
+
+    var isPlaying: Bool
+    var isCompleted: Bool
+    var progress: Double
 
     var episodeLabel: String? {
       if let season, !season.isEmpty, let episode, !episode.isEmpty {
@@ -132,15 +183,7 @@ extension PodcastEpisodeDetailView {
       )
     }
 
-    init(episode: PodcastDetailsView.Model.Episode) {
-      self.title = episode.title
-      self.description = episode.description?.replacingOccurrences(of: "\n", with: "<br>")
-      self.publishedAt = episode.publishedAt
-      self.duration = episode.duration
-      self.season = episode.season
-      self.episode = episode.episode
-      self.chapters = episode.chapters
-    }
+    func onPlay() {}
 
     init(
       title: String,
@@ -149,7 +192,10 @@ extension PodcastEpisodeDetailView {
       duration: Double? = nil,
       season: String? = nil,
       episode: String? = nil,
-      chapters: [PodcastDetailsView.Model.Chapter] = []
+      chapters: [PodcastDetailsView.Model.Chapter] = [],
+      isPlaying: Bool = false,
+      isCompleted: Bool = false,
+      progress: Double = 0
     ) {
       self.title = title
       self.description = description
@@ -158,6 +204,22 @@ extension PodcastEpisodeDetailView {
       self.season = season
       self.episode = episode
       self.chapters = chapters
+      self.isPlaying = isPlaying
+      self.isCompleted = isCompleted
+      self.progress = progress
+    }
+
+    init(episode: PodcastDetailsView.Model.Episode) {
+      self.title = episode.title
+      self.description = episode.description?.replacingOccurrences(of: "\n", with: "<br>")
+      self.publishedAt = episode.publishedAt
+      self.duration = episode.duration
+      self.season = episode.season
+      self.episode = episode.episode
+      self.chapters = episode.chapters
+      self.isPlaying = false
+      self.isCompleted = episode.isCompleted
+      self.progress = episode.progress
     }
   }
 }
