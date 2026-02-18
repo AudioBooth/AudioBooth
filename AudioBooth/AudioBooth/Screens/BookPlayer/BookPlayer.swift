@@ -411,32 +411,44 @@ struct BookPlayer: View {
       }
 
       if Audiobookshelf.shared.authentication.permissions?.download == true {
-        Button(action: { model.onDownloadTapped() }) {
-          VStack(spacing: 6) {
-            Image(systemName: downloadIcon)
-              .font(.system(size: 20))
-              .foregroundColor(.white)
-              .frame(width: 20, height: 20)
-              .opacity([.downloaded, .notDownloaded].contains(model.downloadState) ? 1 : 0)
-              .overlay {
-                if case .downloading(let progress) = model.downloadState {
-                  ProgressView(value: progress)
-                    .progressViewStyle(GaugeProgressViewStyle(tint: .white))
-                }
+        let downloadLabel = VStack(spacing: 6) {
+          Image(systemName: downloadIcon)
+            .font(.system(size: 20))
+            .foregroundColor(.white)
+            .frame(width: 20, height: 20)
+            .opacity([.downloaded, .notDownloaded].contains(model.downloadState) ? 1 : 0)
+            .overlay {
+              if case .downloading(let progress) = model.downloadState {
+                ProgressView(value: progress)
+                  .progressViewStyle(GaugeProgressViewStyle(tint: .white))
               }
-            Text(downloadText)
-              .font(.caption2)
-              .lineLimit(1)
-              .hidden()
-              .overlay(alignment: .top) {
-                Text(downloadText)
-                  .font(.caption2)
-                  .foregroundColor(.white.opacity(0.7))
-                  .fixedSize(horizontal: false, vertical: true)
-              }
-          }
+            }
+          Text(downloadText)
+            .font(.caption2)
+            .lineLimit(1)
+            .hidden()
+            .overlay(alignment: .top) {
+              Text(downloadText)
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .frame(maxWidth: .infinity)
+
+        if model.downloadState == .downloaded {
+          ConfirmationButton(
+            confirmation: .init(title: "Remove Download", action: "Delete"),
+            action: { model.onDownloadTapped() }
+          ) {
+            downloadLabel
+          }
+          .frame(maxWidth: .infinity)
+        } else {
+          Button(action: { model.onDownloadTapped() }) {
+            downloadLabel
+          }
+          .frame(maxWidth: .infinity)
+        }
       }
     }
     .padding(.vertical, 12)
