@@ -11,6 +11,8 @@ public enum HomeSection: String, CaseIterable, Identifiable, Codable {
   case discover = "discover"
   case listenAgain = "listen-again"
   case newestAuthors = "newest-authors"
+  case newestEpisodes = "newest-episodes"
+  case readAgain = "read-again"
 
   public var id: String { rawValue }
 
@@ -26,6 +28,8 @@ public enum HomeSection: String, CaseIterable, Identifiable, Codable {
     case .discover: String(localized: "Discover")
     case .listenAgain: String(localized: "Listen Again")
     case .newestAuthors: String(localized: "Newest Authors")
+    case .newestEpisodes: String(localized: "Newest Episodes")
+    case .readAgain: String(localized: "Read Again")
     }
   }
 
@@ -38,11 +42,13 @@ public enum HomeSection: String, CaseIterable, Identifiable, Codable {
       .continueListening,
       .continueReading,
       .continueSeries,
+      .newestEpisodes,
       .recentlyAdded,
       .recentSeries,
       .discover,
       .listenAgain,
       .newestAuthors,
+      .readAgain,
     ]
   }
 }
