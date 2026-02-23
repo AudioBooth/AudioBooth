@@ -51,6 +51,25 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
     }
   }
 
+  override func onPlayAllEpisodes() {
+    let episodes = filteredEpisodes
+    guard let first = episodes.first else { return }
+
+    onPlayEpisode(first)
+
+    for episode in episodes.dropFirst() {
+      playerManager.addToQueue(
+        QueueItem(
+          bookID: episode.id,
+          title: episode.title,
+          details: episode.durationText,
+          coverURL: coverURL,
+          podcastID: podcastID
+        )
+      )
+    }
+  }
+
   override func onToggleEpisodeFinished(_ episode: Episode) {
     let episodeProgressID = "\(podcastID)/\(episode.id)"
 

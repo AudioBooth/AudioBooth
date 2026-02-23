@@ -438,6 +438,12 @@ extension PlayerManager {
     queue.append(QueueItem(from: item))
   }
 
+  func addToQueue(_ item: QueueItem) {
+    guard item.bookID != current?.id else { return }
+    guard !queue.contains(where: { $0.bookID == item.bookID }) else { return }
+    queue.append(item)
+  }
+
   func removeFromQueue(bookID: String) {
     queue.removeAll { $0.bookID == bookID }
   }

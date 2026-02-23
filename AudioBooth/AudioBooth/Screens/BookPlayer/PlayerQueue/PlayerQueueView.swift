@@ -35,7 +35,13 @@ struct PlayerQueueView: View {
             .onMove(perform: model.onMove)
           }
         } header: {
-          Text("Up Next")
+          HStack {
+            Text("Up Next")
+            Spacer()
+            if !model.queue.isEmpty {
+              Button("Clear", role: .destructive, action: model.onClearQueueTapped)
+            }
+          }
         } footer: {
           if !model.queue.isEmpty {
             Text("Swipe to remove or drag to reorder")
@@ -99,7 +105,7 @@ extension PlayerQueueView {
       .contentShape(Rectangle())
       .overlay {
         if !isEditing {
-          NavigationLink(value: NavigationDestination.book(id: item.bookID)) {}
+          NavigationLink(value: queueDestination(for: item)) {}
             .opacity(0)
         }
       }
@@ -166,7 +172,7 @@ extension PlayerQueueView {
       .contentShape(Rectangle())
       .overlay {
         if !isEditing {
-          NavigationLink(value: NavigationDestination.book(id: item.bookID)) {}
+          NavigationLink(value: queueDestination(for: item)) {}
             .opacity(0)
         }
       }
@@ -223,6 +229,7 @@ extension PlayerQueueView {
     func onPlayTapped(_ item: QueueItem) {}
     func onNowPlayingTapped() {}
     func onClearCurrentTapped() {}
+    func onClearQueueTapped() {}
 
     init(
       currentItem: QueueItem? = nil,
@@ -268,6 +275,13 @@ extension PlayerQueueView {
       ]
     )
   )
+}
+
+private func queueDestination(for item: QueueItem) -> NavigationDestination {
+  if let podcastID = item.podcastID {
+    return .podcast(id: podcastID, episodeID: item.bookID)
+  }
+  return .book(id: item.bookID)
 }
 
 private struct PreviewBook: BookActionable {

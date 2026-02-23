@@ -24,7 +24,8 @@ final class PlayerQueueViewModel: PlayerQueueView.Model {
         bookID: current.id,
         title: current.title,
         details: details,
-        coverURL: current.coverURL
+        coverURL: current.coverURL,
+        podcastID: current.podcastID
       )
     }()
 
@@ -63,6 +64,11 @@ final class PlayerQueueViewModel: PlayerQueueView.Model {
   override func onNowPlayingTapped() {
     dismiss()
     playerManager.showFullPlayer()
+  }
+
+  override func onClearQueueTapped() {
+    playerManager.clearQueue()
+    queue = []
   }
 
   override func onClearCurrentTapped() {

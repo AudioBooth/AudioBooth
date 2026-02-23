@@ -346,9 +346,26 @@ struct PodcastDetailsView: View {
 
   private var episodesSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Text(model.episodesTitle)
-        .font(.headline)
-        .padding(.horizontal)
+      HStack {
+        Text(model.episodesTitle)
+          .font(.headline)
+        Spacer()
+        Button {
+          model.onPlayAllEpisodes()
+        } label: {
+          Label("Play", systemImage: "play.fill")
+            .font(.caption)
+            .fontWeight(.medium)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .foregroundStyle(Color.accentColor)
+            .background(Color.accentColor.opacity(0.15))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(model.filteredEpisodes.isEmpty)
+      }
+      .padding(.horizontal)
 
       HStack {
         Picker("Filter", selection: $model.selectedFilter) {
@@ -659,6 +676,7 @@ extension PodcastDetailsView {
 
     func onAppear() {}
     func onPlayEpisode(_ episode: Episode) {}
+    func onPlayAllEpisodes() {}
     func onToggleEpisodeFinished(_ episode: Episode) {}
     func onDownloadEpisode(_ episode: Episode) {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
