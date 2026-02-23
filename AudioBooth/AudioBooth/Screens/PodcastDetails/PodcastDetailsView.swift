@@ -11,7 +11,7 @@ struct PodcastDetailsView: View {
 
   @State private var isDescriptionExpanded = false
   @State private var isShowingFullScreenCover = false
-  @State private var playlistEpisode: Model.Episode?
+  @State private var activePlaylistModel: CollectionSelectorSheet.Model?
 
   private enum CoordinateSpaces {
     case scrollView
@@ -49,14 +49,15 @@ struct PodcastDetailsView: View {
         .background(.background)
       }
     }
-    .sheet(item: $playlistEpisode) { episode in
-      CollectionSelectorSheet(
-        model: CollectionSelectorSheetModel(
-          bookID: model.podcastID,
-          episodeID: episode.id,
-          mode: .playlists
-        )
+    .sheet(
+      isPresented: Binding(
+        get: { activePlaylistModel != nil },
+        set: { if !$0 { activePlaylistModel = nil } }
       )
+    ) {
+      if let sheetModel = activePlaylistModel {
+        CollectionSelectorSheet(model: sheetModel)
+      }
     }
     .onAppear(perform: model.onAppear)
   }
@@ -409,12 +410,34 @@ struct PodcastDetailsView: View {
       VStack(spacing: 0) {
         ForEach(model.filteredEpisodes) { episode in
           NavigationLink {
-            PodcastEpisodeDetailView(model: PodcastEpisodeDetailViewModel(podcastModel: model, episode: episode))
+            PodcastEpisodeDetailView(
+              model: PodcastEpisodeDetailViewModel(
+                podcastID: model.podcastID,
+                podcastTitle: model.title,
+                podcastAuthor: model.author,
+                coverURL: model.coverURL,
+                episode: episode
+              )
+            )
           } label: {
             episodeRow(episode)
               .padding(.horizontal)
           }
           .buttonStyle(.plain)
+          .contextMenu {
+            if let contextMenu = episode.contextMenu {
+              PodcastEpisodeContextMenu(model: contextMenu)
+            }
+          }
+          .onChange(of: episode.contextMenu?.showingPlaylistSheet) { _, showing in
+            guard showing == true else { return }
+            episode.contextMenu?.showingPlaylistSheet = false
+            activePlaylistModel = CollectionSelectorSheetModel(
+              bookID: model.podcastID,
+              episodeID: episode.id,
+              mode: .playlists
+            )
+          }
           .background(
             episode.id == model.highlightedEpisodeID
               ? Color.accentColor.opacity(0.15)
@@ -457,12 +480,7 @@ struct PodcastDetailsView: View {
             .foregroundStyle(.secondary)
         }
 
-        HStack(spacing: 8) {
-          episodePlayButton(episode)
-          episodeFinishedButton(episode)
-          episodeDownloadButton(episode)
-          episodePlaylistButton(episode)
-        }
+        episodePlayButton(episode)
 
         if episode.progress > 0 {
           ProgressView(value: min(episode.progress, 1.0))
@@ -531,49 +549,6 @@ struct PodcastDetailsView: View {
     return text
   }
 
-  private func episodeFinishedButton(_ episode: Model.Episode) -> some View {
-    Button {
-      model.onToggleEpisodeFinished(episode)
-    } label: {
-      Image(systemName: episode.isCompleted ? "checkmark.shield.fill" : "checkmark.shield")
-        .font(.title3)
-        .foregroundStyle(episode.isCompleted ? .green : .secondary)
-    }
-    .buttonStyle(.plain)
-  }
-
-  private func episodeDownloadButton(_ episode: Model.Episode) -> some View {
-    Button {
-      model.onDownloadEpisode(episode)
-    } label: {
-      Group {
-        switch episode.downloadState {
-        case .notDownloaded:
-          Image(systemName: "arrow.down.circle")
-            .foregroundStyle(.secondary)
-        case .downloading:
-          Image(systemName: "stop.circle")
-            .foregroundStyle(.orange)
-        case .downloaded:
-          Image(systemName: "arrow.down.circle.fill")
-            .foregroundStyle(.green)
-        }
-      }
-      .font(.title3)
-    }
-    .buttonStyle(.plain)
-  }
-
-  private func episodePlaylistButton(_ episode: Model.Episode) -> some View {
-    Button {
-      playlistEpisode = episode
-    } label: {
-      Image(systemName: "text.badge.plus")
-        .font(.title3)
-        .foregroundStyle(Color.accentColor)
-    }
-    .buttonStyle(.plain)
-  }
 }
 
 // MARK: - Model
@@ -677,8 +652,6 @@ extension PodcastDetailsView {
     func onAppear() {}
     func onPlayEpisode(_ episode: Episode) {}
     func onPlayAllEpisodes() {}
-    func onToggleEpisodeFinished(_ episode: Episode) {}
-    func onDownloadEpisode(_ episode: Episode) {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
       if selectedSort == sort {
         ascending.toggle()
@@ -752,6 +725,8 @@ extension PodcastDetailsView.Model {
     let progress: Double
     let chapters: [Chapter]
     var downloadState: DownloadManager.DownloadState
+    var contextMenu: PodcastEpisodeContextMenu.Model?
+    var apiEpisode: PodcastEpisode?
 
     var durationText: String? {
       guard let duration, duration > 0 else { return nil }

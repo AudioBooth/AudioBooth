@@ -17,6 +17,8 @@ struct BookCard: View {
     .contextMenu {
       if let model = model.contextMenu {
         BookCardContextMenu(model: model)
+      } else if let model = model.episodeContextMenu {
+        PodcastEpisodeContextMenu(model: model)
       }
     }
     .onAppear(perform: model.onAppear)
@@ -53,6 +55,8 @@ struct BookListCard: View {
       .contextMenu {
         if let model = model.contextMenu {
           BookCardContextMenu(model: model)
+        } else if let model = model.episodeContextMenu {
+          PodcastEpisodeContextMenu(model: model)
         }
       }
       .onAppear(perform: model.onAppear)
@@ -310,6 +314,7 @@ extension BookCard {
     let publishedYear: String?
     let bookCount: Int?
     var contextMenu: BookCardContextMenu.Model?
+    var episodeContextMenu: PodcastEpisodeContextMenu.Model?
     let hasEbook: Bool
 
     func onAppear() {}
@@ -326,6 +331,7 @@ extension BookCard {
       publishedYear: String? = nil,
       bookCount: Int? = nil,
       contextMenu: BookCardContextMenu.Model? = nil,
+      episodeContextMenu: PodcastEpisodeContextMenu.Model? = nil,
       hasEbook: Bool = false
     ) {
       self.id = id
@@ -339,6 +345,7 @@ extension BookCard {
       self.publishedYear = publishedYear
       self.bookCount = bookCount
       self.contextMenu = contextMenu
+      self.episodeContextMenu = episodeContextMenu
       self.hasEbook = hasEbook
     }
   }

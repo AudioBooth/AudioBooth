@@ -70,84 +70,6 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
     }
   }
 
-  override func onToggleEpisodeFinished(_ episode: Episode) {
-    let episodeProgressID = "\(podcastID)/\(episode.id)"
-
-    Task {
-      do {
-        if episode.isCompleted {
-          let progress = try MediaProgress.fetch(bookID: episode.id)
-          let progressID: String
-
-          if let progress, let id = progress.id {
-            progressID = id
-          } else {
-            let apiProgress = try await Audiobookshelf.shared.libraries.fetchMediaProgress(
-              bookID: episodeProgressID
-            )
-            progressID = apiProgress.id
-          }
-
-          try await Audiobookshelf.shared.libraries.resetBookProgress(progressID: progressID)
-
-          if let progress {
-            try progress.delete()
-          }
-        } else {
-          try MediaProgress.markAsFinished(for: episode.id)
-          try await Audiobookshelf.shared.libraries.markAsFinished(bookID: episodeProgressID)
-        }
-        updateEpisodeProgress(episode.id)
-      } catch {
-        AppLogger.viewModel.error("Failed to toggle episode finished: \(error)")
-      }
-    }
-  }
-
-  override func onDownloadEpisode(_ episode: Episode) {
-    let episodeID = episode.id
-
-    switch episode.downloadState {
-    case .notDownloaded:
-      let size = episode.size ?? 0
-      var details = ""
-      if let duration = episode.duration, duration > 0 {
-        details = Duration.seconds(duration).formatted(
-          .units(allowed: [.hours, .minutes], width: .narrow)
-        )
-      }
-      if size > 0 {
-        if !details.isEmpty { details += " • " }
-        details += size.formatted(.byteCount(style: .file))
-      }
-
-      Task {
-        let canDownload = await StorageManager.shared.canDownload(additionalBytes: size)
-        guard canDownload else {
-          Toast(error: "Storage limit reached").show()
-          return
-        }
-
-        downloadManager.startDownload(
-          for: episodeID,
-          type: .episode(podcastID: podcastID, episodeID: episodeID),
-          info: .init(
-            title: episode.title,
-            details: details.isEmpty ? nil : details,
-            coverURL: coverURL,
-            startedAt: Date()
-          )
-        )
-      }
-
-    case .downloading:
-      downloadManager.cancelDownload(for: episodeID)
-
-    case .downloaded:
-      downloadManager.deleteEpisodeDownload(episodeID: episodeID, podcastID: podcastID)
-    }
-  }
-
   private func observeDownloadStates() {
     downloadManager.$downloadStates
       .sink { [weak self] states in
@@ -161,26 +83,6 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
         }
       }
       .store(in: &cancellables)
-  }
-
-  private func updateEpisodeProgress(_ episodeID: String) {
-    guard let index = episodes.firstIndex(where: { $0.id == episodeID }) else { return }
-    let progress = MediaProgress.progress(for: episodeID)
-    let old = episodes[index]
-    episodes[index] = Episode(
-      id: old.id,
-      title: old.title,
-      season: old.season,
-      episode: old.episode,
-      publishedAt: old.publishedAt,
-      duration: old.duration,
-      size: old.size,
-      description: old.description,
-      isCompleted: progress >= 1.0,
-      progress: progress,
-      chapters: old.chapters,
-      downloadState: old.downloadState
-    )
   }
 
   private func observePlayer() {
@@ -260,6 +162,19 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
           )
         }
 
+        let contextMenu = PodcastEpisodeContextMenuModel(
+          episodeID: localEpisode.episodeID,
+          podcastID: podcastID,
+          podcastTitle: title,
+          podcastAuthor: author,
+          coverURL: coverURL,
+          episodeTitle: localEpisode.title,
+          episodeDuration: localEpisode.duration,
+          episodeSize: nil,
+          isCompleted: progress >= 1.0,
+          progress: progress
+        )
+
         return Episode(
           id: localEpisode.episodeID,
           title: localEpisode.title,
@@ -272,7 +187,8 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
           isCompleted: progress >= 1.0,
           progress: progress,
           chapters: chapters,
-          downloadState: downloadState
+          downloadState: downloadState,
+          contextMenu: contextMenu
         )
       }
 
@@ -331,6 +247,21 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
 
         let downloadState = downloadManager.downloadStates[apiEpisode.id] ?? .notDownloaded
 
+        let size = apiEpisode.audioTrack?.metadata?.size ?? apiEpisode.size
+        let contextMenu = PodcastEpisodeContextMenuModel(
+          episodeID: apiEpisode.id,
+          podcastID: podcastID,
+          podcastTitle: title,
+          podcastAuthor: author,
+          coverURL: coverURL,
+          episodeTitle: apiEpisode.title,
+          episodeDuration: apiEpisode.duration,
+          episodeSize: size,
+          isCompleted: progress >= 1.0,
+          progress: progress,
+          apiEpisode: apiEpisode
+        )
+
         return Episode(
           id: apiEpisode.id,
           title: apiEpisode.title,
@@ -338,12 +269,14 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
           episode: apiEpisode.episode,
           publishedAt: publishedAt,
           duration: apiEpisode.duration,
-          size: apiEpisode.audioTrack?.metadata?.size ?? apiEpisode.size,
+          size: size,
           description: apiEpisode.description,
           isCompleted: progress >= 1.0,
           progress: progress,
           chapters: chapters,
-          downloadState: downloadState
+          downloadState: downloadState,
+          contextMenu: contextMenu,
+          apiEpisode: apiEpisode
         )
       }
 

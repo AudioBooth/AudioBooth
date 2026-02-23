@@ -1,8 +1,11 @@
+import API
 import Combine
 import RichText
 import SwiftUI
 
 struct PodcastEpisodeDetailView: View {
+  private let audiobookshelf = Audiobookshelf.shared
+
   @ObservedObject var model: Model
 
   var body: some View {
@@ -22,6 +25,16 @@ struct PodcastEpisodeDetailView: View {
     }
     .navigationTitle(model.title)
     .navigationBarTitleDisplayMode(.inline)
+    .sheet(
+      isPresented: Binding(
+        get: { model.playlistSheetModel != nil },
+        set: { if !$0 { model.playlistSheetModel = nil } }
+      )
+    ) {
+      if let sheetModel = model.playlistSheetModel {
+        CollectionSelectorSheet(model: sheetModel)
+      }
+    }
   }
 
   private var header: some View {
@@ -53,7 +66,17 @@ struct PodcastEpisodeDetailView: View {
         }
       }
 
-      playButton
+      HStack(spacing: 12) {
+        playButton
+
+        if audiobookshelf.authentication.permissions?.download == true {
+          downloadButton
+        }
+
+        toggleFinishedButton
+
+        addToPlaylistButton
+      }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
@@ -72,6 +95,44 @@ struct PodcastEpisodeDetailView: View {
       .foregroundStyle(model.isPlaying ? .white : Color.accentColor)
       .background(model.isPlaying ? Color.accentColor : Color.accentColor.opacity(0.15))
       .clipShape(Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var downloadButton: some View {
+    Button(action: model.onDownload) {
+      Group {
+        switch model.downloadState {
+        case .notDownloaded:
+          Image(systemName: "arrow.down.circle")
+            .foregroundStyle(.secondary)
+        case .downloading:
+          Image(systemName: "stop.circle")
+            .foregroundStyle(.orange)
+        case .downloaded:
+          Image(systemName: "arrow.down.circle.fill")
+            .foregroundStyle(.green)
+        }
+      }
+      .font(.title3)
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var toggleFinishedButton: some View {
+    Button(action: model.onToggleFinished) {
+      Image(systemName: model.isCompleted ? "checkmark.shield.fill" : "checkmark.shield")
+        .font(.title3)
+        .foregroundStyle(model.isCompleted ? .green : .secondary)
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var addToPlaylistButton: some View {
+    Button(action: model.onAddToPlaylist) {
+      Image(systemName: "text.badge.plus")
+        .font(.title3)
+        .foregroundStyle(Color.accentColor)
     }
     .buttonStyle(.plain)
   }
@@ -163,6 +224,8 @@ extension PodcastEpisodeDetailView {
     var isPlaying: Bool
     var isCompleted: Bool
     var progress: Double
+    var downloadState: DownloadManager.DownloadState
+    var playlistSheetModel: CollectionSelectorSheet.Model?
 
     var episodeLabel: String? {
       if let season, !season.isEmpty, let episode, !episode.isEmpty {
@@ -184,6 +247,9 @@ extension PodcastEpisodeDetailView {
     }
 
     func onPlay() {}
+    func onToggleFinished() {}
+    func onDownload() {}
+    func onAddToPlaylist() {}
 
     init(
       title: String,
@@ -195,7 +261,8 @@ extension PodcastEpisodeDetailView {
       chapters: [PodcastDetailsView.Model.Chapter] = [],
       isPlaying: Bool = false,
       isCompleted: Bool = false,
-      progress: Double = 0
+      progress: Double = 0,
+      downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
       self.title = title
       self.description = description
@@ -207,6 +274,7 @@ extension PodcastEpisodeDetailView {
       self.isPlaying = isPlaying
       self.isCompleted = isCompleted
       self.progress = progress
+      self.downloadState = downloadState
     }
 
     init(episode: PodcastDetailsView.Model.Episode) {
@@ -220,6 +288,7 @@ extension PodcastEpisodeDetailView {
       self.isPlaying = false
       self.isCompleted = episode.isCompleted
       self.progress = episode.progress
+      self.downloadState = episode.downloadState
     }
   }
 }
