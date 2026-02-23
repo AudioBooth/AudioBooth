@@ -7,6 +7,8 @@ import SwiftUI
 struct PodcastDetailsView: View {
   @Environment(\.verticalSizeClass) private var verticalSizeClass
 
+  private let audiobookshelf = Audiobookshelf.shared
+
   @StateObject var model: Model
 
   @State private var isDescriptionExpanded = false
@@ -57,6 +59,23 @@ struct PodcastDetailsView: View {
     ) {
       if let sheetModel = activePlaylistModel {
         CollectionSelectorSheet(model: sheetModel)
+      }
+    }
+    .toolbar {
+      if audiobookshelf.authentication.permissions?.download == true {
+        ToolbarItem(placement: .topBarTrailing) {
+          ConfirmationButton(
+            confirmation: .init(
+              title: "Download \(model.selectedFilter.title)?",
+              message: "This will download \(model.filteredEpisodes.count) episodes.",
+              action: "Download"
+            ),
+            action: model.onDownloadAllEpisodes
+          ) {
+            Label("Download All", systemImage: "arrow.down.circle")
+          }
+          .tint(.primary)
+        }
       }
     }
     .onAppear(perform: model.onAppear)
@@ -652,6 +671,7 @@ extension PodcastDetailsView {
     func onAppear() {}
     func onPlayEpisode(_ episode: Episode) {}
     func onPlayAllEpisodes() {}
+    func onDownloadAllEpisodes() {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
       if selectedSort == sort {
         ascending.toggle()
