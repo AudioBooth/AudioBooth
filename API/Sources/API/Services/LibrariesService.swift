@@ -60,6 +60,13 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     }
   }
 
+  public func clearAllCaches() {
+    let keys = userDefaults.dictionaryRepresentation().keys
+    for key in keys where key.hasPrefix("personalized_") || key.hasPrefix("filterdata_") {
+      userDefaults.removeObject(forKey: key)
+    }
+  }
+
   public func fetch(serverID: String? = nil) async throws -> [Library] {
     let networkService: NetworkService
 

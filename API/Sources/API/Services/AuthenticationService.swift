@@ -390,6 +390,7 @@ public final class AuthenticationService: ObservableObject {
       audiobookshelf.libraries.current = nil
       ImagePipeline.shared.cache.removeAll()
     }
+    audiobookshelf.libraries.clearAllCaches()
     removeServer(serverID)
   }
 
@@ -399,6 +400,7 @@ public final class AuthenticationService: ObservableObject {
     server = nil
     permissions = nil
     audiobookshelf.libraries.current = nil
+    audiobookshelf.libraries.clearAllCaches()
     ImagePipeline.shared.cache.removeAll()
   }
 
