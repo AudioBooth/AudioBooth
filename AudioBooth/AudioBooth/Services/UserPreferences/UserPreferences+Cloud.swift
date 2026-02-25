@@ -51,6 +51,9 @@ extension UserPreferences {
     "ebookReader.wordSpacing",
     "ebookReader.letterSpacing",
     "authorsPageSortOrder",
+    "podcastEpisodeFilter",
+    "podcastEpisodeSort",
+    "podcastEpisodeSortAscending",
   ]
 
   func setupCloudSync() {

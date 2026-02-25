@@ -12,12 +12,27 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
   private var localPodcast: LocalPodcast?
   private var cancellables = Set<AnyCancellable>()
   private let episodeID: String?
+  private let preferences = UserPreferences.shared
 
   init(podcastID: String, episodeID: String? = nil) {
     self.episodeID = episodeID
     super.init(podcastID: podcastID)
+    selectedFilter = preferences.podcastEpisodeFilter
+    selectedSort = preferences.podcastEpisodeSort
+    ascending = preferences.podcastEpisodeSortAscending
     observePlayer()
     observeDownloadStates()
+  }
+
+  override func onFilterChanged(_ filter: EpisodeFilter) {
+    selectedFilter = filter
+    preferences.podcastEpisodeFilter = filter
+  }
+
+  override func onSortOptionTapped(_ sort: EpisodeSort) {
+    super.onSortOptionTapped(sort)
+    preferences.podcastEpisodeSort = selectedSort
+    preferences.podcastEpisodeSortAscending = ascending
   }
 
   override func onAppear() {

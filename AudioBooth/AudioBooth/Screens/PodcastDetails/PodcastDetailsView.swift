@@ -388,7 +388,7 @@ struct PodcastDetailsView: View {
       .padding(.horizontal)
 
       HStack {
-        Picker("Filter", selection: $model.selectedFilter) {
+        Picker("Filter", selection: Binding(get: { model.selectedFilter }, set: { model.onFilterChanged($0) })) {
           ForEach(Model.EpisodeFilter.allCases, id: \.self) { filter in
             Text(filter.title).tag(filter)
           }
@@ -672,6 +672,7 @@ extension PodcastDetailsView {
     func onPlayEpisode(_ episode: Episode) {}
     func onPlayAllEpisodes() {}
     func onDownloadAllEpisodes() {}
+    func onFilterChanged(_ filter: EpisodeFilter) {}
     func onSortOptionTapped(_ sort: EpisodeSort) {
       if selectedSort == sort {
         ascending.toggle()
@@ -788,7 +789,7 @@ extension PodcastDetailsView.Model {
 // MARK: - Enums
 
 extension PodcastDetailsView.Model {
-  enum EpisodeFilter: CaseIterable {
+  enum EpisodeFilter: String, CaseIterable {
     case all, incomplete, complete, inProgress
 
     var title: String {
@@ -801,7 +802,7 @@ extension PodcastDetailsView.Model {
     }
   }
 
-  enum EpisodeSort: CaseIterable {
+  enum EpisodeSort: String, CaseIterable {
     case pubDate, title, season, episode
 
     var title: String {

@@ -121,6 +121,15 @@ final class UserPreferences: ObservableObject {
   @AppStorage("autoPlayNextInQueue")
   var autoPlayNextInQueue: Bool = true
 
+  @AppStorage("podcastEpisodeFilter")
+  var podcastEpisodeFilter: PodcastDetailsView.Model.EpisodeFilter = .all
+
+  @AppStorage("podcastEpisodeSort")
+  var podcastEpisodeSort: PodcastDetailsView.Model.EpisodeSort = .pubDate
+
+  @AppStorage("podcastEpisodeSortAscending")
+  var podcastEpisodeSortAscending: Bool = false
+
   let cloud = NSUbiquitousKeyValueStore.default
   var cloudObserver: NSObjectProtocol?
   var localObserver: NSObjectProtocol?
