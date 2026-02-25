@@ -133,7 +133,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   override func onProgressChanged(_ progress: Double) {
     guard let player else { return }
 
-    if let chapter = chapters?.current {
+    if !preferences.showFullBookDuration, let chapter = chapters?.current {
       let duration = chapter.end - chapter.start
       let currentTime = chapter.start + (duration * progress)
       player.seek(to: CMTime(seconds: currentTime, preferredTimescale: 1000))
