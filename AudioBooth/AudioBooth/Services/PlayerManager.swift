@@ -203,6 +203,35 @@ extension PlayerManager: PlayerManagerProtocol {
     }
   }
 
+  private func play(episodeID: String, podcastID: String) async {
+    if current?.id == episodeID {
+      play()
+      return
+    }
+
+    if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
+      setCurrent(localEpisode)
+      play()
+      return
+    }
+
+    do {
+      let podcast = try await Audiobookshelf.shared.podcasts.fetch(id: podcastID)
+      if let episode = podcast.media.episodes?.first(where: { $0.id == episodeID }) {
+        setCurrent(
+          episode: episode,
+          podcastID: podcastID,
+          podcastTitle: podcast.title,
+          podcastAuthor: podcast.author,
+          coverURL: podcast.coverURL()
+        )
+        play()
+      }
+    } catch {
+      print("Failed to play episode: \(error)")
+    }
+  }
+
   func open(_ bookID: String) async {
     do {
       if current?.id == bookID {
@@ -463,7 +492,11 @@ extension PlayerManager {
     let nextItem = queue.removeFirst()
 
     Task {
-      await play(nextItem.bookID)
+      if let podcastID = nextItem.podcastID {
+        await play(episodeID: nextItem.bookID, podcastID: podcastID)
+      } else {
+        await play(nextItem.bookID)
+      }
     }
   }
 
@@ -473,7 +506,8 @@ extension PlayerManager {
         bookID: current.id,
         title: current.title,
         details: current.author,
-        coverURL: current.coverURL
+        coverURL: current.coverURL,
+        podcastID: current.podcastID
       )
       queue.insert(currentQueueItem, at: 0)
     }
@@ -481,7 +515,11 @@ extension PlayerManager {
     queue.removeAll { $0.bookID == item.bookID }
 
     Task {
-      await play(item.bookID)
+      if let podcastID = item.podcastID {
+        await play(episodeID: item.bookID, podcastID: podcastID)
+      } else {
+        await play(item.bookID)
+      }
     }
   }
 
