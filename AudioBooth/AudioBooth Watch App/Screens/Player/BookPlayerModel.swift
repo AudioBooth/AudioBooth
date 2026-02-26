@@ -54,6 +54,7 @@ final class BookPlayerModel: PlayerView.Model {
       chapters: nil
     )
 
+    setupProgressObserver()
     setupOptionsModel()
     setupChapters()
     load()
@@ -308,6 +309,7 @@ final class BookPlayerModel: PlayerView.Model {
     if isPlaying {
       player.rate = 0
     } else {
+      syncToLatestKnownProgressIfNeeded()
       player.rate = 1.0
     }
   }
@@ -567,6 +569,7 @@ final class BookPlayerModel: PlayerView.Model {
           let timeSinceLastReport = now.timeIntervalSince(lastReport)
           if timeSinceLastReport >= 30 {
             self.connectivityManager.reportProgress(
+              bookID: book.id,
               sessionID: sessionID,
               currentTime: globalTime,
               timeListened: timeSinceLastReport
@@ -619,6 +622,7 @@ final class BookPlayerModel: PlayerView.Model {
     let now = Date()
     let timeListened = lastProgressReportTime.map { now.timeIntervalSince($0) } ?? 0
     connectivityManager.reportProgress(
+      bookID: book.id,
       sessionID: sessionID,
       currentTime: currentTime,
       timeListened: timeListened
@@ -635,6 +639,44 @@ final class BookPlayerModel: PlayerView.Model {
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+  }
+
+  private func setupProgressObserver() {
+    connectivityManager.$progress
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.syncToLatestKnownProgressIfNeeded()
+      }
+      .store(in: &cancellables)
+
+    syncToLatestKnownProgressIfNeeded()
+  }
+
+  private func syncToLatestKnownProgressIfNeeded() {
+    guard !isPlaying else { return }
+
+    let latest = connectivityManager.progress[bookID] ?? current
+    guard abs(latest - current) > 0.5 else { return }
+
+    current = latest
+
+    let duration = max(totalDuration, book.duration, 1)
+    remaining = max(0, duration - latest)
+    progress = min(1, max(0, latest / duration))
+    totalTimeRemaining = remaining
+
+    guard let player else { return }
+
+    let tracks = localBook?.tracks ?? book.tracks
+    guard let track = findTrack(for: latest, in: tracks) else { return }
+
+    if track.index != currentTrackIndex {
+      loadTrack(track, seekTo: latest)
+    } else {
+      let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
+      let seekTime = max(0, latest - trackStartTime)
+      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+    }
   }
 
   @MainActor
