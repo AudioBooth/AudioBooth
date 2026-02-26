@@ -44,9 +44,30 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     } onChange: { [weak self] in
       guard let self else { return }
       RunLoop.main.perform {
-        self.currentIndex = self.chapters.index(for: self.mediaProgress.currentTime)
+        let time = self.mediaProgress.currentTime
+        if self.isShuffled {
+          self.currentIndex = self.chapters.unsortedIndex(for: time)
+        } else {
+          self.currentIndex = self.chapters.index(for: time)
+        }
         self.observeMediaProgress()
       }
+    }
+  }
+
+  override func onShuffleTapped() {
+    isShuffled.toggle()
+    if isShuffled {
+      let current = chapters[currentIndex]
+      var remaining = chapters
+      remaining.remove(at: currentIndex)
+      remaining.shuffle()
+      chapters = [current] + remaining
+      currentIndex = 0
+    } else {
+      let current = chapters[currentIndex]
+      chapters.sort { $0.start < $1.start }
+      currentIndex = chapters.firstIndex(of: current) ?? 0
     }
   }
 
@@ -61,10 +82,9 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
       record(chapter: previousChapter, position: seekTime)
     } else {
-      let chapter = chapters[currentIndex]
       let seekTime = currentChapter.start + 0.1
       player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-      record(chapter: chapter, position: seekTime)
+      record(chapter: currentChapter, position: seekTime)
     }
   }
 
@@ -103,6 +123,15 @@ extension Array where Element == ChapterPickerSheet.Model.Chapter {
         return index
       }
       end = chapter.start
+    }
+    return 0
+  }
+
+  func unsortedIndex(for time: TimeInterval) -> Int {
+    for (index, chapter) in enumerated() {
+      if time >= chapter.start && time < chapter.end {
+        return index
+      }
     }
     return 0
   }

@@ -51,6 +51,13 @@ struct ChapterPickerSheet: View {
       .navigationTitle("Chapters")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          Button(action: model.onShuffleTapped) {
+            Image(systemName: "shuffle")
+          }
+          .tint(model.isShuffled ? .accentColor : .primary)
+        }
+
         ToolbarItem(placement: .topBarTrailing) {
           Button("Done") {
             model.isPresented = false
@@ -87,6 +94,7 @@ extension ChapterPickerSheet {
     var chapters: [Chapter]
     var currentIndex: Int
     var isPresented: Bool = false
+    var isShuffled: Bool = false
 
     init(chapters: [Chapter] = [], currentIndex: Int = 0) {
       self.chapters = chapters
@@ -96,6 +104,7 @@ extension ChapterPickerSheet {
     func onChapterTapped(at index: Int) {}
     func onPreviousChapterTapped() {}
     func onNextChapterTapped() {}
+    func onShuffleTapped() {}
   }
 }
 

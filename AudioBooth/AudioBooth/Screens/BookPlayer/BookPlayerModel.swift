@@ -414,7 +414,7 @@ extension BookPlayerModel {
   }
 
   private func syncSessionProgress() {
-    guard sessionManager.current != nil else { return }
+    guard sessionManager.current != nil, chapters?.isShuffled != true else { return }
 
     Task {
       do {
@@ -1279,6 +1279,7 @@ extension BookPlayerModel {
 
   private func recordBookCompletionIfNeeded() {
     guard
+      chapters?.isShuffled != true,
       !mediaProgress.isFinished,
       player?.status == .readyToPlay,
       mediaProgress.duration > 0,
