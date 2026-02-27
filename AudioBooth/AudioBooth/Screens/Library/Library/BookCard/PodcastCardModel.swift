@@ -4,6 +4,7 @@ import Models
 
 final class PodcastCardModel: BookCard.Model {
   private let podcast: Podcast
+  private var progressObservation: Task<Void, Never>?
 
   init(_ podcast: Podcast, sortBy: SortBy?) {
     self.podcast = podcast
@@ -67,5 +68,18 @@ final class PodcastCardModel: BookCard.Model {
       author: author,
       episodeContextMenu: episodeContextMenu
     )
+
+    if sortBy == nil {
+      observeMediaProgress()
+    }
+  }
+
+  private func observeMediaProgress() {
+    let episodeID = id
+    progressObservation = Task { [weak self] in
+      for await _ in MediaProgress.observe(where: \.bookID, equals: episodeID) {
+        self?.cover.progress = MediaProgress.progress(for: episodeID)
+      }
+    }
   }
 }
