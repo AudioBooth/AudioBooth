@@ -399,17 +399,8 @@ final class BookPlayerModel: PlayerView.Model {
     guard index >= 0, index < chapters.count else { return }
 
     let chapter = chapters[index]
-    let tracks = localBook?.tracks ?? book.tracks
 
-    guard let track = findTrack(for: chapter.start, in: tracks) else { return }
-
-    if track.index != currentTrackIndex {
-      loadTrack(track, seekTo: chapter.start)
-    } else if let player {
-      let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
-      let seekTime = chapter.start - trackStartTime
-      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-    }
+    seekToGlobalTime(chapter.start)
 
     currentChapterIndex = index
     self.chapters?.currentIndex = index
@@ -567,12 +558,13 @@ final class BookPlayerModel: PlayerView.Model {
         let now = Date()
         if let lastReport = self.lastProgressReportTime {
           let timeSinceLastReport = now.timeIntervalSince(lastReport)
-          if timeSinceLastReport >= 30 {
+          if timeSinceLastReport >= 30 || globalTime < 1.0 {
             self.connectivityManager.reportProgress(
               bookID: book.id,
               sessionID: sessionID,
               currentTime: globalTime,
-              timeListened: timeSinceLastReport
+              timeListened: timeSinceLastReport,
+              duration: self.totalDuration
             )
             self.lastProgressReportTime = now
           }
@@ -625,7 +617,8 @@ final class BookPlayerModel: PlayerView.Model {
       bookID: book.id,
       sessionID: sessionID,
       currentTime: currentTime,
-      timeListened: timeListened
+      timeListened: timeListened,
+      duration: self.totalDuration
     )
     lastProgressReportTime = now
   }
@@ -665,18 +658,24 @@ final class BookPlayerModel: PlayerView.Model {
     progress = min(1, max(0, latest / duration))
     totalTimeRemaining = remaining
 
+    seekToGlobalTime(latest)
+  }
+
+  private func seekToGlobalTime(_ globalTime: Double) {
     guard let player else { return }
 
     let tracks = localBook?.tracks ?? book.tracks
-    guard let track = findTrack(for: latest, in: tracks) else { return }
+    guard let track = findTrack(for: globalTime, in: tracks) else { return }
 
     if track.index != currentTrackIndex {
-      loadTrack(track, seekTo: latest)
-    } else {
-      let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
-      let seekTime = max(0, latest - trackStartTime)
-      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+      loadTrack(track, seekTo: globalTime)
+      return
     }
+
+    let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
+    let seekTime = max(0, globalTime - trackStartTime)
+
+    player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
   }
 
   @MainActor

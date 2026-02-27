@@ -259,13 +259,15 @@ extension WatchConnectivityManager: WCSessionDelegate {
         if let bookID = message["bookID"] as? String,
           let sessionID = message["sessionID"] as? String,
           let currentTime = message["currentTime"] as? Double,
-          let timeListened = message["timeListened"] as? Double
+          let timeListened = message["timeListened"] as? Double,
+          let duration = message["duration"] as? Double
         {
           handleProgressReport(
             bookID: bookID,
             sessionID: sessionID,
             currentTime: currentTime,
-            timeListened: timeListened
+            timeListened: timeListened,
+            duration: duration
           )
         }
       case "syncDownloadedBooks":
@@ -422,15 +424,16 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
   }
 
-  private func handleProgressReport(bookID: String, sessionID: String, currentTime: Double, timeListened: Double) {
+  private func handleProgressReport(
+    bookID: String,
+    sessionID: String,
+    currentTime: Double,
+    timeListened: Double,
+    duration: Double
+  ) {
     Task {
       do {
-        let duration =
-          (try? LocalBook.fetch(bookID: bookID))?.duration
-          ?? (try? MediaProgress.fetch(bookID: bookID))?.duration
-          ?? 0
-
-        let safeDuration = (duration > 0) ? duration : max(currentTime, 1)
+        let safeDuration = max(duration, 1)
         try? MediaProgress.updateProgress(
           for: bookID,
           currentTime: currentTime,
