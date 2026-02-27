@@ -447,10 +447,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
           currentTime: currentTime
         )
 
-        await MainActor.run {
-          self.refreshProgress()
-        }
-
         AppLogger.watchConnectivity.debug("Synced watch progress: \(currentTime)s")
       } catch {
         AppLogger.watchConnectivity.error("Failed to sync watch progress: \(error)")

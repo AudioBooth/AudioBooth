@@ -646,10 +646,11 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func syncToLatestKnownProgressIfNeeded() {
-    guard !isPlaying else { return }
-
-    let latest = connectivityManager.progress[bookID] ?? current
-    guard abs(latest - current) > 0.5 else { return }
+    guard
+      !isPlaying,
+      let latest = connectivityManager.progress[bookID],
+      latest - current > 0.5
+    else { return }
 
     current = latest
 
