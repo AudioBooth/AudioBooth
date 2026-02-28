@@ -256,14 +256,18 @@ extension WatchConnectivityManager: WCSessionDelegate {
       case "requestContext":
         refreshProgress()
       case "reportProgress":
-        if let sessionID = message["sessionID"] as? String,
+        if let bookID = message["bookID"] as? String,
+          let sessionID = message["sessionID"] as? String,
           let currentTime = message["currentTime"] as? Double,
-          let timeListened = message["timeListened"] as? Double
+          let timeListened = message["timeListened"] as? Double,
+          let duration = message["duration"] as? Double
         {
           handleProgressReport(
+            bookID: bookID,
             sessionID: sessionID,
             currentTime: currentTime,
-            timeListened: timeListened
+            timeListened: timeListened,
+            duration: duration
           )
         }
       case "syncDownloadedBooks":
@@ -420,19 +424,32 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
   }
 
-  private func handleProgressReport(sessionID: String, currentTime: Double, timeListened: Double) {
+  private func handleProgressReport(
+    bookID: String,
+    sessionID: String,
+    currentTime: Double,
+    timeListened: Double,
+    duration: Double
+  ) {
     Task {
       do {
+        let safeDuration = max(duration, 1)
+        try? MediaProgress.updateProgress(
+          for: bookID,
+          currentTime: currentTime,
+          duration: safeDuration,
+          progress: min(1, max(0, currentTime / safeDuration))
+        )
+
         try await Audiobookshelf.shared.sessions.sync(
           sessionID,
           timeListened: timeListened,
           currentTime: currentTime
         )
+
         AppLogger.watchConnectivity.debug("Synced watch progress: \(currentTime)s")
       } catch {
-        AppLogger.watchConnectivity.error(
-          "Failed to sync watch progress: \(error)"
-        )
+        AppLogger.watchConnectivity.error("Failed to sync watch progress: \(error)")
       }
     }
   }

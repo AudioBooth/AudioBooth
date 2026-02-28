@@ -164,14 +164,16 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     AppLogger.watchConnectivity.info("Sent \(ids.count) downloaded book IDs to iPhone")
   }
 
-  func reportProgress(sessionID: String, currentTime: Double, timeListened: Double) {
+  func reportProgress(bookID: String, sessionID: String, currentTime: Double, timeListened: Double, duration: Double) {
     guard let session = session, session.isReachable else { return }
 
     let message: [String: Any] = [
       "command": "reportProgress",
+      "bookID": bookID,
       "sessionID": sessionID,
       "currentTime": currentTime,
       "timeListened": timeListened,
+      "duration": duration,
     ]
 
     session.sendMessage(message, replyHandler: nil, errorHandler: nil)
@@ -272,7 +274,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
           duration: duration,
           chapters: chapters,
           tracks: tracks,
-          currentTime: 0
+          currentTime: self.progress[id, default: 0]
         )
 
         AppLogger.watchConnectivity.info("Started session for \(id)")
