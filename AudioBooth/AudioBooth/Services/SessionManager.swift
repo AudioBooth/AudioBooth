@@ -60,8 +60,7 @@ extension SessionManager {
       return item
     }
 
-    let downloadKey = episodeID ?? itemID
-    if downloadManager.downloadStates[downloadKey] == .downloaded, let item {
+    if let item, item.isDownloaded {
       startLocalSession(
         libraryItemID: itemID,
         episodeID: episodeID,

@@ -43,6 +43,27 @@ final class DownloadManager: NSObject, ObservableObject {
 
   var backgroundCompletionHandler: (() -> Void)?
 
+  override init() {
+    super.init()
+    updateDownloadStates()
+  }
+
+  func updateDownloadStates() {
+    guard Audiobookshelf.shared.isAuthenticated else { return }
+
+    if let books = try? LocalBook.fetchAll() {
+      for book in books {
+        downloadStates[book.bookID] = book.isDownloaded ? .downloaded : .notDownloaded
+      }
+    }
+
+    if let episodes = try? LocalEpisode.fetchAll() {
+      for episode in episodes {
+        downloadStates[episode.episodeID] = episode.isDownloaded ? .downloaded : .notDownloaded
+      }
+    }
+  }
+
   func isDownloading(for bookID: String) -> Bool {
     activeOperations[bookID] != nil
   }

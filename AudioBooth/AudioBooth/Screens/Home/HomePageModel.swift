@@ -47,7 +47,7 @@ final class HomePageModel: HomePage.Model {
       await fetchContent()
     }
 
-    updateDownloadStates()
+    downloadManager.updateDownloadStates()
   }
 
   override func refresh() async {
@@ -75,32 +75,6 @@ final class HomePageModel: HomePage.Model {
 
   override func onPreferencesChanged() {
     rebuildSections()
-  }
-}
-
-extension HomePageModel {
-  private func updateDownloadStates() {
-    guard Audiobookshelf.shared.isAuthenticated else { return }
-
-    if let books = try? LocalBook.fetchAll() {
-      for book in books {
-        if book.isDownloaded {
-          downloadManager.downloadStates[book.bookID] = .downloaded
-        } else {
-          downloadManager.downloadStates[book.bookID] = .notDownloaded
-        }
-      }
-    }
-
-    if let episodes = try? LocalEpisode.fetchAll() {
-      for episode in episodes {
-        if episode.isDownloaded {
-          downloadManager.downloadStates[episode.episodeID] = .downloaded
-        } else {
-          downloadManager.downloadStates[episode.episodeID] = .notDownloaded
-        }
-      }
-    }
   }
 }
 
