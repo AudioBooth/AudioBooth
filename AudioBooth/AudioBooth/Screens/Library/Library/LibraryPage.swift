@@ -57,7 +57,7 @@ struct LibraryPage: View {
               hasMorePages: model.hasMorePages,
               onLoadMore: model.loadNextPageIfNeeded
             )
-            .environment(\.bookCardDisplayMode, preferences.libraryDisplayMode)
+            .environment(\.itemDisplayMode, preferences.libraryDisplayMode)
             .padding(.horizontal)
           }
         }

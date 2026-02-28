@@ -2,45 +2,49 @@ import SwiftUI
 
 struct SeriesView: View {
   let series: [SeriesCard.Model]
-  let displayMode: SeriesCard.DisplayMode
   var hasMorePages: Bool = false
   var onLoadMore: (() -> Void)?
 
-  private var columns: [GridItem] {
-    switch displayMode {
-    case .row:
-      [GridItem(.adaptive(minimum: 250), spacing: 20)]
-    case .card:
-      [GridItem(.adaptive(minimum: 100), spacing: 20)]
-    }
-  }
-
-  private var gridSpacing: CGFloat {
-    20
-  }
+  @Environment(\.itemDisplayMode) private var displayMode
 
   var body: some View {
-    LazyVGrid(columns: columns, spacing: gridSpacing) {
-      ForEach(series, id: \.id) { series in
-        SeriesCard(model: series)
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      }
-
-      if hasMorePages {
-        ProgressView()
-          .frame(maxWidth: .infinity)
-          .padding()
-          .onAppear {
-            onLoadMore?()
-          }
+    Group {
+      switch displayMode {
+      case .row:
+        LazyVStack(spacing: 12) {
+          seriesItems
+        }
+      case .card:
+        LazyVGrid(
+          columns: [GridItem(.adaptive(minimum: 100), spacing: 20)],
+          spacing: 20
+        ) {
+          seriesItems
+        }
       }
     }
-    .environment(\.seriesCardDisplayMode, displayMode)
+  }
+
+  @ViewBuilder
+  private var seriesItems: some View {
+    ForEach(series, id: \.id) { series in
+      SeriesCard(model: series)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    if hasMorePages {
+      ProgressView()
+        .frame(maxWidth: .infinity)
+        .padding()
+        .onAppear {
+          onLoadMore?()
+        }
+    }
   }
 }
 
 #Preview("SeriesView - Empty") {
-  SeriesView(series: [], displayMode: .row)
+  SeriesView(series: [])
 }
 
 #Preview("SeriesView - Row") {
@@ -93,9 +97,10 @@ struct SeriesView: View {
   ]
 
   ScrollView {
-    SeriesView(series: sampleSeries, displayMode: .row)
+    SeriesView(series: sampleSeries)
       .padding()
   }
+  .environment(\.itemDisplayMode, .row)
 }
 
 #Preview("SeriesView - Card") {
@@ -127,7 +132,8 @@ struct SeriesView: View {
   ]
 
   ScrollView {
-    SeriesView(series: sampleSeries, displayMode: .card)
+    SeriesView(series: sampleSeries)
       .padding()
   }
+  .environment(\.itemDisplayMode, .card)
 }

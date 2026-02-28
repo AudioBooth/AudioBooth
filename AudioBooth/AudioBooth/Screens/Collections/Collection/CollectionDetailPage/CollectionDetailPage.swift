@@ -175,7 +175,7 @@ struct CollectionDetailPage: View {
         .padding(.horizontal)
       }
     }
-    .environment(\.bookCardDisplayMode, .card)
+    .environment(\.itemDisplayMode, .card)
   }
 
   private var listView: some View {
@@ -204,7 +204,7 @@ struct CollectionDetailPage: View {
       }
     }
     .listStyle(.plain)
-    .environment(\.bookCardDisplayMode, .row)
+    .environment(\.itemDisplayMode, .row)
   }
 
   private func episodeRow(_ book: BookCard.Model) -> some View {

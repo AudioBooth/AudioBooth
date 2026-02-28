@@ -73,9 +73,6 @@ final class UserPreferences: ObservableObject {
   @AppStorage("libraryDisplayMode")
   var libraryDisplayMode: BookCard.DisplayMode = .card
 
-  @AppStorage("seriesDisplayMode")
-  var seriesDisplayMode: SeriesCard.DisplayMode = .row
-
   @AppStorage("collapseSeriesInLibrary")
   var collapseSeriesInLibrary: Bool = false
 

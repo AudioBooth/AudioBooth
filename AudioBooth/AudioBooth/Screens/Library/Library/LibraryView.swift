@@ -25,7 +25,6 @@ struct LibraryView: View {
               .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
           case .series(let model):
             SeriesCard(model: model)
-              .environment(\.seriesCardDisplayMode, .card)
               .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
           }
         }

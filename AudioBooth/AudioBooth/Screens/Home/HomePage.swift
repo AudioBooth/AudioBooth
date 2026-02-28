@@ -260,12 +260,12 @@ struct HomePage: View {
           HStack(alignment: .top, spacing: 16) {
             ForEach(items) { series in
               SeriesCard(model: series, titleFont: .footnote)
-                .frame(width: preferences.seriesDisplayMode == .card ? 120 : 240)
+                .frame(width: 120)
             }
           }
           .padding(.horizontal)
         }
-        .environment(\.seriesCardDisplayMode, preferences.seriesDisplayMode)
+        .environment(\.itemDisplayMode, .card)
 
       case .authors(let items):
         Text(section.title)

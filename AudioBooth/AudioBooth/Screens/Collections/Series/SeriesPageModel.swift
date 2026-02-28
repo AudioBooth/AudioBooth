@@ -13,13 +13,12 @@ final class SeriesPageModel: SeriesPage.Model {
   private let itemsPerPage: Int = 50
 
   init() {
-    super.init(hasMorePages: true, displayMode: UserPreferences.shared.seriesDisplayMode)
+    super.init(hasMorePages: true)
     self.search = SearchViewModel()
   }
 
   override func onDisplayModeTapped() {
-    displayMode = displayMode == .row ? .card : .row
-    preferences.seriesDisplayMode = displayMode
+    preferences.libraryDisplayMode = preferences.libraryDisplayMode == .row ? .card : .row
   }
 
   override func onAppear() {

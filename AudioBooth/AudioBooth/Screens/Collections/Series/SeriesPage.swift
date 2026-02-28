@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SeriesPage: View {
   @ObservedObject var model: Model
+  @ObservedObject private var preferences = UserPreferences.shared
 
   var body: some View {
     content
@@ -46,9 +47,9 @@ struct SeriesPage: View {
         Menu {
           Toggle(
             isOn: Binding(
-              get: { model.displayMode == .card },
+              get: { preferences.libraryDisplayMode == .card },
               set: { isOn in
-                if isOn && model.displayMode != .card {
+                if isOn && preferences.libraryDisplayMode != .card {
                   model.onDisplayModeTapped()
                 }
               }
@@ -59,9 +60,9 @@ struct SeriesPage: View {
 
           Toggle(
             isOn: Binding(
-              get: { model.displayMode == .row },
+              get: { preferences.libraryDisplayMode == .row },
               set: { isOn in
-                if isOn && model.displayMode != .row {
+                if isOn && preferences.libraryDisplayMode != .row {
                   model.onDisplayModeTapped()
                 }
               }
@@ -82,12 +83,12 @@ struct SeriesPage: View {
     ScrollView {
       SeriesView(
         series: model.series,
-        displayMode: model.displayMode,
         hasMorePages: model.hasMorePages,
         onLoadMore: model.loadNextPageIfNeeded
       )
       .padding(.horizontal)
     }
+    .environment(\.itemDisplayMode, preferences.libraryDisplayMode)
   }
 }
 
@@ -95,7 +96,6 @@ extension SeriesPage {
   @Observable class Model: ObservableObject {
     var isLoading: Bool
     var hasMorePages: Bool
-    var displayMode: SeriesCard.DisplayMode
 
     var series: [SeriesCard.Model]
     var search: SearchView.Model = SearchView.Model()
@@ -108,12 +108,10 @@ extension SeriesPage {
     init(
       isLoading: Bool = false,
       hasMorePages: Bool = false,
-      displayMode: SeriesCard.DisplayMode = .row,
       series: [SeriesCard.Model] = []
     ) {
       self.isLoading = isLoading
       self.hasMorePages = hasMorePages
-      self.displayMode = displayMode
       self.series = series
     }
   }

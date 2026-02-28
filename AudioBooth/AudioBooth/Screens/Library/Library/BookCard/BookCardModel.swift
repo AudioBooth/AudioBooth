@@ -67,117 +67,70 @@ final class BookCardModel: BookCard.Model {
     sortBy: SortBy?,
     options: Options = []
   ) {
-    let id: String
     let title: String
-    let bookCount: Int?
-    let details: String?
-    let sequence: String?
-    let author: String?
-    let narrator: String?
-    let publishedYear: String?
-
-    if let collapsedSeries = item.collapsedSeries {
-      id = collapsedSeries.id
-
-      if sortBy == .title, options.contains(.ignorePrefix) {
-        title = collapsedSeries.nameIgnorePrefix ?? collapsedSeries.name
-      } else {
-        title = collapsedSeries.name
-
-      }
-
-      bookCount = collapsedSeries.numBooks
-      details = nil
-      sequence = nil
-      author = nil
-      narrator = nil
-      publishedYear = nil
+    if sortBy == .title, options.contains(.ignorePrefix) {
+      title = item.titleIgnorePrefix
     } else {
-      id = item.id
+      title = item.title
+    }
 
-      if sortBy == .title, options.contains(.ignorePrefix) {
-        title = item.titleIgnorePrefix
+    let sequence = options.contains(.showSequence) ? item.series?.first?.sequence : nil
+    let author = item.authorName
+    let narrator = item.media.metadata.narratorName
+    let publishedYear = item.publishedYear
+
+    let time: Date.FormatStyle.TimeStyle = UserPreferences.shared.libraryDisplayMode == .row ? .shortened : .omitted
+
+    let details: String?
+    switch sortBy {
+    case .publishedYear:
+      details = item.publishedYear.map({ "Published \($0)" })
+    case .title, .authorName, .authorNameLF:
+      details = nil
+    case .addedAt:
+      details = "Added \(item.addedAt.formatted(date: .numeric, time: time))"
+    case .updatedAt:
+      details = "Updated \(item.updatedAt.formatted(date: .numeric, time: time))"
+    case .size:
+      details = item.size.map { "Size \($0.formatted(.byteCount(style: .file)))" }
+    case .duration:
+      details = Duration.seconds(item.duration).formatted(
+        .units(allowed: [.hours, .minutes, .seconds], width: .narrow)
+      )
+    case .progress:
+      if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
+        details = "Progress: \(mediaProgress.lastUpdate.formatted(date: .numeric, time: time))"
       } else {
-        title = item.title
-      }
-
-      sequence = options.contains(.showSequence) ? item.series?.first?.sequence : nil
-      author = item.authorName
-      narrator = item.media.metadata.narratorName
-      publishedYear = item.publishedYear
-      bookCount = nil
-
-      let time: Date.FormatStyle.TimeStyle
-      if UserPreferences.shared.libraryDisplayMode == .row {
-        time = .shortened
-      } else {
-        time = .omitted
-      }
-
-      switch sortBy {
-      case .publishedYear:
-        details = item.publishedYear.map({ "Published \($0)" })
-      case .title, .authorName, .authorNameLF:
-        details = nil
-      case .addedAt:
-        details =
-          "Added \(item.addedAt.formatted(date: .numeric, time: time))"
-      case .updatedAt:
-        details =
-          "Updated \(item.updatedAt.formatted(date: .numeric, time: time))"
-      case .size:
-        details = item.size.map {
-          "Size \($0.formatted(.byteCount(style: .file)))"
-        }
-      case .duration:
-        details = Duration.seconds(item.duration).formatted(
-          .units(
-            allowed: [.hours, .minutes, .seconds],
-            width: .narrow
-          )
-        )
-      case .progress:
-        if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
-          details = "Progress: \(mediaProgress.lastUpdate.formatted(date: .numeric, time: time))"
-        } else {
-          details = nil
-        }
-      case .progressFinishedAt:
-        if let mediaProgress = try? MediaProgress.fetch(bookID: item.id), mediaProgress.isFinished {
-          let date = mediaProgress.finishedAt ?? mediaProgress.lastUpdate
-          details = "Finished \(date.formatted(date: .numeric, time: time))"
-        } else {
-          details = nil
-        }
-      case .progressCreatedAt:
-        if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
-          details = "Started \(mediaProgress.lastPlayedAt.formatted(date: .numeric, time: time))"
-        } else {
-          details = nil
-        }
-      default:
         details = nil
       }
+    case .progressFinishedAt:
+      if let mediaProgress = try? MediaProgress.fetch(bookID: item.id), mediaProgress.isFinished {
+        let date = mediaProgress.finishedAt ?? mediaProgress.lastUpdate
+        details = "Finished \(date.formatted(date: .numeric, time: time))"
+      } else {
+        details = nil
+      }
+    case .progressCreatedAt:
+      if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
+        details = "Started \(mediaProgress.lastPlayedAt.formatted(date: .numeric, time: time))"
+      } else {
+        details = nil
+      }
+    default:
+      details = nil
     }
 
     self.item = .remote(item)
-
-    let initialProgress: Double?
-    if let collapsedSeries = item.collapsedSeries {
-      initialProgress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
-    } else {
-      initialProgress = MediaProgress.progress(for: id)
-    }
 
     let cover = Cover.Model(
       url: item.coverURL(),
       title: title,
       author: author,
-      progress: initialProgress
+      progress: MediaProgress.progress(for: item.id)
     )
 
     super.init(
-      id: id,
+      id: item.id,
       title: title,
       details: details,
       cover: cover,
@@ -185,7 +138,6 @@ final class BookCardModel: BookCard.Model {
       author: author,
       narrator: narrator,
       publishedYear: publishedYear,
-      bookCount: bookCount,
       hasEbook: item.media.ebookFile != nil || item.media.ebookFormat != nil
     )
 
@@ -212,20 +164,6 @@ final class BookCardModel: BookCard.Model {
   }
 
   override func onAppear() {
-    if case .remote(let book) = item, let collapsedSeries = book.collapsedSeries {
-      cover.progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
-    } else {
-      cover.progress = MediaProgress.progress(for: id)
-    }
-  }
-
-  private static func calculateSeriesProgress(libraryItemIds: [String]) -> Double? {
-    guard !libraryItemIds.isEmpty else { return nil }
-
-    let totalProgress = libraryItemIds.compactMap { bookID in
-      MediaProgress.progress(for: bookID)
-    }.reduce(0, +)
-
-    return totalProgress / Double(libraryItemIds.count)
+    cover.progress = MediaProgress.progress(for: id)
   }
 }

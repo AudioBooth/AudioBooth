@@ -29,29 +29,34 @@ struct SearchPage: View {
 
 struct SearchView: View {
   @ObservedObject var model: Model
-
   var body: some View {
-    content
-      .onAppear {
-        model.onSearchChanged(model.searchText)
-      }
-      .onChange(of: model.searchText) { _, newValue in
-        model.onSearchChanged(newValue)
-      }
+    ScrollView {
+      content
+    }
+    .scrollDismissesKeyboard(.interactively)
+    .onAppear {
+      model.onSearchChanged(model.searchText)
+    }
+    .onChange(of: model.searchText) { _, newValue in
+      model.onSearchChanged(newValue)
+    }
   }
 
   @ViewBuilder
   var content: some View {
     if model.searchText.isEmpty {
       emptyState
+        .containerRelativeFrame(.vertical)
     } else if model.isLoading {
       loadingState
+        .containerRelativeFrame(.vertical)
     } else if model.books.isEmpty, model.series.isEmpty, model.authors.isEmpty,
       model.narrators.isEmpty, model.tags.isEmpty, model.genres.isEmpty
     {
       noResultsState
+        .containerRelativeFrame(.vertical)
     } else {
-      resultsView
+      resultsContent
     }
   }
 
@@ -66,7 +71,6 @@ struct SearchView: View {
         .foregroundColor(.secondary)
         .multilineTextAlignment(.center)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding()
   }
 
@@ -79,7 +83,6 @@ struct SearchView: View {
         .font(.headline)
         .foregroundColor(.secondary)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
   var noResultsState: some View {
@@ -96,38 +99,36 @@ struct SearchView: View {
         .font(.subheadline)
         .foregroundColor(.secondary)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
-  var resultsView: some View {
-    ScrollView {
-      LazyVStack(spacing: 24) {
-        if !model.books.isEmpty {
-          booksSection
-        }
-
-        if !model.series.isEmpty {
-          seriesSection
-        }
-
-        if !model.authors.isEmpty {
-          authorsSection
-        }
-
-        if !model.narrators.isEmpty {
-          narratorsSection
-        }
-
-        if !model.tags.isEmpty {
-          tagsSection
-        }
-
-        if !model.genres.isEmpty {
-          genresSection
-        }
+  var resultsContent: some View {
+    LazyVStack(spacing: 24) {
+      if !model.books.isEmpty {
+        booksSection
       }
-      .padding()
+
+      if !model.series.isEmpty {
+        seriesSection
+      }
+
+      if !model.authors.isEmpty {
+        authorsSection
+      }
+
+      if !model.narrators.isEmpty {
+        narratorsSection
+      }
+
+      if !model.tags.isEmpty {
+        tagsSection
+      }
+
+      if !model.genres.isEmpty {
+        genresSection
+      }
     }
+    .padding()
+    .padding(.bottom, 50)
   }
 
   var booksSection: some View {
@@ -162,7 +163,8 @@ struct SearchView: View {
           .foregroundColor(.secondary)
       }
 
-      SeriesView(series: model.series, displayMode: .row)
+      SeriesView(series: model.series)
+        .environment(\.itemDisplayMode, .card)
     }
   }
 

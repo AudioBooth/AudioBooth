@@ -32,10 +32,7 @@ final class SeriesCardModel: SeriesCard.Model {
   init(_ collapsedSeries: Book.CollapsedSeries, sortingIgnorePrefix: Bool = false) {
     let coverURLs = collapsedSeries.coverURLs()
     let bookCovers = zip(coverURLs, collapsedSeries.libraryItemIds).map { url, itemID in
-      Cover.Model(
-        url: url,
-        progress: MediaProgress.progress(for: itemID)
-      )
+      Cover.Model(url: url)
     }
 
     let progress = Self.progress(libraryItemIds: collapsedSeries.libraryItemIds)

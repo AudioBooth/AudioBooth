@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 extension EnvironmentValues {
-  @Entry var bookCardDisplayMode: BookCard.DisplayMode = .card
+  @Entry var itemDisplayMode: BookCard.DisplayMode = .card
 }
 
 struct BookCard: View {
@@ -25,9 +25,7 @@ struct BookCard: View {
   }
 
   private var navigationDestination: NavigationDestination {
-    if model.bookCount != nil {
-      .series(id: model.id, name: model.title)
-    } else if let id = model.podcastID {
+    if let id = model.podcastID {
       .podcast(id: id, episodeID: model.id)
     } else {
       .book(id: model.id)
@@ -63,9 +61,7 @@ struct BookListCard: View {
   }
 
   private var navigationDestination: NavigationDestination {
-    if model.bookCount != nil {
-      .series(id: model.id, name: model.title)
-    } else if let id = model.podcastID {
+    if let id = model.podcastID {
       .podcast(id: id, episodeID: model.id)
     } else {
       .book(id: model.id)
@@ -76,7 +72,7 @@ struct BookListCard: View {
 extension BookCard {
   struct Content: View {
     let model: BookCard.Model
-    @Environment(\.bookCardDisplayMode) private var displayMode
+    @Environment(\.itemDisplayMode) private var displayMode
     @Environment(\.editMode) private var editMode
 
     private var isEditing: Bool {
@@ -112,12 +108,6 @@ extension BookCard {
 
         VStack(alignment: .leading, spacing: 6) {
           title
-
-          if let bookCount = model.bookCount {
-            Text("^[\(bookCount) book](inflect: true)")
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
 
           if let author = model.author {
             rowMetadata(icon: "pencil", value: author)
@@ -160,18 +150,9 @@ extension BookCard {
             .padding(.bottom, 2)
         }
         .overlay(alignment: .topTrailing) {
-          Group {
-            if let bookCount = model.bookCount {
-              badge {
-                HStack(spacing: 2) {
-                  Image(systemName: "book")
-                  Text("\(bookCount)")
-                }
-              }
-            } else if let sequence = model.sequence, !sequence.isEmpty {
-              badge {
-                Text("#\(sequence)")
-              }
+          if let sequence = model.sequence, !sequence.isEmpty {
+            badge {
+              Text("#\(sequence)")
             }
           }
         }
@@ -313,7 +294,6 @@ extension BookCard {
     let author: String?
     let narrator: String?
     let publishedYear: String?
-    let bookCount: Int?
     var contextMenu: BookCardContextMenu.Model?
     var episodeContextMenu: PodcastEpisodeContextMenu.Model?
     let hasEbook: Bool
@@ -330,7 +310,6 @@ extension BookCard {
       author: String? = nil,
       narrator: String? = nil,
       publishedYear: String? = nil,
-      bookCount: Int? = nil,
       contextMenu: BookCardContextMenu.Model? = nil,
       episodeContextMenu: PodcastEpisodeContextMenu.Model? = nil,
       hasEbook: Bool = false
@@ -344,7 +323,6 @@ extension BookCard {
       self.author = author
       self.narrator = narrator
       self.publishedYear = publishedYear
-      self.bookCount = bookCount
       self.contextMenu = contextMenu
       self.episodeContextMenu = episodeContextMenu
       self.hasEbook = hasEbook
@@ -439,7 +417,7 @@ extension BookCard.Model {
         )
       }
     }
-    .environment(\.bookCardDisplayMode, .row)
+    .environment(\.itemDisplayMode, .row)
     .padding()
   }
 }

@@ -1,13 +1,9 @@
 import API
 import SwiftUI
 
-extension EnvironmentValues {
-  @Entry var seriesCardDisplayMode: SeriesCard.DisplayMode = .row
-}
-
 struct SeriesCard: View {
   @Bindable var model: Model
-  @Environment(\.seriesCardDisplayMode) private var displayMode
+  @Environment(\.itemDisplayMode) private var displayMode
 
   let titleFont: Font
 
@@ -35,67 +31,36 @@ struct SeriesCard: View {
   }
 
   var rowLayout: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      ZStack(alignment: .topTrailing) {
-        GeometryReader { geometry in
-          let availableWidth = geometry.size.width
-          let coverSize: CGFloat = availableWidth / 2
-          let bookCount = model.bookCovers.prefix(10).count
-          let spacing: CGFloat =
-            bookCount > 1 ? (availableWidth - coverSize) / CGFloat(bookCount - 1) : 0
-
-          ZStack(alignment: bookCount == 1 ? .center : .leading) {
-            if let firstCover = model.bookCovers.first {
-              LazyImage(url: firstCover.url) { state in
-                if let image = state.image {
-                  image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .blur(radius: 5)
-                    .opacity(0.3)
-                } else {
-                  RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.2))
-                }
-              }
-              .frame(width: availableWidth, height: coverSize)
-              .clipped()
-              .cornerRadius(8)
-            }
-
-            ForEach(Array(model.bookCovers.prefix(10).enumerated()), id: \.offset) {
-              index,
-              bookCover in
-              Cover(model: bookCover, style: .plain)
-                .frame(width: coverSize, height: coverSize)
-                .shadow(radius: 2)
-                .zIndex(Double(10 - index))
-                .alignmentGuide(.leading) { _ in
-                  bookCount == 1 ? 0 : CGFloat(-index) * spacing
-                }
-            }
-          }
-          .frame(height: coverSize)
-        }
-        .aspectRatio(2.0, contentMode: .fit)
+    HStack(spacing: 12) {
+      Cover(model: model.bookCovers.first ?? Cover.Model(url: nil), style: .plain)
         .overlay(alignment: .bottom) {
           ProgressOverlay(progress: model.progress)
-            .padding(4)
+            .padding(2)
         }
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .frame(width: 60, height: 60)
 
-        bookCountBadge
+      VStack(alignment: .leading, spacing: 4) {
+        Text(model.title)
+          .font(.caption)
+          .fontWeight(.medium)
+          .lineLimit(1)
+          .allowsTightening(true)
+
+        Text("^[\(model.bookCount) book](inflect: true)")
+          .font(.caption2)
+          .foregroundColor(.secondary)
+
+        Spacer(minLength: 0)
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
 
-      Text(model.title)
-        .font(titleFont)
-        .fontWeight(.medium)
-        .lineLimit(1)
-        .allowsTightening(true)
-        .multilineTextAlignment(.leading)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      Image(systemName: "chevron.right")
+        .font(.caption)
+        .foregroundColor(.secondary)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+    .contentShape(Rectangle())
   }
 
   var cardLayout: some View {
@@ -175,11 +140,6 @@ struct SeriesCard: View {
 }
 
 extension SeriesCard {
-  enum DisplayMode: String {
-    case row
-    case card
-  }
-
   @Observable
   class Model: Identifiable {
     var id: String
@@ -238,5 +198,5 @@ extension SeriesCard.Model {
   SeriesCard(model: .mock)
     .frame(width: 150)
     .padding()
-    .environment(\.seriesCardDisplayMode, .card)
+    .environment(\.itemDisplayMode, .card)
 }

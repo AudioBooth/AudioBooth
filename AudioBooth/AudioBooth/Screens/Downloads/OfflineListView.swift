@@ -165,7 +165,7 @@ struct OfflineListView: View {
     }
     .listStyle(.plain)
     .environment(\.editMode, $model.editMode)
-    .environment(\.bookCardDisplayMode, .row)
+    .environment(\.itemDisplayMode, .row)
   }
 
   private func groupLabel(name: String, count: Int, coverURL: URL?) -> some View {
