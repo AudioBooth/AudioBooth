@@ -4,7 +4,7 @@ import Foundation
 final class PodcastLibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
 
-  private var fetched: [BookCard.Model] = []
+  private var fetched: [LibraryView.Item] = []
   private var sortBy: SortBy = .title
   private var filter: LibraryPageModel.Filter?
 
@@ -61,7 +61,7 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
     currentPage = 0
     hasMorePages = true
     fetched.removeAll()
-    books.removeAll()
+    items.removeAll()
 
     await filters?.refresh()
     await loadPodcasts()
@@ -83,11 +83,18 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
 
   override func onSearchChanged(_ searchText: String) {
     if searchText.isEmpty {
-      books = fetched
+      items = fetched
     } else {
       let searchTerm = searchText.lowercased()
-      books = fetched.filter { item in
-        item.title.lowercased().contains(searchTerm)
+      items = fetched.filter { item in
+
+        let title: String =
+          switch item {
+          case .book(let model): model.title
+          case .series(let model): model.title
+          }
+
+        return title.lowercased().contains(searchTerm)
       }
     }
   }
@@ -155,24 +162,24 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
         filter: filterString
       )
 
-      let cards = response.results.map { podcast in
-        PodcastCardModel(podcast, sortBy: sortBy)
+      let newItems: [LibraryView.Item] = response.results.map { podcast in
+        .book(PodcastCardModel(podcast, sortBy: sortBy))
       }
 
       if currentPage == 0 {
-        fetched = cards
+        fetched = newItems
       } else {
-        fetched.append(contentsOf: cards)
+        fetched.append(contentsOf: newItems)
       }
 
-      books = fetched
+      items = fetched
 
       currentPage += 1
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
       if currentPage == 0 {
         fetched = []
-        books = []
+        items = []
       }
     }
 

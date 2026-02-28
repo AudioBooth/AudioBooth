@@ -34,16 +34,16 @@ struct LibraryPage: View {
       if model.isRoot && !model.search.searchText.isEmpty {
         SearchView(model: model.search)
       } else {
-        if model.isLoading && model.books.isEmpty {
+        if model.isLoading && model.items.isEmpty {
           ProgressView("Loading books...")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if model.books.isEmpty && !model.isLoading {
+        } else if model.items.isEmpty && !model.isLoading {
           ContentUnavailableView(
             "No Books Found",
             systemImage: "magnifyingglass",
             description: Text("No books match your search.")
           )
-        } else if model.books.isEmpty && !model.isLoading {
+        } else if model.items.isEmpty && !model.isLoading {
           ContentUnavailableView(
             "No Books Found",
             systemImage: "books.vertical",
@@ -52,7 +52,7 @@ struct LibraryPage: View {
         } else {
           ScrollView {
             LibraryView(
-              books: model.books,
+              items: model.items,
               displayMode: preferences.libraryDisplayMode == .card ? .grid : .list,
               hasMorePages: model.hasMorePages,
               onLoadMore: model.loadNextPageIfNeeded
@@ -209,7 +209,7 @@ extension LibraryPage {
 
     var title: String
 
-    var books: [BookCard.Model]
+    var items: [LibraryView.Item]
     var search: SearchView.Model
 
     var showCollapseSeries: Bool
@@ -235,7 +235,7 @@ extension LibraryPage {
       sortOptions: [SortBy] = [],
       currentSort: SortBy? = nil,
       showCollapseSeries: Bool = false,
-      books: [BookCard.Model] = [],
+      items: [LibraryView.Item] = [],
       search: SearchView.Model = SearchView.Model(),
       filters: FilterPicker.Model? = nil,
       title: String = "Library"
@@ -246,7 +246,7 @@ extension LibraryPage {
       self.sortOptions = sortOptions
       self.showCollapseSeries = showCollapseSeries
       self.currentSort = currentSort
-      self.books = books
+      self.items = items
       self.search = search
       self.filters = filters
       self.title = title
@@ -266,25 +266,32 @@ extension LibraryPage.Model: Hashable {
 
 extension LibraryPage.Model {
   static var mock: LibraryPage.Model {
-    let sampleBooks: [BookCard.Model] = [
-      BookCard.Model(
-        title: "The Lord of the Rings",
-        details: "J.R.R. Tolkien",
-        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+    let sampleItems: [LibraryView.Item] = [
+      .book(
+        BookCard.Model(
+          title: "The Lord of the Rings",
+          details: "J.R.R. Tolkien",
+          cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+        )
       ),
-      BookCard.Model(
-        title: "Dune",
-        details: "Frank Herbert",
-        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+      .book(
+        BookCard.Model(
+          title: "Dune",
+          details: "Frank Herbert",
+          cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+        )
       ),
-      BookCard.Model(
-        title: "The Foundation",
-        details: "Isaac Asimov",
-        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
+      .series(SeriesCard.Model.mock),
+      .book(
+        BookCard.Model(
+          title: "The Foundation",
+          details: "Isaac Asimov",
+          cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
+        )
       ),
     ]
 
-    return LibraryPage.Model(books: sampleBooks)
+    return LibraryPage.Model(items: sampleItems)
   }
 }
 

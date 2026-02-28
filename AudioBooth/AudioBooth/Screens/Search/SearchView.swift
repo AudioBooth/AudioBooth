@@ -144,7 +144,7 @@ struct SearchView: View {
           .foregroundColor(.secondary)
       }
 
-      LibraryView(books: model.books, displayMode: .grid)
+      LibraryView(items: model.books.map { .book($0) }, displayMode: .grid)
     }
   }
 

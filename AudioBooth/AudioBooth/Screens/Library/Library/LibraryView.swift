@@ -6,7 +6,7 @@ struct LibraryView: View {
     case list
   }
 
-  let books: [BookCard.Model]
+  let items: [Item]
   let displayMode: DisplayMode
   var hasMorePages: Bool = false
   var onLoadMore: (() -> Void)?
@@ -18,9 +18,16 @@ struct LibraryView: View {
         columns: [GridItem(.adaptive(minimum: 100), spacing: 20)],
         spacing: 20
       ) {
-        ForEach(books) { book in
-          BookCard(model: book)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        ForEach(items) { item in
+          switch item {
+          case .book(let model):
+            BookCard(model: model)
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+          case .series(let model):
+            SeriesCard(model: model)
+              .environment(\.seriesCardDisplayMode, .card)
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+          }
         }
 
         if hasMorePages {
@@ -34,8 +41,13 @@ struct LibraryView: View {
       }
     case .list:
       LazyVStack(spacing: 12) {
-        ForEach(books) { book in
-          BookCard(model: book)
+        ForEach(items) { item in
+          switch item {
+          case .book(let model):
+            BookCard(model: model)
+          case .series(let model):
+            SeriesCard(model: model)
+          }
         }
 
         if hasMorePages {
@@ -51,80 +63,92 @@ struct LibraryView: View {
   }
 }
 
+extension LibraryView {
+  enum Item: Identifiable {
+    case book(BookCard.Model)
+    case series(SeriesCard.Model)
+
+    var id: String {
+      switch self {
+      case .book(let model): model.id
+      case .series(let model): model.id
+      }
+    }
+  }
+}
+
 #Preview("LibraryView - Empty") {
-  LibraryView(books: [], displayMode: .grid)
+  LibraryView(items: [], displayMode: .grid)
 }
 
 #Preview("LibraryView - Grid") {
-  let sampleBooks: [BookCard.Model] = [
-    BookCard.Model(
-      title: "The Lord of the Rings",
-      details: "J.R.R. Tolkien",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+  let sampleItems: [LibraryView.Item] = [
+    .book(
+      BookCard.Model(
+        title: "The Lord of the Rings",
+        details: "J.R.R. Tolkien",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
+      )
     ),
-    BookCard.Model(
-      title: "Dune",
-      details: "Frank Herbert",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+    .book(
+      BookCard.Model(
+        title: "Dune",
+        details: "Frank Herbert",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
+      )
     ),
-    BookCard.Model(
-      title: "The Foundation The Foundation",
-      details: "Isaac Asimov",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
-    ),
-    BookCard.Model(
-      title: "The Lord of the Rings",
-      details: "J.R.R. Tolkien",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"))
-    ),
-    BookCard.Model(
-      title: "Dune",
-      details: "Frank Herbert",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"))
-    ),
-    BookCard.Model(
-      title: "The Foundation",
-      details: "Isaac Asimov",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
+    .series(SeriesCard.Model.mock),
+    .book(
+      BookCard.Model(
+        title: "The Foundation",
+        details: "Isaac Asimov",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg"))
+      )
     ),
   ]
 
   ScrollView {
-    LibraryView(books: sampleBooks, displayMode: .grid)
+    LibraryView(items: sampleItems, displayMode: .grid)
       .padding()
   }
 }
 
 #Preview("LibraryView - List") {
-  let sampleBooks: [BookCard.Model] = [
-    BookCard.Model(
-      title: "The Lord of the Rings",
-      details: "J.R.R. Tolkien",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")),
-      author: "J.R.R. Tolkien",
-      narrator: "Rob Inglis",
-      publishedYear: "1954"
+  let sampleItems: [LibraryView.Item] = [
+    .book(
+      BookCard.Model(
+        title: "The Lord of the Rings",
+        details: "J.R.R. Tolkien",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")),
+        author: "J.R.R. Tolkien",
+        narrator: "Rob Inglis",
+        publishedYear: "1954"
+      )
     ),
-    BookCard.Model(
-      title: "Dune",
-      details: "Frank Herbert",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")),
-      author: "Frank Herbert",
-      narrator: "Scott Brick, Orlagh Cassidy",
-      publishedYear: "1965"
+    .book(
+      BookCard.Model(
+        title: "Dune",
+        details: "Frank Herbert",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")),
+        author: "Frank Herbert",
+        narrator: "Scott Brick, Orlagh Cassidy",
+        publishedYear: "1965"
+      )
     ),
-    BookCard.Model(
-      title: "The Foundation",
-      details: "Isaac Asimov",
-      cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")),
-      author: "Isaac Asimov",
-      narrator: "Scott Brick",
-      publishedYear: "1951"
+    .book(
+      BookCard.Model(
+        title: "The Foundation",
+        details: "Isaac Asimov",
+        cover: Cover.Model(url: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")),
+        author: "Isaac Asimov",
+        narrator: "Scott Brick",
+        publishedYear: "1951"
+      )
     ),
   ]
 
   ScrollView {
-    LibraryView(books: sampleBooks, displayMode: .list)
+    LibraryView(items: sampleItems, displayMode: .list)
       .padding()
   }
 }

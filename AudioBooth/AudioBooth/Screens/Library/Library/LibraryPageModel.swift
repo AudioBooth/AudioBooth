@@ -6,7 +6,7 @@ final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private let downloadManager = DownloadManager.shared
 
-  private var fetched: [BookCard.Model] = []
+  private var fetched: [LibraryView.Item] = []
 
   private var filter: Filter?
   private var sortBy: SortBy?
@@ -92,7 +92,7 @@ final class LibraryPageModel: LibraryPage.Model {
     currentPage = 0
     hasMorePages = true
     fetched.removeAll()
-    books.removeAll()
+    items.removeAll()
 
     if isRoot {
       await filters?.refresh()
@@ -123,11 +123,18 @@ final class LibraryPageModel: LibraryPage.Model {
 
   override func onSearchChanged(_ searchText: String) {
     if searchText.isEmpty {
-      books = fetched
+      items = fetched
     } else {
       let searchTerm = searchText.lowercased()
-      books = fetched.filter { book in
-        book.title.lowercased().contains(searchTerm)
+      items = fetched.filter { item in
+
+        let title: String =
+          switch item {
+          case .book(let model): model.title
+          case .series(let model): model.title
+          }
+
+        return title.lowercased().contains(searchTerm)
       }
     }
   }
@@ -151,13 +158,14 @@ final class LibraryPageModel: LibraryPage.Model {
 
   override func onDownloadAllTapped() {
     Task {
-      for book in books {
-        guard downloadManager.downloadStates[book.id] != .downloaded else { continue }
+      for item in items {
+        guard case .book(let model) = item else { continue }
+        guard downloadManager.downloadStates[model.id] != .downloaded else { continue }
 
-        if let localBook = try? LocalBook.fetch(bookID: book.id) {
+        if let localBook = try? LocalBook.fetch(bookID: model.id) {
           try? localBook.download()
         } else {
-          let remoteBook = try? await audiobookshelf.books.fetch(id: book.id)
+          let remoteBook = try? await audiobookshelf.books.fetch(id: model.id)
           try? remoteBook?.download()
         }
       }
@@ -249,32 +257,35 @@ final class LibraryPageModel: LibraryPage.Model {
         filter: filter
       )
 
-      var bookCards = [BookCardModel]()
+      var newItems = [LibraryView.Item]()
+      let ignorePrefix = isRoot && audiobookshelf.libraries.sortingIgnorePrefix
       for book in response.results {
-        if case .series = self.filter {
-          bookCards.append(BookCardModel(book, sortBy: .title, options: .showSequence))
+        if let collapsedSeries = book.collapsedSeries {
+          let model = SeriesCardModel(collapsedSeries, sortingIgnorePrefix: ignorePrefix)
+          newItems.append(.series(model))
         } else {
-          if isRoot, audiobookshelf.libraries.sortingIgnorePrefix {
-            bookCards.append(BookCardModel(book, sortBy: self.sortBy, options: .ignorePrefix))
+          let bookCard: BookCardModel
+          if case .series = self.filter {
+            bookCard = BookCardModel(book, sortBy: .title, options: .showSequence)
+          } else if ignorePrefix {
+            bookCard = BookCardModel(book, sortBy: self.sortBy, options: .ignorePrefix)
           } else {
-            bookCards.append(BookCardModel(book, sortBy: self.sortBy))
+            bookCard = BookCardModel(book, sortBy: self.sortBy)
           }
+          newItems.append(.book(bookCard))
         }
       }
 
       if currentPage == 0 {
-        fetched = bookCards
+        fetched = newItems
       } else {
-        fetched.append(contentsOf: bookCards)
+        fetched.append(contentsOf: newItems)
       }
 
       if isRoot || search.searchText.isEmpty {
-        books = fetched
+        items = fetched
       } else {
-        let searchTerm = search.searchText.lowercased()
-        books = fetched.filter { book in
-          book.title.lowercased().contains(searchTerm)
-        }
+        onSearchChanged(search.searchText)
       }
 
       currentPage += 1
@@ -283,7 +294,7 @@ final class LibraryPageModel: LibraryPage.Model {
     } catch {
       if currentPage == 0 {
         fetched = []
-        books = []
+        items = []
       }
     }
 

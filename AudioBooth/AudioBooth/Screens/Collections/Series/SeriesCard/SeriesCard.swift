@@ -180,7 +180,8 @@ extension SeriesCard {
     case card
   }
 
-  @Observable class Model {
+  @Observable
+  class Model: Identifiable {
     var id: String
     var title: String
     var bookCount: Int

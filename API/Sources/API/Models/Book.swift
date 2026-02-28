@@ -170,6 +170,13 @@ extension Book {
     public let sequence: String?
     public let numBooks: Int
     public let libraryItemIds: [String]
+
+    public func coverURLs(limit: Int = 3) -> [URL] {
+      guard let serverURL = Audiobookshelf.shared.serverURL else { return [] }
+      return libraryItemIds.prefix(limit).map { itemID in
+        serverURL.appendingPathComponent("api/items/\(itemID)/cover")
+      }
+    }
   }
 }
 

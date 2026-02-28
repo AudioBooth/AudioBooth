@@ -29,6 +29,43 @@ final class SeriesCardModel: SeriesCard.Model {
     )
   }
 
+  init(_ collapsedSeries: Book.CollapsedSeries, sortingIgnorePrefix: Bool = false) {
+    let coverURLs = collapsedSeries.coverURLs()
+    let bookCovers = zip(coverURLs, collapsedSeries.libraryItemIds).map { url, itemID in
+      Cover.Model(
+        url: url,
+        progress: MediaProgress.progress(for: itemID)
+      )
+    }
+
+    let progress = Self.progress(libraryItemIds: collapsedSeries.libraryItemIds)
+
+    let title: String
+    if sortingIgnorePrefix {
+      title = collapsedSeries.nameIgnorePrefix ?? collapsedSeries.name
+    } else {
+      title = collapsedSeries.name
+    }
+
+    super.init(
+      id: collapsedSeries.id,
+      title: title,
+      bookCount: collapsedSeries.numBooks,
+      bookCovers: bookCovers,
+      progress: progress
+    )
+  }
+
+  private static func progress(libraryItemIds: [String]) -> Double? {
+    guard !libraryItemIds.isEmpty else { return nil }
+
+    let totalProgress = libraryItemIds.compactMap { bookID in
+      MediaProgress.progress(for: bookID)
+    }.reduce(0, +)
+
+    return totalProgress / Double(libraryItemIds.count)
+  }
+
   static func progress(books: [Book]) -> Double? {
     guard !books.isEmpty else { return nil }
 
