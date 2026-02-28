@@ -20,10 +20,13 @@ enum AppLogger {
     configureNetworkLogger()
 
     LoggingSystem.bootstrap { label in
-      MultiplexLogHandler([
-        StreamLogHandler.standardOutput(label: label),
-        PersistentLogHandler(label: label),
-      ])
+      var stream = StreamLogHandler.standardOutput(label: label)
+      var persistent = PersistentLogHandler(label: label)
+
+      stream.logLevel = .debug
+      persistent.logLevel = .debug
+
+      return MultiplexLogHandler([stream, persistent])
     }
 
     general.info("Version \(UIApplication.appVersion)")
