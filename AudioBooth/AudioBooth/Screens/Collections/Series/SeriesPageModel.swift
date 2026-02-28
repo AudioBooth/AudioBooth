@@ -4,6 +4,7 @@ import SwiftUI
 
 final class SeriesPageModel: SeriesPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
+  private let preferences = UserPreferences.shared
 
   private var fetchedSeries: [SeriesCard.Model] = []
 
@@ -12,8 +13,13 @@ final class SeriesPageModel: SeriesPage.Model {
   private let itemsPerPage: Int = 50
 
   init() {
-    super.init(hasMorePages: true)
+    super.init(hasMorePages: true, displayMode: UserPreferences.shared.seriesDisplayMode)
     self.search = SearchViewModel()
+  }
+
+  override func onDisplayModeTapped() {
+    displayMode = displayMode == .row ? .card : .row
+    preferences.seriesDisplayMode = displayMode
   }
 
   override func onAppear() {

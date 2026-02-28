@@ -1,8 +1,13 @@
 import API
 import SwiftUI
 
+extension EnvironmentValues {
+  @Entry var seriesCardDisplayMode: SeriesCard.DisplayMode = .row
+}
+
 struct SeriesCard: View {
   @Bindable var model: Model
+  @Environment(\.seriesCardDisplayMode) private var displayMode
 
   let titleFont: Font
 
@@ -19,7 +24,17 @@ struct SeriesCard: View {
     .buttonStyle(.plain)
   }
 
+  @ViewBuilder
   var content: some View {
+    switch displayMode {
+    case .row:
+      rowLayout
+    case .card:
+      cardLayout
+    }
+  }
+
+  var rowLayout: some View {
     VStack(alignment: .leading, spacing: 8) {
       ZStack(alignment: .topTrailing) {
         GeometryReader { geometry in
@@ -69,20 +84,7 @@ struct SeriesCard: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 8))
 
-        if model.bookCount > 0 {
-          HStack(spacing: 2) {
-            Image(systemName: "book")
-            Text("\(model.bookCount)")
-          }
-          .font(.caption2)
-          .fontWeight(.medium)
-          .foregroundStyle(Color.white)
-          .padding(.vertical, 2)
-          .padding(.horizontal, 4)
-          .background(Color.black.opacity(0.6))
-          .clipShape(.capsule)
-          .padding(4)
-        }
+        bookCountBadge
       }
 
       Text(model.title)
@@ -95,9 +97,89 @@ struct SeriesCard: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
+
+  var cardLayout: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      stackedCovers
+
+      Text(model.title)
+        .font(.caption)
+        .fontWeight(.medium)
+        .lineLimit(2)
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  var stackedCovers: some View {
+    GeometryReader { geometry in
+      let size = geometry.size.width
+      let covers = Array(model.bookCovers.prefix(3))
+      let backCount = max(covers.count - 1, 0)
+      let stackPadding: CGFloat = CGFloat(backCount) * 4
+      let coverSize = size - stackPadding
+
+      ZStack(alignment: .topLeading) {
+        ForEach(Array(covers.enumerated().reversed()), id: \.offset) { index, cover in
+          if index == 0 {
+            Cover(model: cover, style: .plain)
+              .frame(width: coverSize, height: coverSize)
+              .overlay(alignment: .bottom) {
+                ProgressOverlay(progress: model.progress)
+                  .padding(4)
+              }
+              .clipShape(RoundedRectangle(cornerRadius: 8))
+              .shadow(radius: 2)
+              .overlay(alignment: .topTrailing) {
+                bookCountBadge
+              }
+          } else {
+            Cover(model: cover, style: .plain)
+              .frame(width: coverSize, height: coverSize)
+              .overlay(alignment: .bottom) {
+                ProgressOverlay(progress: model.progress)
+                  .padding(4)
+              }
+              .clipShape(RoundedRectangle(cornerRadius: 8))
+              .shadow(radius: 1)
+              .offset(
+                x: CGFloat(index) * 4,
+                y: CGFloat(index) * 4
+              )
+          }
+        }
+      }
+      .frame(width: size, height: size, alignment: .topLeading)
+    }
+    .aspectRatio(1.0, contentMode: .fit)
+  }
+
+  @ViewBuilder
+  var bookCountBadge: some View {
+    if model.bookCount > 0 {
+      HStack(spacing: 2) {
+        Image(systemName: "book")
+        Text("\(model.bookCount)")
+      }
+      .font(.caption2)
+      .fontWeight(.medium)
+      .foregroundStyle(Color.white)
+      .padding(.vertical, 2)
+      .padding(.horizontal, 4)
+      .background(Color.black.opacity(0.6))
+      .clipShape(.capsule)
+      .padding(4)
+    }
+  }
 }
 
 extension SeriesCard {
+  enum DisplayMode: String {
+    case row
+    case card
+  }
+
   @Observable class Model {
     var id: String
     var title: String
@@ -146,7 +228,14 @@ extension SeriesCard.Model {
   }
 }
 
-#Preview("SeriesCard - Mock") {
+#Preview("SeriesCard - Row") {
   SeriesCard(model: .mock)
     .padding()
+}
+
+#Preview("SeriesCard - Card") {
+  SeriesCard(model: .mock)
+    .frame(width: 150)
+    .padding()
+    .environment(\.seriesCardDisplayMode, .card)
 }

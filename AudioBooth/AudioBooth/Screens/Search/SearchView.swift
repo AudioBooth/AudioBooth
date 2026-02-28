@@ -162,7 +162,7 @@ struct SearchView: View {
           .foregroundColor(.secondary)
       }
 
-      SeriesView(series: model.series)
+      SeriesView(series: model.series, displayMode: .row)
     }
   }
 

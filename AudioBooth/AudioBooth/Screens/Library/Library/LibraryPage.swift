@@ -130,7 +130,7 @@ struct LibraryPage: View {
               }
             )
           ) {
-            Label("List View", systemImage: "list.bullet")
+            Label("List View", systemImage: "rectangle.grid.1x3")
           }
 
           if model.showCollapseSeries {

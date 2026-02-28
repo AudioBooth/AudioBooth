@@ -64,7 +64,7 @@ struct CollectionDetailPage: View {
               set: { if $0 { preferences.libraryDisplayMode = .row } }
             )
           ) {
-            Label("List View", systemImage: "list.bullet")
+            Label("List View", systemImage: "rectangle.grid.1x3")
           }
 
           if model.canEdit {

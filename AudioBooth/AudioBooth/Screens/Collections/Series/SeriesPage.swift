@@ -34,6 +34,47 @@ struct SeriesPage: View {
       text: $model.search.searchText,
       prompt: "Search books, series, and authors"
     )
+    .toolbar {
+      if #available(iOS 26.0, *) {
+        ToolbarItem(placement: .topBarLeading) {
+          Color.clear
+        }
+        .sharedBackgroundVisibility(.hidden)
+      }
+
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Toggle(
+            isOn: Binding(
+              get: { model.displayMode == .card },
+              set: { isOn in
+                if isOn && model.displayMode != .card {
+                  model.onDisplayModeTapped()
+                }
+              }
+            )
+          ) {
+            Label("Grid View", systemImage: "square.grid.2x2")
+          }
+
+          Toggle(
+            isOn: Binding(
+              get: { model.displayMode == .row },
+              set: { isOn in
+                if isOn && model.displayMode != .row {
+                  model.onDisplayModeTapped()
+                }
+              }
+            )
+          ) {
+            Label("List View", systemImage: "rectangle.grid.1x3")
+          }
+        } label: {
+          Image(systemName: "ellipsis")
+        }
+        .tint(.primary)
+      }
+    }
     .onAppear(perform: model.onAppear)
   }
 
@@ -41,6 +82,7 @@ struct SeriesPage: View {
     ScrollView {
       SeriesView(
         series: model.series,
+        displayMode: model.displayMode,
         hasMorePages: model.hasMorePages,
         onLoadMore: model.loadNextPageIfNeeded
       )
@@ -53,6 +95,7 @@ extension SeriesPage {
   @Observable class Model: ObservableObject {
     var isLoading: Bool
     var hasMorePages: Bool
+    var displayMode: SeriesCard.DisplayMode
 
     var series: [SeriesCard.Model]
     var search: SearchView.Model = SearchView.Model()
@@ -60,14 +103,17 @@ extension SeriesPage {
     func onAppear() {}
     func refresh() async {}
     func loadNextPageIfNeeded() {}
+    func onDisplayModeTapped() {}
 
     init(
       isLoading: Bool = false,
       hasMorePages: Bool = false,
+      displayMode: SeriesCard.DisplayMode = .row,
       series: [SeriesCard.Model] = []
     ) {
       self.isLoading = isLoading
       self.hasMorePages = hasMorePages
+      self.displayMode = displayMode
       self.series = series
     }
   }

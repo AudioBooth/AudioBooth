@@ -77,6 +77,19 @@ struct NarratorsPage: View {
           proxy.scrollTo(target, anchor: .top)
         }
       }
+      .toolbar {
+        if #available(iOS 26.0, *) {
+          ToolbarItem(placement: .topBarLeading) {
+            Color.clear
+          }
+          .sharedBackgroundVisibility(.hidden)
+
+          ToolbarItem(placement: .topBarTrailing) {
+            Color.clear
+          }
+          .sharedBackgroundVisibility(.hidden)
+        }
+      }
     }
   }
 
