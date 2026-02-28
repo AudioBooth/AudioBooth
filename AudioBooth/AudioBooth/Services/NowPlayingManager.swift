@@ -166,12 +166,11 @@ final class NowPlayingManager {
   func update() {
     guard let player, let mediaProgress else { return }
 
-    info[MPMediaItemPropertyArtwork] = artwork
+    var info = [String: Any]()
 
-    let rate = player.rate
-    playbackState = rate > 0 ? .playing : .paused
-    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = speed?.playbackSpeed ?? 1.0
-    info[MPNowPlayingInfoPropertyPlaybackRate] = rate
+    info[MPMediaItemPropertyArtwork] = artwork
+    info[MPNowPlayingInfoPropertyExternalUserProfileIdentifier] = Audiobookshelf.shared.authentication.server?.id
+    info[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current {
       info[MPMediaItemPropertyTitle] = current.title
@@ -180,12 +179,20 @@ final class NowPlayingManager {
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = chapters.currentElapsedTime(
         currentTime: mediaProgress.currentTime
       )
+      info[MPNowPlayingInfoPropertyExternalContentIdentifier] = "\(id)-\(current.id)"
     } else {
       info[MPMediaItemPropertyTitle] = title
       info[MPMediaItemPropertyArtist] = author
       info[MPMediaItemPropertyPlaybackDuration] = mediaProgress.duration
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = mediaProgress.currentTime
+      info[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
     }
+
+    let rate = player.rate
+    playbackState = rate > 0 ? .playing : .paused
+
+    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = speed?.playbackSpeed ?? 1.0
+    info[MPNowPlayingInfoPropertyPlaybackRate] = rate
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     MPNowPlayingInfoCenter.default().playbackState = playbackState
