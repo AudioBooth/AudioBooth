@@ -197,7 +197,6 @@ struct BookPlayer: View {
     .overlay(alignment: .topTrailing) {
       timerOverlay
     }
-    .padding(.horizontal, 30)
     .buttonStyle(.plain)
   }
 

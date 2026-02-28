@@ -59,9 +59,12 @@ struct ChapterPickerSheet: View {
         }
 
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Done") {
-            model.isPresented = false
-          }
+          Button(
+            action: { model.isPresented = false },
+            label: {
+              Label("Close", systemImage: "xmark")
+            }
+          )
           .tint(.primary)
         }
       }
