@@ -285,6 +285,7 @@ extension BookCard {
         return nil
       }
     }
+
   }
 
   struct Author {

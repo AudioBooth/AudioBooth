@@ -258,13 +258,14 @@ struct HomePage: View {
 
         ScrollView(.horizontal, showsIndicators: false) {
           HStack(alignment: .top, spacing: 16) {
-            ForEach(items, id: \.id) { series in
+            ForEach(items) { series in
               SeriesCard(model: series, titleFont: .footnote)
-                .frame(width: 240)
+                .frame(width: preferences.seriesDisplayMode == .card ? 120 : 240)
             }
           }
           .padding(.horizontal)
         }
+        .environment(\.seriesCardDisplayMode, preferences.seriesDisplayMode)
 
       case .authors(let items):
         Text(section.title)
