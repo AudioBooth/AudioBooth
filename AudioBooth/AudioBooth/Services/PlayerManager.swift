@@ -23,7 +23,6 @@ final class PlayerManager: ObservableObject, Sendable {
     }
   }
   @Published var isShowingFullPlayer = false
-  @Published var isShowingQueue = false
   @Published var reader: EbookReaderView.Model?
 
   @Published private(set) var queue: [QueueItem] = [] {

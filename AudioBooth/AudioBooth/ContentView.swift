@@ -56,13 +56,18 @@ struct ContentView: View {
           EbookReaderView(model: reader)
         }
       }
-      .sheet(isPresented: $playerManager.isShowingQueue) {
-        PlayerQueueView(
-          model: PlayerQueueViewModel {
-            playerManager.isShowingQueue = false
+      .sheet(
+        isPresented: Binding(
+          get: {
+            guard let current = playerManager.current else { return false }
+            return current.isQueuePresented && !playerManager.isShowingFullPlayer
+          },
+          set: { newValue in
+            playerManager.current?.isQueuePresented = newValue
           }
         )
-        .presentationDetents([.large])
+      ) {
+        PlayerQueueView(model: PlayerQueueViewModel())
       }
       .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
         isKeyboardVisible = true

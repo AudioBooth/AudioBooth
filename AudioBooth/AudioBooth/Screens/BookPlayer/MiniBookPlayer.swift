@@ -86,7 +86,7 @@ struct MiniBookPlayer: View, Equatable {
 
         if !playerManager.queue.isEmpty {
           Button {
-            playerManager.isShowingQueue = true
+            player.isQueuePresented = true
           } label: {
             Image(systemName: "list.bullet")
               .font(.system(size: 12))
@@ -174,7 +174,7 @@ struct LegacyMiniBookPlayer: View {
 
         if !playerManager.queue.isEmpty {
           Button {
-            playerManager.isShowingQueue = true
+            player.isQueuePresented = true
           } label: {
             Image(systemName: "list.bullet")
               .font(.system(size: 16))

@@ -142,7 +142,7 @@ struct BookDetailsView: View {
             }
           }
         } label: {
-          Image(systemName: "ellipsis")
+          Label("More", systemImage: "ellipsis")
         }
         .tint(.primary)
       }

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct PlayerQueueView: View {
   @ObservedObject var model: Model
+  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     NavigationStack {
@@ -11,7 +12,10 @@ struct PlayerQueueView: View {
           Section("Now Playing") {
             CurrentRow(
               item: currentItem,
-              onTapped: model.onNowPlayingTapped,
+              onTapped: {
+                dismiss()
+                PlayerManager.shared.showFullPlayer()
+              },
               onClear: model.onClearCurrentTapped
             )
           }
@@ -52,12 +56,14 @@ struct PlayerQueueView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("Done", action: model.onDoneTapped)
+          Button("Close", systemImage: "xmark", action: { dismiss() })
+            .tint(.primary)
         }
 
         if !model.queue.isEmpty {
           ToolbarItem(placement: .primaryAction) {
             EditButton()
+              .tint(.primary)
           }
         }
       }
@@ -154,6 +160,8 @@ extension PlayerQueueView {
   struct QueueRow: View {
     @Environment(\.editMode) private var editMode
 
+    @ObservedObject private var preferences = UserPreferences.shared
+
     let item: QueueItem
     let onPlay: () -> Void
 
@@ -208,7 +216,7 @@ extension PlayerQueueView {
           .aspectRatio(1, contentMode: .fit)
           .foregroundColor(.white)
           .padding(10)
-          .background(Color.accentColor)
+          .background(preferences.accentColor)
           .clipShape(.circle)
       }
       .buttonStyle(.borderless)
@@ -223,11 +231,9 @@ extension PlayerQueueView {
     var queue: [QueueItem]
     var autoPlayNext: Bool
 
-    func onDoneTapped() {}
     func onDelete(at offsets: IndexSet) {}
     func onMove(from source: IndexSet, to destination: Int) {}
     func onPlayTapped(_ item: QueueItem) {}
-    func onNowPlayingTapped() {}
     func onClearCurrentTapped() {}
     func onClearQueueTapped() {}
 

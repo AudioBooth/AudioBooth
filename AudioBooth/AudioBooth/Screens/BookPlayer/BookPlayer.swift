@@ -67,9 +67,58 @@ struct BookPlayer: View {
         }
 
         ToolbarItem(placement: .topBarTrailing) {
-          AirPlayButton()
-            .frame(width: 44, height: 44)
-            .tint(.primary)
+          HStack(spacing: 0) {
+            AirPlayButton()
+              .frame(width: 36, height: 36)
+              .tint(.primary)
+          }
+        }
+
+        if #available(iOS 26.0, *) {
+          ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
+          Menu {
+            if let podcastID = model.podcastID {
+              NavigationLink(value: NavigationDestination.podcast(id: podcastID)) {
+                Label("Podcast Details", systemImage: "mic")
+              }
+            } else {
+              NavigationLink(value: NavigationDestination.book(id: model.id)) {
+                Label("Book Details", systemImage: "book")
+              }
+            }
+
+            if Audiobookshelf.shared.authentication.permissions?.download == true,
+              model.downloadState == .notDownloaded
+            {
+              Button(action: { model.onDownloadTapped() }) {
+                Label("Download", systemImage: "icloud.and.arrow.down")
+              }
+            }
+
+            if model.history != nil {
+              Button(action: { model.onHistoryTapped() }) {
+                Label("History", systemImage: "clock.arrow.circlepath")
+              }
+            }
+
+            if !playerManager.queue.isEmpty {
+              Button(action: { model.isQueuePresented = true }) {
+                Label("Queue", systemImage: "list.bullet")
+              }
+            }
+
+            Divider()
+
+            Button(action: { model.isSettingsPresented = true }) {
+              Label("Player Settings", systemImage: "gearshape")
+            }
+          } label: {
+            Label("More", systemImage: "ellipsis")
+          }
+          .tint(.primary)
         }
       }
       .navigationDestination(for: NavigationDestination.self) { destination in
@@ -125,12 +174,26 @@ struct BookPlayer: View {
         PlaybackHistorySheet(model: history)
       }
     }
+    .sheet(isPresented: $model.isQueuePresented) {
+      PlayerQueueView(model: PlayerQueueViewModel())
+    }
+    .sheet(isPresented: $model.isSettingsPresented) {
+      NavigationStack {
+        PlayerPreferencesView()
+          .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+              Button("Close", systemImage: "xmark", action: { model.isSettingsPresented = false })
+                .tint(.primary)
+            }
+          }
+      }
+    }
   }
 
   private var portraitLayout: some View {
     VStack(spacing: 0) {
       VStack(spacing: 0) {
-        cover
+        Artwork(model: model)
 
         Spacer(minLength: 24)
 
@@ -154,7 +217,7 @@ struct BookPlayer: View {
 
   private var landscapeLayout: some View {
     HStack(spacing: 24) {
-      cover
+      Artwork(model: model)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .containerRelativeFrame(.horizontal) { width, _ in width * 0.4 }
 
@@ -176,70 +239,6 @@ struct BookPlayer: View {
       .disabled(model.isLoading)
     }
     .padding(.horizontal, 24)
-  }
-
-  private var cover: some View {
-    NavigationLink(
-      value: model.podcastID != nil
-        ? NavigationDestination.podcast(id: model.podcastID ?? model.id)
-        : NavigationDestination.book(id: model.id)
-    ) {
-      Cover(url: model.coverURL, style: .plain)
-        .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
-        .aspectRatio(1, contentMode: .fit)
-        .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
-    }
-    .accessibilityLabel("Book details")
-    .overlay(alignment: .topLeading) {
-      let progress = model.playbackProgress.totalProgress.formatted(.percent.precision(.fractionLength(0)))
-      badge(text: Text(progress), accessibilityLabel: progress)
-    }
-    .overlay(alignment: .topTrailing) {
-      timerOverlay
-    }
-    .buttonStyle(.plain)
-  }
-
-  @ViewBuilder
-  private var timerOverlay: some View {
-    switch model.timer.current {
-    case .preset(let seconds), .custom(let seconds):
-      let text = Duration.seconds(seconds).formatted(
-        .units(
-          allowed: [.hours, .minutes, .seconds],
-          width: .narrow
-        )
-      )
-      let remaining = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds]))
-      let accessibilityLabel = "Sleep timer: \(remaining) remaining"
-      badge(icon: "timer", text: Text(text), accessibilityLabel: accessibilityLabel)
-    case .chapters(let count):
-      let label = count > 1 ? "End of \(count) chapters" : "End of chapter"
-      let accessibilityLabel = "Sleep timer: \(label)"
-      badge(icon: "timer", text: Text(label), accessibilityLabel: accessibilityLabel)
-    case .none:
-      EmptyView()
-    }
-  }
-
-  @ViewBuilder
-  private func badge(icon: String? = nil, text: Text, accessibilityLabel: String) -> some View {
-    HStack(spacing: 4) {
-      if let icon {
-        Image(systemName: icon)
-      }
-      text
-    }
-    .font(.footnote)
-    .fontWeight(.bold)
-    .padding(.horizontal, 8)
-    .padding(.vertical, 4)
-    .background(Color.black.opacity(0.7))
-    .foregroundColor(.white)
-    .clipShape(.capsule)
-    .padding(4)
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel(accessibilityLabel)
   }
 
   @ViewBuilder
@@ -399,81 +398,78 @@ struct BookPlayer: View {
         }
         .frame(maxWidth: .infinity)
       }
-
-      if model.history != nil {
-        Button(action: { model.onHistoryTapped() }) {
-          VStack(spacing: 6) {
-            Image(systemName: "clock.arrow.circlepath")
-              .font(.system(size: 20))
-              .foregroundColor(.white)
-              .frame(width: 20, height: 20)
-            Text("History")
-              .font(.caption2)
-              .foregroundColor(.white.opacity(0.7))
-          }
-        }
-        .frame(maxWidth: .infinity)
-      }
-
-      if Audiobookshelf.shared.authentication.permissions?.download == true {
-        if model.downloadState == .downloaded {
-          ConfirmationButton(
-            confirmation: .init(title: "Remove Download", action: "Delete"),
-            action: { model.onDownloadTapped() }
-          ) {
-            downloadLabel
-          }
-          .frame(maxWidth: .infinity)
-        } else {
-          Button(action: { model.onDownloadTapped() }) {
-            downloadLabel
-          }
-          .frame(maxWidth: .infinity)
-        }
-      }
     }
     .padding(.vertical, 12)
     .buttonStyle(.borderless)
   }
+}
 
-  private var downloadLabel: some View {
-    var icon: String
-    var title: String
-    switch model.downloadState {
-    case .downloading:
-      icon = "stop.circle"
-      title = String(localized: "Cancel")
-    case .downloaded:
-      icon = "internaldrive"
-      title = String(localized: "Remove")
-    case .notDownloaded:
-      icon = "icloud.and.arrow.down"
-      title = String(localized: "Download")
+extension BookPlayer {
+  struct Artwork: View {
+    @ObservedObject var model: Model
+
+    var body: some View {
+      NavigationLink(
+        value: model.podcastID != nil
+          ? NavigationDestination.podcast(id: model.podcastID ?? model.id)
+          : NavigationDestination.book(id: model.id)
+      ) {
+        Cover(url: model.coverURL, style: .plain)
+          .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
+          .aspectRatio(1, contentMode: .fit)
+          .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+      }
+      .accessibilityLabel("Book details")
+      .overlay(alignment: .topLeading) {
+        let progress = model.playbackProgress.totalProgress.formatted(.percent.precision(.fractionLength(0)))
+        badge(text: Text(progress), accessibilityLabel: progress)
+      }
+      .overlay(alignment: .topTrailing) {
+        timerOverlay
+      }
+      .buttonStyle(.plain)
     }
 
-    return VStack(spacing: 6) {
-      Image(systemName: icon)
-        .font(.system(size: 20))
-        .foregroundColor(.white)
-        .frame(width: 20, height: 20)
-        .opacity([.downloaded, .notDownloaded].contains(model.downloadState) ? 1 : 0)
-        .overlay {
-          if case .downloading(let progress) = model.downloadState {
-            ProgressView(value: progress)
-              .progressViewStyle(GaugeProgressViewStyle(tint: .white))
-          }
-        }
+    @ViewBuilder
+    private var timerOverlay: some View {
+      switch model.timer.current {
+      case .preset(let seconds), .custom(let seconds):
+        let text = Duration.seconds(seconds).formatted(
+          .units(
+            allowed: [.hours, .minutes, .seconds],
+            width: .narrow
+          )
+        )
+        let remaining = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds]))
+        let accessibilityLabel = "Sleep timer: \(remaining) remaining"
+        badge(icon: "timer", text: Text(text), accessibilityLabel: accessibilityLabel)
+      case .chapters(let count):
+        let label = count > 1 ? "End of \(count) chapters" : "End of chapter"
+        let accessibilityLabel = "Sleep timer: \(label)"
+        badge(icon: "timer", text: Text(label), accessibilityLabel: accessibilityLabel)
+      case .none:
+        EmptyView()
+      }
+    }
 
-      Text(title)
-        .font(.caption2)
-        .lineLimit(1)
-        .hidden()
-        .overlay(alignment: .top) {
-          Text(title)
-            .font(.caption2)
-            .foregroundColor(.white.opacity(0.7))
-            .fixedSize(horizontal: false, vertical: true)
+    @ViewBuilder
+    private func badge(icon: String? = nil, text: Text, accessibilityLabel: String) -> some View {
+      HStack(spacing: 4) {
+        if let icon {
+          Image(systemName: icon)
         }
+        text
+      }
+      .font(.footnote)
+      .fontWeight(.bold)
+      .padding(.horizontal, 8)
+      .padding(.vertical, 4)
+      .background(Color.black.opacity(0.7))
+      .foregroundColor(.white)
+      .clipShape(.capsule)
+      .padding(4)
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(accessibilityLabel)
     }
   }
 }
@@ -500,6 +496,8 @@ extension BookPlayer {
     var downloadState: DownloadManager.DownloadState
 
     var isPresented: Bool = true
+    var isSettingsPresented: Bool = false
+    var isQueuePresented: Bool = false
 
     func onTogglePlaybackTapped() {}
     func onPauseTapped() {}

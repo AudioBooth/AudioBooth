@@ -3,11 +3,8 @@ import SwiftUI
 final class PlayerQueueViewModel: PlayerQueueView.Model {
   private let playerManager = PlayerManager.shared
   private let userPreferences = UserPreferences.shared
-  private let dismiss: () -> Void
 
-  init(dismiss: @escaping () -> Void) {
-    self.dismiss = dismiss
-
+  init() {
     let current = PlayerManager.shared.current
     let currentItem: QueueItem? = {
       guard let current else { return nil }
@@ -38,10 +35,6 @@ final class PlayerQueueViewModel: PlayerQueueView.Model {
     observeAutoPlayNext()
   }
 
-  override func onDoneTapped() {
-    dismiss()
-  }
-
   override func onDelete(at offsets: IndexSet) {
     for index in offsets {
       let item = queue[index]
@@ -59,11 +52,6 @@ final class PlayerQueueViewModel: PlayerQueueView.Model {
     playerManager.playFromQueue(item)
     currentItem = item
     queue = playerManager.queue
-  }
-
-  override func onNowPlayingTapped() {
-    dismiss()
-    playerManager.showFullPlayer()
   }
 
   override func onClearQueueTapped() {
