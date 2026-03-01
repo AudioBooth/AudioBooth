@@ -13,7 +13,8 @@ public final class BooksService {
     sortBy: SortBy? = nil,
     ascending: Bool = true,
     collapseSeries: Bool = false,
-    filter: String? = nil
+    filter: String? = nil,
+    libraryID: String? = nil
   ) async throws -> Page<Book> {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
@@ -21,7 +22,8 @@ public final class BooksService {
       )
     }
 
-    guard let library = audiobookshelf.libraries.current else {
+    let library = libraryID ?? audiobookshelf.libraries.current?.id
+    guard let library else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "No library selected. Please select a library first."
       )
@@ -49,7 +51,7 @@ public final class BooksService {
     }
 
     let request = NetworkRequest<Page<Book>>(
-      path: "/api/libraries/\(library.id)/items",
+      path: "/api/libraries/\(library)/items",
       method: .get,
       query: query
     )

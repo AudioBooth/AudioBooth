@@ -42,8 +42,8 @@ struct LibraryRootPage: View {
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
           case .offline:
             OfflineListView(model: OfflineListViewModel())
-          case .author(let id, let name):
-            AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
+          case .author(let id, let name, let libraryID):
+            AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name, libraryID: libraryID))
           case .series, .narrator, .genre, .tag, .authorLibrary:
             LibraryPage(model: LibraryPageModel(destination: destination))
           case .podcast(let id, let episodeID):

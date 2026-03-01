@@ -205,6 +205,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         ebooks: ebooks
       )
 
+      libraryID = book.libraryID
       error = nil
       isLoading = false
 

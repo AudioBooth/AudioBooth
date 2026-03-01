@@ -294,13 +294,14 @@ struct PodcastDetailsView: View {
 
       FlowLayout(spacing: 4) {
         ForEach(genres, id: \.self) { genre in
-          NavigationLink(value: NavigationDestination.genre(name: genre)) {
+          NavigationLink(value: NavigationDestination.genre(name: genre, libraryID: model.libraryID)) {
             Chip(
               title: genre,
               icon: "theatermasks.fill",
               color: .gray
             )
           }
+          .disabled(model.libraryID == nil)
         }
       }
     }
@@ -313,13 +314,14 @@ struct PodcastDetailsView: View {
 
       FlowLayout(spacing: 4) {
         ForEach(tags, id: \.self) { tag in
-          NavigationLink(value: NavigationDestination.tag(name: tag)) {
+          NavigationLink(value: NavigationDestination.tag(name: tag, libraryID: model.libraryID)) {
             Chip(
               title: tag,
               icon: "tag.fill",
               color: .gray
             )
           }
+          .disabled(model.libraryID == nil)
         }
       }
     }
@@ -576,6 +578,7 @@ extension PodcastDetailsView {
   @Observable
   class Model: ObservableObject {
     let podcastID: String
+    var libraryID: String?
     var title: String
     var author: String?
     var coverURL: URL?

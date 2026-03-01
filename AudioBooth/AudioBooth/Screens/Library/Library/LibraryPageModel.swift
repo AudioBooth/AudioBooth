@@ -10,6 +10,7 @@ final class LibraryPageModel: LibraryPage.Model {
 
   private var filter: Filter?
   private var sortBy: SortBy?
+  private var libraryID: String?
 
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
@@ -37,36 +38,41 @@ final class LibraryPageModel: LibraryPage.Model {
 
   init(destination: NavigationDestination) {
     switch destination {
-    case .series(let id, let name):
+    case .series(let id, let name, let libraryID):
       self.filter = .series(id, name)
+      self.libraryID = libraryID
       super.init(
         hasMorePages: true,
         isRoot: false,
         title: name
       )
-    case .authorLibrary(let id, let name):
+    case .authorLibrary(let id, let name, let libraryID):
       self.filter = .authors(id, name)
+      self.libraryID = libraryID
       super.init(
         hasMorePages: true,
         isRoot: false,
         title: name
       )
-    case .narrator(let name):
+    case .narrator(let name, let libraryID):
       self.filter = .narrators(name)
+      self.libraryID = libraryID
       super.init(
         hasMorePages: true,
         isRoot: false,
         title: name
       )
-    case .genre(let name):
+    case .genre(let name, let libraryID):
       self.filter = .genres(name)
+      self.libraryID = libraryID
       super.init(
         hasMorePages: true,
         isRoot: false,
         title: name
       )
-    case .tag(let name):
+    case .tag(let name, let libraryID):
       self.filter = .tags(name)
+      self.libraryID = libraryID
       super.init(
         hasMorePages: true,
         isRoot: false,
@@ -260,7 +266,8 @@ final class LibraryPageModel: LibraryPage.Model {
         sortBy: sortBy,
         ascending: ascending,
         collapseSeries: collapseSeries,
-        filter: filter
+        filter: filter,
+        libraryID: libraryID
       )
 
       var newItems = [LibraryView.Item]()

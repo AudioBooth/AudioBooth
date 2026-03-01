@@ -119,7 +119,13 @@ struct AuthorDetailsView: View {
 
   private func seriesSection(_ seriesWithBooks: Model.SeriesWithBooks) -> some View {
     VStack(alignment: .leading, spacing: 12) {
-      NavigationLink(value: NavigationDestination.series(id: seriesWithBooks.id, name: seriesWithBooks.name)) {
+      NavigationLink(
+        value: NavigationDestination.series(
+          id: seriesWithBooks.id,
+          name: seriesWithBooks.name,
+          libraryID: model.libraryID
+        )
+      ) {
         HStack {
           Text(seriesWithBooks.name)
             .font(.title2)
@@ -137,6 +143,7 @@ struct AuthorDetailsView: View {
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
+      .disabled(model.libraryID == nil)
 
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(alignment: .top, spacing: 16) {
@@ -152,7 +159,9 @@ struct AuthorDetailsView: View {
 
   private var allBooksSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      NavigationLink(value: NavigationDestination.authorLibrary(id: model.authorID, name: model.name)) {
+      NavigationLink(
+        value: NavigationDestination.authorLibrary(id: model.authorID, name: model.name, libraryID: model.libraryID)
+      ) {
         HStack {
           Text("^[\(model.allBooks.count) Book](inflect: true)")
             .font(.title2)
@@ -170,6 +179,7 @@ struct AuthorDetailsView: View {
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
+      .disabled(model.libraryID == nil)
 
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(alignment: .top, spacing: 16) {
@@ -188,6 +198,7 @@ extension AuthorDetailsView {
   @Observable
   class Model: ObservableObject {
     let authorID: String
+    var libraryID: String?
     var name: String
     var description: String?
     var imageURL: URL?
@@ -201,6 +212,7 @@ extension AuthorDetailsView {
 
     init(
       authorID: String,
+      libraryID: String? = nil,
       name: String = "",
       description: String? = nil,
       imageURL: URL? = nil,
@@ -211,6 +223,7 @@ extension AuthorDetailsView {
       error: String? = nil
     ) {
       self.authorID = authorID
+      self.libraryID = libraryID
       self.name = name
       self.description = description
       self.imageURL = imageURL

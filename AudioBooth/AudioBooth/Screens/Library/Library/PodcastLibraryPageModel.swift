@@ -29,14 +29,14 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
 
   init(destination: NavigationDestination) {
     switch destination {
-    case .genre(let name):
+    case .genre(let name, _):
       self.filter = .genres(name)
       super.init(
         hasMorePages: true,
         isRoot: false,
         title: name
       )
-    case .tag(let name):
+    case .tag(let name, _):
       self.filter = .tags(name)
       super.init(
         hasMorePages: true,

@@ -2,11 +2,22 @@ import Foundation
 
 public struct Podcast: Codable, Sendable {
   public let id: String
+  public let libraryID: String
   public let media: Media
   public let addedAt: Date
   public let updatedAt: Date
   public let numEpisodesIncomplete: Int?
   public let recentEpisode: PodcastEpisode?
+
+  enum CodingKeys: String, CodingKey {
+    case id
+    case libraryID = "libraryId"
+    case media
+    case addedAt
+    case updatedAt
+    case numEpisodesIncomplete
+    case recentEpisode
+  }
 
   public func coverURL(raw: Bool = false) -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }

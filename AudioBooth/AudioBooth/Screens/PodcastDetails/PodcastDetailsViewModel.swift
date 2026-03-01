@@ -252,6 +252,7 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       description = podcast.description?.replacingOccurrences(of: "\n", with: "<br>")
       genres = podcast.genres
       tags = podcast.tags
+      libraryID = podcast.libraryID
       isExplicit = podcast.media.metadata.explicit ?? false
       language = podcast.language
       podcastType = podcast.podcastType

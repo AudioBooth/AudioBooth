@@ -7,9 +7,10 @@ import Models
 final class AuthorDetailsViewModel: AuthorDetailsView.Model {
   private var authorsService: AuthorsService { Audiobookshelf.shared.authors }
 
-  init(authorID: String, name: String = "") {
+  init(authorID: String, name: String = "", libraryID: String? = nil) {
     super.init(
       authorID: authorID,
+      libraryID: libraryID,
       name: name,
       isLoading: true
     )

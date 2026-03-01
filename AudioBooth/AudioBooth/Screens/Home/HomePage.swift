@@ -49,7 +49,7 @@ struct HomePage: View {
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
           case .offline:
             OfflineListView(model: OfflineListViewModel())
-          case .author(let id, let name):
+          case .author(let id, let name, _):
             AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
           case .series, .narrator, .genre, .tag, .authorLibrary:
             LibraryPage(model: LibraryPageModel(destination: destination))

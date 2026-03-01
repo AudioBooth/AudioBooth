@@ -13,7 +13,7 @@ struct SearchPage: View {
           switch destination {
           case .book(let id):
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .author(let id, let name):
+          case .author(let id, let name, _):
             AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
           case .series, .narrator, .genre, .tag, .offline, .authorLibrary:
             LibraryPage(model: LibraryPageModel(destination: destination))

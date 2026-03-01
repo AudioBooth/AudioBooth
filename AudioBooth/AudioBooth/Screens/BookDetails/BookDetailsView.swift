@@ -376,7 +376,9 @@ struct BookDetailsView: View {
 
           FlowLayout(spacing: 4) {
             ForEach(model.authors, id: \.id) { author in
-              NavigationLink(value: NavigationDestination.author(id: author.id, name: author.name)) {
+              NavigationLink(
+                value: NavigationDestination.author(id: author.id, name: author.name, libraryID: model.libraryID)
+              ) {
                 Chip(
                   title: author.name,
                   icon: "person.circle.fill",
@@ -384,11 +386,12 @@ struct BookDetailsView: View {
                 )
                 .accessibilityLabel("\(author.name) author")
               }
+              .disabled(model.libraryID == nil)
             }
 
             if model.metadata.hasAudio {
               ForEach(model.narrators, id: \.self) { narrator in
-                NavigationLink(value: NavigationDestination.narrator(name: narrator)) {
+                NavigationLink(value: NavigationDestination.narrator(name: narrator, libraryID: model.libraryID)) {
                   Chip(
                     title: narrator,
                     icon: "person.wave.2.fill",
@@ -396,6 +399,7 @@ struct BookDetailsView: View {
                   )
                   .accessibilityLabel("\(narrator) narrator")
                 }
+                .disabled(model.libraryID == nil)
               }
             }
           }
@@ -409,7 +413,9 @@ struct BookDetailsView: View {
 
           FlowLayout(spacing: 4) {
             ForEach(model.series, id: \.id) { series in
-              NavigationLink(value: NavigationDestination.series(id: series.id, name: series.name)) {
+              NavigationLink(
+                value: NavigationDestination.series(id: series.id, name: series.name, libraryID: model.libraryID)
+              ) {
                 Chip(
                   title: series.sequence.isEmpty
                     ? series.name : "\(series.name) #\(series.sequence)",
@@ -417,6 +423,7 @@ struct BookDetailsView: View {
                   color: .orange
                 )
               }
+              .disabled(model.libraryID == nil)
             }
           }
         }
@@ -492,13 +499,14 @@ struct BookDetailsView: View {
 
       FlowLayout(spacing: 4) {
         ForEach(genres, id: \.self) { genre in
-          NavigationLink(value: NavigationDestination.genre(name: genre)) {
+          NavigationLink(value: NavigationDestination.genre(name: genre, libraryID: model.libraryID)) {
             Chip(
               title: genre,
               icon: "theatermasks.fill",
               color: .gray
             )
           }
+          .disabled(model.libraryID == nil)
         }
       }
     }
@@ -511,13 +519,14 @@ struct BookDetailsView: View {
 
       FlowLayout(spacing: 4) {
         ForEach(tags, id: \.self) { tag in
-          NavigationLink(value: NavigationDestination.tag(name: tag)) {
+          NavigationLink(value: NavigationDestination.tag(name: tag, libraryID: model.libraryID)) {
             Chip(
               title: tag,
               icon: "tag.fill",
               color: .gray
             )
           }
+          .disabled(model.libraryID == nil)
         }
       }
     }
@@ -614,6 +623,7 @@ extension BookDetailsView {
     }
 
     let bookID: String
+    var libraryID: String?
     var title: String
     var subtitle: String?
     var authors: [Author]
@@ -652,6 +662,7 @@ extension BookDetailsView {
 
     init(
       bookID: String,
+      libraryID: String? = nil,
       title: String = "",
       subtitle: String? = nil,
       authors: [Author] = [],
@@ -676,6 +687,7 @@ extension BookDetailsView {
       progressCard: ProgressCard.Model? = nil
     ) {
       self.bookID = bookID
+      self.libraryID = libraryID
       self.title = title
       self.subtitle = subtitle
       self.authors = authors
