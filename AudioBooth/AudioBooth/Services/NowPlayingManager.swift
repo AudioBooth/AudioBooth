@@ -180,11 +180,13 @@ final class NowPlayingManager {
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = chapters.currentElapsedTime(
         currentTime: mediaProgress.currentTime
       )
+      info[MPNowPlayingInfoPropertyExternalContentIdentifier] = "\(id)-\(current.id)"
     } else {
       info[MPMediaItemPropertyTitle] = title
       info[MPMediaItemPropertyArtist] = author
       info[MPMediaItemPropertyPlaybackDuration] = mediaProgress.duration
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = mediaProgress.currentTime
+      info[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
     }
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = info
