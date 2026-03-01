@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EbookReaderPreferencesView: View {
   @ObservedObject var preferences: EbookReaderPreferences
+  var onEditZones: (() -> Void)?
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -38,6 +39,21 @@ struct EbookReaderPreferencesView: View {
         Section("Layout") {
           Toggle("Scroll Mode", isOn: $preferences.scroll)
           Toggle("Tap to Navigate", isOn: $preferences.tapToNavigate)
+
+          if preferences.tapToNavigate, let onEditZones {
+            Button {
+              onEditZones()
+            } label: {
+              HStack {
+                Text("Tap Zones")
+                  .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                  .foregroundStyle(.secondary)
+                  .font(.caption)
+              }
+            }
+          }
 
           Picker("Page Margins", selection: $preferences.pageMargins) {
             ForEach(EbookReaderPreferences.PageMargins.allCases) { margins in

@@ -4,6 +4,53 @@ import ReadiumNavigator
 import ReadiumShared
 import SwiftUI
 
+enum EbookTapAction: String, CaseIterable, Identifiable, Codable {
+  case previousPage
+  case nextPage
+  case playPause
+  case jumpForward
+  case jumpBackward
+
+  var id: String { rawValue }
+
+  var label: String {
+    switch self {
+    case .previousPage: "Previous Page"
+    case .nextPage: "Next Page"
+    case .playPause: "Play / Pause"
+    case .jumpForward: "Jump Forward"
+    case .jumpBackward: "Jump Backward"
+    }
+  }
+
+  var color: SwiftUI.Color {
+    switch self {
+    case .previousPage: .blue
+    case .nextPage: .green
+    case .playPause: .purple
+    case .jumpForward: .orange
+    case .jumpBackward: .orange
+    }
+  }
+}
+
+struct EbookTapZone: Identifiable, Codable {
+  var id: UUID
+  var action: EbookTapAction
+  var normalizedRect: CGRect
+
+  init(id: UUID = UUID(), action: EbookTapAction, normalizedRect: CGRect) {
+    self.id = id
+    self.action = action
+    self.normalizedRect = normalizedRect
+  }
+}
+
+private let defaultTapZones: [EbookTapZone] = [
+  EbookTapZone(action: .previousPage, normalizedRect: CGRect(x: 0, y: 0, width: 0.25, height: 1)),
+  EbookTapZone(action: .nextPage, normalizedRect: CGRect(x: 0.75, y: 0, width: 0.25, height: 1)),
+]
+
 class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.fontSize") var fontSize: Double = 1.0
   @AppStorage("ebookReader.fontWeight") var fontWeight: Double = 1.0
@@ -13,6 +60,24 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
   @AppStorage("ebookReader.scroll") var scroll: Bool = false
   @AppStorage("ebookReader.tapToNavigate") var tapToNavigate: Bool = true
+
+  @AppStorage("ebookReader.tapZonesData") private var tapZonesData: Data = Data()
+
+  var tapZones: [EbookTapZone] {
+    get {
+      guard !tapZonesData.isEmpty,
+        let zones = try? JSONDecoder().decode([EbookTapZone].self, from: tapZonesData)
+      else { return defaultTapZones }
+      return zones
+    }
+    set {
+      tapZonesData = (try? JSONEncoder().encode(newValue)) ?? Data()
+    }
+  }
+
+  func resetTapZones() {
+    tapZonesData = Data()
+  }
 
   @AppStorage("ebookReader.publisherStyles") var publisherStyles: Bool = true
   @AppStorage("ebookReader.lineHeight") var lineHeight: Double = 1.2

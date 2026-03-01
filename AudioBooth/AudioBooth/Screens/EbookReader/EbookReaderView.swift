@@ -8,7 +8,9 @@ struct EbookReaderView: View {
   @State private var showControls = false
   @State private var showSettings = false
   @State private var showPlayerSheet = false
+  @State private var showZoneEditor = false
   @ObservedObject private var playerManager = PlayerManager.shared
+  private let userPreferences = UserPreferences.shared
 
   var body: some View {
     ZStack {
@@ -55,7 +57,25 @@ struct EbookReaderView: View {
       }
     }
     .sheet(isPresented: $showSettings) {
-      EbookReaderPreferencesView(preferences: model.preferences)
+      EbookReaderPreferencesView(preferences: model.preferences) {
+        showSettings = false
+        Task {
+          try? await Task.sleep(for: .milliseconds(400))
+          showZoneEditor = true
+        }
+      }
+    }
+    .overlay {
+      if showZoneEditor {
+        EbookTapZonesEditorView(preferences: model.preferences) {
+          showZoneEditor = false
+        }
+        .transition(.opacity)
+      }
+    }
+    .animation(.easeInOut(duration: 0.2), value: showZoneEditor)
+    .onChange(of: showZoneEditor) { _, isShowing in
+      if isShowing { showControls = false }
     }
     .sheet(
       isPresented: Binding(
@@ -111,7 +131,7 @@ struct EbookReaderView: View {
       .simultaneousGesture(
         SpatialTapGesture()
           .onEnded { value in
-            handleTap(at: value.location.x)
+            handleTap(at: value.location)
           }
       )
       .animation(.easeInOut(duration: 0.2), value: showControls)
@@ -126,20 +146,48 @@ struct EbookReaderView: View {
       }
   }
 
-  private func handleTap(at x: CGFloat) {
-    let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
-    let windowWidth = windowScene?.windows.first?.bounds.width ?? UIScreen.main.bounds.width
-    let leftThreshold = windowWidth * 0.25
-    let rightThreshold = windowWidth * 0.75
+  private func handleTap(at point: CGPoint) {
+    guard model.preferences.tapToNavigate else {
+      withAnimation(.easeInOut(duration: 0.2)) { showControls.toggle() }
+      return
+    }
 
-    if model.preferences.tapToNavigate, x < leftThreshold {
+    let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+    let bounds = windowScene?.windows.first?.bounds ?? UIScreen.main.bounds
+    let normalizedPoint = CGPoint(x: point.x / bounds.width, y: point.y / bounds.height)
+
+    for zone in model.preferences.tapZones.reversed() where zone.normalizedRect.contains(normalizedPoint) {
+      executeAction(zone.action)
+      return
+    }
+
+    withAnimation(.easeInOut(duration: 0.2)) { showControls.toggle() }
+  }
+
+  private func executeAction(_ action: EbookTapAction) {
+    switch action {
+    case .previousPage:
       model.onTapLeft()
-    } else if model.preferences.tapToNavigate, x > rightThreshold {
+    case .nextPage:
       model.onTapRight()
-    } else {
-      withAnimation(.easeInOut(duration: 0.2)) {
-        showControls.toggle()
+    case .playPause:
+      guard playerManager.current != nil else {
+        withAnimation(.easeInOut(duration: 0.2)) { showControls.toggle() }
+        return
       }
+      if playerManager.isPlaying { playerManager.pause() } else { playerManager.play() }
+    case .jumpForward:
+      guard let player = playerManager.current else {
+        withAnimation(.easeInOut(duration: 0.2)) { showControls.toggle() }
+        return
+      }
+      player.onSkipForwardTapped(seconds: userPreferences.skipForwardInterval)
+    case .jumpBackward:
+      guard let player = playerManager.current else {
+        withAnimation(.easeInOut(duration: 0.2)) { showControls.toggle() }
+        return
+      }
+      player.onSkipBackwardTapped(seconds: userPreferences.skipBackwardInterval)
     }
   }
 
