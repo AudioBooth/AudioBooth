@@ -17,6 +17,12 @@
             "value" : " %@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -42,6 +48,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-%@"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "-%@"
@@ -77,6 +89,12 @@
             "value" : "·"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -105,6 +123,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Bitrate:** %lld kbps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Tasa de bits:** %lld kbps"
           }
         },
         "fr" : {
@@ -143,6 +167,12 @@
             "value" : "**Channel:** %1$lld (%2$@)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Canal:** %1$lld (%2$@)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -168,6 +198,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Codec:** %@"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Codec:** %@"
@@ -203,6 +239,12 @@
             "value" : "**Dauer:** %@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Duración:** %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -231,6 +273,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Episoden:** %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Episodios:** %lld"
           }
         },
         "fr" : {
@@ -263,6 +311,12 @@
             "value" : "**Sprache:** %@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Idioma:** %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -291,6 +345,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Erschienen:** %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Publicado:** %@"
           }
         },
         "fr" : {
@@ -323,6 +383,12 @@
             "value" : "**Verlag:** %@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Editorial:** %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -351,6 +417,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Größe:** %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Tamaño:** %@"
           }
         },
         "fr" : {
@@ -383,6 +455,12 @@
             "value" : "**Typ:** %@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Tipo:** %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -413,6 +491,12 @@
             "value" : "#%@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "#%@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -438,6 +522,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@"
@@ -479,6 +569,12 @@
             "value" : "%1$@ → %2$@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ → %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -507,6 +603,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ Autor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@autor"
           }
         },
         "fr" : {
@@ -539,6 +641,12 @@
             "value" : "%@ Sprecher"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@narrador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -564,6 +672,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@×"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@×"
@@ -599,6 +713,12 @@
             "value" : "%lld"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -627,6 +747,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld Min."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
           }
         },
         "fr" : {
@@ -659,6 +785,12 @@
             "value" : "%lld Minuten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld minutos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -685,6 +817,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld Sekunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld segundos"
           }
         },
         "fr" : {
@@ -717,6 +855,12 @@
             "value" : "%lld%% abgeschlossen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld%% completado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -747,6 +891,12 @@
             "value" : "%lldms"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldms"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -770,6 +920,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "•"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "•"
@@ -805,6 +961,12 @@
             "value" : "^[%lld Buch](inflect: true)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld libro](inflect: true)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -833,6 +995,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "^[%lld Buch](inflect: true)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld Libro](inflect: true)"
           }
         },
         "fr" : {
@@ -865,6 +1033,12 @@
             "value" : "^[%lld Element](inflect: true)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld elemento](inflect: true)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -890,6 +1064,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "●"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "●"
@@ -925,6 +1105,12 @@
             "value" : "⚠️ Dies löscht ALLE App-Daten inkl. Downloads, Einstellungen und Fortschritt. Du musst dich erneut anmelden. App-Neustart erforderlich."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Esto borrará todos los datos de la aplicación incluído las descargas, ajustes y progreso. Necesitarás volver a iniciar sesión de nuevo. Requiere un reinicio de la aplicación."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -955,6 +1141,12 @@
             "value" : "1 Std."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 hr"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -983,6 +1175,12 @@
             "value" : "5 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1006,6 +1204,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "5s"
@@ -1039,6 +1243,12 @@
             "value" : "10 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1062,6 +1272,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "10s"
@@ -1095,6 +1311,12 @@
             "value" : "15 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1118,6 +1340,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "15s"
@@ -1151,6 +1379,12 @@
             "value" : "20 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1179,6 +1413,12 @@
             "value" : "30 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1202,6 +1442,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "30s"
@@ -1235,6 +1481,12 @@
             "value" : "45 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "45 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1258,6 +1510,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "45s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "45s"
@@ -1291,6 +1549,12 @@
             "value" : "60 Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "60 min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1314,6 +1578,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "60s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "60s"
@@ -1347,6 +1617,12 @@
             "value" : "75s"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "75s"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1370,6 +1646,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "90s"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "90s"
@@ -1405,6 +1687,12 @@
             "value" : "Über"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1433,6 +1721,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Akzentfarbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de acentuación"
           }
         },
         "fr" : {
@@ -1465,6 +1759,12 @@
             "value" : "Konto"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1493,6 +1793,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Füge **audiobooth://oauth** zu den Redirect-URIs des Audiobookshelf-Servers hinzu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade **audiobooth://oauth** a las URIs de redirección del servidor audiobookshelf"
           }
         },
         "fr" : {
@@ -1525,6 +1831,12 @@
             "value" : "Lesezeichen hinzufügen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir un marcador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1555,6 +1867,12 @@
             "value" : "Lesezeichen hinzufügen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir marcador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1581,6 +1899,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lesezeichen ${content} hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade libros a la cola desde la biblioteca."
           }
         },
         "fr" : {
@@ -1613,6 +1937,12 @@
             "value" : "Bücher aus der Bibliothek zur Warteschlange hinzufügen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade libros a la cola desde la biblioteca."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1641,6 +1971,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Header hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir encabezado"
           }
         },
         "fr" : {
@@ -1673,6 +2009,12 @@
             "value" : "Server hinzufügen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir servidor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1701,6 +2043,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zur Sammlung hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a la colección"
           }
         },
         "fr" : {
@@ -1733,6 +2081,12 @@
             "value" : "Zur Playlist hinzufügen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a la lista de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1761,6 +2115,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zur Warteschlange hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a la cola"
           }
         },
         "fr" : {
@@ -1793,6 +2153,12 @@
             "value" : "Fügt an der aktuellen Stelle des laufenden Hörbuchs ein Lesezeichen hinzu."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade un marcador en la posición actual del audiolibro en reprodución."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1819,6 +2185,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kapitel-Fortschritt anpassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar progreso de capítulos a la velocidad"
           }
         },
         "fr" : {
@@ -1851,6 +2223,12 @@
             "value" : "Passt die Covergröße für die Bereiche \"Weiterhören\" und \"Weiterlesen\" an."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajusta el tamaño de la portada de las secciones Continuar escuchando y Continuar leyendo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1877,6 +2255,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Restzeit anpassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar tiempo restante a la velocidad"
           }
         },
         "fr" : {
@@ -1909,6 +2293,12 @@
             "value" : "Erweitert"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1939,6 +2329,12 @@
             "value" : "Erweiterte Typografie"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipografía avanzada"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1965,6 +2361,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nach Pause"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tras una pausa"
           }
         },
         "fr" : {
@@ -1997,6 +2399,12 @@
             "value" : "Alias (optional)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alias (opcional)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2023,6 +2431,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Änderung der Wiedergabeposition erlauben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir cambiar la posición de reproducción"
           }
         },
         "fr" : {
@@ -2055,6 +2469,12 @@
             "value" : "Bereits im ersten Kapitel."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya estás en el primer capítulo."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2083,6 +2503,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bereits im letzten Kapitel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya estás en el último capítulo."
           }
         },
         "fr" : {
@@ -2115,6 +2541,12 @@
             "value" : "App-Symbol"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icono de la aplicación"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2143,6 +2575,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erscheinungsbild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apariencia"
           }
         },
         "fr" : {
@@ -2175,6 +2613,12 @@
             "value" : "Möchtest du diese Sammlung wirklich entfernen?"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Estás seguro de eliminar esta colección?"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2205,6 +2649,12 @@
             "value" : "Möchtest du deine Playlist \"%@\" wirklich entfernen?"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Estás seguro de eliminar la lista de reproducción \"%@\"?"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2231,6 +2681,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Audio-Ausblendung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atenuación de salida de audio"
           }
         },
         "fr" : {
@@ -2263,6 +2719,12 @@
             "value" : "Hörbücher & E-Books"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audiolibros y libros"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2291,6 +2753,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentifizierung..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticando…"
           }
         },
         "fr" : {
@@ -2323,6 +2791,12 @@
             "value" : "Authentifizierung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticación"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2351,6 +2825,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentifizierungsfehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error de autenticación"
           }
         },
         "fr" : {
@@ -2383,6 +2863,12 @@
             "value" : "Authentifizierungsmethode"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Método de autenticación"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2411,6 +2897,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentifizierung erforderlich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticación requerida"
           }
         },
         "fr" : {
@@ -2443,6 +2935,12 @@
             "value" : "Autoren"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autores"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2473,6 +2971,12 @@
             "value" : "Autoren & Sprecher"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autores y narradores"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2496,6 +3000,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auto"
@@ -2531,6 +3041,12 @@
             "value" : "Automatisches Scrollen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazamiento automático"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2557,6 +3073,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatischer Timer-Modus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo temporizador automático"
           }
         },
         "fr" : {
@@ -2589,6 +3111,12 @@
             "value" : "Bücher automatisch herunterladen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar libros automáticamente"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2619,6 +3147,12 @@
             "value" : "Automatisch weiter abspielen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir siguiente automáticamente"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2645,6 +3179,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatischer Sleep-Timer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador de reposo automático"
           }
         },
         "fr" : {
@@ -2675,6 +3215,12 @@
             "value" : "Startet automatisch einen Sleep-Timer, wenn in einem bestimmten Zeitfenster abgespielt wird."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia automáticamente el temporizador de reposo al reproducir dentro de un horario específico."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2701,6 +3247,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zurück"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atrás"
           }
         },
         "fr" : {
@@ -2737,6 +3289,12 @@
             "value" : "Back %1$llds Forward %2$llds"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder %1$lld s  Avanzar %2$lld s"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2765,6 +3323,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Buchdetails"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles del libro"
           }
         },
         "fr" : {
@@ -2797,6 +3361,12 @@
             "value" : "Buchdetails"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles del libro"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2825,6 +3395,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lesezeichen zu %@ hinzugefügt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcador añadido a %@"
           }
         },
         "fr" : {
@@ -2857,6 +3433,12 @@
             "value" : "Lesezeichen-Titel"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título del marcador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2883,6 +3465,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lesezeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcadores"
           }
         },
         "fr" : {
@@ -2915,6 +3503,12 @@
             "value" : "Bücher"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libros"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2943,6 +3537,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bücher und Episoden, die Sie herunterladen, werden hier angezeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los libros y episodios que descargues aparecerán aquí"
           }
         },
         "fr" : {
@@ -2975,6 +3575,12 @@
             "value" : "Cache-Größe"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del caché"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3003,6 +3609,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abbrechen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
           }
         },
         "fr" : {
@@ -3035,6 +3647,12 @@
             "value" : "Download abbrechen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar descarga"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3063,6 +3681,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sleep-Timer abbrechen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar temporizador de reposo"
           }
         },
         "fr" : {
@@ -3095,6 +3719,12 @@
             "value" : "Bricht jeden aktiven Sleep-Timer ab."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancela cualquier temporizador de reposo activo."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3121,6 +3751,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kapitel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capítulo"
           }
         },
         "fr" : {
@@ -3153,6 +3789,12 @@
             "value" : "Kapitel"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capítulos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3179,6 +3821,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wähle, wie weit beim Hören vor- und zurückgesprungen wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige cuánto avanzar o retroceder al escuchar."
           }
         },
         "fr" : {
@@ -3211,6 +3859,12 @@
             "value" : "Löschen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpiar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3239,6 +3893,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Downloads löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpiar todas las descargas"
           }
         },
         "fr" : {
@@ -3271,6 +3931,12 @@
             "value" : "Alle Downloads löschen?"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Limpiar todas las descargas?"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3299,6 +3965,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bild-Cache leeren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpiar caché de imágenes"
           }
         },
         "fr" : {
@@ -3331,6 +4003,12 @@
             "value" : "Bild-Cache leeren?"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Limpiar caché de imágenes?"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3359,6 +4037,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Persistenten Speicher leeren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpiar almacenamiento persistente"
           }
         },
         "fr" : {
@@ -3391,6 +4075,12 @@
             "value" : "Schließen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3419,6 +4109,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Serien einklappen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer series"
           }
         },
         "fr" : {
@@ -3451,6 +4147,12 @@
             "value" : "Sammlungstyp"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de colección"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3479,6 +4181,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sammlungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colecciones"
           }
         },
         "fr" : {
@@ -3511,6 +4219,12 @@
             "value" : "Sammlungen werden von allen Nutzern auf dem Server geteilt."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las colecciones se comparten entre todos los usuarios del servidor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3541,6 +4255,12 @@
             "value" : "Farbschema"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema de color"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3567,6 +4287,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lege fest, wie Wiedergabe und Fortschritt für Bücher mit Kapiteln angezeigt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura como se muestra la reproducción y el progreso de los libros con capítulos."
           }
         },
         "fr" : {
@@ -3597,6 +4323,12 @@
             "value" : "Lege fest, wie die Wiedergabesteuerung auf dem Sperrbildschirm funktioniert."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura el comportamiento de los controles en la pantalla de bloqueo."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3623,6 +4355,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lege fest, wie Zeitangaben von der Wiedergabegeschwindigkeit beeinflusst werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura cómo la velocidad de reproducción afecta a la visualización del tiempo."
           }
         },
         "fr" : {
@@ -3655,6 +4393,12 @@
             "value" : "Verbunden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3683,6 +4427,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindungsfehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error de conexión"
           }
         },
         "fr" : {
@@ -3715,6 +4465,12 @@
             "value" : "Konsole"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consola"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3743,6 +4499,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inhalt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido"
           }
         },
         "fr" : {
@@ -3775,6 +4537,12 @@
             "value" : "Inhalt"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenidos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3803,6 +4571,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weiterhören"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar escuchando"
           }
         },
         "fr" : {
@@ -3835,6 +4609,12 @@
             "value" : "Weiterlesen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar leyendo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3863,6 +4643,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Größe des Weiter-Bereichs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de las secciones Continuar"
           }
         },
         "fr" : {
@@ -3895,6 +4681,12 @@
             "value" : "Serie fortsetzen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar con la serie"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3921,6 +4713,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steuerelemente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controles"
           }
         },
         "fr" : {
@@ -3953,6 +4751,12 @@
             "value" : "Coverbilder werden bei Bedarf erneut geladen."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las imágenes de portada se volverán a descargar cuando sea necesario."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3981,6 +4785,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear"
           }
         },
         "fr" : {
@@ -4013,6 +4823,12 @@
             "value" : "Erstelle unten dein erstes Lesezeichen."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea tu primer marcador abajo."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4041,6 +4857,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstelle unten deine erste Sammlung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea tu primera colección abajo."
           }
         },
         "fr" : {
@@ -4073,6 +4895,12 @@
             "value" : "Erstelle unten deine erste Playlist."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea tu primera lista de reproducción abajo."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4101,6 +4929,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstelle deine erste Playlist, um zu starten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea tu primera lista de reproducción para empezar."
           }
         },
         "fr" : {
@@ -4133,6 +4967,12 @@
             "value" : "Zugangsdaten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenciales"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4161,6 +5001,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzerdefinierte Header"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encabezados personalizados"
           }
         },
         "fr" : {
@@ -4193,6 +5039,12 @@
             "value" : "Benutzerdefinierte Header werden bei jeder Anfrage an deinen Server gesendet."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se enviarán encabezados personalizados con cada solicitud a tu servidor."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4221,6 +5073,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzerdefinierte Zeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo personalizado"
           }
         },
         "fr" : {
@@ -4253,6 +5111,12 @@
             "value" : "Dunkel"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oscuro"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4279,6 +5143,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tag"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Día"
           }
         },
         "fr" : {
@@ -4311,6 +5181,12 @@
             "value" : "Tagesserie"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha diaria"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4339,6 +5215,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Debug"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depuración"
           }
         },
         "fr" : {
@@ -4371,6 +5253,12 @@
             "value" : "STANDARD"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PREDETERMINADO"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4399,6 +5287,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verzögerung vor Download"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo de espera antes de la descarga"
           }
         },
         "fr" : {
@@ -4431,6 +5325,12 @@
             "value" : "Löschen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4459,6 +5359,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sammlung löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar colección"
           }
         },
         "fr" : {
@@ -4491,6 +5397,12 @@
             "value" : "Playlist löschen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar lista de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4519,6 +5431,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beschreibung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descripción"
           }
         },
         "fr" : {
@@ -4551,6 +5469,12 @@
             "value" : "Beschreibung (optional)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descripci´n (optcional)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4579,6 +5503,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht verbunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desconectado"
           }
         },
         "fr" : {
@@ -4611,6 +5541,12 @@
             "value" : "Entdecken"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubrir"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4639,6 +5575,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discovery-Port"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubrir puerto"
           }
         },
         "fr" : {
@@ -4671,6 +5613,12 @@
             "value" : "Fertig"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hecho"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4699,6 +5647,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar"
           }
         },
         "fr" : {
@@ -4731,6 +5685,12 @@
             "value" : "Alle herunterladen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar todo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4759,6 +5719,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download-Einstellungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar ajustes"
           }
         },
         "fr" : {
@@ -4791,6 +5757,12 @@
             "value" : "Download-Tab"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pestaña de descarga"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4819,6 +5791,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heruntergeladen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargado"
           }
         },
         "fr" : {
@@ -4851,6 +5829,12 @@
             "value" : "Heruntergeladene Bücher"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libros descargados"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4881,6 +5865,12 @@
             "value" : "Heruntergeladene Inhalte"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido descargado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4907,6 +5897,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wird heruntergeladen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando"
           }
         },
         "fr" : {
@@ -4939,6 +5935,12 @@
             "value" : "Downloads"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4967,6 +5969,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ziehe, um aktivierte Bereiche neu zu ordnen. Weiterhören und Weiterlesen können nicht deaktiviert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrastra para reordenar las secciones activadas. Continuar escuchando y Continuar leyendo no se pueden desactivar."
           }
         },
         "fr" : {
@@ -4999,6 +6007,12 @@
             "value" : "Zum Neuanordnen ziehen. Deaktivierte Steuerelemente werden in das Player-Menü verschoben."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrastra para reordenar. Los controles desactivados se mueven al menú del reproductor."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5027,6 +6041,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dauer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración"
           }
         },
         "fr" : {
@@ -5059,6 +6079,12 @@
             "value" : "Dauer des Sleep-Timers"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración del temporizador de reposo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5087,6 +6113,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Dauer muss größer als 0 Minuten sein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La duración debe ser mayor de 0 minutos."
           }
         },
         "fr" : {
@@ -5119,6 +6151,12 @@
             "value" : "Dauer zum Zurückspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración del salto hacia atrás"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5149,6 +6187,12 @@
             "value" : "Dauer zum Vorspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración del salto hacia delante"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5174,6 +6218,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E%@"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "E%@"
@@ -5207,6 +6257,12 @@
             "value" : "E-Books"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libros electrónicos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5235,6 +6291,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lesezeichen bearbeiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar marcador"
           }
         },
         "fr" : {
@@ -5267,6 +6329,12 @@
             "value" : "Playlist bearbeiten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar lista de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5297,6 +6365,12 @@
             "value" : "Support kontaktieren"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar correo a soporte"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5325,6 +6399,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activado"
           }
         },
         "fr" : {
@@ -5363,6 +6443,12 @@
             "value" : "End of %1$lld %2$@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final del capítulo %1$lld de %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5393,6 +6479,12 @@
             "value" : "Ende nach %lld Kapiteln"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final de %lld capítulos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5421,6 +6513,12 @@
             "value" : "Ende nach 2 Kapiteln"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final de 2 capítulos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5447,6 +6545,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ende nach 3 Kapiteln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final de 3 capítulos"
           }
         },
         "fr" : {
@@ -5479,6 +6583,12 @@
             "value" : "Ende des Kapitels"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final del capítulo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5505,6 +6615,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Endzeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora de finalización"
           }
         },
         "fr" : {
@@ -5537,6 +6653,12 @@
             "value" : "Gib einen neuen Titel für dieses Lesezeichen ein"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce un nuevo título para este marcador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5565,6 +6687,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Text eingeben, um in diesem Buch zu suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce el texto a buscar en este libro"
           }
         },
         "fr" : {
@@ -5597,6 +6725,12 @@
             "value" : "Gib die Portnummer ein, um im lokalen Netzwerk nach Audiobookshelf-Servern zu suchen."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce el número de puerto para escanear servidores de Audiobookshelf en tu red local."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5625,6 +6759,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beispiel: X-API-Key, Authorization usw."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejemplo: X-API-Key, Authorization, etc."
           }
         },
         "fr" : {
@@ -5657,6 +6797,12 @@
             "value" : "Verlängern um %@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ampliar %@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5685,6 +6831,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlängere den Timer oder schüttle dein Handy, um weiterzuhören."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amplía el temporizador o agita el teléfono para seguir escuchando."
           }
         },
         "fr" : {
@@ -5717,6 +6869,12 @@
             "value" : "Filtern"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5745,6 +6903,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bücher filtern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar libros"
           }
         },
         "fr" : {
@@ -5777,6 +6941,12 @@
             "value" : "Downloads filtern"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar descargas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5805,6 +6975,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bibliothek filtern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar biblioteca"
           }
         },
         "fr" : {
@@ -5837,6 +7013,12 @@
             "value" : "Abgeschlossen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5865,6 +7047,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vorname Nachname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre Apellido"
           }
         },
         "fr" : {
@@ -5897,6 +7085,12 @@
             "value" : "Schriftfamilie"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Familia de fuente"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5925,6 +7119,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schriftgröße"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de fuente"
           }
         },
         "fr" : {
@@ -5957,6 +7157,12 @@
             "value" : "Schriftstärke"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grosor de la fuente"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5983,6 +7189,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vorwärts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adelantar"
           }
         },
         "fr" : {
@@ -6015,6 +7227,12 @@
             "value" : "Allgemein"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6043,6 +7261,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genres"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Géneros"
           }
         },
         "fr" : {
@@ -6075,6 +7299,12 @@
             "value" : "Rasteransicht"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista de cuadrícula"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6103,6 +7333,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Header-Details"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalle de los encabezados"
           }
         },
         "fr" : {
@@ -6135,6 +7371,12 @@
             "value" : "Header-Name"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del encabezado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6163,6 +7405,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Header-Wert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valor del encabezado"
           }
         },
         "fr" : {
@@ -6195,6 +7443,12 @@
             "value" : "Hilfe & Feedback"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayuda y sugerencias"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6223,6 +7477,12 @@
             "value" : "Kapitel-Sprungtasten ausblenden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar botones de salto de capítulo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6249,6 +7509,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alta"
           }
         },
         "fr" : {
@@ -6281,6 +7547,12 @@
             "value" : "Verlauf"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6309,6 +7581,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Übersicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio"
           }
         },
         "fr" : {
@@ -6341,6 +7619,12 @@
             "value" : "Stunde"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hora"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6369,6 +7653,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "horas"
           }
         },
         "fr" : {
@@ -6401,6 +7691,12 @@
             "value" : "Stunden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6431,6 +7727,12 @@
             "value" : "http://"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6456,6 +7758,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "https://"
@@ -6491,6 +7799,12 @@
             "value" : "iCloud"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6519,6 +7833,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bild-Cache"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caché de imágenes"
           }
         },
         "fr" : {
@@ -6551,6 +7871,12 @@
             "value" : "Zugangsdaten einbeziehen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir credenciales"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6581,6 +7907,12 @@
             "value" : "Tritt unserem Discord bei"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Únete a nuestro Discord"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6607,6 +7939,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Querformat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horizontal"
           }
         },
         "fr" : {
@@ -6639,6 +7977,12 @@
             "value" : "Sprachen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idiomas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6667,6 +8011,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nachname Vorname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apellido Nombre"
           }
         },
         "fr" : {
@@ -6699,6 +8049,12 @@
             "value" : "Layout"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diseño"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6727,6 +8083,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeichenabstand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espaciado entre letras"
           }
         },
         "fr" : {
@@ -6759,6 +8121,12 @@
             "value" : "Bibliothek"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bliblioteca"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6787,6 +8155,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bibliothektyp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de biblioteca"
           }
         },
         "fr" : {
@@ -6819,6 +8193,12 @@
             "value" : "Hell"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claro"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6847,6 +8227,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilenhöhe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interlineado"
           }
         },
         "fr" : {
@@ -6879,6 +8265,12 @@
             "value" : "Listenansicht"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista de lista"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6905,6 +8297,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut anhören"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escuchar de nuevo"
           }
         },
         "fr" : {
@@ -6937,6 +8335,12 @@
             "value" : "Hörstatistiken"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estadísticas de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6965,6 +8369,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mehr laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargar más"
           }
         },
         "fr" : {
@@ -6997,6 +8407,12 @@
             "value" : "Lade Autorendetails..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando detalles de autor…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7025,6 +8441,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade Autoren..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando autores…"
           }
         },
         "fr" : {
@@ -7057,6 +8479,12 @@
             "value" : "Lade Buchdetails..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando detalles del libro…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7085,6 +8513,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade Bücher..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando libros…"
           }
         },
         "fr" : {
@@ -7117,6 +8551,12 @@
             "value" : "Lade Sammlungen..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando colecciones…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7145,6 +8585,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloads werden geladen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando descargas…"
           }
         },
         "fr" : {
@@ -7177,6 +8623,12 @@
             "value" : "Lade E-Book..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando libro electrónico…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7205,6 +8657,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade Bibliotheken..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando bibliotecas…"
           }
         },
         "fr" : {
@@ -7237,6 +8695,12 @@
             "value" : "Lade Sprecher..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando narradores…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7265,6 +8729,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade Playlisten..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando listas de reproducción..."
           }
         },
         "fr" : {
@@ -7297,6 +8767,12 @@
             "value" : "Podcast-Details werden geladen…"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando dellas del podcast…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7325,6 +8801,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade Serien..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando series…"
           }
         },
         "fr" : {
@@ -7357,6 +8839,12 @@
             "value" : "Wird geladen..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7383,6 +8871,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sperrbildschirm-Steuerung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controles en la pantalla de bloqueo"
           }
         },
         "fr" : {
@@ -7413,6 +8907,12 @@
             "value" : "Sperrbildschirm Vor/Zurück-Tasten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Botones de adelantar/retroceder en la pantalla de bloqueo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7439,6 +8939,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirmausrichtung des Players sperren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloquear la orientación de pantalla del reproductor"
           }
         },
         "fr" : {
@@ -7471,6 +8977,12 @@
             "value" : "Anmeldung..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciando sesión…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7499,6 +9011,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmelden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio de sesión"
           }
         },
         "fr" : {
@@ -7531,6 +9049,12 @@
             "value" : "Mit SSO anmelden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio de sesión con SSO"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7561,6 +9085,12 @@
             "value" : "Abmelden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar sesión"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7589,6 +9119,12 @@
             "value" : "Niedrig"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baja"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7615,6 +9151,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speicher verwalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestionar almacenamiento"
           }
         },
         "fr" : {
@@ -7647,6 +9189,12 @@
             "value" : "Als abgeschlossen markieren"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcar como finalizado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7675,6 +9223,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Als abgeschlossen markieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcar finalizado"
           }
         },
         "fr" : {
@@ -7707,6 +9261,12 @@
             "value" : "Max. Speicher"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacenamiento máximo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7733,6 +9293,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mittel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media"
           }
         },
         "fr" : {
@@ -7765,6 +9331,12 @@
             "value" : "Metadaten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadatos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7793,6 +9365,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Methode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Método"
           }
         },
         "fr" : {
@@ -7825,6 +9403,12 @@
             "value" : "Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7853,6 +9437,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minimieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimizar"
           }
         },
         "fr" : {
@@ -7885,6 +9475,12 @@
             "value" : "Min."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mins"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7913,6 +9509,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutos"
           }
         },
         "fr" : {
@@ -7945,6 +9547,12 @@
             "value" : "Hörminuten (letzte 7 Tage)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutos escuchados (últimos 7 días)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7973,6 +9581,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mehr"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más"
           }
         },
         "fr" : {
@@ -8005,6 +9619,12 @@
             "value" : "Name"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8033,6 +9653,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprecher"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narradores"
           }
         },
         "fr" : {
@@ -8065,6 +9691,12 @@
             "value" : "Netzwerk-Erkennung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detección de red"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8093,6 +9725,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Sammlungsname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la nueva colección"
           }
         },
         "fr" : {
@@ -8125,6 +9763,12 @@
             "value" : "Neuer Playlistname"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la nueva lista de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8153,6 +9797,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neueste Autoren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autores más recientes"
           }
         },
         "fr" : {
@@ -8185,6 +9835,12 @@
             "value" : "Neueste Episoden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episodios más recientes"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8213,6 +9869,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nächstes Kapitel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo capítulo"
           }
         },
         "fr" : {
@@ -8245,6 +9907,12 @@
             "value" : "NFC-Tag schreiben"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escritura de etiquetas NFC"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8273,6 +9941,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kein aktiver Sleep-Timer zum Abbrechen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún temporizador de reposo activo para cancelar."
           }
         },
         "fr" : {
@@ -8305,6 +9979,12 @@
             "value" : "Aktuell wird kein Hörbuch abgespielt."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se está reproduciendo ningún audiolibro"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8333,6 +10013,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Autoren gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado autores"
           }
         },
         "fr" : {
@@ -8365,6 +10051,12 @@
             "value" : "Keine Lesezeichen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay marcadores"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8393,6 +10085,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Bücher"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay libros"
           }
         },
         "fr" : {
@@ -8425,6 +10123,12 @@
             "value" : "Keine Bücher gefunden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado libros"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8453,6 +10157,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Bücher passen zu deiner Suche."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay libros que coincidan con la búsqueda"
           }
         },
         "fr" : {
@@ -8485,6 +10195,12 @@
             "value" : "Keine Sammlungen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay colecciones"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8513,6 +10229,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Sammlungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay colecciones"
           }
         },
         "fr" : {
@@ -8545,6 +10267,12 @@
             "value" : "Keine Sammlungen verfügbar."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay colecciones disponibles."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8573,6 +10301,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Inhalte verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay contenido disponible"
           }
         },
         "fr" : {
@@ -8605,6 +10339,12 @@
             "value" : "Keine Downloads"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay descargas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8633,6 +10373,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kein Verlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay historial"
           }
         },
         "fr" : {
@@ -8665,6 +10411,12 @@
             "value" : "Keine Treffer für „%@“"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado coincidencias para ‘%@'"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8693,6 +10445,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Sprecher gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado narradores"
           }
         },
         "fr" : {
@@ -8725,6 +10483,12 @@
             "value" : "Keine Playlisten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay listas de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8753,6 +10517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Ergebnisse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay resultados"
           }
         },
         "fr" : {
@@ -8785,6 +10555,12 @@
             "value" : "Keine Ergebnisse gefunden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado resultados"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8813,6 +10589,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Serien gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha encontrado la serie"
           }
         },
         "fr" : {
@@ -8845,6 +10627,12 @@
             "value" : "Keine Server verbunden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay servidores conectados"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8873,6 +10661,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguno"
           }
         },
         "fr" : {
@@ -8905,6 +10699,12 @@
             "value" : "Nicht genug verbleibende Kapitel. Maximum: %lld."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay suficientes capítulos restantes. El máximo es %lld"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8933,6 +10733,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jetzt läuft"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En reproducción"
           }
         },
         "fr" : {
@@ -8965,6 +10771,12 @@
             "value" : "Anzahl der Kapitel (0 = aktuelles Kapitel)"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de capítulos (0 = capítulo actual)"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8995,6 +10807,12 @@
             "value" : "Aus"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9020,6 +10838,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC (SSO)"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OIDC (SSO)"
@@ -9053,6 +10877,12 @@
             "value" : "Bei Unterbrechung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tras una interrupción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9083,6 +10913,12 @@
             "value" : "Im Web öffnen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir en el navegador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9111,6 +10947,12 @@
             "value" : "Ausrichtung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientación"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9137,6 +10979,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausrichtungssperre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloqueo de orientación"
           }
         },
         "fr" : {
@@ -9169,6 +11017,12 @@
             "value" : "Seitenränder"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Márgenes de página"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9197,6 +11051,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Absatzeinzug"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identado de párrafo"
           }
         },
         "fr" : {
@@ -9229,6 +11089,12 @@
             "value" : "Absatzabstand"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espaciado entre párrafos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9257,6 +11123,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraseña"
           }
         },
         "fr" : {
@@ -9289,6 +11161,12 @@
             "value" : "Pause"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9317,6 +11195,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiedergabe pausieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar reproducción"
           }
         },
         "fr" : {
@@ -9349,6 +11233,12 @@
             "value" : "Angeheftete Playlist"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista de reproducción fijada"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9379,6 +11269,12 @@
             "value" : "Abspielen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9405,6 +11301,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiedergabeanzeige"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualización de la reproducción"
           }
         },
         "fr" : {
@@ -9437,6 +11339,12 @@
             "value" : "Wiedergabe läuft bereits."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La reproducción ya está activa."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9465,6 +11373,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiedergabe ist bereits pausiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La reproducción ya está en pausa."
           }
         },
         "fr" : {
@@ -9497,6 +11411,12 @@
             "value" : "Wiedergabesitzungen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9523,6 +11443,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiedergabetempo-Anpassungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de velocidad de reproducción"
           }
         },
         "fr" : {
@@ -9553,6 +11479,12 @@
             "value" : "Player"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproductor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9579,6 +11511,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Player-Ausrichtung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientación del reproductor"
           }
         },
         "fr" : {
@@ -9611,6 +11549,12 @@
             "value" : "Player-Einstellungen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes del reproductor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9639,6 +11583,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Playlist-Name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la lista de reproducción"
           }
         },
         "fr" : {
@@ -9671,6 +11621,12 @@
             "value" : "Playlisten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9699,6 +11655,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Playlisten sind privat. Nur der Ersteller kann sie sehen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las listas de reproducción son privadas. Solo puede verlas el usuario que las crea."
           }
         },
         "fr" : {
@@ -9731,6 +11693,12 @@
             "value" : "Podcast-Details"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles del podcast"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9756,6 +11724,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcasts"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Podcasts"
@@ -9789,6 +11763,12 @@
             "value" : "Hochformat"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertical"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9817,6 +11797,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Optionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferencias"
           }
         },
         "fr" : {
@@ -9849,6 +11835,12 @@
             "value" : "Vorheriges Kapitel"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capítulo anterior"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9877,6 +11869,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fortschritt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progreso"
           }
         },
         "fr" : {
@@ -9909,6 +11907,12 @@
             "value" : "Protokoll"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protocolo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9937,6 +11941,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erscheinungsjahrzehnte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Décadas de publicación"
           }
         },
         "fr" : {
@@ -9969,6 +11979,12 @@
             "value" : "Verlagsstile"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estilo del editor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9997,6 +12013,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlage"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editores"
           }
         },
         "fr" : {
@@ -10029,6 +12051,12 @@
             "value" : "Warteschlange"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cola"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10057,6 +12085,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warteschlange ist leer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cola está vacía"
           }
         },
         "fr" : {
@@ -10089,6 +12123,12 @@
             "value" : "Neu authentifizieren"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar autenticación"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10119,6 +12159,12 @@
             "value" : "Lesen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10145,6 +12191,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut lesen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a leer"
           }
         },
         "fr" : {
@@ -10177,6 +12229,12 @@
             "value" : "Leseeinstellungen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes del lector"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10205,6 +12263,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktuelle Serien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series recientes"
           }
         },
         "fr" : {
@@ -10237,6 +12301,12 @@
             "value" : "Aktuelle Sitzungen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones recientes"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10265,6 +12335,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kürzlich hinzugefügt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadido recientemente"
           }
         },
         "fr" : {
@@ -10297,6 +12373,12 @@
             "value" : "Entfernen nach Nichtnutzung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar si no se ha usado durante"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10325,6 +12407,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar descarga"
           }
         },
         "fr" : {
@@ -10357,6 +12445,12 @@
             "value" : "Download nach Abschluss entfernen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar descarga tras finalizar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10385,6 +12479,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloads entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar descargas"
           }
         },
         "fr" : {
@@ -10417,6 +12517,12 @@
             "value" : "Aus Weiterhören entfernen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar de Continuar escuchando"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10445,6 +12551,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus Warteschlange entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar de la cola"
           }
         },
         "fr" : {
@@ -10477,6 +12589,12 @@
             "value" : "Umbenennen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10505,6 +12623,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer"
           }
         },
         "fr" : {
@@ -10537,6 +12661,12 @@
             "value" : "Fortschritt zurücksetzen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer progreso"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10565,6 +12695,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Timer zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer temporizadores"
           }
         },
         "fr" : {
@@ -10597,6 +12733,12 @@
             "value" : "Auf Standard zurücksetzen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer color predeterminado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10627,6 +12769,12 @@
             "value" : "Wiedergabe fortsetzen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10653,6 +12801,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spule zurück, wenn 10 Minuten pausiert wurde oder nach Audio-Unterbrechungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rebobinar tras una pausa de 10 minutos o tras una interrupción de audio"
           }
         },
         "fr" : {
@@ -10691,6 +12845,12 @@
             "value" : "S%1$@E%2$@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "T%1$@E%2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10719,6 +12879,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar"
           }
         },
         "fr" : {
@@ -10751,6 +12917,12 @@
             "value" : "Scannen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10779,6 +12951,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lokales Netzwerk scannen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar en red local"
           }
         },
         "fr" : {
@@ -10811,6 +12989,12 @@
             "value" : "Netzwerk wird gescannt..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando en la red…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10839,6 +13023,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scrollmodus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar"
           }
         },
         "fr" : {
@@ -10871,6 +13061,12 @@
             "value" : "Suchen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10899,6 +13095,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Buch suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar libro"
           }
         },
         "fr" : {
@@ -10931,6 +13133,12 @@
             "value" : "Episoden suchen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar episodios"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10959,6 +13167,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suche nach Büchern, Serien, Autoren, Sprechern, Tags oder Genres"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar libros, series, autores, narradores, etiquetas, o géneros"
           }
         },
         "fr" : {
@@ -10991,6 +13205,12 @@
             "value" : "Suche..."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando…"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11017,6 +13237,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sekunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segundos"
           }
         },
         "fr" : {
@@ -11049,6 +13275,12 @@
             "value" : "Abschnitt"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sección"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11075,6 +13307,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spulen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar"
           }
         },
         "fr" : {
@@ -11107,6 +13345,12 @@
             "value" : "Auswählen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11135,6 +13379,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wähle ein Buch aus, um zu beginnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona un libro para empezar"
           }
         },
         "fr" : {
@@ -11167,6 +13417,12 @@
             "value" : "Alle auswählen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar todo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11195,6 +13451,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E-Book senden an"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mandar libro electrónico a"
           }
         },
         "fr" : {
@@ -11227,6 +13489,12 @@
             "value" : "Serien"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11255,6 +13523,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor"
           }
         },
         "fr" : {
@@ -11287,6 +13561,12 @@
             "value" : "Server-Konfiguration"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración del servidor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11315,6 +13595,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server-URL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL del servidor"
           }
         },
         "fr" : {
@@ -11353,6 +13639,12 @@
             "value" : "Server: %1$@, %2$@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor: %1$@, %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11383,6 +13675,12 @@
             "value" : "Server"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidores"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11409,6 +13707,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sitzungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones"
           }
         },
         "fr" : {
@@ -11441,6 +13745,12 @@
             "value" : "Sleep-Timer einstellen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer temporizador de reposo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11469,6 +13779,12 @@
             "value" : "Sleep-Timer für ${duration} einstellen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer temporizador de reposo por ${duration}"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11495,6 +13811,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sleep-Timer bis Ende von ${chapters} Kapiteln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer temporizador de reposo hasta el final de ${chapters} capítulos"
           }
         },
         "fr" : {
@@ -11527,6 +13849,12 @@
             "value" : "Sleep-Timer bis Kapitelende"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer temporizador de reposo hasta el final del capítulo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11555,6 +13883,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sleep-Timer mit Dauer einstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer temporizador de reposo por tiempo"
           }
         },
         "fr" : {
@@ -11587,6 +13921,12 @@
             "value" : "Stellt den Sleep-Timer so ein, dass nach einer Dauer pausiert wird."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establece el temporizador de reposo para que pause la reproducción tras un tiempo determinado."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11615,6 +13955,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stellt den Sleep-Timer so ein, dass am Ende einer Anzahl Kapitel pausiert wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establece el temporizador de reposo para que pause la reproducción al final de un número determinado de capítulos."
           }
         },
         "fr" : {
@@ -11647,6 +13993,12 @@
             "value" : "Einstellungen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11673,6 +14025,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schüttel-Empfindlichkeit zum Zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensibilidad al agitar para reiniciar"
           }
         },
         "fr" : {
@@ -11703,6 +14061,12 @@
             "value" : "Schüttel-Empfindlichkeit für Timer-Reset"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensibilidad al agitar para reiniciar el temporizador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11729,6 +14093,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schüttle dein Handy, um den Timer während der Wiedergabe zurückzusetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agita el teléfono para reiniciar el temporizador durante la reproducción."
           }
         },
         "fr" : {
@@ -11761,6 +14131,12 @@
             "value" : "Verbindung teilen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir conexión"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11789,6 +14165,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Link teilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir enlace"
           }
         },
         "fr" : {
@@ -11821,6 +14203,12 @@
             "value" : "QR-Code teilen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir código QR"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11849,6 +14237,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Teile diesen QR-Code oder Link mit einem AudioBooth-Nutzer, damit er sich mit deinem Server verbinden kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparte este código QR o enlace con otro usuario de AudioBooth que pueda conectarse a tu servidor"
           }
         },
         "fr" : {
@@ -11881,6 +14275,12 @@
             "value" : "Das Teilen von Zugangsdaten macht sie auf diesem Gerät ungültig, sobald ein anderes Gerät sie nutzt. Du musst dich erneut verbinden, um diese Verbindung weiter zu nutzen."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al compartir las credenciales, dejarán de funcionar en este dispositivo si otro dispositivo las utiliza. Tendrás que volver a conectarte para seguir usando esta conexión"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11909,6 +14309,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weniger anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar menos"
           }
         },
         "fr" : {
@@ -11941,6 +14347,12 @@
             "value" : "Mehr anzeigen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar más"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11971,6 +14383,12 @@
             "value" : "Option im Buchdetails-Menü anzeigen, um Buchinfos für schnellen Zugriff auf NFC-Tags zu schreiben."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar una opción en los detalles del libro para escribir su información en etiquetas NFC y reproducirlo rápidamente."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11997,6 +14415,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zusätzliche Buch-Fortschrittsleiste anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar barra de progreso adicional"
           }
         },
         "fr" : {
@@ -12029,6 +14453,12 @@
             "value" : "Zurückspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12059,6 +14489,12 @@
             "value" : "%lld Sekunden zurückspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder %lld segundos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12085,6 +14521,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "${duration} zurückspringen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder ${duration}"
           }
         },
         "fr" : {
@@ -12117,6 +14559,12 @@
             "value" : "Um die angegebene Zeit zurückspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder el tiempo indicado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12143,6 +14591,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprung um"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltar por"
           }
         },
         "fr" : {
@@ -12175,6 +14629,12 @@
             "value" : "Vorspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12205,6 +14665,12 @@
             "value" : "%lld Sekunden vorspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar %lld segundos"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12233,6 +14699,12 @@
             "value" : "${duration} vorspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar ${duration}"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12259,6 +14731,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vor- und zurückspringen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar y retroceder"
           }
         },
         "fr" : {
@@ -12291,6 +14769,12 @@
             "value" : "Um die angegebene Zeit vorspringen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar el tiempo indicado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12319,6 +14803,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zum nächsten Kapitel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar al siguiente capítulo"
           }
         },
         "fr" : {
@@ -12351,6 +14841,12 @@
             "value" : "Zum vorherigen Kapitel"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder al capítulo anterior"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12379,6 +14875,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Springt im aktuellen Hörbuch um eine festgelegte Dauer zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrocede en el audiolibro en reproducción la duración especificada."
           }
         },
         "fr" : {
@@ -12411,6 +14913,12 @@
             "value" : "Springt im aktuellen Hörbuch um eine festgelegte Dauer vor."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanza en el audiolibro en reproducción la duración especificada."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12439,6 +14947,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Springt im aktuellen Hörbuch zum nächsten Kapitel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanza al siguiente capítulo del audiolibro en reproducción."
           }
         },
         "fr" : {
@@ -12471,6 +14985,12 @@
             "value" : "Springt im aktuellen Hörbuch zum vorherigen Kapitel."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrocede al capítula anterior del audiolibro en reproducción."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12497,6 +15017,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sleep-Timer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador de reposo"
           }
         },
         "fr" : {
@@ -12529,6 +15055,12 @@
             "value" : "Sleep-Timer abgebrochen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador de reposo cancelado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12559,6 +15091,12 @@
             "value" : "Sleep-Timer bis Kapitelende"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador de reposo haste el final del capítulo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12585,6 +15123,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smartes Zurückspulen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rebobinado inteligente"
           }
         },
         "fr" : {
@@ -12615,6 +15159,12 @@
             "value" : "Smartes Zurückspulen nach Pause"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración de rebobinado inteligente tras una pausa"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12641,6 +15191,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smartes Zurückspulen bei Unterbrechung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración de rebobinado inteligente tras una interrupción"
           }
         },
         "fr" : {
@@ -12673,6 +15229,12 @@
             "value" : "Sortieren nach"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12701,6 +15263,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sortierreihenfolge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de clasificación"
           }
         },
         "fr" : {
@@ -12733,6 +15301,12 @@
             "value" : "Geschwindigkeit"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocidad"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12761,6 +15335,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sponsor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patrocinador"
           }
         },
         "fr" : {
@@ -12793,6 +15373,12 @@
             "value" : "Start"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12819,6 +15405,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Startzeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora de inicio"
           }
         },
         "fr" : {
@@ -12851,6 +15443,12 @@
             "value" : "Gestartet"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empezado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12879,6 +15477,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener"
           }
         },
         "fr" : {
@@ -12911,6 +15515,12 @@
             "value" : "Speicher"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacenamiento"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12939,6 +15549,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speicherlimits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límites de almacenamiento"
           }
         },
         "fr" : {
@@ -12971,6 +15587,12 @@
             "value" : "Support"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soporte"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12999,6 +15621,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wischen zum Entfernen oder ziehen zum Neuordnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza para eliminar o arrastra para reordenar"
           }
         },
         "fr" : {
@@ -13031,6 +15659,12 @@
             "value" : "Synchronisieren"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13059,6 +15693,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Synchronisiere deine Einstellungen auf allen Geräten mit iCloud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincroniza las preferencias en todos tus dispositivos usando iCloud."
           }
         },
         "fr" : {
@@ -13091,6 +15731,12 @@
             "value" : "Tags"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiquetas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13119,6 +15765,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippen zum Navigieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca para navegar"
           }
         },
         "fr" : {
@@ -13151,6 +15803,12 @@
             "value" : "Tippe, um deine Statistiken zu sehen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca para ver tus estadísticas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13179,6 +15837,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippzonen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zonas de toque"
           }
         },
         "fr" : {
@@ -13211,6 +15875,12 @@
             "value" : "Tippen außerhalb der Zonen blendet Steuerelemente ein/aus"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los toques fuera de las zonas muestran/ocultan los controles"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13239,6 +15909,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TestFlight-Hinweis: "
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aviso de TestFlight: "
           }
         },
         "fr" : {
@@ -13271,6 +15947,12 @@
             "value" : "Text-Normalisierung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normalización de texto"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13299,6 +15981,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Danke für deine Unterstützung!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gracias por tu apoyo!"
           }
         },
         "fr" : {
@@ -13331,6 +16019,12 @@
             "value" : "Lesezeichen-Titel"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título del marcador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13359,6 +16053,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das aktuelle Hörbuch hat keine Kapitel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El audiolibro actual no tiene capítulos"
           }
         },
         "fr" : {
@@ -13391,6 +16091,12 @@
             "value" : "Thema"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13419,6 +16125,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dies sind nur Testkäufe. Möchtest du die Entwicklung unterstützen? Lade die App aus dem App Store, um ein echtes Trinkgeld zu geben. [App Store öffnen](https://apps.apple.com/us/app/id6753017503)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas compras son solo para pruebas.\n¿Quieres apoyar el desarrollo? Descarga la app desde el App Store para dejar una donación. [Abrir App Store](https://apps.apple.com/us/app/id6753017503)"
           }
         },
         "fr" : {
@@ -13451,6 +16163,12 @@
             "value" : "Diese Sammlung ist leer."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta colección está vacía."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13479,6 +16197,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Playlist ist leer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta lista de reproducción está vacía."
           }
         },
         "fr" : {
@@ -13511,6 +16235,12 @@
             "value" : "diese Woche"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta semana"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13539,6 +16269,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dies löscht alle zwischengespeicherten Coverbilder. Sie werden bei Bedarf erneut geladen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto eliminará todas las portadas almacenadas en caché. Se volverán a descargar cuando sea necesario."
           }
         },
         "fr" : {
@@ -13571,6 +16307,12 @@
             "value" : "Dies löscht alle heruntergeladenen Hörbücher und E-Books. Du kannst sie später erneut laden."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto eliminará todas las descargas de audiolibros y libros. Puedes volver a descargarlos más tarde."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13599,6 +16341,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dies löscht alle heruntergeladenen Inhalte. Diese Aktion kann nicht rückgängig gemacht werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto eliminará todo el contenido descargado. Esta acción es irreversible."
           }
         },
         "fr" : {
@@ -13631,6 +16379,12 @@
             "value" : "Zeit"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13659,6 +16413,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeit ist um"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se acabó el tiempo"
           }
         },
         "fr" : {
@@ -13691,6 +16451,12 @@
             "value" : "Timer"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13719,6 +16485,12 @@
             "value" : "Timer-Audioausblendung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atenuación de audio al finalizar el temporizador"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13745,6 +16517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Timer abgeschlossen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador completado"
           }
         },
         "fr" : {
@@ -13777,6 +16555,12 @@
             "value" : "Timer verlängert"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador ampliado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13805,6 +16589,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Timer ist nicht verfügbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El temporizador no está disponible."
           }
         },
         "fr" : {
@@ -13837,6 +16627,12 @@
             "value" : "Timer gestartet"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador iniciado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13865,6 +16661,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "heute"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hoy"
           }
         },
         "fr" : {
@@ -13897,6 +16699,12 @@
             "value" : "Heute"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13927,6 +16735,12 @@
             "value" : "Gesamter Speicher verwendet"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacenamiento total utilizado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13953,6 +16767,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Audiodateien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pistas"
           }
         },
         "fr" : {
@@ -13985,6 +16805,12 @@
             "value" : "Versuche, deine Suchbegriffe anzupassen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intenta ajustar los términos de búsqueda"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14013,6 +16839,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut versuchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a intentarlo"
           }
         },
         "fr" : {
@@ -14045,6 +16877,12 @@
             "value" : "Typografie"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipografía"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14073,6 +16911,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Autor konnte nicht geladen werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar el autor"
           }
         },
         "fr" : {
@@ -14105,6 +16949,12 @@
             "value" : "Buch konnte nicht geladen werden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar el libro"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14133,6 +16983,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E-Book konnte nicht geladen werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puedo cargar el libro electrónico"
           }
         },
         "fr" : {
@@ -14165,6 +17021,12 @@
             "value" : "Podcast konnte nicht geladen werden"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puedo cargar el podcast"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14193,6 +17055,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auswahl aufheben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseleccionar todo"
           }
         },
         "fr" : {
@@ -14225,6 +17093,12 @@
             "value" : "Als Nächstes"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A continuación"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14251,6 +17125,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Buchdauer verwenden (statt Kapitel)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar duración del libro (en lugar del capítulo)"
           }
         },
         "fr" : {
@@ -14283,6 +17163,12 @@
             "value" : "Benutzername"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de usuario"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14313,6 +17199,12 @@
             "value" : "Benutzername & Passwort"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de usuario y contraseña"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14338,6 +17230,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version: %@"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version: %@"
@@ -14371,6 +17269,12 @@
             "value" : "Sehr hoch"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muy alta"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14397,6 +17301,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sehr niedrig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muy baja"
           }
         },
         "fr" : {
@@ -14429,6 +17339,12 @@
             "value" : "Autor anzeigen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver autor"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14455,6 +17371,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprecher anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver narrador"
           }
         },
         "fr" : {
@@ -14487,6 +17409,12 @@
             "value" : "Serie anzeigen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver series"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14515,6 +17443,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sichtbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visible"
           }
         },
         "fr" : {
@@ -14547,6 +17481,12 @@
             "value" : "Lautstärke"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel de volumen"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14575,6 +17515,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wie soll das Lesezeichen heißen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cómo debería llamarse el marcador?"
           }
         },
         "fr" : {
@@ -14607,6 +17553,12 @@
             "value" : "Wortabstand"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacio entre palabras"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14635,6 +17587,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NFC-Tag schreiben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribir etiqueta NFC"
           }
         },
         "fr" : {
@@ -14667,6 +17625,12 @@
             "value" : "Jahresrückblick"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumen del año"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14695,6 +17659,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gestern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayer"
           }
         },
         "fr" : {
@@ -14727,6 +17697,12 @@
             "value" : "Du hast keine Playlisten"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tienes listas de reproducción"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14755,6 +17731,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Du hast noch keine Lesezeichen für dieses Buch erstellt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no has creado marcadores para este libro."
           }
         },
         "fr" : {
@@ -14787,6 +17769,12 @@
             "value" : "Deine Lesezeichen"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus marcadores"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14815,6 +17803,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine Bibliothek ist leer oder es ist keine Bibliothek ausgewählt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca parece estar vacía o no hay biblioteca seleccionada."
           }
         },
         "fr" : {
@@ -14847,6 +17841,12 @@
             "value" : "Deine Bibliothek hat keine Autoren oder es ist keine Bibliothek ausgewählt."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca parece que no tiene autores o no hay biblioteca seleccionada."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14875,6 +17875,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine Bibliothek hat keine Sprecher oder es ist keine Bibliothek ausgewählt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca parece que no tiene narradores o no hay biblioteca seleccionada"
           }
         },
         "fr" : {
@@ -14907,6 +17913,12 @@
             "value" : "Deine Bibliothek hat keine Serien oder es ist keine Bibliothek ausgewählt."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca parece que no tiene series o no hay biblioteca seleccionada"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14935,6 +17947,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine personalisierten Inhalte erscheinen hier"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu contenido personalizado aparecerá aquí"
           }
         },
         "fr" : {
@@ -14967,6 +17985,12 @@
             "value" : "Dein Wiedergabeverlauf erscheint hier."
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu historial de reproducción aparecerá aquí"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14995,6 +18019,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine Statistiken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus estadísticas"
           }
         },
         "fr" : {
