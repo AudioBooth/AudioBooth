@@ -249,7 +249,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
         PlayerManager.shared.current?.onSkipBackwardTapped(seconds: interval)
       case "changePlaybackRate":
         if let rate = message["rate"] as? Float {
-          PlayerManager.shared.current?.speed.onSpeedChanged(rate)
+          PlayerManager.shared.current?.speed.onValueChanged(Double(rate))
         }
       case "refreshContinueListening":
         refreshContinueListening()

@@ -432,7 +432,7 @@ extension PlayerManager {
         return .commandFailed
       }
 
-      current.speed.onSpeedChanged(rateEvent.playbackRate)
+      current.speed.onValueChanged(Double(rateEvent.playbackRate))
 
       return .success
     }

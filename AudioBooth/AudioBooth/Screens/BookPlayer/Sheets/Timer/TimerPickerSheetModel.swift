@@ -12,7 +12,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private let itemID: String
   private let player: AVPlayer
   private let chapters: ChapterPickerSheet.Model?
-  private let speed: SpeedPickerSheet.Model
+  private let speed: FloatPickerSheet.Model
 
   private var sleepTimer: Timer?
   private var timerStartTime: Date?
@@ -23,7 +23,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private var seekObserver: AnyCancellable?
   private var liveActivity: Activity<SleepTimerActivityAttributes>?
 
-  init(itemID: String, player: AVPlayer, chapters: ChapterPickerSheet.Model?, speed: SpeedPickerSheet.Model) {
+  init(itemID: String, player: AVPlayer, chapters: ChapterPickerSheet.Model?, speed: FloatPickerSheet.Model) {
     self.itemID = itemID
     self.player = player
     self.chapters = chapters
@@ -140,7 +140,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       }
     }
 
-    let playbackSpeed = Double(speed.playbackSpeed)
+    let playbackSpeed = speed.value
     let adjustedSeconds = totalSeconds / playbackSpeed
 
     let endDate = Date().addingTimeInterval(adjustedSeconds)
@@ -207,7 +207,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       }
     }
 
-    let playbackSpeed = Double(speed.playbackSpeed)
+    let playbackSpeed = speed.value
     return totalSeconds / playbackSpeed
   }
 

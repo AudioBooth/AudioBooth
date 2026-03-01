@@ -2,55 +2,41 @@ import SwiftUI
 
 struct TimerPickerSheet: View {
   @Binding var model: Model
-  @State private var height: CGFloat = 200
   @State private var isCustomExpended: Bool = false
 
   var body: some View {
-    NavigationStack {
-      VStack(spacing: 0) {
-        VStack(spacing: 24) {
-          Text("Timer")
-            .font(.title2)
-            .fontWeight(.semibold)
-            .foregroundColor(.primary)
-            .padding(.top, 20)
+    VStack(spacing: 0) {
+      VStack(spacing: 24) {
+        Text("Timer")
+          .font(.title2)
+          .fontWeight(.semibold)
+          .foregroundColor(.primary)
+          .padding(.top, 50)
 
-          LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-            ForEach([15, 30, 45, 60], id: \.self) { minutes in
-              quickTimerButton(for: minutes)
-            }
-          }
-          .padding(.horizontal, 20)
-
-          customTimeSection()
-
-          endOfChapterSection()
-
-          offButton()
-        }
-        .padding(.bottom, 40)
-        .toolbar {
-          ToolbarItem(placement: .topBarTrailing) {
-            Button("Start") {
-              model.onStartTimerTapped()
-            }
-            .disabled(model.selected == .none)
-            .tint(.primary)
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+          ForEach([15, 30, 45, 60], id: \.self) { minutes in
+            quickTimerButton(for: minutes)
           }
         }
+        .padding(.horizontal, 20)
+
+        customTimeSection()
+
+        endOfChapterSection()
+
+        offButton()
       }
-      .background {
-        GeometryReader { proxy in
-          Color.clear
-            .onAppear { height = proxy.size.height }
-            .onChange(of: proxy.size.height) { _, new in
-              withAnimation { height = new }
-            }
-        }
-      }
+      .padding(.bottom, 40)
     }
-    .presentationDetents([.height(height)])
-    .presentationDragIndicator(.visible)
+    .overlay(alignment: .topTrailing) {
+      Button("Start") {
+        model.onStartTimerTapped()
+      }
+      .buttonStyle(.bordered)
+      .disabled(model.selected == .none)
+      .tint(.primary)
+      .padding()
+    }
   }
 
   @ViewBuilder

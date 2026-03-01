@@ -10,6 +10,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("homeSections")
   var homeSections: [HomeSection] = HomeSection.defaultCases
 
+  @AppStorage("playerControls")
+  var playerControls: [PlayerControl] = PlayerControl.default
+
   @AppStorage("autoDownloadBooks")
   var autoDownloadBooks: AutoDownloadMode = .off
 

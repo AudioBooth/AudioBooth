@@ -30,6 +30,66 @@ struct TimePicker: View {
 struct PlayerPreferencesView: View {
   @ObservedObject var preferences = UserPreferences.shared
 
+  @State private var allControls: [PlayerControl] = []
+  @State private var enabledControls: Set<PlayerControl> = []
+
+  var body: some View {
+    Form {
+      Section {
+        List {
+          ForEach(allControls) { control in
+            HStack {
+              Text(control.displayName)
+                .font(.subheadline)
+                .bold()
+              Spacer()
+              Toggle(isOn: controlBinding(for: control)) {}
+            }
+          }
+          .onMove { source, destination in
+            allControls.move(fromOffsets: source, toOffset: destination)
+          }
+        }
+      } header: {
+        Text("Controls")
+      } footer: {
+        Text("Drag to reorder. Disabled controls move to the player menu.")
+          .font(.caption)
+      }
+
+      playerPreferencesForm
+    }
+    .navigationTitle("Player")
+    .environment(\.editMode, .constant(.active))
+    .onAppear(perform: loadControls)
+    .onDisappear(perform: saveControls)
+  }
+
+  private func controlBinding(for control: PlayerControl) -> Binding<Bool> {
+    Binding(
+      get: { enabledControls.contains(control) },
+      set: { isEnabled in
+        if isEnabled {
+          enabledControls.insert(control)
+        } else {
+          enabledControls.remove(control)
+        }
+      }
+    )
+  }
+
+  private func loadControls() {
+    let stored = preferences.playerControls
+    let storedSet = Set(stored)
+    let disabled = PlayerControl.allCases.filter { !storedSet.contains($0) }
+    allControls = stored + disabled
+    enabledControls = storedSet
+  }
+
+  private func saveControls() {
+    preferences.playerControls = allControls.filter { enabledControls.contains($0) }
+  }
+
   private var autoTimerModeAccessibilityValue: String {
     switch preferences.autoTimerMode {
     case .off:
@@ -41,335 +101,307 @@ struct PlayerPreferencesView: View {
     }
   }
 
-  var body: some View {
-    Form {
-      Section {
-        VStack(alignment: .leading) {
-          Text("Skip forward and back")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
+  @ViewBuilder
+  private var playerPreferencesForm: some View {
+    Section {
+      VStack(alignment: .leading) {
+        Text("Skip forward and back")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
 
-          Text("Choose how far to skip forward and back while listening.")
-        }
-        .font(.caption)
+        Text("Choose how far to skip forward and back while listening.")
+      }
+      .font(.caption)
 
-        DisclosureGroup(
-          content: {
-            HStack {
-              VStack(spacing: .zero) {
-                Text("Back").bold()
+      DisclosureGroup(
+        content: {
+          HStack {
+            VStack(spacing: .zero) {
+              Text("Back").bold()
 
-                Picker("Back", selection: $preferences.skipBackwardInterval) {
-                  Text("10s").tag(10.0)
-                  Text("15s").tag(15.0)
-                  Text("30s").tag(30.0)
-                  Text("60s").tag(60.0)
-                  Text("90s").tag(90.0)
-                }
+              Picker("Back", selection: $preferences.skipBackwardInterval) {
+                Text("10s").tag(10.0)
+                Text("15s").tag(15.0)
+                Text("30s").tag(30.0)
+                Text("60s").tag(60.0)
+                Text("90s").tag(90.0)
               }
-              .frame(maxWidth: .infinity, alignment: .center)
-
-              VStack(spacing: .zero) {
-                Text("Forward").bold()
-
-                Picker("Forward", selection: $preferences.skipForwardInterval) {
-                  Text("10s").tag(10.0)
-                  Text("15s").tag(15.0)
-                  Text("30s").tag(30.0)
-                  Text("60s").tag(60.0)
-                  Text("90s").tag(90.0)
-                }
-              }
-              .frame(maxWidth: .infinity, alignment: .center)
             }
-            .pickerStyle(.wheel)
-            .labelsHidden()
-          },
-          label: {
-            Text(
-              "Back \(Int(preferences.skipBackwardInterval))s Forward \(Int(preferences.skipForwardInterval))s"
-            )
-            .font(.subheadline)
-            .bold()
+            .frame(maxWidth: .infinity, alignment: .center)
+
+            VStack(spacing: .zero) {
+              Text("Forward").bold()
+
+              Picker("Forward", selection: $preferences.skipForwardInterval) {
+                Text("10s").tag(10.0)
+                Text("15s").tag(15.0)
+                Text("30s").tag(30.0)
+                Text("60s").tag(60.0)
+                Text("90s").tag(90.0)
+              }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
           }
-        )
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Smart Rewind")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Rewind after being paused for 10 minutes or after audio interruptions.")
-        }
-        .font(.caption)
-
-        Picker("After Pause", selection: $preferences.smartRewindInterval) {
-          Text("Off").tag(0.0)
-          Text("5s").tag(5.0)
-          Text("10s").tag(10.0)
-          Text("15s").tag(15.0)
-          Text("30s").tag(30.0)
-          Text("45s").tag(45.0)
-          Text("60s").tag(60.0)
-          Text("75s").tag(75.0)
-          Text("90s").tag(90.0)
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Smart Rewind After Pause Duration")
-        .accessibilityValue(
-          preferences.smartRewindInterval == 0 ? "Off" : "\(Int(preferences.smartRewindInterval)) seconds"
-        )
-
-        Picker("On Interruption", selection: $preferences.smartRewindOnInterruptionInterval) {
-          Text("Off").tag(0.0)
-          Text("5s").tag(5.0)
-          Text("10s").tag(10.0)
-          Text("15s").tag(15.0)
-          Text("30s").tag(30.0)
-          Text("45s").tag(45.0)
-          Text("60s").tag(60.0)
-          Text("75s").tag(75.0)
-          Text("90s").tag(90.0)
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Smart Rewind On Interruption Duration")
-        .accessibilityValue(
-          preferences.smartRewindOnInterruptionInterval == 0
-            ? "Off" : "\(Int(preferences.smartRewindOnInterruptionInterval)) seconds"
-        )
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Timer")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Shake your phone to reset the timer during playback.")
-        }
-        .font(.caption)
-
-        Picker("Shake Sensitivity to Reset", selection: $preferences.shakeSensitivity) {
-          Text("Off").tag(ShakeSensitivity.off)
-          Text("Very Low").tag(ShakeSensitivity.veryLow)
-          Text("Low").tag(ShakeSensitivity.low)
-          Text("Medium").tag(ShakeSensitivity.medium)
-          Text("High").tag(ShakeSensitivity.high)
-          Text("Very High").tag(ShakeSensitivity.veryHigh)
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Shake to Reset Timer Sensitivity")
-        .accessibilityValue(preferences.shakeSensitivity.displayText)
-
-        Picker("Audio Fade Out", selection: $preferences.timerFadeOut) {
-          Text("Off").tag(0.0)
-          Text("15s").tag(15.0)
-          Text("30s").tag(30.0)
-          Text("60s").tag(60.0)
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Timer Audio Fade Out")
-        .accessibilityValue(
-          preferences.timerFadeOut == 0 ? "Off" : "\(Int(preferences.timerFadeOut)) seconds"
-        )
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Automatic Sleep Timer")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
+          .pickerStyle(.wheel)
+          .labelsHidden()
+        },
+        label: {
           Text(
-            "Automatically start a sleep timer when playing during a specific time window."
+            "Back \(Int(preferences.skipBackwardInterval))s Forward \(Int(preferences.skipForwardInterval))s"
           )
-        }
-        .font(.caption)
-
-        Picker("Sleep Timer", selection: $preferences.autoTimerMode) {
-          Text("Off").tag(AutoTimerMode.off)
-          Divider()
-          Text("5 min").tag(AutoTimerMode.duration(300.0))
-          Text("10 min").tag(AutoTimerMode.duration(600.0))
-          Text("15 min").tag(AutoTimerMode.duration(900.0))
-          Text("20 min").tag(AutoTimerMode.duration(1200.0))
-          Text("30 min").tag(AutoTimerMode.duration(1800.0))
-          Text("45 min").tag(AutoTimerMode.duration(2700.0))
-          Text("60 min").tag(AutoTimerMode.duration(3600.0))
-          Divider()
-          Text("End of chapter").tag(AutoTimerMode.chapters(1))
-          Text("End of 2 chapters").tag(AutoTimerMode.chapters(2))
-          Text("End of 3 chapters").tag(AutoTimerMode.chapters(3))
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Auto Timer Mode")
-        .accessibilityValue(autoTimerModeAccessibilityValue)
-
-        if preferences.autoTimerMode != .off {
-          HStack {
-            Text("Start Time")
-            Spacer()
-            TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowStart)
-          }
-          .font(.subheadline)
-          .bold()
-
-          HStack {
-            Text("End Time")
-            Spacer()
-            TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowEnd)
-          }
           .font(.subheadline)
           .bold()
         }
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Lock Screen Controls")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Configure how the lock screen playback controls behave.")
-        }
-        .font(.caption)
-
-        Picker("Skip by", selection: $preferences.lockScreenNextPreviousUsesChapters) {
-          Text("Seconds").tag(false)
-          Text("Chapter").tag(true)
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Lock Screen Next/Previous Buttons")
-        .accessibilityValue(preferences.lockScreenNextPreviousUsesChapters ? "Chapter" : "Seconds")
-
-        Toggle(
-          "Allow Playback Position Change",
-          isOn: $preferences.lockScreenAllowPlaybackPositionChange
-        )
-        .font(.subheadline)
-        .bold()
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Playback Speed Adjustments")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Configure how time displays are affected by playback speed.")
-        }
-        .font(.caption)
-
-        Toggle("Adjusts Time Remaining", isOn: $preferences.timeRemainingAdjustsWithSpeed)
-          .font(.subheadline)
-          .bold()
-
-        Toggle("Adjusts Chapter Progression", isOn: $preferences.chapterProgressionAdjustsWithSpeed)
-          .font(.subheadline)
-          .bold()
-      }
-      .listRowSeparator(.hidden)
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Playback Display")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Configure how playback and progress is displayed for books with chapters.")
-        }
-        .font(.caption)
-
-        Toggle("Use Book Duration (Instead of Chapter)", isOn: $preferences.showFullBookDuration)
-          .font(.subheadline)
-          .bold()
-
-        Toggle("Show Supplementary Book Progress Bar", isOn: $preferences.showBookProgressBar)
-          .font(.subheadline)
-          .bold()
-
-        Toggle("Hide Chapter Skip Buttons", isOn: $preferences.hideChapterSkipButtons)
-          .font(.subheadline)
-          .bold()
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Volume Level")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Adjust the volume level for audiobooks.")
-        }
-        .font(.caption)
-
-        Stepper(
-          value: $preferences.volumeLevel,
-          in: 0.1...3.0,
-          step: 0.1
-        ) {
-          Text(preferences.volumeLevel.formatted(.percent.precision(.fractionLength(0))))
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Volume Level")
-        .accessibilityValue(preferences.volumeLevel.formatted(.percent.precision(.fractionLength(0))))
-      }
-      .listRowSeparator(.hidden)
-      .listSectionSpacing(.custom(12))
-
-      Section {
-        VStack(alignment: .leading) {
-          Text("Orientation Lock")
-            .textCase(.uppercase)
-            .bold()
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Lock the player screen orientation.")
-        }
-        .font(.caption)
-
-        Picker("Orientation", selection: $preferences.playerOrientation) {
-          Text("Auto").tag(PlayerOrientation.auto)
-          Text("Portrait").tag(PlayerOrientation.portrait)
-          Text("Landscape").tag(PlayerOrientation.landscape)
-        }
-        .font(.subheadline)
-        .bold()
-        .accessibilityLabel("Player Orientation")
-        .accessibilityValue(preferences.playerOrientation.displayText)
-      }
-      .listRowSeparator(.hidden)
+      )
     }
-    .navigationTitle("Player")
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Smart Rewind")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Rewind after being paused for 10 minutes or after audio interruptions.")
+      }
+      .font(.caption)
+
+      Picker("After Pause", selection: $preferences.smartRewindInterval) {
+        Text("Off").tag(0.0)
+        Text("5s").tag(5.0)
+        Text("10s").tag(10.0)
+        Text("15s").tag(15.0)
+        Text("30s").tag(30.0)
+        Text("45s").tag(45.0)
+        Text("60s").tag(60.0)
+        Text("75s").tag(75.0)
+        Text("90s").tag(90.0)
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Smart Rewind After Pause Duration")
+      .accessibilityValue(
+        preferences.smartRewindInterval == 0 ? "Off" : "\(Int(preferences.smartRewindInterval)) seconds"
+      )
+
+      Picker("On Interruption", selection: $preferences.smartRewindOnInterruptionInterval) {
+        Text("Off").tag(0.0)
+        Text("5s").tag(5.0)
+        Text("10s").tag(10.0)
+        Text("15s").tag(15.0)
+        Text("30s").tag(30.0)
+        Text("45s").tag(45.0)
+        Text("60s").tag(60.0)
+        Text("75s").tag(75.0)
+        Text("90s").tag(90.0)
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Smart Rewind On Interruption Duration")
+      .accessibilityValue(
+        preferences.smartRewindOnInterruptionInterval == 0
+          ? "Off" : "\(Int(preferences.smartRewindOnInterruptionInterval)) seconds"
+      )
+    }
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Timer")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Shake your phone to reset the timer during playback.")
+      }
+      .font(.caption)
+
+      Picker("Shake Sensitivity to Reset", selection: $preferences.shakeSensitivity) {
+        Text("Off").tag(ShakeSensitivity.off)
+        Text("Very Low").tag(ShakeSensitivity.veryLow)
+        Text("Low").tag(ShakeSensitivity.low)
+        Text("Medium").tag(ShakeSensitivity.medium)
+        Text("High").tag(ShakeSensitivity.high)
+        Text("Very High").tag(ShakeSensitivity.veryHigh)
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Shake to Reset Timer Sensitivity")
+      .accessibilityValue(preferences.shakeSensitivity.displayText)
+
+      Picker("Audio Fade Out", selection: $preferences.timerFadeOut) {
+        Text("Off").tag(0.0)
+        Text("15s").tag(15.0)
+        Text("30s").tag(30.0)
+        Text("60s").tag(60.0)
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Timer Audio Fade Out")
+      .accessibilityValue(
+        preferences.timerFadeOut == 0 ? "Off" : "\(Int(preferences.timerFadeOut)) seconds"
+      )
+    }
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Automatic Sleep Timer")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text(
+          "Automatically start a sleep timer when playing during a specific time window."
+        )
+      }
+      .font(.caption)
+
+      Picker("Sleep Timer", selection: $preferences.autoTimerMode) {
+        Text("Off").tag(AutoTimerMode.off)
+        Divider()
+        Text("5 min").tag(AutoTimerMode.duration(300.0))
+        Text("10 min").tag(AutoTimerMode.duration(600.0))
+        Text("15 min").tag(AutoTimerMode.duration(900.0))
+        Text("20 min").tag(AutoTimerMode.duration(1200.0))
+        Text("30 min").tag(AutoTimerMode.duration(1800.0))
+        Text("45 min").tag(AutoTimerMode.duration(2700.0))
+        Text("60 min").tag(AutoTimerMode.duration(3600.0))
+        Divider()
+        Text("End of chapter").tag(AutoTimerMode.chapters(1))
+        Text("End of 2 chapters").tag(AutoTimerMode.chapters(2))
+        Text("End of 3 chapters").tag(AutoTimerMode.chapters(3))
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Auto Timer Mode")
+      .accessibilityValue(autoTimerModeAccessibilityValue)
+
+      if preferences.autoTimerMode != .off {
+        HStack {
+          Text("Start Time")
+          Spacer()
+          TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowStart)
+        }
+        .font(.subheadline)
+        .bold()
+
+        HStack {
+          Text("End Time")
+          Spacer()
+          TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowEnd)
+        }
+        .font(.subheadline)
+        .bold()
+      }
+    }
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Lock Screen Controls")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Configure how the lock screen playback controls behave.")
+      }
+      .font(.caption)
+
+      Picker("Skip by", selection: $preferences.lockScreenNextPreviousUsesChapters) {
+        Text("Seconds").tag(false)
+        Text("Chapter").tag(true)
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Lock Screen Next/Previous Buttons")
+      .accessibilityValue(preferences.lockScreenNextPreviousUsesChapters ? "Chapter" : "Seconds")
+
+      Toggle(
+        "Allow Playback Position Change",
+        isOn: $preferences.lockScreenAllowPlaybackPositionChange
+      )
+      .font(.subheadline)
+      .bold()
+    }
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Playback Speed Adjustments")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Configure how time displays are affected by playback speed.")
+      }
+      .font(.caption)
+
+      Toggle("Adjusts Time Remaining", isOn: $preferences.timeRemainingAdjustsWithSpeed)
+        .font(.subheadline)
+        .bold()
+
+      Toggle("Adjusts Chapter Progression", isOn: $preferences.chapterProgressionAdjustsWithSpeed)
+        .font(.subheadline)
+        .bold()
+    }
+    .listRowSeparator(.hidden)
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Playback Display")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Configure how playback and progress is displayed for books with chapters.")
+      }
+      .font(.caption)
+
+      Toggle("Use Book Duration (Instead of Chapter)", isOn: $preferences.showFullBookDuration)
+        .font(.subheadline)
+        .bold()
+
+      Toggle("Show Supplementary Book Progress Bar", isOn: $preferences.showBookProgressBar)
+        .font(.subheadline)
+        .bold()
+
+      Toggle("Hide Chapter Skip Buttons", isOn: $preferences.hideChapterSkipButtons)
+        .font(.subheadline)
+        .bold()
+    }
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Orientation Lock")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Lock the player screen orientation.")
+      }
+      .font(.caption)
+
+      Picker("Orientation", selection: $preferences.playerOrientation) {
+        Text("Auto").tag(PlayerOrientation.auto)
+        Text("Portrait").tag(PlayerOrientation.portrait)
+        Text("Landscape").tag(PlayerOrientation.landscape)
+      }
+      .font(.subheadline)
+      .bold()
+      .accessibilityLabel("Player Orientation")
+      .accessibilityValue(preferences.playerOrientation.displayText)
+    }
+    .listRowSeparator(.hidden)
   }
 }
 

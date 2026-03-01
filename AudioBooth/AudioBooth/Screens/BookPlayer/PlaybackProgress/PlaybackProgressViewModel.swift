@@ -7,7 +7,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var itemID: String
   private var player: AVPlayer?
   private var chapters: ChapterPickerSheet.Model?
-  private var speed: SpeedPickerSheet.Model?
+  private var speed: FloatPickerSheet.Model?
   private let preferences = UserPreferences.shared
   private var cancellables = Set<AnyCancellable>()
 
@@ -46,7 +46,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   func configure(
     player: AVPlayer?,
     chapters: ChapterPickerSheet.Model?,
-    speed: SpeedPickerSheet.Model
+    speed: FloatPickerSheet.Model
   ) {
     self.player = player
     self.chapters = chapters
@@ -73,8 +73,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     var remaining: TimeInterval = totalDuration - currentTime
     let progress: CGFloat = CGFloat(overallProgress)
 
-    if let speed, preferences.timeRemainingAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
-      let playbackSpeed = Double(speed.playbackSpeed)
+    if let speed, preferences.timeRemainingAdjustsWithSpeed, speed.value != 1.0 {
+      let playbackSpeed = speed.value
       let adjustedTotal = (current + remaining) / playbackSpeed
       current = (current / playbackSpeed).rounded()
       remaining = adjustedTotal - current
@@ -82,7 +82,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
 
     var totalTimeRemaining = (totalDuration - currentTime)
     if let speed, preferences.timeRemainingAdjustsWithSpeed {
-      totalTimeRemaining /= Double(speed.playbackSpeed)
+      totalTimeRemaining /= speed.value
     }
 
     self.progress = progress
@@ -111,8 +111,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       progress = CGFloat(overallProgress)
     }
 
-    if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
-      let playbackSpeed = Double(speed.playbackSpeed)
+    if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.value != 1.0 {
+      let playbackSpeed = speed.value
       let adjustedTotal = (current + remaining) / playbackSpeed
       current = (current / playbackSpeed).rounded()
       remaining = adjustedTotal - current
@@ -120,7 +120,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
 
     var totalTimeRemaining = (totalDuration - currentTime)
     if let speed, preferences.timeRemainingAdjustsWithSpeed {
-      totalTimeRemaining /= Double(speed.playbackSpeed)
+      totalTimeRemaining /= speed.value
     }
 
     self.progress = progress

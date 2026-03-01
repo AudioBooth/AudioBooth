@@ -17,7 +17,7 @@ final class NowPlayingManager {
   private var playbackState: MPNowPlayingPlaybackState = .paused
 
   private weak var player: AVPlayer?
-  private var speed: SpeedPickerSheet.Model?
+  private var speed: FloatPickerSheet.Model?
   private var chapters: ChapterPickerSheet.Model?
   private var mediaProgress: MediaProgress?
   private var timeObserver: Any?
@@ -79,7 +79,7 @@ final class NowPlayingManager {
 
   func configure(
     player: AVPlayer,
-    speed: SpeedPickerSheet.Model,
+    speed: FloatPickerSheet.Model,
     chapters: ChapterPickerSheet.Model?,
     mediaProgress: MediaProgress
   ) {
@@ -118,7 +118,7 @@ final class NowPlayingManager {
     guard let speed else { return }
 
     withObservationTracking {
-      _ = speed.playbackSpeed
+      _ = speed.value
     } onChange: { [weak self] in
       guard let self else { return }
       RunLoop.main.perform {
@@ -170,7 +170,7 @@ final class NowPlayingManager {
 
     let rate = player.rate
     playbackState = rate > 0 ? .playing : .paused
-    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = speed?.playbackSpeed ?? 1.0
+    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = speed?.value ?? 1.0
     info[MPNowPlayingInfoPropertyPlaybackRate] = rate
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current {

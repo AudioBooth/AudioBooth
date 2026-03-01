@@ -18,18 +18,30 @@ struct AdaptiveSheetModifier<SheetContent: View>: ViewModifier {
     content
       .background(
         sheetContent()
-          .hidden()
           .background(
             GeometryReader { proxy in
-              Color.clear.task(id: proxy.size.height) {
-                contentHeight = proxy.size.height
-              }
+              Color.clear
+                .task(id: proxy.size.height) {
+                  contentHeight = proxy.size.height
+                }
             }
           )
+          .hidden()
       )
       .sheet(isPresented: $isPresented) {
         sheetContent()
+          .background(
+            GeometryReader { proxy in
+              Color.clear
+                .onChange(of: proxy.size.height) {
+                  withAnimation {
+                    contentHeight = proxy.size.height
+                  }
+                }
+            }
+          )
           .presentationDetents([.height(contentHeight)])
+          .presentationDragIndicator(.visible)
       }
   }
 }

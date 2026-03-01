@@ -133,13 +133,13 @@ final class CarPlayNowPlaying: NSObject {
     guard let current = PlayerManager.shared.current else { return }
 
     let speeds: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
-    let currentSpeed = current.speed.playbackSpeed
+    let currentSpeed = Float(current.speed.value)
 
     if let currentIndex = speeds.firstIndex(of: currentSpeed) {
       let nextIndex = (currentIndex + 1) % speeds.count
-      current.speed.onSpeedChanged(speeds[nextIndex])
+      current.speed.onValueChanged(Double(speeds[nextIndex]))
     } else {
-      current.speed.onSpeedChanged(1.0)
+      current.speed.onValueChanged(1.0)
     }
   }
 

@@ -98,9 +98,30 @@ struct BookPlayer: View {
               }
             }
 
-            if model.history != nil {
+            let disabledControls = Set(PlayerControl.allCases).subtracting(preferences.playerControls)
+            if disabledControls.contains(.speed) {
+              Button(action: { model.speed.isPresented = true }) {
+                Label(PlayerControl.speed.displayName, systemImage: PlayerControl.speed.systemImage)
+              }
+            }
+            if disabledControls.contains(.timer) {
+              Button(action: { model.timer.isPresented = true }) {
+                Label(PlayerControl.timer.displayName, systemImage: PlayerControl.timer.systemImage)
+              }
+            }
+            if disabledControls.contains(.bookmarks), model.bookmarks != nil {
+              Button(action: { model.onBookmarksTapped() }) {
+                Label(PlayerControl.bookmarks.displayName, systemImage: PlayerControl.bookmarks.systemImage)
+              }
+            }
+            if disabledControls.contains(.history), model.history != nil {
               Button(action: { model.onHistoryTapped() }) {
-                Label("History", systemImage: "clock.arrow.circlepath")
+                Label(PlayerControl.history.displayName, systemImage: PlayerControl.history.systemImage)
+              }
+            }
+            if disabledControls.contains(.volume) {
+              Button(action: { model.volume.isPresented = true }) {
+                Label(PlayerControl.volume.displayName, systemImage: PlayerControl.volume.systemImage)
               }
             }
 
@@ -145,10 +166,13 @@ struct BookPlayer: View {
         ChapterPickerSheet(model: chapters)
       }
     }
-    .sheet(isPresented: $model.speed.isPresented) {
-      SpeedPickerSheet(model: $model.speed)
+    .adaptiveSheet(isPresented: $model.volume.isPresented) {
+      FloatPickerSheet(model: $model.volume)
     }
-    .sheet(isPresented: $model.timer.isPresented) {
+    .adaptiveSheet(isPresented: $model.speed.isPresented) {
+      FloatPickerSheet(model: $model.speed)
+    }
+    .adaptiveSheet(isPresented: $model.timer.isPresented) {
       TimerPickerSheet(model: $model.timer)
     }
     .sheet(item: $model.timer.completedAlert) { model in
@@ -264,49 +288,91 @@ struct BookPlayer: View {
 
   private var bottomControlBar: some View {
     HStack(alignment: .bottom, spacing: 0) {
+      ForEach(preferences.playerControls) { control in
+        controlButton(for: control)
+      }
+    }
+    .padding(.vertical, 12)
+    .buttonStyle(.borderless)
+  }
+
+  @ViewBuilder
+  private func controlButton(for control: PlayerControl) -> some View {
+    switch control {
+    case .speed:
       Button(action: { model.speed.isPresented = true }) {
         VStack(spacing: 6) {
-          Text("\(String(format: "%.1f", model.speed.playbackSpeed))×")
+          Text("\(String(format: "%.1f", model.speed.value))×")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.white)
             .frame(height: 20)
-          Text("Speed")
+          Text(control.displayName)
             .font(.caption2)
             .foregroundColor(.white.opacity(0.7))
         }
       }
       .frame(maxWidth: .infinity)
 
+    case .timer:
       Button(action: { model.timer.isPresented = true }) {
         VStack(spacing: 6) {
-          Image(systemName: "timer")
+          Image(systemName: control.systemImage)
             .font(.system(size: 20))
             .foregroundColor(.white)
             .frame(width: 20, height: 20)
-          Text("Timer")
+          Text(control.displayName)
             .font(.caption2)
             .foregroundColor(.white.opacity(0.7))
         }
       }
       .frame(maxWidth: .infinity)
 
+    case .bookmarks:
       if model.bookmarks != nil {
         Button(action: { model.onBookmarksTapped() }) {
           VStack(spacing: 6) {
-            Image(systemName: "bookmark")
+            Image(systemName: control.systemImage)
               .font(.system(size: 20))
               .foregroundColor(.white)
               .frame(width: 20, height: 20)
-            Text("Bookmarks")
+            Text(control.displayName)
               .font(.caption2)
               .foregroundColor(.white.opacity(0.7))
           }
         }
         .frame(maxWidth: .infinity)
       }
+
+    case .history:
+      if model.history != nil {
+        Button(action: { model.onHistoryTapped() }) {
+          VStack(spacing: 6) {
+            Image(systemName: control.systemImage)
+              .font(.system(size: 20))
+              .foregroundColor(.white)
+              .frame(width: 20, height: 20)
+            Text(control.displayName)
+              .font(.caption2)
+              .foregroundColor(.white.opacity(0.7))
+          }
+        }
+        .frame(maxWidth: .infinity)
+      }
+
+    case .volume:
+      Button(action: { model.volume.isPresented = true }) {
+        VStack(spacing: 6) {
+          Image(systemName: control.systemImage)
+            .font(.system(size: 20))
+            .foregroundColor(.white)
+            .frame(width: 20, height: 20)
+          Text(control.displayName)
+            .font(.caption2)
+            .foregroundColor(.white.opacity(0.7))
+        }
+      }
+      .frame(maxWidth: .infinity)
     }
-    .padding(.vertical, 12)
-    .buttonStyle(.borderless)
   }
 }
 
@@ -392,8 +458,9 @@ extension BookPlayer {
 
     var isPlaying: Bool
     var isLoading: Bool
-    var speed: SpeedPickerSheet.Model
+    var speed: FloatPickerSheet.Model
     var timer: TimerPickerSheet.Model
+    var volume: FloatPickerSheet.Model
     var chapters: ChapterPickerSheet.Model?
     var bookmarks: BookmarkViewerSheet.Model?
     var history: PlaybackHistorySheet.Model?
@@ -423,8 +490,9 @@ extension BookPlayer {
       coverURL: URL?,
       isPlaying: Bool = false,
       isLoading: Bool = false,
-      speed: SpeedPickerSheet.Model,
+      speed: FloatPickerSheet.Model,
       timer: TimerPickerSheet.Model,
+      volume: FloatPickerSheet.Model = .init(),
       chapters: ChapterPickerSheet.Model? = nil,
       bookmarks: BookmarkViewerSheet.Model? = nil,
       history: PlaybackHistorySheet.Model? = nil,
@@ -440,6 +508,7 @@ extension BookPlayer {
       self.isLoading = isLoading
       self.speed = speed
       self.timer = timer
+      self.volume = volume
       self.chapters = chapters
       self.bookmarks = bookmarks
       self.history = history

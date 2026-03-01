@@ -64,7 +64,7 @@ final class BookPlayerModel: BookPlayer.Model {
       title: book.title,
       author: book.authorName,
       coverURL: book.coverURL(raw: true),
-      speed: SpeedPickerSheet.Model(),
+      speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
@@ -74,7 +74,6 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(bookID: book.id)
     setupHistory()
     observeSpeedChanged()
-    observeVolumeLevelChanged()
 
     onLoad()
   }
@@ -101,7 +100,7 @@ final class BookPlayerModel: BookPlayer.Model {
       title: item.title,
       author: item.authorNames,
       coverURL: item.coverURL(raw: true),
-      speed: SpeedPickerSheet.Model(),
+      speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
@@ -111,7 +110,6 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(bookID: item.bookID)
     setupHistory()
     observeSpeedChanged()
-    observeVolumeLevelChanged()
 
     onLoad()
   }
@@ -141,7 +139,7 @@ final class BookPlayerModel: BookPlayer.Model {
       title: episode.title,
       author: episode.podcast?.author,
       coverURL: episode.coverURL,
-      speed: SpeedPickerSheet.Model(),
+      speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: nil,
       history: PlaybackHistorySheet.Model(),
@@ -155,7 +153,6 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(episodeID: episode.episodeID)
     setupHistory()
     observeSpeedChanged()
-    observeVolumeLevelChanged()
 
     onLoad()
   }
@@ -194,7 +191,7 @@ final class BookPlayerModel: BookPlayer.Model {
       title: episode.title,
       author: podcastAuthor,
       coverURL: coverURL,
-      speed: SpeedPickerSheet.Model(),
+      speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: nil,
       history: PlaybackHistorySheet.Model(),
@@ -208,7 +205,6 @@ final class BookPlayerModel: BookPlayer.Model {
     setupDownloadStateBinding(episodeID: episode.id)
     setupHistory()
     observeSpeedChanged()
-    observeVolumeLevelChanged()
 
     onLoad()
   }
@@ -674,6 +670,7 @@ extension BookPlayerModel {
     setupTimeObserver()
 
     speed = SpeedPickerSheetViewModel(player: player)
+    volume = VolumeLevelSheetViewModel(player: player)
 
     if let localBook = item as? LocalBook {
       bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook), initialTime: 0)
@@ -889,7 +886,7 @@ extension BookPlayerModel {
 extension BookPlayerModel {
   private func observeSpeedChanged() {
     withObservationTracking {
-      _ = speed.playbackSpeed
+      _ = speed.value
     } onChange: { [weak self] in
       guard let self else { return }
 
@@ -899,22 +896,13 @@ extension BookPlayerModel {
           self.syncPlayback()
         }
 
-        self.watchConnectivity.sendPlaybackRate(self.speed.playbackSpeed)
+        self.watchConnectivity.sendPlaybackRate(Float(self.speed.value))
 
         self.observeSpeedChanged()
       }
     }
 
-    watchConnectivity.sendPlaybackRate(speed.playbackSpeed)
-  }
-
-  private func observeVolumeLevelChanged() {
-    userPreferences.objectWillChange
-      .sink { [weak self] _ in
-        guard let self, let player = self.player else { return }
-        player.volume = Float(userPreferences.volumeLevel)
-      }
-      .store(in: &cancellables)
+    watchConnectivity.sendPlaybackRate(Float(speed.value))
   }
 
   private func setupHistory() {
@@ -1394,7 +1382,7 @@ extension BookPlayerModel {
       currentTime: mediaProgress.currentTime,
       duration: mediaProgress.duration,
       isPlaying: isPlaying,
-      playbackSpeed: speed.playbackSpeed
+      playbackSpeed: Float(speed.value)
     )
 
     if let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS"),
