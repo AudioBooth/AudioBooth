@@ -242,6 +242,12 @@ final class LibraryPageModel: LibraryPage.Model {
         filter = "publishedDecades.\(base64Decade)"
         sortBy = .title
 
+      case .explicit:
+        filter = "explicit"
+
+      case .abridged:
+        filter = "abridged"
+
       case .all, nil:
         filter = nil
       }
@@ -307,6 +313,8 @@ final class LibraryPageModel: LibraryPage.Model {
 extension LibraryPageModel {
   enum Filter: Equatable {
     case all
+    case explicit
+    case abridged
     case progress(String)
     case series(String, String)
     case authors(String, String)
@@ -333,6 +341,10 @@ extension LibraryPageModel.Filter: RawRepresentable, Codable {
     switch type {
     case "all":
       self = .all
+    case "explicit":
+      self = .explicit
+    case "abridged":
+      self = .abridged
     case "progress":
       let value = try container.decode(String.self, forKey: .value1)
       self = .progress(value)
@@ -378,6 +390,10 @@ extension LibraryPageModel.Filter: RawRepresentable, Codable {
     switch self {
     case .all:
       try container.encode("all", forKey: .type)
+    case .explicit:
+      try container.encode("explicit", forKey: .type)
+    case .abridged:
+      try container.encode("abridged", forKey: .type)
     case .progress(let value):
       try container.encode("progress", forKey: .type)
       try container.encode(value, forKey: .value1)

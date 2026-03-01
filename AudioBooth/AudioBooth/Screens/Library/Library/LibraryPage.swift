@@ -181,6 +181,8 @@ struct LibraryPage: View {
 
     switch filters.selectedFilter {
     case .all: return nil
+    case .explicit: return "Explicit"
+    case .abridged: return "Abridged"
     case .progress(let name): return name
     case .authors(_, let name): return name
     case .series(_, let name): return name

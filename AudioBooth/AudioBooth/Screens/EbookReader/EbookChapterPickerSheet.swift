@@ -48,7 +48,7 @@ struct EbookChapterPickerSheet: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Done") {
+          Button("Close", systemImage: "xmark") {
             model.isPresented = false
           }
           .tint(.primary)

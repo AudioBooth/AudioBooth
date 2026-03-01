@@ -210,12 +210,21 @@ extension BookCard {
     }
 
     private var title: some View {
-      Text(model.title)
-        .font(.caption)
-        .foregroundColor(.primary)
-        .fontWeight(.medium)
-        .lineLimit(1)
-        .allowsTightening(true)
+      HStack(spacing: 4) {
+        Text(model.title)
+          .font(.caption)
+          .foregroundColor(.primary)
+          .fontWeight(.medium)
+          .lineLimit(1)
+          .allowsTightening(true)
+
+        if model.isExplicit {
+          Image(systemName: "e.square.fill")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+
+      }
     }
 
     @ViewBuilder
@@ -297,6 +306,7 @@ extension BookCard {
     var contextMenu: BookCardContextMenu.Model?
     var episodeContextMenu: PodcastEpisodeContextMenu.Model?
     let hasEbook: Bool
+    let isExplicit: Bool
 
     func onAppear() {}
 
@@ -312,7 +322,8 @@ extension BookCard {
       publishedYear: String? = nil,
       contextMenu: BookCardContextMenu.Model? = nil,
       episodeContextMenu: PodcastEpisodeContextMenu.Model? = nil,
-      hasEbook: Bool = false
+      hasEbook: Bool = false,
+      isExplicit: Bool = false
     ) {
       self.id = id
       self.podcastID = podcastID
@@ -326,6 +337,7 @@ extension BookCard {
       self.contextMenu = contextMenu
       self.episodeContextMenu = episodeContextMenu
       self.hasEbook = hasEbook
+      self.isExplicit = isExplicit
     }
   }
 }

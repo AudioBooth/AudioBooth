@@ -42,7 +42,8 @@ final class ContinueListeningBookCardModel: BookCard.Model {
         book,
         onProgressChanged: nil,
         onRemoveFromContinueListening: onRemoved
-      )
+      ),
+      isExplicit: book.media.metadata.explicit ?? false
     )
 
     observeMediaProgress()
@@ -71,7 +72,8 @@ final class ContinueListeningBookCardModel: BookCard.Model {
         localBook,
         onProgressChanged: nil,
         onRemoveFromContinueListening: onRemoved
-      )
+      ),
+      isExplicit: localBook.isExplicit
     )
 
     observeMediaProgress()

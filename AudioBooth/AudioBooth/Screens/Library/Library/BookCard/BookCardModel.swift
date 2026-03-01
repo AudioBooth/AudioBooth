@@ -49,7 +49,8 @@ final class BookCardModel: BookCard.Model {
       sequence: options.contains(.showSequence) ? item.series.first?.sequence : nil,
       author: item.authorNames,
       publishedYear: item.publishedYear,
-      hasEbook: item.ebookFile != nil
+      hasEbook: item.ebookFile != nil,
+      isExplicit: item.isExplicit
     )
 
     setupDownloadProgressObserver()
@@ -138,7 +139,8 @@ final class BookCardModel: BookCard.Model {
       author: author,
       narrator: narrator,
       publishedYear: publishedYear,
-      hasEbook: item.media.ebookFile != nil || item.media.ebookFormat != nil
+      hasEbook: item.media.ebookFile != nil || item.media.ebookFormat != nil,
+      isExplicit: item.media.metadata.explicit ?? false
     )
 
     setupDownloadProgressObserver()

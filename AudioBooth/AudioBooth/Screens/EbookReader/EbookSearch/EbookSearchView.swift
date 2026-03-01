@@ -26,9 +26,10 @@ struct EbookSearchView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Done") {
+          Button("Close", systemImage: "xmark") {
             model.onDismiss()
           }
+          .tint(.primary)
         }
       }
       .onAppear {

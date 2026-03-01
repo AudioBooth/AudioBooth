@@ -199,14 +199,38 @@ struct FilterPicker: View {
           }
         }
       }
+
+      Section {
+        FilterRow(
+          title: "Explicit",
+          isSelected: model.selectedFilter == .explicit,
+          action: {
+            model.selectedFilter = .explicit
+            dismiss()
+          }
+        )
+      }
+
+      Section {
+        FilterRow(
+          title: "Abridged",
+          isSelected: model.selectedFilter == .abridged,
+          action: {
+            model.selectedFilter = .abridged
+            dismiss()
+          }
+        )
+      }
     }
+    .listSectionSpacing(.compact)
     .navigationTitle("Filter Library")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItem(placement: .cancellationAction) {
-        Button("Done") {
+        Button("Close", systemImage: "xmark") {
           dismiss()
         }
+        .tint(.primary)
       }
     }
   }
