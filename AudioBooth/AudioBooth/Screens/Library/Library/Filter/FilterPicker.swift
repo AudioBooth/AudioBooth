@@ -11,7 +11,7 @@ struct FilterPicker: View {
     List {
       Section {
         FilterRow(
-          title: "All",
+          title: String(localized: "All"),
           isSelected: model.selectedFilter == nil,
           action: {
             model.selectedFilter = nil
@@ -22,7 +22,7 @@ struct FilterPicker: View {
 
       if !model.progressOptions.isEmpty {
         CollapsibleSection(
-          title: "Progress",
+          title: String(localized: "Progress"),
           isExpanded: expandedSection == .progress,
           isActive: isCategoryActive(.progress),
           toggle: { toggleSection(.progress) }
@@ -42,7 +42,7 @@ struct FilterPicker: View {
 
       if !model.authors.isEmpty {
         CollapsibleSection(
-          title: "Authors",
+          title: String(localized: "Authors"),
           isExpanded: expandedSection == .authors,
           isActive: isCategoryActive(.authors),
           toggle: { toggleSection(.authors) }
@@ -62,7 +62,7 @@ struct FilterPicker: View {
 
       if !model.genres.isEmpty {
         CollapsibleSection(
-          title: "Genres",
+          title: String(localized: "Genres"),
           isExpanded: expandedSection == .genres,
           isActive: isCategoryActive(.genres),
           toggle: { toggleSection(.genres) }
@@ -82,7 +82,7 @@ struct FilterPicker: View {
 
       if !model.narrators.isEmpty {
         CollapsibleSection(
-          title: "Narrators",
+          title: String(localized: "Narrators"),
           isExpanded: expandedSection == .narrators,
           isActive: isCategoryActive(.narrators),
           toggle: { toggleSection(.narrators) }
@@ -102,7 +102,7 @@ struct FilterPicker: View {
 
       if !model.series.isEmpty {
         CollapsibleSection(
-          title: "Series",
+          title: String(localized: "Series"),
           isExpanded: expandedSection == .series,
           isActive: isCategoryActive(.series),
           toggle: { toggleSection(.series) }
@@ -122,7 +122,7 @@ struct FilterPicker: View {
 
       if !model.tags.isEmpty {
         CollapsibleSection(
-          title: "Tags",
+          title: String(localized: "Tags"),
           isExpanded: expandedSection == .tags,
           isActive: isCategoryActive(.tags),
           toggle: { toggleSection(.tags) }
@@ -142,7 +142,7 @@ struct FilterPicker: View {
 
       if !model.languages.isEmpty {
         CollapsibleSection(
-          title: "Languages",
+          title: String(localized: "Languages"),
           isExpanded: expandedSection == .languages,
           isActive: isCategoryActive(.languages),
           toggle: { toggleSection(.languages) }
@@ -162,7 +162,7 @@ struct FilterPicker: View {
 
       if !model.publishers.isEmpty {
         CollapsibleSection(
-          title: "Publishers",
+          title: String(localized: "Publishers"),
           isExpanded: expandedSection == .publishers,
           isActive: isCategoryActive(.publishers),
           toggle: { toggleSection(.publishers) }
@@ -182,7 +182,7 @@ struct FilterPicker: View {
 
       if !model.publishedDecades.isEmpty {
         CollapsibleSection(
-          title: "Published Decades",
+          title: String(localized: "Published Decades"),
           isExpanded: expandedSection == .publishedDecades,
           isActive: isCategoryActive(.publishedDecades),
           toggle: { toggleSection(.publishedDecades) }
@@ -202,7 +202,7 @@ struct FilterPicker: View {
 
       Section {
         FilterRow(
-          title: "Explicit",
+          title: String(localized: "Explicit"),
           isSelected: model.selectedFilter == .explicit,
           action: {
             model.selectedFilter = .explicit
@@ -213,7 +213,7 @@ struct FilterPicker: View {
 
       Section {
         FilterRow(
-          title: "Abridged",
+          title: String(localized: "Abridged"),
           isSelected: model.selectedFilter == .abridged,
           action: {
             model.selectedFilter = .abridged

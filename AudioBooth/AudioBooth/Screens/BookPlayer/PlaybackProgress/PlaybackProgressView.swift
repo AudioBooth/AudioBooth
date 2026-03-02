@@ -82,7 +82,7 @@ struct PlaybackProgressView: View {
             Text(model.title)
               .lineLimit(1)
           } else {
-            Text(formatTimeRemaining(model.totalTimeRemaining))
+            Text(model.totalTimeRemaining.formattedTimeRemaining)
           }
         }
         .font(.caption)
@@ -97,15 +97,6 @@ struct PlaybackProgressView: View {
       }
       .monospacedDigit()
     }
-  }
-
-  private func formatTimeRemaining(_ duration: TimeInterval) -> String {
-    Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    ) + " remaining"
   }
 
   private func formatCurrentTime(_ duration: TimeInterval) -> String {

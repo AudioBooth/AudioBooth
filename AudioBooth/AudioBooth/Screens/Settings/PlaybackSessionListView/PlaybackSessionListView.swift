@@ -74,7 +74,7 @@ struct PlaybackSessionListView: View {
 
                 Text("•")
 
-                Text(formatTimeRemaining(session.duration - session.currentTime))
+                Text((session.duration - session.currentTime).formattedTimeRemaining)
               }
               .foregroundColor(.secondary)
 
@@ -131,15 +131,6 @@ struct PlaybackSessionListView: View {
 
   private func formatTime(_ duration: TimeInterval) -> String {
     Duration.seconds(duration).formatted(.time(pattern: .hourMinuteSecond))
-  }
-
-  private func formatTimeRemaining(_ duration: TimeInterval) -> String {
-    Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    ) + " remaining"
   }
 
   private func formatDate(_ date: Date) -> String {

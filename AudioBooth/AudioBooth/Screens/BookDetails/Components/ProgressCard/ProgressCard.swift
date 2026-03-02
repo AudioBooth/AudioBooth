@@ -32,12 +32,8 @@ struct ProgressCard: View {
         Text("·")
           .foregroundStyle(.secondary)
 
-        Text(
-          Duration.seconds(model.timeRemaining).formatted(
-            .units(allowed: [.hours, .minutes], width: .abbreviated)
-          ) + " remaining"
-        )
-        .foregroundStyle(.secondary)
+        Text(model.timeRemaining.formattedTimeRemaining)
+          .foregroundStyle(.secondary)
       }
     }
     .font(.subheadline)

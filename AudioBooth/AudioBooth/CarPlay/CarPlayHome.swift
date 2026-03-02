@@ -17,8 +17,9 @@ final class CarPlayHome {
     self.interfaceController = interfaceController
     self.nowPlaying = nowPlaying
 
-    template = CPListTemplate(title: "Home", sections: [])
-    template.tabTitle = "Home"
+    let title = String(localized: "Home")
+    template = CPListTemplate(title: title, sections: [])
+    template.tabTitle = title
     template.tabImage = UIImage(systemName: "house.fill")
 
     currentPlayerCancellable = PlayerManager.shared.$current.sink { [weak self] _ in
@@ -139,7 +140,7 @@ extension CarPlayHome {
       createListItem(for: book)
     }
 
-    return CPListSection(items: items, header: "Continue Listening", sectionIndexTitle: nil)
+    return CPListSection(items: items, header: String(localized: "Continue Listening"), sectionIndexTitle: nil)
   }
 
   private func buildBookSections() async -> [CPListSection] {
@@ -164,7 +165,11 @@ extension CarPlayHome {
         createListItem(for: book)
       }
 
-      sections.append(CPListSection(items: items, header: section.label, sectionIndexTitle: nil))
+      let header =
+        HomeSection(rawValue: section.id)?.displayName
+        ?? section.label
+
+      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
     }
 
     return sections
@@ -186,7 +191,11 @@ extension CarPlayHome {
         createListItem(for: series)
       }
 
-      sections.append(CPListSection(items: items, header: section.label, sectionIndexTitle: nil))
+      let header =
+        HomeSection(rawValue: section.id)?.displayName
+        ?? section.label
+
+      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
     }
 
     return sections
@@ -208,7 +217,11 @@ extension CarPlayHome {
         createListItem(for: author)
       }
 
-      sections.append(CPListSection(items: items, header: section.label, sectionIndexTitle: nil))
+      let header =
+        HomeSection(rawValue: section.id)?.displayName
+        ?? section.label
+
+      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
     }
 
     return sections

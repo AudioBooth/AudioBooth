@@ -24,7 +24,7 @@ final class CarPlayChapters {
     }
 
     let section = CPListSection(items: items)
-    let template = CPListTemplate(title: "Chapters", sections: [section])
+    let template = CPListTemplate(title: String(localized: "Chapters"), sections: [section])
 
     interfaceController.pushTemplate(template, animated: true, completion: nil)
   }

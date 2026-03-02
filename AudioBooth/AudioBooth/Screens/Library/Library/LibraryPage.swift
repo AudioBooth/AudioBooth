@@ -298,7 +298,7 @@ extension LibraryPage.Model {
 }
 
 extension SortBy {
-  var displayTitle: String {
+  var displayTitle: LocalizedStringResource {
     switch self {
     case .title: "Title"
     case .authorName: "Author Name"

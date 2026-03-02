@@ -465,7 +465,7 @@ struct BookDetailsView: View {
     }
   }
 
-  private var playButtonText: String {
+  private var playButtonText: LocalizedStringResource {
     if model.isPlaying {
       "Pause"
     } else if model.progress.audio > 0 {

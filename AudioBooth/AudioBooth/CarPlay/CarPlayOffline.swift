@@ -16,8 +16,9 @@ final class CarPlayOffline {
     self.interfaceController = interfaceController
     self.nowPlaying = nowPlaying
 
-    template = CPListTemplate(title: "Offline", sections: [])
-    template.tabTitle = "Offline"
+    let title = String(localized: "Offline")
+    template = CPListTemplate(title: title, sections: [])
+    template.tabTitle = title
     template.tabImage = UIImage(systemName: "arrow.down.circle.fill")
 
     currentPlayerCancellable = PlayerManager.shared.$current.sink { [weak self] _ in
@@ -35,7 +36,9 @@ final class CarPlayOffline {
     let items = await buildBookItems()
     if items.isEmpty {
       template.updateSections([])
-      template.emptyViewTitleVariants = ["No offline books"]
+      template.emptyViewTitleVariants = [
+        String(localized: "No offline books")
+      ]
     } else {
       let section = CPListSection(items: items)
       template.updateSections([section])

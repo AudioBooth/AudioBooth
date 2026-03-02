@@ -46,7 +46,7 @@ struct MiniBookPlayer: View, Equatable {
           .lineLimit(1)
           .frame(maxWidth: .infinity, alignment: .leading)
 
-        Text(formatTimeRemaining(player.playbackProgress.totalTimeRemaining))
+        Text(player.playbackProgress.totalTimeRemaining.formattedTimeRemaining)
           .font(.caption)
           .foregroundColor(.secondary)
           .fontWeight(.medium)
@@ -97,16 +97,6 @@ struct MiniBookPlayer: View, Equatable {
       }
     }
   }
-
-  private func formatTimeRemaining(_ duration: TimeInterval) -> String {
-    Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    ) + " remaining"
-  }
-
 }
 
 struct LegacyMiniBookPlayer: View {
@@ -142,7 +132,7 @@ struct LegacyMiniBookPlayer: View {
           .foregroundColor(.primary)
           .lineLimit(1)
 
-        Text(formatTimeRemaining(player.playbackProgress.totalTimeRemaining))
+        Text(player.playbackProgress.totalTimeRemaining.formattedTimeRemaining)
           .font(.caption)
           .foregroundColor(.secondary)
           .fontWeight(.medium)
@@ -188,15 +178,6 @@ struct LegacyMiniBookPlayer: View {
 
   private var cover: some View {
     Cover(url: player.coverURL)
-  }
-
-  private func formatTimeRemaining(_ duration: TimeInterval) -> String {
-    Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    ) + " remaining"
   }
 }
 
