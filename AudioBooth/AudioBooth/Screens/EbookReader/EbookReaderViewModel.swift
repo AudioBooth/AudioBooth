@@ -321,9 +321,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
           let elapsed = min(now.timeIntervalSince(last), 0.032)
           let maxOffset = scrollView.contentSize.height - scrollView.frame.size.height
           guard scrollView.contentOffset.y < maxOffset else { continue }
-          let delta = max(CGFloat(preferences.autoScrollSpeed * 20 * elapsed), 1)
           scrollView.contentOffset.y = min(
-            scrollView.contentOffset.y + delta,
+            scrollView.contentOffset.y + CGFloat(preferences.autoScrollSpeed * 20 * elapsed),
             maxOffset
           )
         }
