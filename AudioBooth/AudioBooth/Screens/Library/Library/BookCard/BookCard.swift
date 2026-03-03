@@ -152,7 +152,7 @@ extension BookCard {
         .overlay(alignment: .topTrailing) {
           if let sequence = model.sequence, !sequence.isEmpty {
             badge {
-              Text("#\(sequence)")
+              Text(verbatim: "#\(sequence)")
             }
           }
         }
@@ -181,7 +181,7 @@ extension BookCard {
         }
         .overlay(alignment: .topTrailing) {
           if let sequence = model.sequence, !sequence.isEmpty {
-            Text("#\(sequence)")
+            Text(verbatim: "#\(sequence)")
               .font(.caption2)
               .fontWeight(.medium)
               .foregroundStyle(Color.white)

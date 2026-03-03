@@ -90,14 +90,11 @@ struct PlayerPreferencesView: View {
     preferences.playerControls = allControls.filter { enabledControls.contains($0) }
   }
 
-  private var autoTimerModeAccessibilityValue: String {
+  private var autoTimerModeAccessibilityValue: LocalizedStringResource {
     switch preferences.autoTimerMode {
-    case .off:
-      return String(localized: "Off")
-    case .duration(let seconds):
-      return String(localized: "\(Int(seconds / 60)) minutes")
-    case .chapters(let count):
-      return String(localized: "End of \(count) \(count == 1 ? "chapter" : "chapters")")
+    case .off: "Off"
+    case .duration(let seconds): "\(Int(seconds / 60)) minutes"
+    case .chapters(let count): "End of \(count) \(count == 1 ? "chapter" : "chapters")"
     }
   }
 

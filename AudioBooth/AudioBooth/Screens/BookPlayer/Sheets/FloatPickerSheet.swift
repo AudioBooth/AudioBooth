@@ -13,7 +13,7 @@ struct FloatPickerSheet: View {
           .foregroundColor(.primary)
           .padding(.top, 50)
 
-        Text("\(String(format: "%.2f", model.value))×")
+        Text(verbatim: "\(String(format: "%.2f", model.value))×")
           .font(.largeTitle)
           .fontWeight(.medium)
           .foregroundColor(.primary)

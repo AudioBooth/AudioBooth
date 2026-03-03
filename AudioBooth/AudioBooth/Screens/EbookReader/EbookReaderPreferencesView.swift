@@ -43,11 +43,13 @@ struct EbookReaderPreferencesView: View {
               HStack {
                 Text("Auto Scroll")
                 Spacer()
-                Text(
-                  preferences.autoScrollSpeed == 0
-                    ? "Off" : "\(preferences.autoScrollSpeed, format: .number.precision(.fractionLength(1)))×"
-                )
-                .foregroundStyle(.secondary)
+                if preferences.autoScrollSpeed == 0 {
+                  Text("Off")
+                    .foregroundStyle(.secondary)
+                } else {
+                  Text(verbatim: "\(preferences.autoScrollSpeed.formatted(.number.precision(.fractionLength(1))))×")
+                    .foregroundStyle(.secondary)
+                }
               }
             }
           }

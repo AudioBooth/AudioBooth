@@ -9,13 +9,13 @@ enum PlayerControl: String, CaseIterable, Identifiable, Codable {
 
   var id: String { rawValue }
 
-  var displayName: String {
+  var displayName: LocalizedStringResource {
     switch self {
-    case .speed: String(localized: "Speed")
-    case .timer: String(localized: "Timer")
-    case .bookmarks: String(localized: "Bookmarks")
-    case .history: String(localized: "History")
-    case .volume: String(localized: "Volume")
+    case .speed: "Speed"
+    case .timer: "Timer"
+    case .bookmarks: "Bookmarks"
+    case .history: "History"
+    case .volume: "Volume"
     }
   }
 

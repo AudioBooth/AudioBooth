@@ -27,7 +27,7 @@ struct PlaybackProgressView: View {
 
             Spacer()
 
-            Text("-\(formatCurrentTime(model.totalTimeRemaining))")
+            Text(verbatim: "-\(formatCurrentTime(model.totalTimeRemaining))")
           }
           .font(.caption)
           .foregroundColor(.white.opacity(0.7))
@@ -91,7 +91,7 @@ struct PlaybackProgressView: View {
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal)
 
-        Text("-\(formatCurrentTime(model.remaining))")
+        Text(verbatim: "-\(formatCurrentTime(model.remaining))")
           .font(.caption)
           .foregroundColor(.white.opacity(0.7))
       }

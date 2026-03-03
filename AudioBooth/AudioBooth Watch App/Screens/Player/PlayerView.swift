@@ -216,7 +216,7 @@ extension PlayerView {
           .font(.system(size: 11))
           .frame(maxWidth: .infinity, alignment: .center)
 
-        Text("-\(formatTime(remaining))")
+        Text(verbatim: "-\(formatTime(remaining))")
           .font(.system(size: 10))
       }
       .foregroundStyle(.secondary)

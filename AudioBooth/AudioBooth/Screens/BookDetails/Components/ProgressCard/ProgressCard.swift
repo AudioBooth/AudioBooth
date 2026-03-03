@@ -29,7 +29,7 @@ struct ProgressCard: View {
         .fontWeight(.medium)
 
       if model.timeRemaining.isFinite, model.timeRemaining > 0 {
-        Text("·")
+        Text(verbatim: "·")
           .foregroundStyle(.secondary)
 
         Text(model.timeRemaining.formattedTimeRemaining)
@@ -48,7 +48,7 @@ struct ProgressCard: View {
         .fontWeight(.medium)
 
       if let finishedAt = model.finishedAt {
-        Text("·")
+        Text(verbatim: "·")
           .foregroundStyle(.secondary)
 
         Text(finishedAt.formatted(date: .abbreviated, time: .omitted))

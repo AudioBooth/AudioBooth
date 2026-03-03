@@ -123,30 +123,24 @@ struct CollectionDetailPage: View {
     }
   }
 
-  private var emptyStateMessage: String {
+  private var emptyStateMessage: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      String(localized: "This playlist is empty.")
-    case .collections:
-      String(localized: "This collection is empty.")
+    case .playlists: "This playlist is empty."
+    case .collections: "This collection is empty."
     }
   }
 
-  private var deleteActionTitle: String {
+  private var deleteActionTitle: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      String(localized: "Delete Playlist")
-    case .collections:
-      String(localized: "Delete Collection")
+    case .playlists: "Delete Playlist"
+    case .collections: "Delete Collection"
     }
   }
 
-  private var deleteConfirmationMessage: String {
+  private var deleteConfirmationMessage: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      String(localized: "Are you sure you want to remove your playlist \"\(model.collectionName)\"?")
-    case .collections:
-      String(localized: "Are you sure you want to remove this collection?")
+    case .playlists: "Are you sure you want to remove your playlist \"\(model.collectionName)\"?"
+    case .collections: "Are you sure you want to remove this collection?"
     }
   }
 

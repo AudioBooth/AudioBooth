@@ -37,21 +37,17 @@ struct CollectionsPage: View {
     }
   }
 
-  private var emptyStateTitle: String {
+  private var emptyStateTitle: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      return String(localized: "No Playlists")
-    case .collections:
-      return String(localized: "No Collections")
+    case .playlists: "No Playlists"
+    case .collections: "No Collections"
     }
   }
 
-  private var emptyStateMessage: String {
+  private var emptyStateMessage: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      return String(localized: "Create your first playlist to get started.")
-    case .collections:
-      return String(localized: "No collections available.")
+    case .playlists: "Create your first playlist to get started."
+    case .collections: "No collections available."
     }
   }
 

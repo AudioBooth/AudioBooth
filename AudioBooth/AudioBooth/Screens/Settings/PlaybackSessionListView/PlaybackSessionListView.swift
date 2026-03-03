@@ -48,15 +48,15 @@ struct PlaybackSessionListView: View {
                   .fontWeight(.medium)
                   .foregroundColor(.accentColor)
 
-                  Text("•")
+                  Text(verbatim: "•")
 
-                  Text("\(formatTime(session.startTime)) → \(formatTime(session.currentTime))")
+                  Text(verbatim: "\(formatTime(session.startTime)) → \(formatTime(session.currentTime))")
                 }
 
                 HStack(spacing: 6) {
                   Text(formatDate(session.updatedAt))
 
-                  Text("•")
+                  Text(verbatim: "•")
 
                   Text(session.updatedAt.formatted(date: .omitted, time: .shortened))
                 }
@@ -72,7 +72,7 @@ struct PlaybackSessionListView: View {
               HStack(spacing: 6) {
                 Text("\(Int(session.progress * 100))% complete")
 
-                Text("•")
+                Text(verbatim: "•")
 
                 Text((session.duration - session.currentTime).formattedTimeRemaining)
               }

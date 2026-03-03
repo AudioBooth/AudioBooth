@@ -11,7 +11,7 @@ struct PlaybackHistoryRow: View {
         .frame(width: 24)
         .font(.body)
 
-      Text(model.title ?? model.actionType.displayName)
+      Text(model.title ?? String(localized: model.actionType.displayName))
         .frame(maxWidth: .infinity, alignment: .leading)
         .fontWeight(.medium)
 
@@ -73,16 +73,16 @@ extension PlaybackHistory.ActionType {
     }
   }
 
-  var displayName: String {
+  var displayName: LocalizedStringResource {
     switch self {
-    case .play: String(localized: "Play")
-    case .pause: String(localized: "Pause")
-    case .seek: String(localized: "Seek")
-    case .sync: String(localized: "Sync")
-    case .chapter: String(localized: "Chapter")
-    case .timerStarted: String(localized: "Timer Started")
-    case .timerCompleted: String(localized: "Timer Completed")
-    case .timerExtended: String(localized: "Timer Extended")
+    case .play: "Play"
+    case .pause: "Pause"
+    case .seek: "Seek"
+    case .sync: "Sync"
+    case .chapter: "Chapter"
+    case .timerStarted: "Timer Started"
+    case .timerCompleted: "Timer Completed"
+    case .timerExtended: "Timer Extended"
     }
   }
 

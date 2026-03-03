@@ -14,7 +14,7 @@ struct RemotePlayerOptionsSheet: View {
         Text("Speed")
           .font(.headline)
 
-        Text("\(String(format: "%.1f", playbackSpeed))×")
+        Text(verbatim: "\(String(format: "%.1f", playbackSpeed))×")
           .font(.title2)
           .fontWeight(.medium)
 

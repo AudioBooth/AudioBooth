@@ -86,7 +86,7 @@ struct StatsPageView: View {
                 .font(.caption)
                 .foregroundColor(.accentColor)
 
-              Text("•")
+              Text(verbatim: "•")
                 .font(.caption)
                 .foregroundColor(.secondary)
 

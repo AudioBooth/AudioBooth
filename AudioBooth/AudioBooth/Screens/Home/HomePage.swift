@@ -27,16 +27,12 @@ struct HomePage: View {
     }
   }
 
-  var connectionStatusLabel: String {
+  var connectionStatusLabel: LocalizedStringResource {
     switch authentication.server?.status {
-    case .connected:
-      return String(localized: "Connected")
-    case .connectionError:
-      return String(localized: "Connection error")
-    case .authenticationError:
-      return String(localized: "Authentication error")
-    case .none:
-      return String(localized: "Disconnected")
+    case .connected: "Connected"
+    case .connectionError: "Connection error"
+    case .authenticationError: "Authentication error"
+    case .none: "Disconnected"
     }
   }
 
@@ -104,7 +100,7 @@ struct HomePage: View {
           showingServerPicker = true
         } label: {
           HStack(spacing: 4) {
-            Text("●")
+            Text(verbatim: "●")
               .foregroundStyle(connectionStatusColor)
 
             Text(libraries.current?.name ?? "Server")

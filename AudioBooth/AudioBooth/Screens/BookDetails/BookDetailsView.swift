@@ -232,7 +232,7 @@ struct BookDetailsView: View {
     if model.flags.contains(.explicit) {
       result =
         result
-        + Text(" \(Image(systemName: "e.square.fill"))")
+        + Text(verbatim: " \(Image(systemName: "e.square.fill"))")
         .font(.footnote)
         .baselineOffset(8)
         .foregroundStyle(.secondary)
@@ -241,7 +241,7 @@ struct BookDetailsView: View {
     if model.flags.contains(.abridged) {
       result =
         result
-        + Text(" \(Image(systemName: "a.square.fill"))")
+        + Text(verbatim: " \(Image(systemName: "a.square.fill"))")
         .font(.footnote)
         .baselineOffset(8)
         .foregroundStyle(.secondary)
@@ -721,12 +721,12 @@ extension BookDetailsView.Model {
     case ebooks(EbooksContent.Model)
     case sessions(SessionsContent.Model)
 
-    var title: String {
+    var title: LocalizedStringResource {
       switch self {
-      case .chapters: String(localized: "Chapters")
-      case .tracks: String(localized: "Tracks")
-      case .ebooks: String(localized: "eBooks")
-      case .sessions: String(localized: "Sessions")
+      case .chapters: "Chapters"
+      case .tracks: "Tracks"
+      case .ebooks: "eBooks"
+      case .sessions: "Sessions"
       }
     }
   }

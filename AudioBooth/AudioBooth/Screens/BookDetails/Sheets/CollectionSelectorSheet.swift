@@ -48,59 +48,48 @@ struct CollectionSelectorSheet: View {
     }
   }
 
-  private var navigationTitle: String {
+  private var navigationTitle: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      return String(localized: "Add to Playlist")
-    case .collections:
-      return String(localized: "Collections")
+    case .playlists: "Add to Playlist"
+    case .collections: "Collections"
     }
   }
 
-  private var loadingMessage: String {
+  private var loadingMessage: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      return String(localized: "Loading playlists...")
-    case .collections:
-      return String(localized: "Loading collections...")
+    case .playlists: "Loading playlists..."
+    case .collections: "Loading collections..."
     }
   }
 
-  private var emptyStateTitle: String {
+  private var emptyStateTitle: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      return String(localized: "You have no playlists")
-    case .collections:
-      return String(localized: "No collections")
+    case .playlists: "You have no playlists"
+    case .collections: "No collections"
     }
   }
 
   private var emptyStateIcon: String {
     switch model.mode {
-    case .playlists:
-      return "music.note.list"
-    case .collections:
-      return "square.stack.3d.up.fill"
+    case .playlists: "music.note.list"
+    case .collections: "square.stack.3d.up.fill"
     }
   }
 
-  private var emptyStateMessage: String {
+  private var emptyStateMessage: LocalizedStringResource {
     switch model.mode {
-    case .playlists:
-      return String(localized: "Create your first playlist below.")
+    case .playlists: "Create your first playlist below."
     case .collections:
-      return model.canEdit
-        ? String(localized: "Create your first collection below.")
-        : String(localized: "No collections available.")
+      model.canEdit
+        ? "Create your first collection below."
+        : "No collections available."
     }
   }
 
   private var createFieldPlaceholder: String {
     switch model.mode {
-    case .playlists:
-      return String(localized: "New playlist name")
-    case .collections:
-      return String(localized: "New collection name")
+    case .playlists: String(localized: "New playlist name")
+    case .collections: String(localized: "New collection name")
     }
   }
 

@@ -32,7 +32,7 @@ struct ServerListPage: View {
                 model.selected = server
               } label: {
                 HStack {
-                  Text("●")
+                  Text(verbatim: "●")
                     .foregroundStyle(statusColor(for: server.status))
 
                   VStack(alignment: .leading, spacing: 4) {

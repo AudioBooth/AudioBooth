@@ -9,18 +9,10 @@ final class PlayerQueueViewModel: PlayerQueueView.Model {
     let currentItem: QueueItem? = {
       guard let current else { return nil }
 
-      let details =
-        Duration.seconds(current.playbackProgress.totalTimeRemaining).formatted(
-          .units(
-            allowed: [.hours, .minutes],
-            width: .narrow
-          )
-        ) + " remaining"
-
       return QueueItem(
         bookID: current.id,
         title: current.title,
-        details: details,
+        details: current.playbackProgress.totalTimeRemaining.formattedTimeRemaining,
         coverURL: current.coverURL,
         podcastID: current.podcastID
       )

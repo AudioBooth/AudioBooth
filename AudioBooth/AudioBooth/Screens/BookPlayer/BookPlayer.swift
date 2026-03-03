@@ -302,7 +302,7 @@ struct BookPlayer: View {
     case .speed:
       Button(action: { model.speed.isPresented = true }) {
         VStack(spacing: 6) {
-          Text("\(String(format: "%.1f", model.speed.value))×")
+          Text(verbatim: "\(String(format: "%.1f", model.speed.value))×")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.white)
             .frame(height: 20)

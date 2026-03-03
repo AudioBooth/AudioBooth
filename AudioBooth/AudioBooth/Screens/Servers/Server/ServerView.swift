@@ -46,8 +46,8 @@ struct ServerView: View {
 
         if !model.isTypingScheme {
           Picker("Protocol", selection: $model.serverScheme) {
-            Text("https://").tag(ServerView.Model.ServerScheme.https)
-            Text("http://").tag(ServerView.Model.ServerScheme.http)
+            Text(verbatim: "https://").tag(ServerView.Model.ServerScheme.https)
+            Text(verbatim: "http://").tag(ServerView.Model.ServerScheme.http)
           }
           .pickerStyle(.segmented)
           .disabled(model.authenticationModel == nil)
