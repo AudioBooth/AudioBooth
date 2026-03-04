@@ -48,6 +48,7 @@ public struct Connection: Codable, Sendable {
 public enum Credentials: Codable, Sendable {
   case legacy(token: String)
   case bearer(accessToken: String, refreshToken: String, expiresAt: TimeInterval)
+  case apiKey(key: String)
 
   public var bearer: String {
     switch self {
@@ -55,6 +56,8 @@ public enum Credentials: Codable, Sendable {
       return "Bearer \(token)"
     case .bearer(let accessToken, _, _):
       return "Bearer \(accessToken)"
+    case .apiKey(let key):
+      return "Bearer \(key)"
     }
   }
 }

@@ -7,6 +7,7 @@ struct AuthenticationView: View {
   enum FocusField: Hashable {
     case username
     case password
+    case apiKey
   }
 
   @Environment(\.dismiss) var dismiss
@@ -27,6 +28,8 @@ struct AuthenticationView: View {
                 Text("Username & Password").tag(method)
               case .oidc:
                 Text("OIDC (SSO)").tag(method)
+              case .apiKey:
+                Text("API Key").tag(method)
               }
             }
           }
@@ -68,6 +71,39 @@ struct AuthenticationView: View {
           .disabled(
             model.username.isEmpty || model.password.isEmpty || model.isLoading
           )
+        }
+      } else if model.authenticationMethod == .apiKey {
+        Section("API Key") {
+          SecureField("API Key", text: $model.apiKey)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .focused($focusedField, equals: .apiKey)
+            .submitLabel(.send)
+            .onSubmit {
+              model.onAPIKeyLoginTapped()
+            }
+        }
+
+        Section {
+          Button(action: model.onAPIKeyLoginTapped) {
+            HStack {
+              if model.isLoading {
+                ProgressView()
+                  .scaleEffect(0.8)
+              } else {
+                Image(systemName: "person.badge.key")
+              }
+              Text(model.isLoading ? "Authenticating..." : "Authenticate")
+            }
+          }
+          .disabled(model.apiKey.isEmpty || model.isLoading)
+        } footer: {
+          if let serverURL = model.serverURL {
+            Link(
+              "Create an API key",
+              destination: serverURL.appending(path: "config/api-keys/")
+            )
+          }
         }
       } else {
         Section {
@@ -112,11 +148,14 @@ extension AuthenticationView {
     enum AuthenticationMethod: CaseIterable, Hashable {
       case usernamePassword
       case oidc
+      case apiKey
     }
 
     var isLoading: Bool
     var username: String
     var password: String
+    var apiKey: String
+    var serverURL: URL?
     var authenticationMethod: AuthenticationMethod
     var availableAuthMethods: [AuthenticationMethod]
     var shouldAutoLaunchOIDC: Bool
@@ -126,19 +165,24 @@ extension AuthenticationView {
 
     func onLoginTapped() {}
     func onOIDCLoginTapped(using session: WebAuthenticationSession) {}
+    func onAPIKeyLoginTapped() {}
 
     init(
       isLoading: Bool = false,
       username: String = "",
       password: String = "",
+      apiKey: String = "",
+      serverURL: URL? = nil,
       authenticationMethod: AuthenticationMethod = .usernamePassword,
-      availableAuthMethods: [AuthenticationMethod] = [.usernamePassword, .oidc],
+      availableAuthMethods: [AuthenticationMethod] = [.usernamePassword, .oidc, .apiKey],
       shouldAutoLaunchOIDC: Bool = false,
       onAuthenticationSuccess: @escaping () -> Void = {}
     ) {
       self.isLoading = isLoading
       self.username = username
       self.password = password
+      self.apiKey = apiKey
+      self.serverURL = serverURL
       self.authenticationMethod = authenticationMethod
       self.availableAuthMethods = availableAuthMethods
       self.shouldAutoLaunchOIDC = shouldAutoLaunchOIDC

@@ -253,6 +253,7 @@ extension ServerView {
     enum AuthenticationMethod: CaseIterable {
       case usernamePassword
       case oidc
+      case apiKey
     }
 
     enum ServerScheme: String, CaseIterable {

@@ -10,7 +10,7 @@ final class AuthenticationViewModel: AuthenticationView.Model {
 
   init(server: Server) {
     self.server = server
-    super.init()
+    super.init(serverURL: server.baseURL)
   }
 
   override func onLoginTapped() {
@@ -36,6 +36,32 @@ final class AuthenticationViewModel: AuthenticationView.Model {
         shouldDismiss = true
       } catch {
         AppLogger.viewModel.error("Re-authentication failed: \(error.localizedDescription)")
+        Toast(error: error.localizedDescription).show()
+      }
+
+      isLoading = false
+    }
+  }
+
+  override func onAPIKeyLoginTapped() {
+    let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedKey.isEmpty else { return }
+
+    isLoading = true
+
+    Task {
+      do {
+        _ = try await audiobookshelf.authentication.loginWithAPIKey(
+          serverURL: server.baseURL.absoluteString,
+          apiKey: trimmedKey,
+          customHeaders: server.customHeaders,
+          existingServerID: server.id
+        )
+        apiKey = ""
+        onAuthenticationSuccess()
+        shouldDismiss = true
+      } catch {
+        AppLogger.viewModel.error("API key authentication failed: \(error.localizedDescription)")
         Toast(error: error.localizedDescription).show()
       }
 

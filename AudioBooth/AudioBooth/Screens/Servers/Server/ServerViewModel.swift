@@ -35,6 +35,10 @@ final class ServerViewModel: ServerView.Model {
     override func onOIDCLoginTapped(using session: WebAuthenticationSession) {
       parent?.performNewServerOIDCLogin(authModel: self, using: session)
     }
+
+    override func onAPIKeyLoginTapped() {
+      parent?.performNewServerAPIKeyLogin(apiKey: apiKey, authModel: self)
+    }
   }
 
   init(exportConnection: DeepLinkManager.ExportConnection) {
@@ -100,6 +104,10 @@ final class ServerViewModel: ServerView.Model {
         username = JWT(accessToken)?.username
         canExportConnection = true
         connectionSharingModel = ConnectionSharingPageViewModel(server: server)
+      case .apiKey:
+        username = nil
+        canExportConnection = false
+        connectionSharingModel = nil
       }
     } else {
       serverURL = ""
@@ -241,6 +249,40 @@ final class ServerViewModel: ServerView.Model {
         await fetchLibraries()
       } catch {
         AppLogger.viewModel.error("Login failed: \(error.localizedDescription)")
+        Toast(error: error.localizedDescription).show()
+      }
+
+      authModel.isLoading = false
+    }
+  }
+
+  private func performNewServerAPIKeyLogin(
+    apiKey: String,
+    authModel: AuthenticationView.Model
+  ) {
+    let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !serverURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      !trimmedKey.isEmpty
+    else { return }
+
+    authModel.isLoading = true
+    let normalizedURL = buildFullServerURL()
+    let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
+
+    Task {
+      do {
+        let connectionID = try await audiobookshelf.authentication.loginWithAPIKey(
+          serverURL: normalizedURL,
+          apiKey: trimmedKey,
+          customHeaders: headers
+        )
+        authModel.apiKey = ""
+        pendingConnectionID = connectionID
+        server = audiobookshelf.authentication.servers[connectionID]
+        authenticationModel = nil
+        await fetchLibraries()
+      } catch {
+        AppLogger.viewModel.error("API key login failed: \(error.localizedDescription)")
         Toast(error: error.localizedDescription).show()
       }
 
@@ -394,11 +436,14 @@ final class ServerViewModel: ServerView.Model {
       availableMethods.append(.oidc)
     }
 
+    availableMethods.append(.apiKey)
+
     if availableMethods.isEmpty {
-      availableMethods = [.usernamePassword, .oidc]
+      availableMethods = [.usernamePassword, .oidc, .apiKey]
     }
 
     authModel.availableAuthMethods = availableMethods
+    authModel.serverURL = URL(string: buildFullServerURL())
 
     if availableMethods.contains(.oidc) && !availableMethods.contains(.usernamePassword) {
       authModel.authenticationMethod = .oidc

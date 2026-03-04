@@ -365,6 +365,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
             url.append(queryItems: [URLQueryItem(name: "token", value: tokenValue)])
           case .bearer(let accessToken, _, _):
             url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
+          case .apiKey(let key):
+            url.append(queryItems: [URLQueryItem(name: "token", value: key)])
           }
           trackURL = url.absoluteString
         } else if let sessionID = sessionID {

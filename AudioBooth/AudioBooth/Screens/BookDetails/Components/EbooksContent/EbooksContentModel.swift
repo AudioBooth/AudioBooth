@@ -58,6 +58,8 @@ extension EbooksContent.SupplementaryEbook {
       url.append(queryItems: [URLQueryItem(name: "token", value: token)])
     case .bearer(let accessToken, _, _):
       url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
+    case .apiKey(let key):
+      url.append(queryItems: [URLQueryItem(name: "token", value: key)])
     }
 
     return url

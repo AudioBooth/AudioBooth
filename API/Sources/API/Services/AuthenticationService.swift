@@ -499,7 +499,42 @@ public final class AuthenticationService: ObservableObject {
     }
   }
 
+  public func loginWithAPIKey(
+    serverURL: String,
+    apiKey: String,
+    customHeaders: [String: String] = [:],
+    existingServerID: String? = nil
+  ) async throws -> String {
+    guard let baseURL = URL(string: serverURL) else {
+      throw Audiobookshelf.AudiobookshelfError.invalidURL
+    }
+
+    let token = Credentials.apiKey(key: apiKey)
+    var headers = customHeaders
+    headers["Authorization"] = token.bearer
+
+    let validateService = NetworkService(baseURL: baseURL)
+    let request = NetworkRequest<User>(
+      path: "/api/me",
+      method: .get,
+      headers: headers
+    )
+
+    _ = try await validateService.send(request)
+
+    return try upsertConnection(
+      serverURL: baseURL,
+      token: token,
+      customHeaders: customHeaders,
+      existingServerID: existingServerID
+    )
+  }
+
   func refreshToken(for server: Server) async throws -> Credentials {
+    if case .apiKey = server.token {
+      return server.token
+    }
+
     guard case .bearer(_, let refreshToken, _) = server.token else {
       throw Audiobookshelf.AudiobookshelfError.loginFailed("Token not in correct format")
     }
