@@ -426,10 +426,14 @@ extension HomePageModel {
 
     do {
       let data = try await Audiobookshelf.shared.authentication.authorize()
-      try? MediaProgress.syncFromAPI(
-        userData: data.user,
-        currentPlayingBookID: PlayerManager.shared.current?.id
-      )
+      let orphanedIDs =
+        (try? MediaProgress.syncFromAPI(
+          userData: data.user,
+          currentPlayingBookID: PlayerManager.shared.current?.id
+        )) ?? []
+      for bookID in orphanedIDs {
+        UserDefaults.standard.removeObject(forKey: "bookSpeed_\(bookID)")
+      }
       downloadManager.removeCompleted()
       try? Bookmark.syncFromAPI(userData: data.user)
 

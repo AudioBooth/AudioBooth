@@ -267,8 +267,9 @@ extension MediaProgress {
     cache[bookID] = 1.0
   }
 
+  @discardableResult
   @MainActor
-  public static func syncFromAPI(userData: User, currentPlayingBookID: String? = nil) throws {
+  public static func syncFromAPI(userData: User, currentPlayingBookID: String? = nil) throws -> [String] {
     let context = ModelContextProvider.shared.context
 
     let allLocalProgress = try MediaProgress.fetchAll()
@@ -323,6 +324,8 @@ extension MediaProgress {
       }
     }
 
+    var orphanedBookIDs: [String] = []
+
     for localProgress in allLocalProgress {
       if !remoteBookIDs.contains(localProgress.bookID) {
         if let currentPlayingBookID, localProgress.bookID == currentPlayingBookID {
@@ -331,9 +334,11 @@ extension MediaProgress {
 
         context.delete(localProgress)
         cache.removeValue(forKey: localProgress.bookID)
+        orphanedBookIDs.append(localProgress.bookID)
       }
     }
 
     try context.save()
+    return orphanedBookIDs
   }
 }
