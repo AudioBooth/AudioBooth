@@ -25,6 +25,10 @@ final class SettingsViewModel: SettingsView.Model {
     Task {
       try? LocalBook.deleteAll()
       try? MediaProgress.deleteAll()
+      for key in UserDefaults.standard.dictionaryRepresentation().keys
+      where key.hasPrefix("bookSpeed_") {
+        UserDefaults.standard.removeObject(forKey: key)
+      }
       DownloadManager.shared.deleteAllServerData()
       PlayerManager.shared.clearCurrent()
 
