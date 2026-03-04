@@ -55,6 +55,7 @@ extension UserPreferences {
     "podcastEpisodeFilter",
     "podcastEpisodeSort",
     "podcastEpisodeSortAscending",
+    "defaultPlaybackSpeed",
   ]
 
   func setupCloudSync() {
