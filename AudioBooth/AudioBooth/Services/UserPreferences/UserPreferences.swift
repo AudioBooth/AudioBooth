@@ -61,6 +61,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("chapterProgressionAdjustsWithSpeed")
   var chapterProgressionAdjustsWithSpeed: Bool = false
 
+  @AppStorage("defaultPlaybackSpeed")
+  var defaultPlaybackSpeed: Double = 1.0
+
   @AppStorage("showFullBookDuration")
   var showFullBookDuration: Bool = false
 
@@ -153,6 +156,7 @@ final class UserPreferences: ObservableObject {
     migrateShakeToExtendTimer()
     migrateAutoTimerDuration()
     migrateVolumeBoost()
+    migrateGlobalPlaybackSpeed()
     setupCloudSync()
   }
 
@@ -200,6 +204,14 @@ final class UserPreferences: ObservableObject {
     case "high": volumeLevel = 3.0
     default: break
     }
+  }
+
+  private func migrateGlobalPlaybackSpeed() {
+    let globalSpeed = UserDefaults.standard.float(forKey: "playbackSpeed")
+    guard globalSpeed > 0,
+      UserDefaults.standard.object(forKey: "defaultPlaybackSpeed") == nil
+    else { return }
+    UserDefaults.standard.set(Double(globalSpeed), forKey: "defaultPlaybackSpeed")
   }
 }
 
