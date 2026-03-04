@@ -63,9 +63,18 @@ public enum Credentials: Codable, Sendable {
 }
 
 public struct JWT {
+  public enum Category: String {
+    case access
+    case api
+    case refresh
+    case unknown
+  }
+
   public let userID: String?
   public let exp: TimeInterval?
   public let username: String?
+  public let name: String?
+  public let type: Category
 
   public init?(_ token: String) {
     let parts = token.split(separator: ".")
@@ -88,6 +97,8 @@ public struct JWT {
 
     self.userID = json["userId"] as? String
     self.username = json["username"] as? String
+    self.name = json["name"] as? String
     self.exp = json["exp"] as? TimeInterval
+    self.type = (json["type"] as? String).flatMap(Category.init) ?? .unknown
   }
 }

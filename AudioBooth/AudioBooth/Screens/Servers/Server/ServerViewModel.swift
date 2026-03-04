@@ -104,10 +104,10 @@ final class ServerViewModel: ServerView.Model {
         username = JWT(accessToken)?.username
         canExportConnection = true
         connectionSharingModel = ConnectionSharingPageViewModel(server: server)
-      case .apiKey:
-        username = nil
-        canExportConnection = false
-        connectionSharingModel = nil
+      case .apiKey(let key):
+        username = JWT(key)?.name
+        canExportConnection = true
+        connectionSharingModel = ConnectionSharingPageViewModel(server: server)
       }
     } else {
       serverURL = ""

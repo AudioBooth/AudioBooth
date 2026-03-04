@@ -10,7 +10,13 @@ final class ConnectionSharingPageViewModel: ConnectionSharingPage.Model {
 
   init(server: Server) {
     self.server = server
-    super.init()
+    let isAPIKey: Bool
+    if case .apiKey = server.token {
+      isAPIKey = true
+    } else {
+      isAPIKey = false
+    }
+    super.init(isCredentialsEphemeral: !isAPIKey)
   }
 
   override func onAppear() {

@@ -31,7 +31,7 @@ struct ConnectionSharingPage: View {
             model.onIncludeCredentialsChanged(newValue)
           }
 
-        if model.includeCredentials {
+        if model.includeCredentials, model.isCredentialsEphemeral {
           HStack(alignment: .center, spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
               .foregroundStyle(.orange)
@@ -82,6 +82,7 @@ extension ConnectionSharingPage {
     var qrCodeImage: UIImage?
     var connectionURL: URL?
     var includeCredentials: Bool
+    var isCredentialsEphemeral: Bool
 
     func onAppear() {}
     func onShareTapped() {}
@@ -91,11 +92,13 @@ extension ConnectionSharingPage {
     init(
       qrCodeImage: UIImage? = nil,
       connectionURL: URL? = nil,
-      includeCredentials: Bool = false
+      includeCredentials: Bool = false,
+      isCredentialsEphemeral: Bool = true
     ) {
       self.qrCodeImage = qrCodeImage
       self.connectionURL = connectionURL
       self.includeCredentials = includeCredentials
+      self.isCredentialsEphemeral = isCredentialsEphemeral
     }
   }
 }

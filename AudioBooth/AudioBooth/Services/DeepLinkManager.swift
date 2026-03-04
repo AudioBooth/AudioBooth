@@ -54,10 +54,17 @@ class DeepLinkManager: ObservableObject {
     }
 
     if let token = exportConnection.token {
+      let credentials: Credentials
+      if JWT(token)?.type == .api {
+        credentials = .apiKey(key: token)
+      } else {
+        credentials = .bearer(accessToken: "", refreshToken: token, expiresAt: 0)
+      }
       let connection = Connection(
         serverURL: exportConnection.url,
-        token: .bearer(accessToken: "", refreshToken: token, expiresAt: 0),
-        customHeaders: exportConnection.headers
+        token: credentials,
+        customHeaders: exportConnection.headers,
+        alias: exportConnection.alias
       )
       Audiobookshelf.shared.authentication.restoreConnection(connection)
       Toast(success: "Connection imported successfully").show()
@@ -98,14 +105,22 @@ extension DeepLinkManager {
     public let url: URL
     public let token: String?
     public let headers: [String: String]
+    public let alias: String?
 
     init?(_ connection: Connection, includeToken: Bool = false) {
       url = connection.serverURL
       headers = connection.customHeaders
+      alias = connection.alias
 
       if includeToken {
-        guard case .bearer(_, let refreshToken, _) = connection.token else { return nil }
-        token = refreshToken
+        switch connection.token {
+        case .bearer(_, let refreshToken, _):
+          token = refreshToken
+        case .apiKey(let key):
+          token = key
+        case .legacy:
+          return nil
+        }
       } else {
         token = nil
       }
