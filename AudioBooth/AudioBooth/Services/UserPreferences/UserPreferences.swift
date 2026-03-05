@@ -23,7 +23,7 @@ final class UserPreferences: ObservableObject {
   var autoDownloadDelay: AutoDownloadDelay = .none
 
   @AppStorage("maxDownloadStorage")
-  var maxDownloadStorage: MaxDownloadStorage = .unlimited
+  var maxDownloadStorageGB: Int = 0
 
   @AppStorage("removeAfterUnused")
   var removeAfterUnused: RemoveAfterUnused = .never
@@ -254,33 +254,6 @@ enum AutoDownloadDelay: Int, CaseIterable {
   }
 }
 
-enum MaxDownloadStorage: Int, CaseIterable {
-  case unlimited = 0
-  case oneGB = 1
-  case twoGB = 2
-  case fiveGB = 5
-  case tenGB = 10
-  case twentyGB = 20
-  case fiftyGB = 50
-
-  var displayName: String {
-    switch self {
-    case .unlimited: "Unlimited"
-    case .oneGB: "1 GB"
-    case .twoGB: "2 GB"
-    case .fiveGB: "5 GB"
-    case .tenGB: "10 GB"
-    case .twentyGB: "20 GB"
-    case .fiftyGB: "50 GB"
-    }
-  }
-
-  var bytes: Int64? {
-    guard self != .unlimited else { return nil }
-    return Int64(rawValue) * 1_000_000_000
-  }
-}
-
 enum RemoveAfterUnused: Int, CaseIterable {
   case never = 0
   case oneDay = 1
@@ -288,16 +261,12 @@ enum RemoveAfterUnused: Int, CaseIterable {
   case sevenDays = 7
   case fourteenDays = 14
   case thirtyDays = 30
+  case ninetyDays = 90
+  case oneHundredEightyDays = 180
 
-  var displayName: String {
-    switch self {
-    case .never: "Never"
-    case .oneDay: "1 Day"
-    case .fiveDays: "5 Days"
-    case .sevenDays: "7 Days"
-    case .fourteenDays: "14 Days"
-    case .thirtyDays: "30 Days"
-    }
+  var displayName: LocalizedStringResource {
+    guard self != .never else { return "Never" }
+    return "^[\(rawValue) Day](inflect: true)"
   }
 }
 

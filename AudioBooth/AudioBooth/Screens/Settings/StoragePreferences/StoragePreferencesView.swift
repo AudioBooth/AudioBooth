@@ -5,6 +5,13 @@ struct StoragePreferencesView: View {
   @ObservedObject var model: Model
   @ObservedObject private var preferences = UserPreferences.shared
 
+  private var maxStorageText: Binding<String> {
+    Binding(
+      get: { preferences.maxDownloadStorageGB == 0 ? "" : "\(preferences.maxDownloadStorageGB)" },
+      set: { preferences.maxDownloadStorageGB = max(0, Int($0) ?? 0) }
+    )
+  }
+
   var body: some View {
     Form {
       Section {
@@ -45,13 +52,20 @@ struct StoragePreferencesView: View {
       }
 
       Section("Storage Limits") {
-        Picker("Maximum Storage", selection: $preferences.maxDownloadStorage) {
-          ForEach(MaxDownloadStorage.allCases, id: \.rawValue) { limit in
-            Text(limit.displayName).tag(limit)
+        HStack {
+          Text("Maximum Storage")
+            .font(.subheadline)
+            .bold()
+          Spacer()
+          TextField("Unlimited", text: maxStorageText)
+            .keyboardType(.numberPad)
+            .multilineTextAlignment(.trailing)
+            .frame(width: 80)
+          if preferences.maxDownloadStorageGB > 0 {
+            Text(verbatim: "GB")
+              .foregroundStyle(.secondary)
           }
         }
-        .font(.subheadline)
-        .bold()
 
         Picker("Remove After Unused For", selection: $preferences.removeAfterUnused) {
           ForEach(RemoveAfterUnused.allCases, id: \.rawValue) { duration in
