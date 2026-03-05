@@ -2,11 +2,16 @@ import SwiftUI
 
 struct AlphabetScrollBar: View {
   var onLetterTapped: ((String) -> Void)?
+  var reversed: Bool = false
 
   private let allLetters = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
     "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "#",
   ]
+
+  private var letters: [String] {
+    reversed ? allLetters.reversed() : allLetters
+  }
 
   @GestureState private var dragLocation: CGPoint = .zero
   @State private var lastScrolledLetter: String = ""
@@ -15,7 +20,7 @@ struct AlphabetScrollBar: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ForEach(allLetters, id: \.self) { letter in
+      ForEach(letters, id: \.self) { letter in
         Text(letter)
           .font(.caption2)
           .fontWeight(.semibold)

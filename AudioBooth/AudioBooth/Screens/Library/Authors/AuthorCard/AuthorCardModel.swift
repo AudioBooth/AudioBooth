@@ -6,7 +6,7 @@ final class AuthorCardModel: AuthorCard.Model {
     super.init(
       id: author.id,
       name: author.name,
-      lastFirst: author.lastFirst,
+      lastFirst: author.lastFirst ?? author.name,
       bookCount: author.numBooks ?? 0,
       imageURL: author.imageURL
     )

@@ -1,95 +1,73 @@
+import API
 import Combine
 import NukeUI
 import SwiftUI
 
 struct AuthorsPage: View {
-  @AppStorage("authorsPageSortOrder") var sortOrder: SortOrder = .firstLast
-
+  @ObservedObject private var preferences = UserPreferences.shared
   @ObservedObject var model: Model
 
   var body: some View {
     content
+      .navigationTitle("Authors")
+      .refreshable {
+        await model.refresh()
+      }
+      .conditionalSearchable(
+        text: $model.searchViewModel.searchText,
+        prompt: "Search books, series, and authors"
+      )
+      .toolbar { toolbarContent }
+      .onAppear(perform: model.onAppear)
   }
 
-  var content: some View {
-    Group {
-      if !model.searchViewModel.searchText.isEmpty {
-        SearchView(model: model.searchViewModel)
-      } else {
-        if model.isLoading && model.authors.isEmpty {
-          ProgressView("Loading authors...")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if model.authors.isEmpty && !model.isLoading {
-          ContentUnavailableView(
-            "No Authors Found",
-            systemImage: "person.2",
-            description: Text(
-              "Your library appears to have no authors or no library is selected."
-            )
-          )
-        } else {
-          authorsRowContent
-        }
+  @ToolbarContentBuilder
+  var toolbarContent: some ToolbarContent {
+    if #available(iOS 26.0, *) {
+      ToolbarItem(placement: .topBarLeading) {
+        Color.clear
       }
+      .sharedBackgroundVisibility(.hidden)
     }
-    .navigationTitle("Authors")
-    .refreshable {
-      await model.refresh()
-    }
-    .conditionalSearchable(
-      text: $model.searchViewModel.searchText,
-      prompt: "Search books, series, and authors"
-    )
-    .toolbar {
-      if #available(iOS 26.0, *) {
-        ToolbarItem(placement: .topBarLeading) {
-          Color.clear
-        }
-        .sharedBackgroundVisibility(.hidden)
-      }
 
-      ToolbarItem(placement: .topBarTrailing) {
-        Menu {
-          Picker("Sort Order", selection: $sortOrder) {
-            Text("First Last").tag(SortOrder.firstLast)
-            Text("Last First").tag(SortOrder.lastFirst)
+    ToolbarItem(placement: .topBarTrailing) {
+      Menu {
+        ForEach(AuthorsService.SortBy.allCases, id: \.self) { sortBy in
+          if preferences.authorsSortBy == sortBy {
+            Button(
+              sortBy.displayTitle,
+              systemImage: preferences.authorsSortAscending ? "chevron.up" : "chevron.down"
+            ) {
+              model.onSortOptionTapped(sortBy)
+            }
+          } else {
+            Button(sortBy.displayTitle) {
+              model.onSortOptionTapped(sortBy)
+            }
           }
-        } label: {
-          Image(systemName: "arrow.up.arrow.down")
-            .foregroundColor(.primary)
         }
+      } label: {
+        Image(systemName: "arrow.up.arrow.down")
+          .foregroundColor(.primary)
       }
     }
-    .onAppear(perform: model.onAppear)
   }
 
-  var authorSections: [AuthorSection] {
-    let sortedAuthors = model.authors.sorted { lhs, rhs in
-      switch sortOrder {
-      case .firstLast:
-        return lhs.name.cleaned().lowercased() < rhs.name.cleaned().lowercased()
-      case .lastFirst:
-        return lhs.lastFirst.cleaned().lowercased() < rhs.lastFirst.cleaned().lowercased()
-      }
-    }
-
-    let grouped = Dictionary(grouping: sortedAuthors) { author in
-      let name: String
-      switch sortOrder {
-      case .firstLast:
-        name = author.name
-      case .lastFirst:
-        name = author.lastFirst
-      }
-      return sectionLetter(for: name)
-    }
-
-    return grouped.map { letter, authors in
-      AuthorSection(id: letter, letter: letter, authors: authors)
-    }.sorted { lhs, rhs in
-      if lhs.letter == "#" { return false }
-      if rhs.letter == "#" { return true }
-      return lhs.letter < rhs.letter
+  @ViewBuilder
+  var content: some View {
+    if !model.searchViewModel.searchText.isEmpty {
+      SearchView(model: model.searchViewModel)
+    } else if model.isLoading && model.sections.isEmpty {
+      ProgressView("Loading authors...")
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else if model.sections.isEmpty && !model.isLoading {
+      ContentUnavailableView(
+        "No Authors Found",
+        systemImage: "person.2",
+        description: Text("Your library appears to have no authors or no library is selected.")
+      )
+    } else {
+      authorsRowContent
     }
   }
 
@@ -99,9 +77,12 @@ struct AuthorsPage: View {
         authorsList
       }
       .overlay(alignment: .trailing) {
-        AlphabetScrollBar(
-          onLetterTapped: { model.onLetterTapped($0) }
-        )
+        if [.name, .lastFirst].contains(preferences.authorsSortBy) {
+          AlphabetScrollBar(
+            onLetterTapped: { model.onLetterTapped($0) },
+            reversed: !preferences.authorsSortAscending
+          )
+        }
       }
       .scrollIndicators(.hidden)
       .onChange(of: model.scrollTarget) { _, scrollTarget in
@@ -115,13 +96,15 @@ struct AuthorsPage: View {
 
   var authorsList: some View {
     LazyVStack(alignment: .leading, spacing: 0) {
-      ForEach(authorSections) { section in
+      ForEach(model.sections) { section in
         Section {
           ForEach(section.authors, id: \.id) { author in
             authorRow(for: author)
           }
         } header: {
-          sectionHeader(for: section.letter)
+          if !section.letter.isEmpty {
+            sectionHeader(for: section.letter)
+          }
         }
         .id(section.letter)
       }
@@ -207,11 +190,6 @@ struct AuthorsPage: View {
 extension AuthorsPage {
   static let bottomScrollID = "BOTTOM"
 
-  enum SortOrder: String {
-    case firstLast = "First Last"
-    case lastFirst = "Last First"
-  }
-
   struct AuthorSection: Identifiable {
     let id: String
     let letter: String
@@ -233,56 +211,87 @@ extension AuthorsPage {
       }
     }
 
-    var authors: [AuthorCard.Model]
+    var sections: [AuthorSection]
     var searchViewModel: SearchView.Model = SearchView.Model()
 
     func onAppear() {}
     func refresh() async {}
     func loadNextPageIfNeeded() {}
     func onLetterTapped(_ letter: String) {}
+    func onSortOptionTapped(_ sortBy: AuthorsService.SortBy) {}
 
     init(
       isLoading: Bool = false,
       hasMorePages: Bool = false,
-      authors: [AuthorCard.Model] = []
+      sections: [AuthorSection] = []
     ) {
       self.isLoading = isLoading
       self.hasMorePages = hasMorePages
-      self.authors = authors
+      self.sections = sections
+    }
+  }
+}
+
+extension AuthorsService.SortBy {
+  var displayTitle: String {
+    switch self {
+    case .name: "First Last"
+    case .lastFirst: "Last First"
+    case .numBooks: "# of Books"
+    case .addedAt: "Date Added"
+    case .updatedAt: "Last Updated"
     }
   }
 }
 
 extension AuthorsPage.Model {
   static var mock: AuthorsPage.Model {
-    let sampleAuthors: [AuthorCard.Model] = [
-      AuthorCard.Model(
-        name: "Andrew Seipe",
-        bookCount: 15,
-        imageURL: URL(
-          string:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-        )
+    let sections: [AuthorsPage.AuthorSection] = [
+      AuthorsPage.AuthorSection(
+        id: "A",
+        letter: "A",
+        authors: [
+          AuthorCard.Model(
+            name: "Andrew Seipe",
+            bookCount: 15,
+            imageURL: URL(
+              string:
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
+            )
+          )
+        ]
       ),
-      AuthorCard.Model(
-        name: "Brandon Sanderson",
-        bookCount: 15,
-        imageURL: URL(
-          string:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-        )
+      AuthorsPage.AuthorSection(
+        id: "B",
+        letter: "B",
+        authors: [
+          AuthorCard.Model(
+            name: "Brandon Sanderson",
+            bookCount: 15,
+            imageURL: URL(
+              string:
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
+            )
+          )
+        ]
       ),
-      AuthorCard.Model(
-        name: "Terry Pratchett",
-        bookCount: 8,
-        imageURL: URL(
-          string:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Terry_Pratchett_cropped.jpg/220px-Terry_Pratchett_cropped.jpg"
-        )
+      AuthorsPage.AuthorSection(
+        id: "T",
+        letter: "T",
+        authors: [
+          AuthorCard.Model(
+            name: "Terry Pratchett",
+            bookCount: 8,
+            imageURL: URL(
+              string:
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Terry_Pratchett_cropped.jpg/220px-Terry_Pratchett_cropped.jpg"
+            )
+          )
+        ]
       ),
     ]
 
-    return AuthorsPage.Model(authors: sampleAuthors)
+    return AuthorsPage.Model(sections: sections)
   }
 }
 

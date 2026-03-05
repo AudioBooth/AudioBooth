@@ -133,6 +133,12 @@ final class UserPreferences: ObservableObject {
   @AppStorage("podcastEpisodeSortAscending")
   var podcastEpisodeSortAscending: Bool = false
 
+  @AppStorage("authorsSortBy")
+  var authorsSortBy: AuthorsService.SortBy = .name
+
+  @AppStorage("authorsSortAscending")
+  var authorsSortAscending: Bool = true
+
   let cloud = NSUbiquitousKeyValueStore.default
   var cloudObserver: NSObjectProtocol?
   var localObserver: NSObjectProtocol?

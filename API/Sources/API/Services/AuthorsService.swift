@@ -7,7 +7,7 @@ public final class AuthorsService {
     self.audiobookshelf = audiobookshelf
   }
 
-  public enum SortBy: String {
+  public enum SortBy: String, CaseIterable, Hashable {
     case name
     case lastFirst
     case numBooks

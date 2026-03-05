@@ -42,6 +42,7 @@ final class AuthorDetailsViewModel: AuthorDetailsView.Model {
         BookCardModel(book, sortBy: .publishedYear)
       }
 
+      libraryID = details.libraryID
       name = details.name
       description = details.description
       imageURL = details.imageURL
