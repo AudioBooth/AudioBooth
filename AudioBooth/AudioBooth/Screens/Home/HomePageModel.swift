@@ -430,6 +430,7 @@ extension HomePageModel {
         userData: data.user,
         currentPlayingBookID: PlayerManager.shared.current?.id
       )
+      downloadManager.removeCompleted()
       try? Bookmark.syncFromAPI(userData: data.user)
 
       BookmarkSyncQueue.shared.syncPending()

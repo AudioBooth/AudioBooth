@@ -194,6 +194,18 @@ extension DownloadManager {
     }
   }
 
+  func removeCompleted() {
+    guard UserPreferences.shared.removeDownloadOnCompletion else { return }
+
+    let currentPlayingID = PlayerManager.shared.current?.id
+
+    for (bookID, state) in downloadStates {
+      guard state == .downloaded, bookID != currentPlayingID else { continue }
+      guard let progress = try? MediaProgress.fetch(bookID: bookID), progress.isFinished else { continue }
+      deleteDownload(for: bookID)
+    }
+  }
+
   func deleteAllServerData() {
     Task {
       guard

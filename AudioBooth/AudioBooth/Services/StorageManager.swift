@@ -60,9 +60,10 @@ final class StorageManager {
   }
 
   func canDownload(additionalBytes: Int64 = 0) async -> Bool {
-    let limit = UserPreferences.shared.maxDownloadStorage
-    guard let maxBytes = limit.bytes else { return true }
+    let limitGB = UserPreferences.shared.maxDownloadStorageGB
+    guard limitGB > 0 else { return true }
 
+    let maxBytes = Int64(limitGB) * 1_000_000_000
     let currentUsage = await getDownloadedContentSize()
     return (currentUsage + additionalBytes) < maxBytes
   }
