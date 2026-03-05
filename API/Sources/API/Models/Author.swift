@@ -3,6 +3,7 @@ import Foundation
 public struct Author: Codable, Sendable {
   public let id: String
   public let name: String
+  public let lastFirst: String
   public let description: String?
   public let addedAt: Date?
   public let updatedAt: Date?

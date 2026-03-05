@@ -67,9 +67,9 @@ struct AuthorsPage: View {
     let sortedAuthors = model.authors.sorted { lhs, rhs in
       switch sortOrder {
       case .firstLast:
-        return lhs.name < rhs.name
+        return lhs.name.cleaned().lowercased() < rhs.name.cleaned().lowercased()
       case .lastFirst:
-        return lastNameFirst(lhs.name) < lastNameFirst(rhs.name)
+        return lhs.lastFirst.cleaned().lowercased() < rhs.lastFirst.cleaned().lowercased()
       }
     }
 
@@ -79,7 +79,7 @@ struct AuthorsPage: View {
       case .firstLast:
         name = author.name
       case .lastFirst:
-        name = lastNameFirst(author.name)
+        name = author.lastFirst
       }
       return sectionLetter(for: name)
     }
@@ -91,18 +91,6 @@ struct AuthorsPage: View {
       if rhs.letter == "#" { return true }
       return lhs.letter < rhs.letter
     }
-  }
-
-  private func sectionLetter(for name: String) -> String {
-    guard let firstChar = name.uppercased().first else { return "#" }
-    let validLetters: Set<Character> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    return validLetters.contains(firstChar) ? String(firstChar) : "#"
-  }
-
-  private func lastNameFirst(_ name: String) -> String {
-    let components = name.components(separatedBy: " ")
-    guard components.count > 1 else { return name }
-    return components.last ?? name
   }
 
   var authorsRowContent: some View {

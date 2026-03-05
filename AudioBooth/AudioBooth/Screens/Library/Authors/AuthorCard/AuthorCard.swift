@@ -79,17 +79,20 @@ extension AuthorCard {
   @Observable class Model {
     var id: String
     var name: String
+    var lastFirst: String
     var bookCount: Int
     var imageURL: URL?
 
     init(
       id: String = UUID().uuidString,
       name: String = "",
+      lastFirst: String = "",
       bookCount: Int = 0,
       imageURL: URL? = nil
     ) {
       self.id = id
       self.name = name
+      self.lastFirst = lastFirst
       self.bookCount = bookCount
       self.imageURL = imageURL
     }

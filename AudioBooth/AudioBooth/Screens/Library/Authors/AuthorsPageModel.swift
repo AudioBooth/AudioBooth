@@ -4,7 +4,6 @@ import SwiftUI
 
 final class AuthorsPageModel: AuthorsPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
-
   private var targetLetter: String?
 
   private var currentPage: Int = 0
@@ -38,12 +37,21 @@ final class AuthorsPageModel: AuthorsPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
+      
+    @AppStorage("authorsPageSortOrder") var sortOrder: AuthorsPage.SortOrder = .firstLast
+    var sortBy: AuthorsService.SortBy
+    switch sortOrder {
+      case .firstLast:
+        sortBy = .name
+      case .lastFirst:
+        sortBy = .lastFirst
+    }
 
     do {
       let response = try await audiobookshelf.authors.fetch(
         limit: itemsPerPage,
         page: currentPage,
-        sortBy: .name,
+        sortBy: sortBy,
         ascending: true
       )
 
@@ -96,11 +104,7 @@ extension AuthorsPageModel {
     Set(authors.map { sectionLetter(for: $0.name) })
   }
 
-  private func sectionLetter(for name: String) -> String {
-    guard let firstChar = name.uppercased().first else { return "#" }
-    let validLetters: Set<Character> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    return validLetters.contains(firstChar) ? String(firstChar) : "#"
-  }
+
 
   private func findNextAvailableLetter(after letter: String, in sections: Set<String>) -> String? {
     if letter == "#" { return AuthorsPage.bottomScrollID }
