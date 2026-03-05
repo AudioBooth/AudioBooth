@@ -107,9 +107,8 @@ final class CarPlayOffline {
 
     Task {
       PlayerManager.shared.setCurrent(book)
-
       try? await Task.sleep(for: .milliseconds(500))
-
+      PlayerManager.shared.play()
       nowPlaying?.showNowPlaying()
       completion()
     }
