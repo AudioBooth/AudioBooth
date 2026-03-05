@@ -9,6 +9,7 @@ final class CarPlayOffline {
   private weak var nowPlaying: CarPlayNowPlaying?
   private var currentPlayerCancellable: AnyCancellable?
   private let downloadManager = DownloadManager.shared
+  private var booksObservation: Task<Void, Never>?
 
   let template: CPListTemplate
 
@@ -26,9 +27,20 @@ final class CarPlayOffline {
         await self?.loadBooks()
       }
     }
+    
+    setupBooksObservation()
 
     Task {
       await loadBooks()
+    }
+  }
+  
+  private func setupBooksObservation() {
+    booksObservation = Task { [weak self] in
+      for await _ in LocalBook.observeAll() {
+        guard !Task.isCancelled, let self else { break }
+        await self.loadBooks()
+      }
     }
   }
 
