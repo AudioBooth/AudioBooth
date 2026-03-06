@@ -61,6 +61,7 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.fontFamily") var fontFamily: FontFamily = .system
   @AppStorage("ebookReader.theme") var theme: Theme = .light
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
+  @AppStorage("ebookReader.columnCount") var columnCount: ColumnCount = .auto
   @AppStorage("ebookReader.scroll") var scroll: Bool = false
   @AppStorage("ebookReader.tapToNavigate") var tapToNavigate: Bool = true
   @AppStorage("ebookReader.autoScrollSpeed") var autoScrollSpeed: Double = 0.0
@@ -118,6 +119,30 @@ class EbookReaderPreferences: ObservableObject {
     var id: String { rawValue }
   }
 
+  enum ColumnCount: String, CaseIterable, Identifiable {
+    case auto = "Auto"
+    case one = "1"
+    case two = "2"
+
+    var id: String { rawValue }
+
+    var label: String {
+      switch self {
+      case .auto: "Auto"
+      case .one: "1 Column"
+      case .two: "2 Columns"
+      }
+    }
+
+    var readiumColumnCount: ReadiumNavigator.ColumnCount {
+      switch self {
+      case .auto: .auto
+      case .one: .one
+      case .two: .two
+      }
+    }
+  }
+
   enum PageMargins: String, CaseIterable, Identifiable {
     case narrow = "Narrow"
     case medium = "Medium"
@@ -146,6 +171,7 @@ extension EbookReaderPreferences {
     prefs.theme = theme.toReadiumTheme()
     prefs.pageMargins = pageMargins.value
     prefs.scroll = scroll
+    prefs.columnCount = columnCount.readiumColumnCount
 
     prefs.publisherStyles = publisherStyles
     if !publisherStyles {

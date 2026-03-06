@@ -42,6 +42,7 @@ extension UserPreferences {
     "ebookReader.fontFamily",
     "ebookReader.theme",
     "ebookReader.pageMargins",
+    "ebookReader.columnCount",
     "ebookReader.scroll",
     "ebookReader.tapToNavigate",
     "ebookReader.publisherStyles",
