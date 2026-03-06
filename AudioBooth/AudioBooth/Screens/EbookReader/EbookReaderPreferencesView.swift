@@ -70,6 +70,12 @@ struct EbookReaderPreferencesView: View {
             }
           }
 
+          Picker("Columns", selection: $preferences.columnCount) {
+            ForEach(EbookReaderPreferences.ColumnCount.allCases) { count in
+              Text(count.label).tag(count)
+            }
+          }
+
           Picker("Page Margins", selection: $preferences.pageMargins) {
             ForEach(EbookReaderPreferences.PageMargins.allCases) { margins in
               Text(margins.rawValue).tag(margins)
