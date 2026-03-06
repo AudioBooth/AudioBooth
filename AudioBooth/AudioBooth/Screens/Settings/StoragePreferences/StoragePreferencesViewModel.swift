@@ -30,11 +30,19 @@ final class StoragePreferencesViewModel: StoragePreferencesView.Model {
 
       for server in servers.values {
         guard let context = try? ModelContextProvider.shared.context(for: server.id) else { continue }
-        let descriptor = FetchDescriptor<LocalBook>()
-        guard let books = try? context.fetch(descriptor) else { continue }
-        for book in books where book.bookID != currentBookID {
-          context.delete(book)
+
+        if let books = try? context.fetch(FetchDescriptor<LocalBook>()) {
+          for book in books where book.bookID != currentBookID {
+            context.delete(book)
+          }
         }
+
+        if let podcasts = try? context.fetch(FetchDescriptor<LocalPodcast>()) {
+          for podcast in podcasts {
+            context.delete(podcast)
+          }
+        }
+
         try? context.save()
       }
 

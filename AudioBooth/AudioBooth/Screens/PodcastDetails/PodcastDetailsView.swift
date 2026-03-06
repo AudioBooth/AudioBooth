@@ -428,7 +428,7 @@ struct PodcastDetailsView: View {
         .textFieldStyle(.roundedBorder)
         .padding(.horizontal)
 
-      VStack(spacing: 0) {
+      LazyVStack(spacing: 0) {
         ForEach(model.filteredEpisodes) { episode in
           NavigationLink {
             PodcastEpisodeDetailView(
