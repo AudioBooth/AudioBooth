@@ -9,6 +9,8 @@ final class CarPlayTabBar {
   private var offline: CarPlayOffline?
   private weak var nowPlaying: CarPlayNowPlaying?
   private var cancellables = Set<AnyCancellable>()
+  
+  private var reloadables: [CPTemplate: CarPlayReloadable] = [:]
 
   private(set) var template: CPTemplate
 
@@ -27,6 +29,10 @@ final class CarPlayTabBar {
 
     updateTemplate()
   }
+  
+  func handleWillAppear(for template: CPTemplate) async {
+      await reloadables[template]?.reload()
+  }
 
   private static var emptyTemplate: CPListTemplate {
     let emptyTemplate = CPListTemplate(title: "AudioBooth", sections: [])
@@ -37,6 +43,8 @@ final class CarPlayTabBar {
 
   private func updateTemplate() {
     guard let nowPlaying else { return }
+    
+    reloadables.removeAll()
 
     let newTemplate: CPTemplate
 
@@ -45,6 +53,8 @@ final class CarPlayTabBar {
       let offlineInstance = CarPlayOffline(interfaceController: interfaceController, nowPlaying: nowPlaying)
       home = homeInstance
       offline = offlineInstance
+      reloadables[homeInstance.template] = homeInstance
+      reloadables[offlineInstance.template] = offlineInstance
       newTemplate = CPTabBarTemplate(templates: [homeInstance.template, offlineInstance.template])
     } else {
       home = nil

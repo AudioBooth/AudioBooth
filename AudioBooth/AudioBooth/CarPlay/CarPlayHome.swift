@@ -4,7 +4,7 @@ import Combine
 import Foundation
 import Nuke
 
-final class CarPlayHome {
+final class CarPlayHome: CarPlayReloadable {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
   private var currentPlayerCancellable: AnyCancellable?
@@ -28,6 +28,10 @@ final class CarPlayHome {
         await self.loadSections()
       }
     }
+  }
+  
+  func reload() async {
+    await loadSections()
   }
 
   private func loadSections() async {
