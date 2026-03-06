@@ -232,7 +232,8 @@ struct BookDetailsView: View {
     if model.flags.contains(.explicit) {
       result =
         result
-        + Text(verbatim: " \(Image(systemName: "e.square.fill"))")
+        + Text(verbatim: " ")
+        + Text(Image(systemName: "e.square.fill"))
         .font(.footnote)
         .baselineOffset(8)
         .foregroundStyle(.secondary)
@@ -241,7 +242,8 @@ struct BookDetailsView: View {
     if model.flags.contains(.abridged) {
       result =
         result
-        + Text(verbatim: " \(Image(systemName: "a.square.fill"))")
+        + Text(verbatim: " ")
+        + Text(Image(systemName: "a.square.fill"))
         .font(.footnote)
         .baselineOffset(8)
         .foregroundStyle(.secondary)
