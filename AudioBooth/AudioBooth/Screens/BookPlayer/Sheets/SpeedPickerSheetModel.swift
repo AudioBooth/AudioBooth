@@ -1,22 +1,22 @@
 import AVFoundation
+import Models
 import SwiftUI
 
 final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
-  private let bookID: String?
+  private let mediaProgress: MediaProgress?
 
   let player: AVPlayer
 
-  init(player: AVPlayer, bookID: String? = nil) {
-    self.bookID = bookID
+  init(player: AVPlayer, mediaProgress: MediaProgress? = nil) {
+    self.mediaProgress = mediaProgress
 
     let defaultSpeed = UserDefaults.standard.double(forKey: "defaultPlaybackSpeed")
     let fallback = defaultSpeed > 0 ? defaultSpeed : 1.0
 
     let speed: Float
-    if let bookID {
-      let saved = UserDefaults.standard.float(forKey: "bookSpeed_\(bookID)")
-      speed = saved > 0 ? saved : Float(fallback)
+    if let saved = mediaProgress?.playbackSpeed, saved > 0 {
+      speed = Float(saved)
     } else {
       speed = Float(fallback)
     }
@@ -50,9 +50,7 @@ final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
     value = rounded
     let floatValue = Float(rounded)
 
-    if let bookID {
-      UserDefaults.standard.set(floatValue, forKey: "bookSpeed_\(bookID)")
-    }
+    mediaProgress?.playbackSpeed = rounded
     sharedDefaults?.set(floatValue, forKey: "playbackSpeed")
 
     player.defaultRate = floatValue

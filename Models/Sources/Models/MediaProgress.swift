@@ -11,6 +11,7 @@ public final class MediaProgress {
   public var currentTime: TimeInterval
   public var duration: TimeInterval
   public var progress: Double
+  public var playbackSpeed: Double?
   public var ebookProgress: Double?
   public var ebookLocation: String?
   public var isFinished: Bool
@@ -27,6 +28,7 @@ public final class MediaProgress {
     currentTime: TimeInterval = 0,
     duration: TimeInterval = .infinity,
     progress: Double = 0,
+    playbackSpeed: Double? = nil,
     ebookProgress: Double? = nil,
     ebookLocation: String? = nil,
     isFinished: Bool = false,
@@ -40,6 +42,7 @@ public final class MediaProgress {
     self.currentTime = currentTime
     self.duration = duration
     self.progress = progress
+    self.playbackSpeed = playbackSpeed
     self.ebookProgress = ebookProgress
     self.ebookLocation = ebookLocation
     self.isFinished = isFinished
@@ -67,6 +70,7 @@ public final class MediaProgress {
       currentTime: currentTime,
       duration: apiProgress.duration ?? 0,
       progress: progress,
+      playbackSpeed: apiProgress.playbackRate,
       ebookProgress: apiProgress.ebookProgress,
       ebookLocation: apiProgress.ebookLocation,
       isFinished: apiProgress.isFinished,
@@ -136,6 +140,7 @@ extension MediaProgress {
       existingProgress.isFinished = isFinished
       existingProgress.finishedAt = finishedAt
       existingProgress.lastUpdate = lastUpdate
+      existingProgress.playbackSpeed = playbackSpeed
     } else {
       context.insert(self)
     }
@@ -267,9 +272,8 @@ extension MediaProgress {
     cache[bookID] = 1.0
   }
 
-  @discardableResult
   @MainActor
-  public static func syncFromAPI(userData: User, currentPlayingBookID: String? = nil) throws -> [String] {
+  public static func syncFromAPI(userData: User, currentPlayingBookID: String? = nil) throws {
     let context = ModelContextProvider.shared.context
 
     let allLocalProgress = try MediaProgress.fetchAll()
@@ -308,6 +312,10 @@ extension MediaProgress {
           local.lastUpdate = remote.lastUpdate
         }
 
+        if let remoteSpeed = remote.playbackSpeed {
+          local.playbackSpeed = remoteSpeed
+        }
+
         if local.progress > 0 {
           cache[local.bookID] = local.progress
         } else if let progress = local.ebookProgress {
@@ -324,8 +332,6 @@ extension MediaProgress {
       }
     }
 
-    var orphanedBookIDs: [String] = []
-
     for localProgress in allLocalProgress {
       if !remoteBookIDs.contains(localProgress.bookID) {
         if let currentPlayingBookID, localProgress.bookID == currentPlayingBookID {
@@ -334,11 +340,9 @@ extension MediaProgress {
 
         context.delete(localProgress)
         cache.removeValue(forKey: localProgress.bookID)
-        orphanedBookIDs.append(localProgress.bookID)
       }
     }
 
     try context.save()
-    return orphanedBookIDs
   }
 }
