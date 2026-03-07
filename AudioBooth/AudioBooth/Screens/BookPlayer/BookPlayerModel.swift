@@ -669,7 +669,7 @@ extension BookPlayerModel {
     setupPlayerObservers()
     setupTimeObserver()
 
-    speed = SpeedPickerSheetViewModel(player: player, bookID: id)
+    speed = SpeedPickerSheetViewModel(player: player, mediaProgress: mediaProgress)
     volume = VolumeLevelSheetViewModel(player: player)
 
     if let localBook = item as? LocalBook {
