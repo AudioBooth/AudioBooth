@@ -27,6 +27,11 @@ final class CarPlayTabBar {
 
     updateTemplate()
   }
+  
+  func handleWillAppear(for template: CPTemplate) async {
+    guard template === offline?.template else { return }
+    await offline?.reload()
+  }
 
   private static var emptyTemplate: CPListTemplate {
     let emptyTemplate = CPListTemplate(title: "AudioBooth", sections: [])

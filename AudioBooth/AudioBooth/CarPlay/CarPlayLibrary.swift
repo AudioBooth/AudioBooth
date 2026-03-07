@@ -66,7 +66,6 @@ final class CarPlayLibrary {
 
   private func onBookSelected(_ book: Book) {
     PlayerManager.shared.setCurrent(book)
-    PlayerManager.shared.play()
     nowPlaying?.showNowPlaying()
   }
 
