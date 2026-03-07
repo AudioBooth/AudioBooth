@@ -32,6 +32,7 @@ struct PlayerPreferencesView: View {
 
   @State private var allControls: [PlayerControl] = []
   @State private var enabledControls: Set<PlayerControl> = []
+  @State private var defaultSpeedModel: FloatPickerSheet.Model = DefaultSpeedPickerSheetViewModel()
 
   var body: some View {
     Form {
@@ -63,6 +64,9 @@ struct PlayerPreferencesView: View {
     .environment(\.editMode, .constant(.active))
     .onAppear(perform: loadControls)
     .onDisappear(perform: saveControls)
+    .adaptiveSheet(isPresented: $defaultSpeedModel.isPresented) {
+      FloatPickerSheet(model: $defaultSpeedModel)
+    }
   }
 
   private func controlBinding(for control: PlayerControl) -> Binding<Bool> {
@@ -326,6 +330,34 @@ struct PlayerPreferencesView: View {
       )
       .font(.subheadline)
       .bold()
+    }
+    .listRowSeparator(.hidden)
+    .listSectionSpacing(.custom(12))
+
+    Section {
+      VStack(alignment: .leading) {
+        Text("Narration Speed")
+          .textCase(.uppercase)
+          .bold()
+          .accessibilityAddTraits(.isHeader)
+
+        Text("Set your default narration speed for new books.")
+      }
+      .font(.caption)
+
+      Button {
+        defaultSpeedModel.isPresented = true
+      } label: {
+        HStack {
+          Text("Default")
+            .font(.subheadline)
+            .bold()
+          Spacer()
+          Text(String(format: "%.2g×", preferences.defaultPlaybackSpeed))
+            .foregroundStyle(.secondary)
+        }
+      }
+      .tint(.primary)
     }
     .listRowSeparator(.hidden)
     .listSectionSpacing(.custom(12))
