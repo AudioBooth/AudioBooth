@@ -39,15 +39,17 @@ struct EbookReaderPreferencesView: View {
         Section("Layout") {
           Toggle("Scroll Mode", isOn: $preferences.scroll)
           if preferences.scroll {
-            Stepper(value: $preferences.autoScrollSpeed, in: 0.0...8.0, step: 0.5) {
+            Stepper(value: $preferences.autoScrollSpeed, in: 0.0...8.0, step: 0.1) {
               HStack {
                 Text("Auto Scroll")
                 Spacer()
-                Text(
-                  preferences.autoScrollSpeed == 0
-                    ? "Off" : "\(preferences.autoScrollSpeed, format: .number.precision(.fractionLength(1)))×"
-                )
-                .foregroundStyle(.secondary)
+                if preferences.autoScrollSpeed == 0 {
+                  Text("Off")
+                    .foregroundStyle(.secondary)
+                } else {
+                  Text(verbatim: "\(preferences.autoScrollSpeed.formatted(.number.precision(.fractionLength(1))))×")
+                    .foregroundStyle(.secondary)
+                }
               }
             }
           }
@@ -65,6 +67,12 @@ struct EbookReaderPreferencesView: View {
                   .foregroundStyle(.secondary)
                   .font(.caption)
               }
+            }
+          }
+
+          Picker("Columns", selection: $preferences.columnCount) {
+            ForEach(EbookReaderPreferences.ColumnCount.allCases) { count in
+              Text(count.label).tag(count)
             }
           }
 

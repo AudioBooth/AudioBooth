@@ -670,6 +670,7 @@ extension BookPlayerModel {
     setupTimeObserver()
 
     speed = SpeedPickerSheetViewModel(player: player, mediaProgress: mediaProgress)
+    observeDefaultSpeedChanges()
     volume = VolumeLevelSheetViewModel(player: player)
 
     if let localBook = item as? LocalBook {
@@ -1216,6 +1217,19 @@ extension BookPlayerModel {
 
       nowPlaying.update()
     }
+  }
+
+  private func observeDefaultSpeedChanges() {
+    userPreferences.objectWillChange
+      .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+      .sink { [weak self] _ in
+        guard let self, mediaProgress.playbackSpeed == nil else { return }
+
+        let newDefault = userPreferences.defaultPlaybackSpeed
+        guard newDefault > 0 else { return }
+        (speed as? SpeedPickerSheetViewModel)?.applySpeed(newDefault)
+      }
+      .store(in: &cancellables)
   }
 
   private func handlePlaybackStateChange(_ isNowPlaying: Bool) {
