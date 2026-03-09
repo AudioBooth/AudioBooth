@@ -13,7 +13,6 @@ extension User {
     public let episodeId: String?
     public let duration: Double?
     public let progress: Double
-    public let playbackRate: Double?
     public let ebookProgress: Double?
     public let ebookLocation: String?
     public let isFinished: Bool
@@ -28,7 +27,6 @@ extension User {
       episodeId: String? = nil,
       duration: Double,
       progress: Double,
-      playbackRate: Double? = nil,
       ebookProgress: Double,
       ebookLocation: String?,
       isFinished: Bool,
@@ -42,7 +40,6 @@ extension User {
       self.episodeId = episodeId
       self.duration = duration
       self.progress = progress
-      self.playbackRate = playbackRate
       self.ebookProgress = ebookProgress
       self.ebookLocation = ebookLocation
       self.isFinished = isFinished
@@ -59,7 +56,6 @@ extension User {
       self.episodeId = try container.decodeIfPresent(String.self, forKey: .episodeId)
       self.duration = try container.decodeIfPresent(Double.self, forKey: .duration)
       self.progress = try container.decode(Double.self, forKey: .progress)
-      self.playbackRate = try container.decodeIfPresent(Double.self, forKey: .playbackRate)
       self.ebookProgress = try container.decodeIfPresent(Double.self, forKey: .ebookProgress)
       self.ebookLocation = try? container.decodeIfPresent(String.self, forKey: .ebookLocation)
       self.isFinished = try container.decode(Bool.self, forKey: .isFinished)

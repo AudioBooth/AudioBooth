@@ -70,7 +70,6 @@ public final class MediaProgress {
       currentTime: currentTime,
       duration: apiProgress.duration ?? 0,
       progress: progress,
-      playbackSpeed: apiProgress.playbackRate,
       ebookProgress: apiProgress.ebookProgress,
       ebookLocation: apiProgress.ebookLocation,
       isFinished: apiProgress.isFinished,
@@ -310,10 +309,6 @@ extension MediaProgress {
           local.isFinished = remote.isFinished
           local.finishedAt = remote.finishedAt
           local.lastUpdate = remote.lastUpdate
-        }
-
-        if let remoteSpeed = remote.playbackSpeed {
-          local.playbackSpeed = remoteSpeed
         }
 
         if local.progress > 0 {

@@ -1,24 +1,25 @@
 import AVFoundation
+import Combine
 import Models
 import SwiftUI
 
 final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
   private let mediaProgress: MediaProgress?
+  private let preferences = UserPreferences.shared
+  private var cancellables = Set<AnyCancellable>()
 
   let player: AVPlayer
 
   init(player: AVPlayer, mediaProgress: MediaProgress? = nil) {
     self.mediaProgress = mediaProgress
-
-    let defaultSpeed = UserDefaults.standard.double(forKey: "defaultPlaybackSpeed")
-    let fallback = defaultSpeed > 0 ? defaultSpeed : 1.0
+    let fallback = UserDefaults.standard.double(forKey: "playbackSpeed")
 
     let speed: Float
     if let saved = mediaProgress?.playbackSpeed, saved > 0 {
       speed = Float(saved)
     } else {
-      speed = Float(fallback)
+      speed = fallback > 0 ? Float(fallback) : 1.0
     }
 
     sharedDefaults?.set(speed, forKey: "playbackSpeed")
@@ -33,6 +34,21 @@ final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
       presets: [0.7, 1.0, 1.2, 1.5, 1.7, 2.0],
       defaultValue: 1.0
     )
+
+    observeDefaultSpeedChanges()
+  }
+
+  private func observeDefaultSpeedChanges() {
+    preferences.objectWillChange
+      .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+      .sink { [weak self] _ in
+        guard let self, mediaProgress?.playbackSpeed == nil else { return }
+
+        let newDefault = preferences.defaultPlaybackSpeed
+        guard newDefault > 0 else { return }
+        applySpeed(newDefault)
+      }
+      .store(in: &cancellables)
   }
 
   override func onIncrease() {
@@ -46,20 +62,11 @@ final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
   }
 
   override func onValueChanged(_ newValue: Double) {
-    let rounded = (newValue / 0.05).rounded() * 0.05
-    value = rounded
-    let floatValue = Float(rounded)
-
-    mediaProgress?.playbackSpeed = rounded
-    sharedDefaults?.set(floatValue, forKey: "playbackSpeed")
-
-    player.defaultRate = floatValue
-    if player.rate > 0 {
-      player.rate = floatValue
-    }
+    mediaProgress?.playbackSpeed = (newValue / 0.05).rounded() * 0.05
+    applySpeed(newValue)
   }
 
-  func applySpeed(_ newValue: Double) {
+  private func applySpeed(_ newValue: Double) {
     let rounded = (newValue / 0.05).rounded() * 0.05
     value = rounded
     let floatValue = Float(rounded)
