@@ -1,7 +1,7 @@
 @preconcurrency import CarPlay
 import Foundation
 
-class CarPlayController: NSObject, CPInterfaceControllerDelegate {
+class CarPlayController {
   private let interfaceController: CPInterfaceController
 
   private let tabBar: CarPlayTabBar
@@ -12,17 +12,6 @@ class CarPlayController: NSObject, CPInterfaceControllerDelegate {
 
     nowPlaying = .init(interfaceController: interfaceController)
     tabBar = .init(interfaceController: interfaceController, nowPlaying: nowPlaying)
-    
-    super.init()
-
-    self.interfaceController.delegate = self
-    
     try await interfaceController.setRootTemplate(tabBar.template, animated: false)
-  }
-  
-  func templateWillAppear(_ template: CPTemplate, animated: Bool) {
-    Task {
-      await tabBar.handleWillAppear(for: template)
-    }
   }
 }

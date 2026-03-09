@@ -4,7 +4,7 @@ import Combine
 import Foundation
 import Nuke
 
-final class CarPlayHome: CarPlayReloadable {
+final class CarPlayHome: CarPlayPageProtocol {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
   private var currentPlayerCancellable: AnyCancellable?
@@ -29,9 +29,9 @@ final class CarPlayHome: CarPlayReloadable {
       }
     }
   }
-  
-  func reload() async {
-    await loadSections()
+
+  func willAppear() {
+    Task { await loadSections() }
   }
 
   private func loadSections() async {
