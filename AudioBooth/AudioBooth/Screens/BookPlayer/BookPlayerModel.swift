@@ -1203,6 +1203,7 @@ extension BookPlayerModel {
 
         mediaProgress.lastPlayedAt = Date()
         mediaProgress.lastUpdate = Date()
+        mediaProgress.playbackSpeed = speed.value
         if mediaProgress.duration > 0 {
           mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
         }
