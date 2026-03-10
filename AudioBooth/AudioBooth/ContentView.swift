@@ -79,7 +79,7 @@ struct ContentView: View {
       }
       .handleDeepLinks()
       .onChange(of: scenePhase) { _, newPhase in
-        if newPhase == .active, preferences.openPlayerOnLaunch, playerManager.current != nil {
+        if newPhase == .active, preferences.openPlayerOnLaunch, playerManager.current != nil, !isModalPresented {
           playerManager.showFullPlayer()
         }
       }
@@ -205,6 +205,17 @@ struct ContentView: View {
         .transition(.move(edge: .bottom))
         .animation(.easeInOut(duration: 0.3), value: playerManager.hasActivePlayer)
     }
+  }
+}
+
+extension ContentView {
+  private var isModalPresented: Bool {
+    UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .compactMap { $0.windows.first { $0.isKeyWindow } }
+      .first?
+      .rootViewController?
+      .presentedViewController != nil
   }
 }
 
