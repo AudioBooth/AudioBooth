@@ -112,6 +112,29 @@ struct HomePage: View {
         .tint(.primary)
       }
 
+      if #available(iOS 26.0, *) {
+        if let dailyGoal = model.dailyGoal, dailyGoal.goal > 0 {
+          ToolbarItem(placement: .topBarTrailing) {
+            let progress = min(dailyGoal.current / 60 / Double(dailyGoal.goal), 1.0)
+            NavigationLink(value: NavigationDestination.stats) {
+              Gauge(value: progress) {
+                Text(dailyGoal.goal, format: .number.precision(.fractionLength(0)))
+              } currentValueLabel: {
+                Text(dailyGoal.current / 60, format: .number.precision(.fractionLength(0)))
+                  .foregroundStyle(Color.accentColor)
+              }
+              .gaugeStyle(.accessoryCircular)
+              .tint(.accentColor)
+              .scaleEffect(0.65)
+            }
+            .tint(.primary)
+            .frame(width: 44, height: 44)
+            .glassEffect()
+          }
+          .sharedBackgroundVisibility(.hidden)
+        }
+      }
+
       ToolbarItem(placement: .topBarTrailing) {
         Button {
           showingSettings = true
@@ -140,6 +163,9 @@ struct HomePage: View {
       model.onReset(new != nil)
     }
     .onChange(of: preferences.homeSections) { _, _ in
+      model.onPreferencesChanged()
+    }
+    .onChange(of: preferences.dailyGoalMinutes) { _, _ in
       model.onPreferencesChanged()
     }
     .refreshable {
@@ -315,6 +341,7 @@ extension HomePage {
     }
 
     var sections: [Section]
+    var dailyGoal: (current: Double, goal: Int)?
 
     func onAppear() {}
     func refresh() async {}
@@ -325,12 +352,14 @@ extension HomePage {
       isLoading: Bool = false,
       isRoot: Bool = true,
       error: String? = nil,
-      sections: [Section] = []
+      sections: [Section] = [],
+      dailyGoal: (current: Double, goal: Int)? = nil
     ) {
       self.isLoading = isLoading
       self.isRoot = isRoot
       self.error = error
       self.sections = sections
+      self.dailyGoal = dailyGoal
     }
   }
 }

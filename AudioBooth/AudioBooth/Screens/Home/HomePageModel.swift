@@ -72,6 +72,9 @@ final class HomePageModel: HomePage.Model {
 
   override func onPreferencesChanged() {
     rebuildSections()
+    if let current = dailyGoal?.current {
+      dailyGoal = (current: current, goal: preferences.dailyGoalMinutes)
+    }
   }
 }
 
@@ -442,6 +445,10 @@ extension HomePageModel {
       processSections(personalized.sections)
     } catch {
       AppLogger.viewModel.error("Failed to fetch personalized content: \(error)")
+    }
+
+    if let stats = try? await Audiobookshelf.shared.authentication.fetchListeningStats() {
+      dailyGoal = (current: stats.today, goal: preferences.dailyGoalMinutes)
     }
   }
 }

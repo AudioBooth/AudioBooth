@@ -76,6 +76,7 @@ struct YearInReviewCard: View {
         endPoint: .bottomTrailing
       )
       .frame(height: 600)
+      .allowsHitTesting(false)
     )
     .clipShape(RoundedRectangle(cornerRadius: 12))
   }

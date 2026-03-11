@@ -3,8 +3,10 @@ import Foundation
 import Models
 
 final class StatsPageViewModel: StatsPageView.Model {
+  private let preferences = UserPreferences.shared
+
   init() {
-    super.init(isLoading: true)
+    super.init(isLoading: true, dailyGoalMinutes: UserPreferences.shared.dailyGoalMinutes)
   }
 
   override func onAppear() {
@@ -22,8 +24,14 @@ final class StatsPageViewModel: StatsPageView.Model {
     }
   }
 
+  override func onGoalChanged(_ minutes: Int) {
+    dailyGoalMinutes = minutes
+    preferences.dailyGoalMinutes = minutes
+  }
+
   private func processStats(_ stats: ListeningStats) async {
     totalTime = stats.totalTime
+    todayTime = stats.today
 
     daysListened = stats.days.values.filter { $0 > 0 }.count
 

@@ -145,6 +145,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("openPlayerOnLaunch")
   var openPlayerOnLaunch: Bool = false
 
+  @AppStorage("dailyGoalMinutes")
+  var dailyGoalMinutes: Int = 0
+
   let cloud = NSUbiquitousKeyValueStore.default
   var cloudObserver: NSObjectProtocol?
   var localObserver: NSObjectProtocol?
