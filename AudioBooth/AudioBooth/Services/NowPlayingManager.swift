@@ -175,8 +175,8 @@ final class NowPlayingManager {
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current {
       info[MPMediaItemPropertyTitle] = current.title
-      info[MPMediaItemPropertyArtist] = author
-      info[MPMediaItemPropertyAlbumTitle] = title
+      info[MPMediaItemPropertyArtist] = title
+      info[MPMediaItemPropertyAlbumTitle] = author
       info[MPMediaItemPropertyPlaybackDuration] = current.end - current.start
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = chapters.currentElapsedTime(
         currentTime: mediaProgress.currentTime
