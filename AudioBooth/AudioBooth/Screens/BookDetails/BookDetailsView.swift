@@ -379,7 +379,7 @@ struct BookDetailsView: View {
           FlowLayout(spacing: 4) {
             ForEach(model.authors, id: \.id) { author in
               NavigationLink(
-                value: NavigationDestination.author(id: author.id, name: author.name, libraryID: model.libraryID)
+                value: NavigationDestination.authorLibrary(id: author.id, name: author.name, libraryID: model.libraryID)
               ) {
                 Chip(
                   title: author.name,
