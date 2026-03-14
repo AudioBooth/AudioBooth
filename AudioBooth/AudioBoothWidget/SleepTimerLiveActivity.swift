@@ -43,7 +43,13 @@ private struct TimerText: View {
     HStack {
       switch state.timer {
       case .countdown(let endTime):
-        Text(endTime, style: .timer)
+        TimelineView(.explicit([endTime])) { _ in
+          if Date() >= endTime {
+            Text(Duration.seconds(0), format: .time(pattern: .minuteSecond))
+          } else {
+            Text(endTime, style: .timer)
+          }
+        }
       case .paused(let remaining):
         Text(
           Duration.seconds(remaining),
