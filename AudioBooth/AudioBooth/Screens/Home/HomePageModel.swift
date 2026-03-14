@@ -19,6 +19,7 @@ final class HomePageModel: HomePage.Model {
   private var personalizedSections: [Personalized.Section] = []
   private var pinnedPlaylist: Playlist?
   private var isFetchingRemoteContent = false
+  private var libraryData: [Library] = []
 
   init() {
     super.init()
@@ -45,6 +46,7 @@ final class HomePageModel: HomePage.Model {
   override func onAppear() {
     Task {
       await fetchContent()
+      await fetchAvailableLibraries()
     }
 
     downloadManager.updateDownloadStates()
@@ -63,6 +65,8 @@ final class HomePageModel: HomePage.Model {
     personalizedSections = []
     pinnedPlaylist = nil
     sections = []
+    availableLibraries = []
+    libraryData = []
     isLoading = false
 
     if shouldRefresh {
@@ -70,10 +74,28 @@ final class HomePageModel: HomePage.Model {
     }
   }
 
+  override func onLibrarySelected(_ id: String) {
+    guard let library = libraryData.first(where: { $0.id == id }) else { return }
+    Audiobookshelf.shared.libraries.current = library
+  }
+
   override func onPreferencesChanged() {
     rebuildSections()
     if let current = dailyGoal?.current {
       dailyGoal = (current: current, goal: preferences.dailyGoalMinutes)
+    }
+  }
+}
+
+extension HomePageModel {
+  private func fetchAvailableLibraries() async {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else { return }
+    do {
+      let fetched = try await Audiobookshelf.shared.libraries.fetch(serverID: serverID)
+      libraryData = fetched
+      availableLibraries = fetched.map { LibraryItem(id: $0.id, name: $0.name) }
+    } catch {
+      AppLogger.viewModel.error("Failed to fetch libraries: \(error)")
     }
   }
 }
