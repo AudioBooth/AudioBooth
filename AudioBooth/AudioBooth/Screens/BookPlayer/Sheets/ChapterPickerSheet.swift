@@ -98,6 +98,8 @@ extension ChapterPickerSheet {
     var currentIndex: Int
     var isPresented: Bool = false
     var isShuffled: Bool = false
+    var canGoPreviousChapter: Bool = false
+    var canGoNextChapter: Bool = false
 
     init(chapters: [Chapter] = [], currentIndex: Int = 0) {
       self.chapters = chapters

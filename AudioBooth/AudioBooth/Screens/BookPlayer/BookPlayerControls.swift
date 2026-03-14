@@ -7,13 +7,12 @@ struct BookPlayerControls: View {
   var body: some View {
     HStack(spacing: 0) {
       if let chapters = model.chapters, !preferences.hideChapterSkipButtons {
-        let isFirstChapter = chapters.currentIndex == 0
         Button(action: { chapters.onPreviousChapterTapped() }) {
           Image(systemName: "backward.end")
             .font(.system(size: 30, weight: .thin))
-            .foregroundColor((model.isLoading || isFirstChapter) ? .white.opacity(0.3) : .white)
+            .foregroundColor((model.isLoading || !chapters.canGoPreviousChapter) ? .white.opacity(0.3) : .white)
         }
-        .disabled(isFirstChapter)
+        .disabled(!chapters.canGoPreviousChapter)
         .accessibilityLabel("Previous chapter")
       }
 
@@ -77,13 +76,12 @@ struct BookPlayerControls: View {
       Spacer(minLength: 8)
 
       if let chapters = model.chapters, !preferences.hideChapterSkipButtons {
-        let isLastChapter = chapters.currentIndex == chapters.chapters.count - 1
         Button(action: { chapters.onNextChapterTapped() }) {
           Image(systemName: "forward.end")
             .font(.system(size: 30, weight: .thin))
-            .foregroundColor((model.isLoading || isLastChapter) ? .white.opacity(0.3) : .white)
+            .foregroundColor((model.isLoading || !chapters.canGoNextChapter) ? .white.opacity(0.3) : .white)
         }
-        .disabled(isLastChapter)
+        .disabled(!chapters.canGoNextChapter)
         .accessibilityLabel("Next chapter")
       }
     }

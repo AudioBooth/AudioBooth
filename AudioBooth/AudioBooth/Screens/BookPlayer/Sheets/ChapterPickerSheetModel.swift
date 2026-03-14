@@ -8,6 +8,8 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   private var itemID: String
 
   private let mediaProgress: MediaProgress
+  private let playerManager = PlayerManager.shared
+  private let userPreferences = UserPreferences.shared
 
   init(
     itemID: String,
@@ -35,6 +37,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       currentIndex: currentIndex
     )
 
+    updateNavigation()
     observeMediaProgress()
   }
 
@@ -50,9 +53,16 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
         } else {
           self.currentIndex = self.chapters.index(for: time)
         }
+        self.updateNavigation()
         self.observeMediaProgress()
       }
     }
+  }
+
+  private func updateNavigation() {
+    canGoPreviousChapter = currentIndex > 0
+    let isLastChapter = currentIndex == chapters.count - 1
+    canGoNextChapter = !isLastChapter || (!playerManager.queue.isEmpty && userPreferences.autoPlayNextInQueue)
   }
 
   override func onShuffleTapped() {
@@ -69,6 +79,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       chapters.sort { $0.start < $1.start }
       currentIndex = chapters.firstIndex(of: current) ?? 0
     }
+    updateNavigation()
   }
 
   override func onPreviousChapterTapped() {
@@ -89,7 +100,10 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   }
 
   override func onNextChapterTapped() {
-    guard currentIndex < chapters.count - 1 else { return }
+    guard currentIndex < chapters.count - 1 else {
+      playerManager.playNext()
+      return
+    }
     currentIndex += 1
     let nextChapter = chapters[currentIndex]
     let seekTime = nextChapter.start + 0.1
