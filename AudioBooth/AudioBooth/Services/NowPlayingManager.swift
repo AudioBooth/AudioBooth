@@ -87,6 +87,7 @@ final class NowPlayingManager {
     self.speed = speed
     self.chapters = chapters
     self.mediaProgress = mediaProgress
+    self.player?.allowsExternalPlayback = false
 
     observePlayerRate()
     observeSpeedChanges()
