@@ -1,0 +1,5 @@
+// Signing.App.xcconfig: AudioBooth main app target
+#include "Signing.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = $(AB_BUNDLE_ID_BASE)
+CODE_SIGN_ENTITLEMENTS = $(AB_APP_ENTITLEMENTS)

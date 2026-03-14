@@ -1,0 +1,6 @@
+// Signing.Watch.xcconfig: AudioBooth Watch App target
+#include "Signing.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = $(AB_BUNDLE_ID_BASE).watchkitapp
+CODE_SIGN_ENTITLEMENTS = $(AB_WATCH_ENTITLEMENTS)
+INFOPLIST_KEY_WKCompanionAppBundleIdentifier = $(AB_BUNDLE_ID_BASE)
