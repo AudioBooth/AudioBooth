@@ -50,7 +50,6 @@ struct CollectionsRootPage: View {
             AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name, libraryID: libraryID))
           case .series, .narrator, .genre, .tag, .offline, .authorLibrary:
             LibraryPage(model: LibraryPageModel(destination: destination))
-
           case .podcast(let id, let episodeID):
             PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
           case .stats:
