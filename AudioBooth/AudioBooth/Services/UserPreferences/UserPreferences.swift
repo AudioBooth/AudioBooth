@@ -148,7 +148,11 @@ final class UserPreferences: ObservableObject {
   @AppStorage("dailyGoalMinutes")
   var dailyGoalMinutes: Int = 0
 
-  let cloud = NSUbiquitousKeyValueStore.default
+  #if CONTRIBUTOR_BUILD
+  let cloud: NSUbiquitousKeyValueStore? = nil
+  #else
+  let cloud: NSUbiquitousKeyValueStore? = .default
+  #endif
   var cloudObserver: NSObjectProtocol?
   var localObserver: NSObjectProtocol?
   var isApplyingCloudChanges = false

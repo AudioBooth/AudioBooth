@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.me.jgrenier.audioBS</string>
+		<string>group.$(ORG_IDENTIFIER).audioBS</string>
 	</array>
 </dict>
 </plist>
