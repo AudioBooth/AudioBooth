@@ -295,6 +295,52 @@ public final class AuthenticationService: ObservableObject {
     server = restoredServer
   }
 
+  public func verifyAlternativeURL(_ url: URL, for serverID: String) async throws {
+    guard let server = servers[serverID] else {
+      throw Audiobookshelf.AudiobookshelfError.networkError("Server not found")
+    }
+
+    let request = NetworkRequest<Authorize>(path: "/api/authorize", method: .post, body: nil)
+
+    let primaryService = NetworkService(baseURL: server.baseURL, server: server) {
+      let freshToken = try? await server.freshToken
+      guard let credentials = freshToken else { return [:] }
+      var headers = server.customHeaders
+      headers["Authorization"] = credentials.bearer
+      return headers
+    }
+
+    let altService = NetworkService(baseURL: url, server: server) {
+      let freshToken = try? await server.freshToken
+      guard let credentials = freshToken else { return [:] }
+      var headers = server.customHeaders
+      headers["Authorization"] = credentials.bearer
+      return headers
+    }
+
+    let primaryID = try await primaryService.send(request).value.serverSettings.id
+    let altID = try await altService.send(request).value.serverSettings.id
+
+    guard altID == primaryID else {
+      throw Audiobookshelf.AudiobookshelfError.networkError("This URL points to a different server")
+    }
+  }
+
+  public func updateAlternativeURL(_ serverID: String, url: URL?) {
+    guard let server = servers[serverID] else { return }
+    server.alternativeURL = url
+    connections[serverID] = Connection(server)
+  }
+
+  public func setUsingAlternativeURL(_ serverID: String, isUsing: Bool) {
+    guard let server = servers[serverID] else { return }
+    server.isUsingAlternativeURL = isUsing
+    connections[serverID] = Connection(server)
+    if server.id == self.server?.id {
+      audiobookshelf.setupNetworkService()
+    }
+  }
+
   public func updateAlias(_ serverID: String, alias: String?) {
     guard let server = servers[serverID] else { return }
 
@@ -547,7 +593,7 @@ public final class AuthenticationService: ObservableObject {
       let user: User
     }
 
-    let networkService = NetworkService(baseURL: server.baseURL)
+    let networkService = NetworkService(baseURL: server.activeURL)
 
     var headers = server.customHeaders
     headers["x-refresh-token"] = refreshToken
@@ -579,9 +625,7 @@ public final class AuthenticationService: ObservableObject {
   }
 
   public func checkServersHealth() async {
-    let activeServerID = server?.id
-
-    for (serverID, _) in servers where serverID != activeServerID {
+    for (serverID, _) in servers {
       _ = try? await self.audiobookshelf.libraries.fetch(serverID: serverID)
     }
   }

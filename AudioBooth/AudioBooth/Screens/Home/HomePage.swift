@@ -10,31 +10,10 @@ struct HomePage: View {
 
   @StateObject var model: Model
   @State private var showingSettings = false
-  @State private var showingServerPicker = false
+  @State private var showingServerList = false
+  @State private var showingServerDetails = false
 
   @State private var path = NavigationPath()
-
-  var connectionStatusColor: Color {
-    switch authentication.server?.status {
-    case .connected:
-      return .green
-    case .connectionError:
-      return .orange
-    case .authenticationError:
-      return .red
-    case .none:
-      return .gray
-    }
-  }
-
-  var connectionStatusLabel: LocalizedStringResource {
-    switch authentication.server?.status {
-    case .connected: "Connected"
-    case .connectionError: "Connection error"
-    case .authenticationError: "Authentication error"
-    case .none: "Disconnected"
-    }
-  }
 
   var body: some View {
     NavigationStack {
@@ -95,22 +74,7 @@ struct HomePage: View {
     }
     .navigationTitle("Home")
     .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        Button {
-          showingServerPicker = true
-        } label: {
-          HStack(spacing: 4) {
-            Text(verbatim: "●")
-              .foregroundStyle(connectionStatusColor)
-
-            Text(libraries.current?.name ?? "Server")
-              .bold()
-          }
-          .frame(maxWidth: 250)
-        }
-        .accessibilityLabel("Server: \(libraries.current?.name ?? "Server"), \(connectionStatusLabel)")
-        .tint(.primary)
-      }
+      serverMenuToolbarItem
 
       if #available(iOS 26.0, *) {
         if let dailyGoal = model.dailyGoal, dailyGoal.goal > 0 {
@@ -149,17 +113,34 @@ struct HomePage: View {
         SettingsView(model: SettingsViewModel())
       }
     }
-    .sheet(isPresented: $showingServerPicker) {
+    .sheet(isPresented: $showingServerList) {
       ServerListPage(model: ServerListModel())
+    }
+    .sheet(isPresented: $showingServerDetails) {
+      if let server = authentication.server {
+        NavigationStack {
+          ServerView(model: ServerViewModel(server: server))
+            .toolbar {
+              ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                  showingServerDetails = false
+                } label: {
+                  Label("Close", systemImage: "xmark")
+                }
+                .tint(.primary)
+              }
+            }
+        }
+      }
     }
     .onAppear {
       if !authentication.isAuthenticated || libraries.current == nil {
-        showingServerPicker = true
+        showingServerList = true
       }
       model.onAppear()
     }
     .onChange(of: libraries.current) { _, new in
-      showingServerPicker = false
+      showingServerList = false
       model.onReset(new != nil)
     }
     .onChange(of: preferences.homeSections) { _, _ in
@@ -312,12 +293,108 @@ struct HomePage: View {
 }
 
 extension HomePage {
+  var connectionStatusColor: Color {
+    switch authentication.server?.status {
+    case .connected:
+      return .green
+    case .connectionError:
+      return .orange
+    case .authenticationError:
+      return .red
+    case .none:
+      return .gray
+    }
+  }
+
+  var connectionStatusLabel: LocalizedStringResource {
+    switch authentication.server?.status {
+    case .connected: "Connected"
+    case .connectionError: "Connection error"
+    case .authenticationError: "Authentication error"
+    case .none: "Disconnected"
+    }
+  }
+
+  var serverMenuToolbarItem: some ToolbarContent {
+    ToolbarItem(placement: .topBarLeading) {
+      Menu {
+        ForEach(model.availableLibraries) { library in
+          if library.id == libraries.current?.id {
+            Button {
+              model.onLibrarySelected(library.id)
+            } label: {
+              Label(library.name, systemImage: "checkmark")
+            }
+          } else {
+            Button {
+              model.onLibrarySelected(library.id)
+            } label: {
+              Text(library.name)
+            }
+          }
+        }
+
+        if let server = authentication.server, server.alternativeURL != nil {
+          ControlGroup("Server URL") {
+            Button("Primary", systemImage: server.isUsingAlternativeURL ? "circle" : "checkmark.circle.fill") {
+              if server.isUsingAlternativeURL {
+                model.onToggleAlternativeURL()
+              }
+            }
+            .tint(server.isUsingAlternativeURL ? nil : .accentColor)
+
+            Button("Alternative", systemImage: server.isUsingAlternativeURL ? "checkmark.circle.fill" : "circle") {
+              if !server.isUsingAlternativeURL {
+                model.onToggleAlternativeURL()
+              }
+            }
+            .tint(server.isUsingAlternativeURL ? .accentColor : nil)
+          }
+        }
+
+        if !model.availableLibraries.isEmpty {
+          Divider()
+        }
+
+        Button {
+          showingServerDetails = true
+        } label: {
+          Label("Server Details", systemImage: "info.circle")
+        }
+
+        Button {
+          showingServerList = true
+        } label: {
+          Label("Manage Servers", systemImage: "server.rack")
+        }
+      } label: {
+        HStack(spacing: 4) {
+          Text(verbatim: "●")
+            .foregroundStyle(connectionStatusColor)
+
+          Text(libraries.current?.name ?? "Server")
+            .bold()
+        }
+        .frame(maxWidth: 250)
+      }
+      .accessibilityLabel("Server: \(libraries.current?.name ?? "Server"), \(connectionStatusLabel)")
+      .tint(.primary)
+    }
+  }
+}
+
+extension HomePage {
   @Observable
   class Model: ObservableObject {
     var isLoading: Bool
     var isRoot: Bool
 
     var error: String?
+
+    struct LibraryItem: Identifiable {
+      let id: String
+      let name: String
+    }
 
     struct Section {
       let id: String
@@ -342,24 +419,29 @@ extension HomePage {
 
     var sections: [Section]
     var dailyGoal: (current: Double, goal: Int)?
+    var availableLibraries: [LibraryItem]
 
     func onAppear() {}
     func refresh() async {}
     func onReset(_ shouldRefresh: Bool) {}
     func onPreferencesChanged() {}
+    func onLibrarySelected(_ id: String) {}
+    func onToggleAlternativeURL() {}
 
     init(
       isLoading: Bool = false,
       isRoot: Bool = true,
       error: String? = nil,
       sections: [Section] = [],
-      dailyGoal: (current: Double, goal: Int)? = nil
+      dailyGoal: (current: Double, goal: Int)? = nil,
+      availableLibraries: [LibraryItem] = []
     ) {
       self.isLoading = isLoading
       self.isRoot = isRoot
       self.error = error
       self.sections = sections
       self.dailyGoal = dailyGoal
+      self.availableLibraries = availableLibraries
     }
   }
 }

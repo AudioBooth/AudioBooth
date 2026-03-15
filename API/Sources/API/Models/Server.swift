@@ -8,6 +8,12 @@ public final class Server: @unchecked Sendable {
   public internal(set) var token: Credentials
   public internal(set) var customHeaders: [String: String]
   public internal(set) var alias: String?
+  public internal(set) var alternativeURL: URL?
+  public internal(set) var isUsingAlternativeURL: Bool
+
+  public var activeURL: URL {
+    isUsingAlternativeURL ? alternativeURL ?? baseURL : baseURL
+  }
 
   public enum Status {
     case connected
@@ -32,5 +38,7 @@ public final class Server: @unchecked Sendable {
     self.token = connection.token
     self.customHeaders = connection.customHeaders
     self.alias = connection.alias
+    self.alternativeURL = connection.alternativeURL
+    self.isUsingAlternativeURL = connection.isUsingAlternativeURL
   }
 }

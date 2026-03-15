@@ -145,11 +145,19 @@ final class ServerViewModel: ServerView.Model {
       reauthModel = nil
     }
 
+    let alternativeURLModel: AlternativeURLView.Model
+    if let server {
+      alternativeURLModel = AlternativeURLViewModel(server: server)
+    } else {
+      alternativeURLModel = AlternativeURLView.Model()
+    }
+
     super.init(
       serverURL: serverURL,
       customHeaders: CustomHeadersViewModel(initialHeaders: customHeaders),
       selectedLibrary: selectedLibrary,
       alias: alias,
+      alternativeURL: alternativeURLModel,
       authenticationModel: authModel,
       reauthenticationModel: reauthModel,
       status: server?.status,

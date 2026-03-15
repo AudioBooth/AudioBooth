@@ -18,15 +18,11 @@ final class ServerListModel: ServerListPage.Model {
 
     let activeServerID = audiobookshelf.authentication.server?.id
 
-    var selected: ServerView.Model?
     let serverModels = allServers.map { server in
-      let viewModel = ServerViewModel(server: server)
-      if server.id == activeServerID {
-        selected = viewModel
-      }
-      return viewModel
+      ServerViewModel(server: server)
     }
 
+    var selected: ServerView.Model?
     if let exportConnection = pendingExportConnection {
       selected = ServerViewModel(exportConnection: exportConnection)
     }

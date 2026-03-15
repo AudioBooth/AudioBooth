@@ -24,6 +24,15 @@ final class HomePageModel: HomePage.Model {
     super.init()
     loadCachedContent()
 
+    Audiobookshelf.shared.libraries.objectWillChange
+      .receive(on: RunLoop.main)
+      .sink { [weak self] _ in
+        self?.availableLibraries = Audiobookshelf.shared.libraries.libraries.map {
+          LibraryItem(id: $0.id, name: $0.name)
+        }
+      }
+      .store(in: &cancellables)
+
     NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
       .sink { [weak self] _ in
         Task {
@@ -68,6 +77,19 @@ final class HomePageModel: HomePage.Model {
     if shouldRefresh {
       onAppear()
     }
+  }
+
+  override func onLibrarySelected(_ id: String) {
+    guard let library = Audiobookshelf.shared.libraries.libraries.first(where: { $0.id == id }) else { return }
+    Audiobookshelf.shared.libraries.current = library
+  }
+
+  override func onToggleAlternativeURL() {
+    guard let server = Audiobookshelf.shared.authentication.server else { return }
+    Audiobookshelf.shared.authentication.setUsingAlternativeURL(
+      server.id,
+      isUsing: !server.isUsingAlternativeURL
+    )
   }
 
   override func onPreferencesChanged() {
@@ -395,6 +417,8 @@ extension HomePageModel {
 
 extension HomePageModel {
   private func loadCachedContent() {
+    availableLibraries = Audiobookshelf.shared.libraries.libraries.map { LibraryItem(id: $0.id, name: $0.name) }
+
     guard Audiobookshelf.shared.isAuthenticated else { return }
 
     if let cachedPlaylist = Audiobookshelf.shared.playlists.pinnedPlaylist,

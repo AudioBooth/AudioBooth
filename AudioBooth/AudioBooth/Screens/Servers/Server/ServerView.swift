@@ -67,7 +67,6 @@ struct ServerView: View {
               model.onServerURLSubmit()
             }
           }
-
         customHeadersSection
       }
 
@@ -224,8 +223,16 @@ struct ServerView: View {
       }
     }
 
-    if model.canExportConnection, let connectionSharingModel = model.connectionSharingModel {
-      Section("Advanced") {
+    Section("Advanced") {
+      NavigationLink(
+        destination: { AlternativeURLView(model: model.alternativeURL) },
+        label: {
+          Label("Alternative URL", systemImage: "link.badge.plus")
+            .foregroundStyle(.primary)
+        }
+      )
+
+      if model.canExportConnection, let connectionSharingModel = model.connectionSharingModel {
         NavigationLink(destination: { ConnectionSharingPage(model: connectionSharingModel) }) {
           HStack {
             Image(systemName: "square.and.arrow.up")
@@ -280,6 +287,7 @@ extension ServerView {
     var libraries: [Library]
     var selectedLibrary: Library?
     var alias: String
+    var alternativeURL: AlternativeURLView.Model
     var authenticationModel: AuthenticationView.Model?
     var reauthenticationModel: AuthenticationView.Model?
     var status: Server.Status?
@@ -316,6 +324,7 @@ extension ServerView {
       libraries: [Library] = [],
       selectedLibrary: Library? = nil,
       alias: String = "",
+      alternativeURL: AlternativeURLView.Model = .mock,
       authenticationModel: AuthenticationView.Model? = nil,
       reauthenticationModel: AuthenticationView.Model? = nil,
       status: Server.Status? = nil,
@@ -337,6 +346,7 @@ extension ServerView {
       self.libraries = libraries
       self.selectedLibrary = selectedLibrary
       self.alias = alias
+      self.alternativeURL = alternativeURL
       self.authenticationModel = authenticationModel
       self.reauthenticationModel = reauthenticationModel
       self.status = status

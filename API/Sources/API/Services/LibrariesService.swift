@@ -15,7 +15,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     static func filterData(libraryID: String) -> String {
       "filterdata_\(libraryID)"
     }
-
+    static let libraries = "libraries"
     static let sortingIgnorePrefix = "sortingIgnorePrefix"
   }
 
@@ -57,6 +57,18 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     }
     set {
       UserDefaults.standard.set(newValue, forKey: Keys.sortingIgnorePrefix)
+    }
+  }
+
+  public var libraries: [Library] {
+    get {
+      guard let data = userDefaults.data(forKey: Keys.libraries) else { return [] }
+      return (try? JSONDecoder().decode([Library].self, from: data)) ?? []
+    }
+    set {
+      objectWillChange.send()
+      guard let data = try? JSONEncoder().encode(newValue) else { return }
+      userDefaults.set(data, forKey: Keys.libraries)
     }
   }
 
@@ -104,7 +116,12 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
 
     do {
       let response = try await networkService.send(request)
-      return response.value.libraries
+      let fetched = response.value.libraries
+      let activeServerID = audiobookshelf.authentication.server?.id
+      if serverID == nil || serverID == activeServerID {
+        await MainActor.run { libraries = fetched }
+      }
+      return fetched
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Failed to fetch libraries: \(error.localizedDescription)"
