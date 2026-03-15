@@ -1,5 +1,5 @@
 // Signing.Widget.xcconfig: AudioBoothWidget target
 #include "Signing.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = $(AB_BUNDLE_ID_BASE).widget
-CODE_SIGN_ENTITLEMENTS = $(AB_WIDGET_ENTITLEMENTS)
+PRODUCT_BUNDLE_IDENTIFIER = $(ORG_IDENTIFIER).AudioBS.widget
+CODE_SIGN_ENTITLEMENTS = AudioBoothWidget/AudioBoothWidgetExtension.entitlements

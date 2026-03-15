@@ -5,11 +5,4 @@
 // To find your Team ID, open Xcode → Settings → Accounts → select your Apple ID → look at the Team list.
 
 DEVELOPMENT_TEAM = YOUR_TEAM_ID_HERE
-AB_BUNDLE_ID_BASE = com.github.audiobooth-YOUR_GITHUB_USERNAME
-AB_APP_GROUP = group.com.github.audiobooth-YOUR_GITHUB_USERNAME
-
-AB_APP_ENTITLEMENTS = AudioBooth/AudioBooth.contributor.entitlements
-AB_WATCH_ENTITLEMENTS = AudioBooth Watch App/AudioBooth Watch App.contributor.entitlements
-AB_WIDGET_ENTITLEMENTS = AudioBoothWidget/AudioBoothWidgetExtension.contributor.entitlements
-
-SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) CONTRIBUTOR_BUILD
+ORG_IDENTIFIER = com.YOUR_ORG_HERE

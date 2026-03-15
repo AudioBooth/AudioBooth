@@ -6,11 +6,11 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.me.jgrenier.audioBS</string>
+		<string>group.$(ORG_IDENTIFIER).audioBS</string>
 	</array>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)me.jgrenier.AudioBS</string>
+		<string>$(AppIdentifierPrefix)$(ORG_IDENTIFIER).AudioBS</string>
 	</array>
 </dict>
 </plist>
