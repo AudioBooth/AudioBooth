@@ -87,6 +87,7 @@
 		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = API; path = ../API; sourceTree = SOURCE_ROOT; };
 		3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBooth Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBooth.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -216,6 +217,7 @@
 				3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */,
 				3F6E94DB2E6395A20039F187 /* Frameworks */,
 				3FC8DC6F2E638F5E00A4B080 /* Products */,
+				FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -494,7 +496,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.8;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -526,7 +528,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.8;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -550,13 +552,13 @@
 				INFOPLIST_FILE = "AudioBooth Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(ORG_IDENTIFIER).AudioBS";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.8;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS.watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -583,13 +585,13 @@
 				INFOPLIST_FILE = "AudioBooth Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(ORG_IDENTIFIER).AudioBS";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.8;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS.watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -606,6 +608,7 @@
 		};
 		3FC8DC772E638F5F00A4B080 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -641,7 +644,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 7MM2M9KD2W;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -674,6 +676,7 @@
 		};
 		3FC8DC782E638F5F00A4B080 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -709,7 +712,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 0;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 7MM2M9KD2W;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -760,7 +762,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.8;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -799,7 +801,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.8;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

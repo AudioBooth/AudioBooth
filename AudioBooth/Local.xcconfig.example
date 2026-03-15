@@ -1,0 +1,10 @@
+// Local.xcconfig
+// Copy this file to Local.xcconfig and update with your settings.
+// Local.xcconfig is gitignored and will not be committed.
+//
+// To find your Team ID, open Xcode → Settings → Accounts → select your Apple ID → look at the Team list.
+
+DEVELOPMENT_TEAM = YOUR_TEAM_ID_HERE
+ORG_IDENTIFIER = com.YOUR_ORG_HERE
+
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) CONTRIBUTOR_BUILD

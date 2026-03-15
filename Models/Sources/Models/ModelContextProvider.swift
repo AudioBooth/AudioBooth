@@ -119,13 +119,12 @@ public final class ModelContextProvider {
   }
 
   private func databaseURL(for serverID: String) -> URL {
-    guard
-      let containerURL = FileManager.default.containerURL(
+    let containerURL =
+      FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
       )
-    else {
-      fatalError("App Group container not found. Check entitlements configuration.")
-    }
+      ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+
     return
       containerURL
       .appending(path: serverID)

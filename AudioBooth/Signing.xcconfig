@@ -1,0 +1,12 @@
+// Signing.xcconfig
+// Default signing configuration for AudioBooth
+//
+// Maintainer: These defaults are used automatically.
+// Contributors: Copy Local.xcconfig.example to Local.xcconfig and update
+//               with your settings.
+
+DEVELOPMENT_TEAM = 7MM2M9KD2W
+ORG_IDENTIFIER = me.jgrenier
+
+// Pull in local overrides if they exist (the ? makes the include optional)
+#include? "Local.xcconfig"

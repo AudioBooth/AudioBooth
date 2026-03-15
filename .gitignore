@@ -11,3 +11,4 @@ DerivedData/
 Package.resolved
 .build
 Debug
+AudioBooth/Local.xcconfig

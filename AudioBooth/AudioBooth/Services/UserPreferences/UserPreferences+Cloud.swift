@@ -60,6 +60,8 @@ extension UserPreferences {
   ]
 
   func setupCloudSync() {
+    guard cloud != nil else { return }
+
     cloudObserver = NotificationCenter.default.addObserver(
       forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
       object: cloud,
@@ -77,7 +79,7 @@ extension UserPreferences {
     }
 
     if iCloudSyncEnabled {
-      cloud.synchronize()
+      cloud?.synchronize()
       syncFromCloud()
     }
   }
@@ -103,7 +105,7 @@ extension UserPreferences {
     defer { isApplyingCloudChanges = false }
 
     for key in Self.syncableKeys {
-      guard let cloudValue = cloud.object(forKey: key) else { continue }
+      guard let cloudValue = cloud?.object(forKey: key) else { continue }
       UserDefaults.standard.set(cloudValue, forKey: key)
     }
 
@@ -115,18 +117,18 @@ extension UserPreferences {
 
     for key in Self.syncableKeys {
       if let value = UserDefaults.standard.object(forKey: key) {
-        cloud.set(value, forKey: key)
+        cloud?.set(value, forKey: key)
       }
     }
 
-    cloud.synchronize()
+    cloud?.synchronize()
   }
 
   func purgeCloud() {
     for key in Self.syncableKeys {
-      cloud.removeObject(forKey: key)
+      cloud?.removeObject(forKey: key)
     }
 
-    cloud.synchronize()
+    cloud?.synchronize()
   }
 }
