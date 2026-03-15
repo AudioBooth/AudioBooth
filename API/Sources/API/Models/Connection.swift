@@ -6,19 +6,25 @@ public struct Connection: Codable, Sendable {
   public let token: Credentials
   public let customHeaders: [String: String]
   public let alias: String?
+  public let alternativeURL: URL?
+  public let isUsingAlternativeURL: Bool
 
   public init(
     id: String? = nil,
     serverURL: URL,
     token: Credentials,
     customHeaders: [String: String] = [:],
-    alias: String? = nil
+    alias: String? = nil,
+    alternativeURL: URL? = nil,
+    isUsingAlternativeURL: Bool = false
   ) {
     self.id = id ?? UUID().uuidString
     self.serverURL = serverURL
     self.token = token
     self.customHeaders = customHeaders
     self.alias = alias
+    self.alternativeURL = alternativeURL
+    self.isUsingAlternativeURL = isUsingAlternativeURL
   }
 
   public init(_ server: Server) {
@@ -27,7 +33,9 @@ public struct Connection: Codable, Sendable {
       serverURL: server.baseURL,
       token: server.token,
       customHeaders: server.customHeaders,
-      alias: server.alias
+      alias: server.alias,
+      alternativeURL: server.alternativeURL,
+      isUsingAlternativeURL: server.isUsingAlternativeURL
     )
   }
 
@@ -42,6 +50,8 @@ public struct Connection: Codable, Sendable {
     }
     customHeaders = try container.decode([String: String].self, forKey: .customHeaders)
     alias = try container.decodeIfPresent(String.self, forKey: .alias)
+    alternativeURL = try container.decodeIfPresent(URL.self, forKey: .alternativeURL)
+    isUsingAlternativeURL = try container.decodeIfPresent(Bool.self, forKey: .isUsingAlternativeURL) ?? false
   }
 }
 

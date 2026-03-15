@@ -15,28 +15,6 @@ struct HomePage: View {
 
   @State private var path = NavigationPath()
 
-  var connectionStatusColor: Color {
-    switch authentication.server?.status {
-    case .connected:
-      return .green
-    case .connectionError:
-      return .orange
-    case .authenticationError:
-      return .red
-    case .none:
-      return .gray
-    }
-  }
-
-  var connectionStatusLabel: LocalizedStringResource {
-    switch authentication.server?.status {
-    case .connected: "Connected"
-    case .connectionError: "Connection error"
-    case .authenticationError: "Authentication error"
-    case .none: "Disconnected"
-    }
-  }
-
   var body: some View {
     NavigationStack {
       content
@@ -96,51 +74,7 @@ struct HomePage: View {
     }
     .navigationTitle("Home")
     .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        Menu {
-          ForEach(model.availableLibraries) { library in
-            if library.id == libraries.current?.id {
-              Button {
-                model.onLibrarySelected(library.id)
-              } label: {
-                Label(library.name, systemImage: "checkmark")
-              }
-            } else {
-              Button {
-                model.onLibrarySelected(library.id)
-              } label: {
-                Text(library.name)
-              }
-            }
-          }
-
-          if !model.availableLibraries.isEmpty {
-            Divider()
-          }
-
-          Button {
-            showingServerDetails = true
-          } label: {
-            Label("Server Details", systemImage: "info.circle")
-          }
-
-          Button {
-            showingServerList = true
-          } label: {
-            Label("Manage Servers", systemImage: "server.rack")
-          }
-        } label: {
-          HStack(spacing: 4) {
-            Text(verbatim: "●")
-              .foregroundStyle(connectionStatusColor)
-            Text(libraries.current?.name ?? "Server")
-              .bold()
-          }
-          .frame(maxWidth: 250)
-        }
-        .accessibilityLabel("Server: \(libraries.current?.name ?? "Server"), \(connectionStatusLabel)")
-        .tint(.primary)
-      }
+      serverMenuToolbarItem
 
       if #available(iOS 26.0, *) {
         if let dailyGoal = model.dailyGoal, dailyGoal.goal > 0 {
@@ -359,6 +293,97 @@ struct HomePage: View {
 }
 
 extension HomePage {
+  var connectionStatusColor: Color {
+    switch authentication.server?.status {
+    case .connected:
+      return .green
+    case .connectionError:
+      return .orange
+    case .authenticationError:
+      return .red
+    case .none:
+      return .gray
+    }
+  }
+
+  var connectionStatusLabel: LocalizedStringResource {
+    switch authentication.server?.status {
+    case .connected: "Connected"
+    case .connectionError: "Connection error"
+    case .authenticationError: "Authentication error"
+    case .none: "Disconnected"
+    }
+  }
+
+  var serverMenuToolbarItem: some ToolbarContent {
+    ToolbarItem(placement: .topBarLeading) {
+      Menu {
+        ForEach(model.availableLibraries) { library in
+          if library.id == libraries.current?.id {
+            Button {
+              model.onLibrarySelected(library.id)
+            } label: {
+              Label(library.name, systemImage: "checkmark")
+            }
+          } else {
+            Button {
+              model.onLibrarySelected(library.id)
+            } label: {
+              Text(library.name)
+            }
+          }
+        }
+
+        if let server = authentication.server, server.alternativeURL != nil {
+          ControlGroup("Server URL") {
+            Button("Primary", systemImage: server.isUsingAlternativeURL ? "circle" : "checkmark.circle.fill") {
+              if server.isUsingAlternativeURL {
+                model.onToggleAlternativeURL()
+              }
+            }
+            .tint(server.isUsingAlternativeURL ? nil : .accentColor)
+
+            Button("Alternative", systemImage: server.isUsingAlternativeURL ? "checkmark.circle.fill" : "circle") {
+              if !server.isUsingAlternativeURL {
+                model.onToggleAlternativeURL()
+              }
+            }
+            .tint(server.isUsingAlternativeURL ? .accentColor : nil)
+          }
+        }
+
+        if !model.availableLibraries.isEmpty {
+          Divider()
+        }
+
+        Button {
+          showingServerDetails = true
+        } label: {
+          Label("Server Details", systemImage: "info.circle")
+        }
+
+        Button {
+          showingServerList = true
+        } label: {
+          Label("Manage Servers", systemImage: "server.rack")
+        }
+      } label: {
+        HStack(spacing: 4) {
+          Text(verbatim: "●")
+            .foregroundStyle(connectionStatusColor)
+
+          Text(libraries.current?.name ?? "Server")
+            .bold()
+        }
+        .frame(maxWidth: 250)
+      }
+      .accessibilityLabel("Server: \(libraries.current?.name ?? "Server"), \(connectionStatusLabel)")
+      .tint(.primary)
+    }
+  }
+}
+
+extension HomePage {
   @Observable
   class Model: ObservableObject {
     var isLoading: Bool
@@ -401,6 +426,7 @@ extension HomePage {
     func onReset(_ shouldRefresh: Bool) {}
     func onPreferencesChanged() {}
     func onLibrarySelected(_ id: String) {}
+    func onToggleAlternativeURL() {}
 
     init(
       isLoading: Bool = false,
