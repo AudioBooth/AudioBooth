@@ -471,8 +471,10 @@ extension HomePageModel {
       AppLogger.viewModel.error("Failed to fetch personalized content: \(error)")
     }
 
-    if let stats = try? await Audiobookshelf.shared.authentication.fetchListeningStats() {
-      dailyGoal = (current: stats.today, goal: preferences.dailyGoalMinutes)
+    Task {
+      if let stats = try? await Audiobookshelf.shared.authentication.fetchListeningStats() {
+        dailyGoal = (current: stats.today, goal: preferences.dailyGoalMinutes)
+      }
     }
   }
 }
