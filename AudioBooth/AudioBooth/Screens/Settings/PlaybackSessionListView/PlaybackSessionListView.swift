@@ -6,6 +6,8 @@ import SwiftUI
 struct PlaybackSessionListView: View {
   @ObservedObject var model: Model
 
+  @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 80
+
   var body: some View {
     List {
       ForEach(model.sessions, id: \.id) { session in
@@ -19,7 +21,7 @@ struct PlaybackSessionListView: View {
               Rectangle()
                 .fill(Color.gray.opacity(0.3))
             }
-            .frame(width: 80, height: 80)
+            .frame(width: coverSize, height: coverSize)
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 8) {

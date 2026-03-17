@@ -5,6 +5,8 @@ import SwiftUI
 struct CollectionRow: View {
   @ObservedObject var model: Model
 
+  @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 60
+
   private var gridCovers: [URL] {
     switch model.covers.count {
     case 0:
@@ -23,7 +25,7 @@ struct CollectionRow: View {
   var body: some View {
     HStack(spacing: 12) {
       coverGrid
-        .frame(width: 60, height: 60)
+        .frame(width: coverSize, height: coverSize)
         .clipShape(RoundedRectangle(cornerRadius: 8))
 
       VStack(alignment: .leading, spacing: 4) {

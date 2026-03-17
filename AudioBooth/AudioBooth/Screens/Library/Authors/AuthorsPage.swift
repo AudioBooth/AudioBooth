@@ -7,6 +7,8 @@ struct AuthorsPage: View {
   @ObservedObject private var preferences = UserPreferences.shared
   @ObservedObject var model: Model
 
+  @ScaledMetric(relativeTo: .title) private var avatarSize: CGFloat = 40
+
   var body: some View {
     content
       .navigationTitle("Authors")
@@ -155,7 +157,7 @@ struct AuthorsPage: View {
           image
             .resizable()
             .aspectRatio(contentMode: .fill)
-            .frame(width: 40, height: 40)
+            .frame(width: avatarSize, height: avatarSize)
             .clipShape(Circle())
         } else {
           placeholderImage
@@ -169,7 +171,7 @@ struct AuthorsPage: View {
   var placeholderImage: some View {
     Circle()
       .fill(Color.gray.opacity(0.3))
-      .frame(width: 40, height: 40)
+      .frame(width: avatarSize, height: avatarSize)
       .overlay(
         Image(systemName: "person.circle")
           .foregroundColor(.gray)

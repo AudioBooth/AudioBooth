@@ -8,6 +8,8 @@ struct AuthorDetailsView: View {
   @ObservedObject var preferences = UserPreferences.shared
   @State private var isDescriptionExpanded: Bool = false
 
+  @ScaledMetric(relativeTo: .title) private var cardWidth: CGFloat = 120
+
   var body: some View {
     Group {
       if model.isLoading {
@@ -149,7 +151,7 @@ struct AuthorDetailsView: View {
         HStack(alignment: .top, spacing: 16) {
           ForEach(seriesWithBooks.books) { book in
             BookCard(model: book)
-              .frame(width: 120)
+              .frame(width: cardWidth)
           }
         }
         .padding(.horizontal)
@@ -185,7 +187,7 @@ struct AuthorDetailsView: View {
         HStack(alignment: .top, spacing: 16) {
           ForEach(model.allBooks) { book in
             BookCard(model: book)
-              .frame(width: 120)
+              .frame(width: cardWidth)
           }
         }
         .padding(.horizontal)

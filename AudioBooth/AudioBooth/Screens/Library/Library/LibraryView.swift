@@ -11,11 +11,13 @@ struct LibraryView: View {
   var hasMorePages: Bool = false
   var onLoadMore: (() -> Void)?
 
+  @ScaledMetric(relativeTo: .title) private var gridMinimum: CGFloat = 100
+
   var body: some View {
     switch displayMode {
     case .grid:
       LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 100), spacing: 20)],
+        columns: [GridItem(.adaptive(minimum: gridMinimum), spacing: 20)],
         spacing: 20
       ) {
         ForEach(items) { item in

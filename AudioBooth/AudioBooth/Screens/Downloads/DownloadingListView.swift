@@ -25,6 +25,8 @@ extension DownloadingListView {
     let book: BookItem
     let onCancel: () -> Void
 
+    @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 60
+
     var body: some View {
       HStack(spacing: 12) {
         cover
@@ -60,7 +62,7 @@ extension DownloadingListView {
 
     var cover: some View {
       Cover(url: book.coverURL)
-        .frame(width: 60, height: 60)
+        .frame(width: coverSize, height: coverSize)
     }
   }
 }

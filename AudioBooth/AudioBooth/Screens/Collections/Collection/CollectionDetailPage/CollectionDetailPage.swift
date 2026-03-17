@@ -10,6 +10,9 @@ struct CollectionDetailPage: View {
   @State private var showDeleteConfirmation = false
   @State private var showEditSheet = false
 
+  @ScaledMetric(relativeTo: .title) private var gridMinimum: CGFloat = 100
+  @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
+
   private var isCardMode: Bool {
     preferences.libraryDisplayMode == .card
   }
@@ -158,7 +161,7 @@ struct CollectionDetailPage: View {
         titleHeader
 
         LazyVGrid(
-          columns: [GridItem(.adaptive(minimum: 100), spacing: 20)],
+          columns: [GridItem(.adaptive(minimum: gridMinimum), spacing: 20)],
           spacing: 20
         ) {
           ForEach(model.books) { book in
@@ -204,7 +207,7 @@ struct CollectionDetailPage: View {
   private func episodeRow(_ book: BookCard.Model) -> some View {
     HStack(spacing: 12) {
       Cover(model: book.cover, size: .small)
-        .frame(width: 60, height: 60)
+        .frame(width: rowCoverSize, height: rowCoverSize)
 
       VStack(alignment: .leading, spacing: 6) {
         Text(book.title)

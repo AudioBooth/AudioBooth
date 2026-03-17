@@ -96,6 +96,8 @@ extension PlayerQueueView {
   struct CurrentRow: View {
     @Environment(\.editMode) private var editMode
 
+    @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 40
+
     let item: QueueItem
     let onTapped: () -> Void
     let onClear: () -> Void
@@ -121,7 +123,7 @@ extension PlayerQueueView {
 
     private var cover: some View {
       Cover(url: item.coverURL)
-        .frame(width: 40, height: 40)
+        .frame(width: coverSize, height: coverSize)
     }
 
     private var info: some View {
@@ -162,6 +164,8 @@ extension PlayerQueueView {
   struct QueueRow: View {
     @Environment(\.editMode) private var editMode
 
+    @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 40
+
     @ObservedObject private var preferences = UserPreferences.shared
 
     let item: QueueItem
@@ -190,7 +194,7 @@ extension PlayerQueueView {
 
     private var cover: some View {
       Cover(url: item.coverURL)
-        .frame(width: 40, height: 40)
+        .frame(width: coverSize, height: coverSize)
     }
 
     private var info: some View {

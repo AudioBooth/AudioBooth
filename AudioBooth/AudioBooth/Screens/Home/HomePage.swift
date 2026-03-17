@@ -8,6 +8,13 @@ struct HomePage: View {
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
   @ObservedObject private var preferences = UserPreferences.shared
 
+  @ScaledMetric(relativeTo: .title) private var cardWidth: CGFloat = 120
+  @ScaledMetric(relativeTo: .title) private var authorCardWidth: CGFloat = 80
+
+  private var continueSectionWidth: CGFloat {
+    preferences.continueSectionSize.value / 120 * cardWidth
+  }
+
   @StateObject var model: Model
   @State private var showingSettings = false
   @State private var showingServerList = false
@@ -209,7 +216,7 @@ struct HomePage: View {
           HStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { book in
               BookCard(model: book)
-                .frame(width: 120)
+                .frame(width: cardWidth)
             }
           }
           .padding(.horizontal)
@@ -227,7 +234,7 @@ struct HomePage: View {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { item in
               BookCard(model: item)
-                .frame(width: preferences.continueSectionSize.value)
+                .frame(width: continueSectionWidth)
             }
           }
           .padding(.horizontal)
@@ -245,7 +252,7 @@ struct HomePage: View {
           HStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { book in
               BookCard(model: book)
-                .frame(width: 120)
+                .frame(width: cardWidth)
             }
           }
           .padding(.horizontal)
@@ -263,7 +270,7 @@ struct HomePage: View {
           HStack(alignment: .top, spacing: 16) {
             ForEach(items) { series in
               SeriesCard(model: series, titleFont: .footnote)
-                .frame(width: 120)
+                .frame(width: cardWidth)
             }
           }
           .padding(.horizontal)
@@ -282,7 +289,7 @@ struct HomePage: View {
           HStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { author in
               AuthorCard(model: author)
-                .frame(width: 80)
+                .frame(width: authorCardWidth)
             }
           }
           .padding(.horizontal)

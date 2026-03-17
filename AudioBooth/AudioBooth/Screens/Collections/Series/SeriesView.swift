@@ -6,6 +6,7 @@ struct SeriesView: View {
   var onLoadMore: (() -> Void)?
 
   @Environment(\.itemDisplayMode) private var displayMode
+  @ScaledMetric(relativeTo: .title) private var gridMinimum: CGFloat = 100
 
   var body: some View {
     Group {
@@ -16,7 +17,7 @@ struct SeriesView: View {
         }
       case .card:
         LazyVGrid(
-          columns: [GridItem(.adaptive(minimum: 100), spacing: 20)],
+          columns: [GridItem(.adaptive(minimum: gridMinimum), spacing: 20)],
           spacing: 20
         ) {
           seriesItems

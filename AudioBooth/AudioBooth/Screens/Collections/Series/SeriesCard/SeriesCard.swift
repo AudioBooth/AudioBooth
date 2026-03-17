@@ -5,6 +5,8 @@ struct SeriesCard: View {
   @Bindable var model: Model
   @Environment(\.itemDisplayMode) private var displayMode
 
+  @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
+
   let titleFont: Font
 
   init(model: Model, titleFont: Font = .headline) {
@@ -38,7 +40,7 @@ struct SeriesCard: View {
             .padding(2)
         }
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .frame(width: 60, height: 60)
+        .frame(width: rowCoverSize, height: rowCoverSize)
 
       VStack(alignment: .leading, spacing: 4) {
         Text(model.title)

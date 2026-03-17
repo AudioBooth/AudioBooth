@@ -115,6 +115,7 @@ struct TipJarView: View {
           .font(.footnote)
         }
       }
+      .dynamicTypeSize(...DynamicTypeSize.accessibility1)
       .animation(.easeInOut(duration: 0.3), value: model.lastPurchaseSuccess)
       .listRowBackground(Color.clear)
       .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))

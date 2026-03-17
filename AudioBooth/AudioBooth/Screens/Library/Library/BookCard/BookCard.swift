@@ -75,6 +75,8 @@ extension BookCard {
     @Environment(\.itemDisplayMode) private var displayMode
     @Environment(\.editMode) private var editMode
 
+    @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
+
     private var isEditing: Bool {
       editMode?.wrappedValue.isEditing ?? false
     }
@@ -192,7 +194,7 @@ extension BookCard {
               .padding(2)
           }
         }
-        .frame(width: 60, height: 60)
+        .frame(width: rowCoverSize, height: rowCoverSize)
     }
 
     private func rowMetadata(icon: String, value: String) -> some View {

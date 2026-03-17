@@ -5,12 +5,14 @@ import SwiftUI
 struct BookmarkRow: View {
   @ObservedObject var model: Model
 
+  @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 60
+
   var body: some View {
     HStack(spacing: 12) {
       ZStack {
         RoundedRectangle(cornerRadius: 8)
           .fill(Color.accentColor.opacity(0.1))
-          .frame(width: 60, height: 60)
+          .frame(width: iconSize, height: iconSize)
 
         Image(systemName: "bookmark.fill")
           .font(.title2)

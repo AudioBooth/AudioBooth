@@ -40,7 +40,7 @@ struct ListeningStatsCard: View {
               .padding(.horizontal, 12)
           }
         }
-        .frame(height: 180)
+        .frame(minHeight: 180)
         .padding(.vertical, 12)
         .background(.secondary.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -50,6 +50,7 @@ struct ListeningStatsCard: View {
         )
       }
     }
+    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     .onAppear(perform: model.onAppear)
   }
 

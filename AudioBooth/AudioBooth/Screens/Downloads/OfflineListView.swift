@@ -4,6 +4,8 @@ import SwiftUI
 struct OfflineListView: View {
   @ObservedObject var model: Model
 
+  @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
+
   var body: some View {
     content
   }
@@ -172,7 +174,7 @@ struct OfflineListView: View {
     HStack(spacing: 12) {
       if let coverURL {
         Cover(url: coverURL)
-          .frame(width: 60, height: 60)
+          .frame(width: rowCoverSize, height: rowCoverSize)
       }
 
       VStack(alignment: .leading, spacing: 4) {
@@ -206,7 +208,7 @@ struct OfflineListView: View {
 
       HStack(spacing: 12) {
         Cover(model: episode.cover, size: .small)
-          .frame(width: 60, height: 60)
+          .frame(width: rowCoverSize, height: rowCoverSize)
 
         VStack(alignment: .leading, spacing: 6) {
           Text(episode.title)

@@ -31,6 +31,7 @@ struct AlphabetScrollBar: View {
           .background(dragObserver(for: letter))
       }
     }
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     .background(Color.clear)
     .contentShape(Rectangle())
     .gesture(
