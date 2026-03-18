@@ -1,11 +1,14 @@
 import API
-import ActivityKit
 import AppIntents
 import Logging
 import Models
 import PlayerIntents
 import RevenueCat
 import UIKit
+
+#if !targetEnvironment(macCatalyst)
+import ActivityKit
+#endif
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   static var orientationLock = UIInterfaceOrientationMask.all {
@@ -71,7 +74,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       await StorageManager.shared.cleanupUnusedDownloads()
     }
 
+    #if !targetEnvironment(macCatalyst)
     endAllLiveActivities()
+    #endif
 
     return true
   }
@@ -90,7 +95,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
   ) -> UIInterfaceOrientationMask {
     return AppDelegate.orientationLock
   }
+}
 
+extension AppDelegate {
+  #if !targetEnvironment(macCatalyst)
   private func endAllLiveActivities() {
     Task {
       for activity in Activity<SleepTimerActivityAttributes>.activities {
@@ -101,4 +109,5 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       }
     }
   }
+  #endif
 }

@@ -10,7 +10,7 @@
 		3F1E6AA12EB9B62E00CD9090 /* RichText in Frameworks */ = {isa = PBXBuildFile; productRef = 3F1E6AA02EB9B62E00CD9090 /* RichText */; };
 		3F2D3BF52EBE711800D49AFF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F2D3BF42EBE711800D49AFF /* WidgetKit.framework */; };
 		3F2D3BF72EBE711800D49AFF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F2D3BF62EBE711800D49AFF /* SwiftUI.framework */; };
-		3F2D3C042EBE711A00D49AFF /* AudioBoothWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3F2D3BF32EBE711800D49AFF /* AudioBoothWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3F2D3C042EBE711A00D49AFF /* AudioBoothWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3F2D3BF32EBE711800D49AFF /* AudioBoothWidgetExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3F2D3C132EBE730D00D49AFF /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = 3F2D3C122EBE730D00D49AFF /* Models */; };
 		3F2D3C1C2EBFC7A100D49AFF /* PlayerIntents in Frameworks */ = {isa = PBXBuildFile; productRef = 3F2D3C1B2EBFC7A100D49AFF /* PlayerIntents */; };
 		3F2D3C202EBFC9D700D49AFF /* PlayerIntents in Frameworks */ = {isa = PBXBuildFile; productRef = 3F2D3C1F2EBFC9D700D49AFF /* PlayerIntents */; };
@@ -28,7 +28,7 @@
 		3F7928D92EDE439F008D6027 /* Pulse in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7928D82EDE439F008D6027 /* Pulse */; };
 		3F7928DB2EDE439F008D6027 /* PulseUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7928DA2EDE439F008D6027 /* PulseUI */; };
 		3F7928DD2EDE4670008D6027 /* PulseProxy in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7928DC2EDE4670008D6027 /* PulseProxy */; };
-		3FBEA06F2E8CD49400976BA0 /* AudioBooth Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3FBEA06F2E8CD49400976BA0 /* AudioBooth Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3FBEA0832E8CE7D600976BA0 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = 3FBEA0822E8CE7D600976BA0 /* API */; };
 		3FEB781C2F059A3B00618BF9 /* Recording in Frameworks */ = {isa = PBXBuildFile; productRef = 3FEB781B2F059A3B00618BF9 /* Recording */; };
 		3FEB781E2F059A3B00618BF9 /* Reporting in Frameworks */ = {isa = PBXBuildFile; productRef = 3FEB781D2F059A3B00618BF9 /* Reporting */; };
@@ -465,11 +465,13 @@
 /* Begin PBXTargetDependency section */
 		3F2D3C032EBE711A00D49AFF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = 3F2D3BF22EBE711800D49AFF /* AudioBoothWidgetExtension */;
 			targetProxy = 3F2D3C022EBE711A00D49AFF /* PBXContainerItemProxy */;
 		};
 		3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = 3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */;
 			targetProxy = 3FBEA06D2E8CD49400976BA0 /* PBXContainerItemProxy */;
 		};
@@ -765,12 +767,15 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Debug;
 		};
@@ -782,6 +787,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = AudioBooth/AudioBooth.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = AudioBooth/AudioBooth.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "AudioBooth/AudioBooth Mac.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -804,12 +811,15 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Release;
 		};

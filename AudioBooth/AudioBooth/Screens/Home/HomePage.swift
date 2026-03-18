@@ -376,9 +376,10 @@ extension HomePage {
         }
       } label: {
         HStack(spacing: 4) {
+          #if !targetEnvironment(macCatalyst)
           Text(verbatim: "●")
             .foregroundStyle(connectionStatusColor)
-
+          #endif
           Text(libraries.current?.name ?? "Server")
             .bold()
         }

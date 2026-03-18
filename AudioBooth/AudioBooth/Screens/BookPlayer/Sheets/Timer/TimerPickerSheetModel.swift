@@ -1,11 +1,14 @@
 import AVFoundation
-import ActivityKit
 import Combine
 import Foundation
 import Logging
 import Models
 import PlayerIntents
 import SwiftUI
+
+#if !targetEnvironment(macCatalyst)
+import ActivityKit
+#endif
 
 final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private let preferences = UserPreferences.shared
@@ -21,7 +24,9 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private var cancellables = Set<AnyCancellable>()
   private var playbackObserver: AnyCancellable?
   private var seekObserver: AnyCancellable?
+  #if !targetEnvironment(macCatalyst)
   private var liveActivity: Activity<SleepTimerActivityAttributes>?
+  #endif
 
   init(itemID: String, player: AVPlayer, chapters: ChapterPickerSheet.Model?, speed: FloatPickerSheet.Model) {
     self.itemID = itemID
@@ -454,9 +459,47 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 }
 
-// MARK: - Live Activity
+extension TimerPickerSheetViewModel {
+  func startObservingPlaybackState() {
+    playbackObserver = player.publisher(for: \.timeControlStatus)
+      .removeDuplicates()
+      .sink { [weak self] status in
+        guard let self, case .chapters(let count) = self.current else { return }
+        switch status {
+        case .playing:
+          if let duration = self.calculateChapterDuration(for: count) {
+            self.startLiveActivity(duration: duration)
+          }
+        case .paused:
+          self.pauseLiveActivity()
+        case .waitingToPlayAtSpecifiedRate:
+          break
+        @unknown default:
+          break
+        }
+      }
+
+    seekObserver = NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)
+      .sink { [weak self] _ in
+        guard let self,
+          case .chapters(let count) = self.current,
+          self.player.timeControlStatus == .playing,
+          let duration = self.calculateChapterDuration(for: count)
+        else { return }
+        self.startLiveActivity(duration: duration)
+      }
+  }
+
+  func stopObservingPlaybackState() {
+    playbackObserver?.cancel()
+    playbackObserver = nil
+    seekObserver?.cancel()
+    seekObserver = nil
+  }
+}
 
 extension TimerPickerSheetViewModel {
+  #if !targetEnvironment(macCatalyst)
   func startLiveActivity(duration: TimeInterval) {
     let endTime = Date().addingTimeInterval(duration)
     let state = SleepTimerActivityAttributes.ContentState(
@@ -506,36 +549,6 @@ extension TimerPickerSheetViewModel {
     self.liveActivity = nil
   }
 
-  func startObservingPlaybackState() {
-    playbackObserver = player.publisher(for: \.timeControlStatus)
-      .removeDuplicates()
-      .sink { [weak self] status in
-        guard let self, case .chapters(let count) = self.current else { return }
-        switch status {
-        case .playing:
-          if let duration = self.calculateChapterDuration(for: count) {
-            self.startLiveActivity(duration: duration)
-          }
-        case .paused:
-          self.pauseLiveActivity()
-        case .waitingToPlayAtSpecifiedRate:
-          break
-        @unknown default:
-          break
-        }
-      }
-
-    seekObserver = NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)
-      .sink { [weak self] _ in
-        guard let self,
-          case .chapters(let count) = self.current,
-          self.player.timeControlStatus == .playing,
-          let duration = self.calculateChapterDuration(for: count)
-        else { return }
-        self.startLiveActivity(duration: duration)
-      }
-  }
-
   func pauseLiveActivity(remaining: TimeInterval? = nil) {
     guard liveActivity != nil else { return }
 
@@ -554,11 +567,10 @@ extension TimerPickerSheetViewModel {
     )
     updateLiveActivity(state)
   }
-
-  func stopObservingPlaybackState() {
-    playbackObserver?.cancel()
-    playbackObserver = nil
-    seekObserver?.cancel()
-    seekObserver = nil
-  }
+  #else
+  func startLiveActivity(duration: TimeInterval) {}
+  func updateLiveActivity(_ state: Any) {}
+  func endLiveActivity() {}
+  func pauseLiveActivity(remaining: TimeInterval? = nil) {}
+  #endif
 }

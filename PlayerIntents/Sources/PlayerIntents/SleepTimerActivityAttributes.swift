@@ -1,7 +1,12 @@
-import ActivityKit
 import Foundation
 import SwiftUI
+import UIKit
 
+#if !targetEnvironment(macCatalyst)
+import ActivityKit
+#endif
+
+#if !targetEnvironment(macCatalyst)
 public struct SleepTimerActivityAttributes: ActivityAttributes {
   public enum TimerDisplay: Codable, Hashable {
     case countdown(Date)
@@ -25,6 +30,7 @@ public struct SleepTimerActivityAttributes: ActivityAttributes {
 
   public init() {}
 }
+#endif
 
 extension Color: @retroactive RawRepresentable {
   public init?(rawValue: String) {
