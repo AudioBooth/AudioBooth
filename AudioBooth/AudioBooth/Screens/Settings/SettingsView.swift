@@ -94,6 +94,31 @@ struct SettingsView: View {
 
         debug
 
+        Section("Legal") {
+          Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!) {
+            HStack {
+              Image(systemName: "doc.text")
+              Text("Terms of Use")
+              Spacer()
+              Image(systemName: "arrow.up.forward")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+
+          Link(destination: URL(string: "https://github.com/AudioBooth/AudioBooth/blob/main/PRIVACY.md")!) {
+            HStack {
+              Image(systemName: "hand.raised")
+              Text("Privacy Policy")
+              Spacer()
+              Image(systemName: "arrow.up.forward")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+        }
+        .tint(.primary)
+
         Section {
           Text(model.appVersion)
             .font(.caption)
