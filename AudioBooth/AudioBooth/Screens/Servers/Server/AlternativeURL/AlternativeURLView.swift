@@ -8,9 +8,11 @@ struct AlternativeURLView: View {
     Form {
       Section {
         HStack {
-          TextField("https://...", text: $model.url)
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
+          TextField(text: $model.url) {
+            Text(verbatim: "https://...")
+          }
+          .autocorrectionDisabled()
+          .textInputAutocapitalization(.never)
 
           if !model.url.isEmpty {
             Button(action: model.onClearURL) {

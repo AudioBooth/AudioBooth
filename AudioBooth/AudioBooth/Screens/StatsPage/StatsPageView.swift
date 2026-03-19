@@ -134,12 +134,12 @@ struct StatsPageView: View {
         }
         .pickerStyle(.wheel)
 
-        Text("1440")
+        Text(verbatim: "1440")
           .monospacedDigit()
           .hidden()
           .overlay(alignment: .leading) {
             HStack(spacing: 12) {
-              Text("1440")
+              Text(verbatim: "1440")
                 .monospacedDigit()
                 .hidden()
 
