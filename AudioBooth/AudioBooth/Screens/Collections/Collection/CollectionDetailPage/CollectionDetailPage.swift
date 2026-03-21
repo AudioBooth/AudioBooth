@@ -7,11 +7,13 @@ struct CollectionDetailPage: View {
   @ObservedObject private var preferences = UserPreferences.shared
 
   @StateObject var model: Model
+  @Environment(\.editMode) private var editMode
   @State private var showDeleteConfirmation = false
   @State private var showEditSheet = false
 
   @ScaledMetric(relativeTo: .title) private var gridMinimum: CGFloat = 100
   @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
+  @ScaledMetric(relativeTo: .title) private var deleteButtonSize: CGFloat = 24
 
   private var isCardMode: Bool {
     preferences.libraryDisplayMode == .card
@@ -43,7 +45,7 @@ struct CollectionDetailPage: View {
         }
       }
 
-      if model.canEdit && !isCardMode {
+      if model.canEdit {
         ToolbarItem(placement: .topBarTrailing) {
           EditButton()
             .tint(.primary)
@@ -167,6 +169,24 @@ struct CollectionDetailPage: View {
           ForEach(model.books) { book in
             BookCard(model: book)
               .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+              .allowsHitTesting(editMode?.wrappedValue.isEditing != true)
+              .overlay(alignment: .topLeading) {
+                if editMode?.wrappedValue.isEditing == true {
+                  Button {
+                    if let index = model.books.firstIndex(where: { $0.id == book.id }) {
+                      model.onDelete(at: IndexSet(integer: index))
+                    }
+                  } label: {
+                    Image(systemName: "minus.circle.fill")
+                      .resizable()
+                      .frame(width: deleteButtonSize, height: deleteButtonSize)
+                      .symbolRenderingMode(.palette)
+                      .foregroundStyle(.white, .red)
+                  }
+                  .offset(x: -deleteButtonSize * 0.3, y: -deleteButtonSize * 0.3)
+                  .transition(.scale.combined(with: .opacity))
+                }
+              }
           }
         }
         .padding(.horizontal)
