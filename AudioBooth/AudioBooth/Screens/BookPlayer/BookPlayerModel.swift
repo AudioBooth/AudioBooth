@@ -8,7 +8,6 @@ import Models
 import Nuke
 import SwiftData
 import SwiftUI
-import WidgetKit
 
 final class BookPlayerModel: BookPlayer.Model {
   private let audiobookshelf = Audiobookshelf.shared
@@ -25,16 +24,16 @@ final class BookPlayerModel: BookPlayer.Model {
   private var itemObservation: Task<Void, Never>?
   private var mediaProgress: MediaProgress
   private var episodeID: String?
-  private var timerSecondsCounter = 0
+  private var lastSyncedTime: Double = 0
   private var pendingPlay: Bool = false
   private var pendingSeekTime: TimeInterval?
 
   private var lastPlaybackAt: Date?
 
   private let downloadManager = DownloadManager.shared
-  private let watchConnectivity = WatchConnectivityManager.shared
 
   private var nowPlaying: NowPlayingManager
+  private var widgetManager: WidgetManager
 
   private var recoveryAttempts = 0
   private var maxRecoveryAttempts = 3
@@ -59,6 +58,13 @@ final class BookPlayerModel: BookPlayer.Model {
       duration: mediaProgress.duration
     )
 
+    widgetManager = WidgetManager(
+      id: book.id,
+      title: book.title,
+      author: book.authorName,
+      coverURL: book.coverURL(raw: false)
+    )
+
     super.init(
       id: book.id,
       title: book.title,
@@ -73,7 +79,6 @@ final class BookPlayerModel: BookPlayer.Model {
 
     setupDownloadStateBinding(bookID: book.id)
     setupHistory()
-    observeSpeedChanged()
 
     onLoad()
   }
@@ -95,6 +100,13 @@ final class BookPlayerModel: BookPlayer.Model {
       duration: mediaProgress.duration
     )
 
+    widgetManager = WidgetManager(
+      id: item.bookID,
+      title: item.title,
+      author: item.authorNames,
+      coverURL: item.coverURL(raw: false)
+    )
+
     super.init(
       id: item.bookID,
       title: item.title,
@@ -109,7 +121,6 @@ final class BookPlayerModel: BookPlayer.Model {
 
     setupDownloadStateBinding(bookID: item.bookID)
     setupHistory()
-    observeSpeedChanged()
 
     onLoad()
   }
@@ -133,6 +144,13 @@ final class BookPlayerModel: BookPlayer.Model {
       duration: mediaProgress.duration
     )
 
+    widgetManager = WidgetManager(
+      id: episode.episodeID,
+      title: episode.title,
+      author: episode.podcast?.author,
+      coverURL: episode.coverURL
+    )
+
     super.init(
       id: episode.episodeID,
       podcastID: episode.podcast?.podcastID,
@@ -152,7 +170,6 @@ final class BookPlayerModel: BookPlayer.Model {
 
     setupDownloadStateBinding(episodeID: episode.episodeID)
     setupHistory()
-    observeSpeedChanged()
 
     onLoad()
   }
@@ -185,6 +202,13 @@ final class BookPlayerModel: BookPlayer.Model {
       duration: mediaProgress.duration
     )
 
+    widgetManager = WidgetManager(
+      id: episode.id,
+      title: episode.title,
+      author: podcastAuthor,
+      coverURL: coverURL
+    )
+
     super.init(
       id: episode.id,
       podcastID: podcastID,
@@ -204,7 +228,6 @@ final class BookPlayerModel: BookPlayer.Model {
 
     setupDownloadStateBinding(episodeID: episode.id)
     setupHistory()
-    observeSpeedChanged()
 
     onLoad()
   }
@@ -271,7 +294,7 @@ final class BookPlayerModel: BookPlayer.Model {
 
     applySmartRewind(reason: .afterPause)
 
-    timerSecondsCounter = 0
+    lastSyncedTime = mediaProgress.currentTime
     player.play()
     try? audioSession.setActive(true)
 
@@ -389,6 +412,7 @@ extension BookPlayerModel {
     cancellables.removeAll()
 
     nowPlaying.clear()
+    widgetManager.clear()
   }
 }
 
@@ -424,8 +448,6 @@ extension BookPlayerModel {
         }
       }
     }
-
-    syncPlayback()
   }
 
   private func isSessionNotFoundError(_ error: Error) -> Bool {
@@ -672,8 +694,6 @@ extension BookPlayerModel {
 
     configurePlayerComponents(player: player)
 
-    syncPlayback()
-
     if pendingPlay {
       onPlayTapped()
     }
@@ -723,6 +743,16 @@ extension BookPlayerModel {
       chapters: chapters,
       mediaProgress: mediaProgress
     )
+
+    widgetManager.configure(
+      player: player,
+      speed: speed,
+      chapters: chapters,
+      mediaProgress: mediaProgress,
+      playbackProgress: playbackProgress
+    )
+
+    observeSpeedChanged()
   }
 
   private func loadLocalBookIfAvailable() async {
@@ -905,18 +935,10 @@ extension BookPlayerModel {
       guard let self else { return }
 
       RunLoop.main.perform {
-        if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
-          playbackProgress.updateProgress()
-          self.syncPlayback()
-        }
-
-        self.watchConnectivity.sendPlaybackRate(Float(self.speed.value))
-
+        (self.playbackProgress as? PlaybackProgressViewModel)?.updateProgress()
         self.observeSpeedChanged()
       }
     }
-
-    watchConnectivity.sendPlaybackRate(Float(speed.value))
   }
 
   private func setupHistory() {
@@ -1069,9 +1091,8 @@ extension BookPlayerModel {
         self.mediaProgress.currentTime = currentTime
       }
 
-      self.timerSecondsCounter += 1
-
-      if self.timerSecondsCounter % 20 == 0 {
+      if abs(currentTime - lastSyncedTime) >= 10 {
+        lastSyncedTime = currentTime
         self.updateMediaProgress()
         self.checkAutoDownloadAfterListening()
       }
@@ -1275,7 +1296,6 @@ extension BookPlayerModel {
     try? mediaProgress.save()
 
     isPlaying = isNowPlaying
-    syncPlayback()
   }
 
   private func recordBookCompletionIfNeeded() {
@@ -1382,31 +1402,5 @@ extension BookPlayerModel {
         playerManager.clearCurrent()
       }
     }
-  }
-}
-
-extension BookPlayerModel {
-  private func syncPlayback() {
-    guard let item else { return }
-
-    let state = PlaybackState(
-      bookID: item.itemID,
-      title: item.title,
-      author: item.details,
-      coverURL: item.coverURL(raw: false),
-      currentTime: mediaProgress.currentTime,
-      duration: mediaProgress.duration,
-      isPlaying: isPlaying,
-      playbackSpeed: Float(speed.value)
-    )
-
-    if let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS"),
-      let data = try? JSONEncoder().encode(state)
-    {
-      sharedDefaults.set(data, forKey: "playbackState")
-      WidgetCenter.shared.reloadAllTimelines()
-    }
-
-    WatchConnectivityManager.shared.syncProgress(item.itemID)
   }
 }

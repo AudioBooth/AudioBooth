@@ -34,13 +34,20 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     SessionService.deviceID + "-watch"
   }
 
-  func syncProgress(_ bookID: String) {
+  func syncProgress(_ bookID: String, chapterProgress: Double? = nil) {
     guard let current = try? MediaProgress.fetch(bookID: bookID) else { return }
 
     var progress = context["progress"] as? [String: Double] ?? [:]
     progress[bookID] = current.currentTime
 
     context["progress"] = progress
+
+    if let chapterProgress {
+      context["chapterProgress"] = chapterProgress
+    } else {
+      context.removeValue(forKey: "chapterProgress")
+    }
+
     updateContext()
   }
 
@@ -154,6 +161,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     } else {
       context.removeValue(forKey: "playbackRate")
       context.removeValue(forKey: "hasCurrentBook")
+      context.removeValue(forKey: "chapterProgress")
     }
 
     updateContext()

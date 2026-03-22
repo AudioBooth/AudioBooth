@@ -3,6 +3,7 @@ import Combine
 import Foundation
 import MediaPlayer
 import OSLog
+import WidgetKit
 
 final class BookPlayerModel: PlayerView.Model {
   let bookID: String
@@ -475,8 +476,10 @@ final class BookPlayerModel: PlayerView.Model {
     player.publisher(for: \.rate)
       .receive(on: DispatchQueue.main)
       .sink { [weak self] rate in
-        self?.isPlaying = rate > 0
-        self?.updateNowPlayingInfo()
+        guard let self else { return }
+        self.isPlaying = rate > 0
+        self.updateNowPlayingInfo()
+        self.updateComplicationState()
       }
       .store(in: &cancellables)
 
@@ -576,6 +579,10 @@ final class BookPlayerModel: PlayerView.Model {
       if self.isLocal && self.progressSaveCounter % 60 == 0 {
         self.saveProgress(currentTime: globalTime)
       }
+
+      if self.progressSaveCounter % 20 == 0 {
+        self.updateComplicationState()
+      }
     }
   }
 
@@ -621,6 +628,19 @@ final class BookPlayerModel: PlayerView.Model {
       duration: self.totalDuration
     )
     lastProgressReportTime = now
+  }
+
+  private func updateComplicationState() {
+    let state = WatchComplicationState(
+      bookTitle: book.title,
+      progress: totalDuration > 0 ? current / totalDuration : 0,
+      chapterProgress: chapterProgress > 0 ? chapterProgress : nil,
+      currentTime: current,
+      duration: totalDuration,
+      isPlaying: isPlaying
+    )
+    WatchComplicationStorage.save(state)
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   private func updateNowPlayingInfo() {

@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import WidgetKit
 
 final class PlayerManager: ObservableObject {
   @Published var current: PlayerView.Model?
@@ -29,5 +30,6 @@ final class PlayerManager: ObservableObject {
     current?.stop()
     current = nil
     UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)
+    WatchConnectivityManager.shared.updateComplication()
   }
 }

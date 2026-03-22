@@ -143,6 +143,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       player.seek(to: CMTime(seconds: currentTime, preferredTimescale: 1000))
       PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     }
+
+    updateProgress()
   }
 
   private func observePreferenceChanges() {

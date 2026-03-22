@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import OSLog
 import WatchConnectivity
+import WidgetKit
 
 final class WatchConnectivityManager: NSObject, ObservableObject {
   static let shared = WatchConnectivityManager()
@@ -10,6 +11,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var progress: [String: Double] = [:]
   @Published var hasCurrentBook: Bool = false
   @Published var playbackRate: Float = 1.0
+  private var chapterProgress: Double?
 
   private var session: WCSession?
   private var cancellables = Set<AnyCancellable>()
@@ -330,14 +332,15 @@ extension WatchConnectivityManager: WCSessionDelegate {
   }
 
   private func handleContext(_ context: [String: Any]) {
+    hasCurrentBook = context["hasCurrentBook"] as? Bool ?? false
+    playbackRate = context["playbackRate"] as? Float ?? 1.0
+    chapterProgress = context["chapterProgress"] as? Double
+
     let continueListeningData = context["continueListening"] as? [[String: Any]] ?? []
     handleContinueListening(continueListeningData)
 
     let progressData = context["progress"] as? [String: Double] ?? [:]
     handleProgress(progressData)
-
-    hasCurrentBook = context["hasCurrentBook"] as? Bool ?? false
-    playbackRate = context["playbackRate"] as? Float ?? 1.0
   }
 
   private func handleMessage(_ message: [String: Any]) {
@@ -354,6 +357,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     continueListeningBooks = books
     persistBooks(books)
+    updateComplication()
   }
 
   private func handleProgress(_ data: [String: Double]) {
@@ -371,6 +375,24 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     continueListeningBooks = updatedBooks
     persistBooks(continueListeningBooks)
+    updateComplication()
+  }
+
+  func updateComplication() {
+    if let book = continueListeningBooks.first {
+      let state = WatchComplicationState(
+        bookTitle: book.title,
+        progress: book.progress,
+        chapterProgress: chapterProgress,
+        currentTime: book.currentTime,
+        duration: book.duration,
+        isPlaying: false
+      )
+      WatchComplicationStorage.save(state)
+    } else {
+      WatchComplicationStorage.clear()
+    }
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
 }
