@@ -254,15 +254,18 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   private var totalBytes: Int64 = 0
   private var bytesDownloadedSoFar: Int64 = 0
 
+  private let maxRetryAttempts = 3
+
   private var currentTrack: URLSessionDownloadTask?
   private var continuation: CheckedContinuation<Void, Error>?
   private var trackDestination: URL?
+  private var lastResumeData: Data?
 
   private lazy var downloadSession: URLSession = {
     let config = URLSessionConfiguration.background(
       withIdentifier: "me.jgrenier.AudioBS.download.\(bookID)"
     )
-    config.timeoutIntervalForRequest = 120
+    config.timeoutIntervalForRequest = 300
     config.sessionSendsLaunchEvents = true
     config.isDiscretionary = false
     let delegate = URLSessionProxyDelegate(delegate: self)
@@ -495,16 +498,11 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       }
     }
 
-    try await withCheckedThrowingContinuation { continuation in
-      let downloadTask = downloadSession.downloadTask(with: request)
-      downloadTask.countOfBytesClientExpectsToReceive = fileSize > 0 ? fileSize : 500_000_000
-
-      self.currentTrack = downloadTask
-      self.continuation = continuation
-      self.trackDestination = trackFile
-
-      downloadTask.resume()
-    }
+    try await downloadFile(
+      request: request,
+      expectedSize: fileSize,
+      destination: trackFile
+    )
 
     progressContinuation.yield(1.0)
 
@@ -616,18 +614,11 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         }
       }
 
-      try await withCheckedThrowingContinuation { continuation in
-        let downloadTask = downloadSession.downloadTask(with: request)
-        downloadTask.countOfBytesClientExpectsToReceive = Int64(
-          apiTrack.metadata?.size ?? 500_000_000
-        )
-
-        self.currentTrack = downloadTask
-        self.continuation = continuation
-        self.trackDestination = trackFile
-
-        downloadTask.resume()
-      }
+      try await downloadFile(
+        request: request,
+        expectedSize: apiTrack.metadata?.size ?? 500_000_000,
+        destination: trackFile
+      )
 
       if let size = apiTrack.metadata?.size {
         bytesDownloadedSoFar += size
@@ -679,18 +670,65 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       }
     }
 
-    try await withCheckedThrowingContinuation { continuation in
-      let downloadTask = downloadSession.downloadTask(with: request)
-      downloadTask.countOfBytesClientExpectsToReceive = 50_000_000
-
-      self.currentTrack = downloadTask
-      self.continuation = continuation
-      self.trackDestination = ebookFile
-
-      downloadTask.resume()
-    }
+    try await downloadFile(
+      request: request,
+      expectedSize: 50_000_000,
+      destination: ebookFile
+    )
 
     progressContinuation.yield(1.0)
+  }
+
+  private func downloadFile(
+    request: URLRequest,
+    expectedSize: Int64,
+    destination: URL
+  ) async throws {
+    var lastError: Error?
+    lastResumeData = nil
+
+    for attempt in 0..<maxRetryAttempts {
+      guard !isCancelled else { throw CancellationError() }
+
+      if attempt > 0 {
+        let delay = pow(2.0, Double(attempt))
+        AppLogger.download.info(
+          "Retry \(attempt)/\(maxRetryAttempts - 1) after \(delay)s for \(request.url?.lastPathComponent ?? "unknown")"
+        )
+        try await Task.sleep(for: .seconds(delay))
+      }
+
+      do {
+        try await withCheckedThrowingContinuation { continuation in
+          let downloadTask: URLSessionDownloadTask
+          if let resumeData = lastResumeData {
+            downloadTask = downloadSession.downloadTask(withResumeData: resumeData)
+          } else {
+            downloadTask = downloadSession.downloadTask(with: request)
+          }
+          downloadTask.countOfBytesClientExpectsToReceive = expectedSize > 0 ? expectedSize : 500_000_000
+          downloadTask.priority = URLSessionTask.lowPriority
+
+          self.currentTrack = downloadTask
+          self.continuation = continuation
+          self.trackDestination = destination
+          self.lastResumeData = nil
+
+          downloadTask.resume()
+        }
+        self.continuation = nil
+        return
+      } catch {
+        self.continuation = nil
+        lastError = error
+        lastResumeData = (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data
+        let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
+        if isCancelled { throw error }
+        AppLogger.download.error("Download attempt \(attempt + 1) failed: \(error.localizedDescription)")
+      }
+    }
+
+    throw lastError ?? URLError(.unknown)
   }
 
   private func finish(success: Bool, error: Error?) {
