@@ -144,7 +144,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   private func updateContext() {
-    guard let session, session.activationState == .activated else { return }
+    guard let session, session.activationState == .activated, session.isPaired else { return }
     do {
       try session.updateApplicationContext(context)
     } catch {
