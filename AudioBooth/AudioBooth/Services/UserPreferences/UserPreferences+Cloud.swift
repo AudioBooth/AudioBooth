@@ -57,6 +57,7 @@ extension UserPreferences {
     "podcastEpisodeSortAscending",
     "openPlayerOnLaunch",
     "playbackSpeed",
+    "equalizerSettings",
   ]
 
   func setupCloudSync() {

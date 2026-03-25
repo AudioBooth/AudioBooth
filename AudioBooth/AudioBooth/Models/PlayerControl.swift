@@ -6,6 +6,7 @@ enum PlayerControl: String, CaseIterable, Identifiable, Codable {
   case bookmarks
   case history
   case volume
+  case equalizer
 
   var id: String { rawValue }
 
@@ -16,6 +17,7 @@ enum PlayerControl: String, CaseIterable, Identifiable, Codable {
     case .bookmarks: "Bookmarks"
     case .history: "History"
     case .volume: "Volume"
+    case .equalizer: "Equalizer"
     }
   }
 
@@ -26,6 +28,7 @@ enum PlayerControl: String, CaseIterable, Identifiable, Codable {
     case .bookmarks: "bookmark.fill"
     case .history: "clock.arrow.circlepath"
     case .volume: "speaker.wave.2.fill"
+    case .equalizer: "slider.vertical.3"
     }
   }
 

@@ -76,6 +76,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("volumeLevel")
   var volumeLevel: Double = 1.0
 
+  @AppStorage("equalizerSettings")
+  var equalizerSettings: EqualizerSettings = .init()
+
   @AppStorage("libraryDisplayMode")
   var libraryDisplayMode: BookCard.DisplayMode = .card
 
@@ -388,6 +391,37 @@ enum ColorSchemeMode: String, CaseIterable {
     case .light: .light
     case .dark: .dark
     }
+  }
+}
+
+struct EqualizerSettings: Equatable, RawRepresentable {
+  var isEnabled: Bool
+  var preamp: Float
+  var bandGains: [Float]
+
+  init(
+    isEnabled: Bool = false,
+    preamp: Float = 0,
+    bandGains: [Float] = [Float](repeating: 0, count: 6)
+  ) {
+    self.isEnabled = isEnabled
+    self.preamp = preamp
+    self.bandGains = bandGains
+  }
+
+  init?(rawValue: String) {
+    let parts = rawValue.components(separatedBy: "|")
+    guard parts.count == 3 else { return nil }
+    self.isEnabled = parts[0] == "1"
+    self.preamp = Float(parts[1]) ?? 0
+    self.bandGains = parts[2].components(separatedBy: ",").compactMap { Float($0) }
+    guard bandGains.count == 6 else { return nil }
+  }
+
+  var rawValue: String {
+    let enabled = isEnabled ? "1" : "0"
+    let gains = bandGains.map { String($0) }.joined(separator: ",")
+    return "\(enabled)|\(preamp)|\(gains)"
   }
 }
 

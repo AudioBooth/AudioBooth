@@ -112,6 +112,12 @@ struct BookPlayer: View {
               }
             }
 
+            if disabledControls.contains(.equalizer) {
+              Button(action: { model.equalizer.isPresented = true }) {
+                Label(PlayerControl.equalizer.displayName, systemImage: PlayerControl.equalizer.systemImage)
+              }
+            }
+
             if !playerManager.queue.isEmpty {
               Button(action: { model.isQueuePresented = true }) {
                 Label("Queue", systemImage: "list.bullet")
@@ -157,6 +163,9 @@ struct BookPlayer: View {
     }
     .adaptiveSheet(isPresented: $model.volume.isPresented) {
       FloatPickerSheet(model: $model.volume)
+    }
+    .adaptiveSheet(isPresented: $model.equalizer.isPresented) {
+      EqualizerSheet(model: model.equalizer)
     }
     .adaptiveSheet(isPresented: $model.speed.isPresented) {
       FloatPickerSheet(model: $model.speed)
@@ -382,6 +391,18 @@ struct BookPlayer: View {
         }
       }
       .frame(maxWidth: .infinity)
+
+    case .equalizer:
+      Button(action: { model.equalizer.isPresented = true }) {
+        VStack(spacing: 6) {
+          Image(systemName: control.systemImage)
+            .font(.system(size: 20))
+            .frame(width: 20, height: 20)
+          Text(control.displayName)
+            .font(.caption2)
+        }
+      }
+      .frame(maxWidth: .infinity)
     }
   }
 }
@@ -474,6 +495,7 @@ extension BookPlayer {
     var chapters: ChapterPickerSheet.Model?
     var bookmarks: BookmarkViewerSheet.Model?
     var history: PlaybackHistorySheet.Model?
+    var equalizer: EqualizerSheet.Model
     var playbackProgress: PlaybackProgressView.Model
 
     var downloadState: DownloadManager.DownloadState
@@ -507,6 +529,7 @@ extension BookPlayer {
       chapters: ChapterPickerSheet.Model? = nil,
       bookmarks: BookmarkViewerSheet.Model? = nil,
       history: PlaybackHistorySheet.Model? = nil,
+      equalizer: EqualizerSheet.Model = .init(),
       playbackProgress: PlaybackProgressView.Model,
       downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
@@ -523,6 +546,7 @@ extension BookPlayer {
       self.chapters = chapters
       self.bookmarks = bookmarks
       self.history = history
+      self.equalizer = equalizer
       self.playbackProgress = playbackProgress
       self.downloadState = downloadState
     }

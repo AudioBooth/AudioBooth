@@ -665,6 +665,7 @@ extension BookPlayerModel {
 
     speed = SpeedPickerSheetViewModel(player: player, mediaProgress: mediaProgress)
     volume = VolumeLevelSheetViewModel(player: player)
+    equalizer = EqualizerSheetViewModel(player: player)
 
     if let localBook = item as? LocalBook {
       bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook), initialTime: 0)
