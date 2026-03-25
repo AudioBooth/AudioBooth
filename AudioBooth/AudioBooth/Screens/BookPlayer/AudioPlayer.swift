@@ -1,6 +1,8 @@
 import AVFoundation
 import Combine
+import CoreAudio
 import Logging
+import MediaToolbox
 import Models
 
 final class AudioPlayer {
@@ -191,6 +193,7 @@ private extension AudioPlayer {
 
     let item = AVPlayerItem(url: trackURLs[index])
     observeItem(item)
+    applyEQ(to: item)
     player.replaceCurrentItem(with: item)
 
     if offset > 0 {
@@ -321,5 +324,183 @@ private extension AudioPlayer {
 private extension AVPlayer {
   var currentSeconds: TimeInterval {
     currentTime().seconds.isNaN ? 0 : currentTime().seconds
+  }
+}
+
+extension AudioPlayer {
+  func setEQPreamp(_ value: Float) {
+    eqContext.setPreamp(value)
+  }
+
+  func setEQBand(_ index: Int, gain: Float) {
+    eqContext.setBandGain(index, gain: gain)
+  }
+
+  var isEQEnabled: Bool {
+    get { eqContext.isEnabled }
+    set { eqContext.isEnabled = newValue }
+  }
+
+  var eqBands: [Float] {
+    eqContext.bandGains
+  }
+
+  final class EQContext {
+    static let bandFrequencies: [Float] = [60, 150, 400, 1000, 2400, 15000]
+
+    private(set) var engine: AVAudioEngine?
+    private(set) var eq: AVAudioUnitEQ?
+    private var sourceNode: AVAudioSourceNode?
+    private var outputBuffer: AVAudioPCMBuffer?
+    private var inputBufferList: UnsafeMutablePointer<AudioBufferList>?
+    var isEnabled = false
+    var preamp: Float = 0
+    var bandGains: [Float]
+
+    init() {
+      bandGains = [Float](repeating: 0, count: Self.bandFrequencies.count)
+    }
+
+    func prepare(format: AVAudioFormat, maxFrames: AVAudioFrameCount) {
+      unprepare()
+
+      let newEngine = AVAudioEngine()
+      let newEQ = AVAudioUnitEQ(numberOfBands: Self.bandFrequencies.count)
+
+      newEQ.globalGain = preamp
+      for (i, freq) in Self.bandFrequencies.enumerated() {
+        let band = newEQ.bands[i]
+        band.filterType = .parametric
+        band.frequency = freq
+        band.bandwidth = 1.0
+        band.gain = bandGains[i]
+        band.bypass = false
+      }
+
+      let srcNode = AVAudioSourceNode(format: format) { [weak self] _, _, _, audioBufferList in
+        guard let self, let input = self.inputBufferList else { return noErr }
+        let dst = UnsafeMutableAudioBufferListPointer(audioBufferList)
+        let src = UnsafeMutableAudioBufferListPointer(input)
+        for i in 0..<min(dst.count, src.count) {
+          if let dstData = dst[i].mData, let srcData = src[i].mData {
+            memcpy(dstData, srcData, Int(min(dst[i].mDataByteSize, src[i].mDataByteSize)))
+          }
+        }
+        return noErr
+      }
+
+      newEngine.attach(srcNode)
+      newEngine.attach(newEQ)
+      newEngine.connect(srcNode, to: newEQ, format: format)
+      newEngine.connect(newEQ, to: newEngine.mainMixerNode, format: format)
+
+      do {
+        try newEngine.enableManualRenderingMode(.realtime, format: format, maximumFrameCount: maxFrames)
+        try newEngine.start()
+        outputBuffer = AVAudioPCMBuffer(pcmFormat: newEngine.manualRenderingFormat, frameCapacity: maxFrames)
+        self.engine = newEngine
+        self.eq = newEQ
+        self.sourceNode = srcNode
+      } catch {
+        AppLogger.player.error("EQ engine setup failed: \(error)")
+      }
+    }
+
+    func process(numberFrames: CMItemCount, bufferListInOut: UnsafeMutablePointer<AudioBufferList>) {
+      guard isEnabled, let outputBuffer else { return }
+
+      inputBufferList = bufferListInOut
+
+      let frameCount = AVAudioFrameCount(numberFrames)
+      outputBuffer.frameLength = frameCount
+
+      var err: OSStatus = noErr
+      let status = engine?.manualRenderingBlock(frameCount, outputBuffer.mutableAudioBufferList, &err)
+
+      guard status == .success else { return }
+
+      let src = UnsafeMutableAudioBufferListPointer(outputBuffer.mutableAudioBufferList)
+      let dst = UnsafeMutableAudioBufferListPointer(bufferListInOut)
+      for i in 0..<min(dst.count, src.count) {
+        if let dstData = dst[i].mData, let srcData = src[i].mData {
+          memcpy(dstData, srcData, Int(src[i].mDataByteSize))
+        }
+      }
+    }
+
+    func unprepare() {
+      engine?.stop()
+      engine = nil
+      eq = nil
+      sourceNode = nil
+      outputBuffer = nil
+      inputBufferList = nil
+    }
+
+    func setPreamp(_ value: Float) {
+      preamp = value
+      eq?.globalGain = value
+    }
+
+    func setBandGain(_ index: Int, gain: Float) {
+      guard index < bandGains.count else { return }
+      bandGains[index] = gain
+      eq?.bands[index].gain = gain
+    }
+  }
+
+  func applyEQ(to item: AVPlayerItem) {
+    Task { [weak self] in
+      guard let self else { return }
+      guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first else { return }
+      guard player.currentItem === item else { return }
+
+      let context = eqContext
+      let clientInfo = Unmanaged.passRetained(context).toOpaque()
+
+      var callbacks = MTAudioProcessingTapCallbacks(
+        version: kMTAudioProcessingTapCallbacksVersion_0,
+        clientInfo: UnsafeMutableRawPointer(clientInfo)
+      ) { _, clientInfo, tapStorageOut in
+        tapStorageOut.pointee = clientInfo
+      } finalize: { tap in
+        let storage = MTAudioProcessingTapGetStorage(tap)
+        Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).release()
+      } prepare: { tap, maxFrames, processingFormat in
+        let storage = MTAudioProcessingTapGetStorage(tap)
+        let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
+        guard let format = AVAudioFormat(streamDescription: processingFormat) else { return }
+        ctx.prepare(format: format, maxFrames: AVAudioFrameCount(maxFrames))
+      } unprepare: { tap in
+        let storage = MTAudioProcessingTapGetStorage(tap)
+        let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
+        ctx.unprepare()
+      } process: { tap, numberFrames, _, bufferListInOut, numberFramesOut, flagsOut in
+        guard
+          MTAudioProcessingTapGetSourceAudio(tap, numberFrames, bufferListInOut, flagsOut, nil, numberFramesOut)
+            == noErr
+        else {
+          return
+        }
+        let storage = MTAudioProcessingTapGetStorage(tap)
+        let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
+        ctx.process(numberFrames: numberFrames, bufferListInOut: bufferListInOut)
+      }
+
+      var tap: MTAudioProcessingTap?
+      guard
+        MTAudioProcessingTapCreate(kCFAllocatorDefault, &callbacks, kMTAudioProcessingTapCreationFlag_PreEffects, &tap)
+          == noErr
+      else {
+        return
+      }
+
+      let params = AVMutableAudioMixInputParameters(track: track)
+      params.audioTapProcessor = tap
+
+      let audioMix = AVMutableAudioMix()
+      audioMix.inputParameters = [params]
+      item.audioMix = audioMix
+    }
   }
 }
