@@ -18,6 +18,9 @@ struct AudioBoothApp: App {
       ContentView()
         .tint(preferences.accentColor)
         .preferredColorScheme(preferences.colorScheme.colorScheme)
+        .onChange(of: preferences.accentColor, initial: true) {
+          updateWindowTintColor(preferences.accentColor)
+        }
         .task {
           if libraries.current != nil {
             Task {
@@ -42,6 +45,16 @@ struct AudioBoothApp: App {
         Task {
           try? await Audiobookshelf.shared.libraries.fetchFilterData()
         }
+      }
+    }
+  }
+
+  private func updateWindowTintColor(_ color: Color?) {
+    let color = color.map(UIColor.init)
+    for scene in UIApplication.shared.connectedScenes {
+      guard let windowScene = scene as? UIWindowScene else { continue }
+      for window in windowScene.windows {
+        window.tintColor = color
       }
     }
   }
