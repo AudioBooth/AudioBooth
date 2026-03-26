@@ -5,6 +5,11 @@ import Foundation
 import Logging
 import MediaPlayer
 import Models
+import PlayerIntents
+
+#if !targetEnvironment(macCatalyst)
+import ActivityKit
+#endif
 
 final class SessionManager {
   static let shared = SessionManager()
@@ -498,6 +503,7 @@ extension SessionManager {
       task.setTaskCompleted(success: false)
     } else {
       AppLogger.session.info("Playback is not active, attempting to close session")
+      endAllSleepTimerLiveActivities()
       Task {
         do {
           try await closeSession()
@@ -580,6 +586,21 @@ extension SessionManager {
     inactivityTask?.cancel()
     inactivityTask = nil
   }
+}
+
+extension SessionManager {
+  #if !targetEnvironment(macCatalyst)
+  private func endAllSleepTimerLiveActivities() {
+    Task {
+      for activity in Activity<SleepTimerActivityAttributes>.activities {
+        await activity.end(nil, dismissalPolicy: .immediate)
+      }
+      AppLogger.session.info("Ended all sleep timer Live Activities during session cleanup")
+    }
+  }
+  #else
+  private func endAllSleepTimerLiveActivities() {}
+  #endif
 }
 
 extension SessionSync {

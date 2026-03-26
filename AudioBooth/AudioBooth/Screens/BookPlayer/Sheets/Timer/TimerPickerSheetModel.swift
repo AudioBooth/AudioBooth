@@ -24,6 +24,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private var cancellables = Set<AnyCancellable>()
   private var playbackObserver: AnyCancellable?
   private var seekObserver: AnyCancellable?
+  private var liveActivityCleanupTask: Task<Void, Never>?
   #if !targetEnvironment(macCatalyst)
   private var liveActivity: Activity<SleepTimerActivityAttributes>?
   #endif
@@ -300,6 +301,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     timerStartTime = nil
 
     pauseLiveActivity(remaining: originalTimerDuration)
+    scheduleLiveActivityCleanup()
 
     AppLogger.player.info("Timer expired - playback paused")
   }
@@ -363,6 +365,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
 
     current = .none
+    scheduleLiveActivityCleanup()
     AppLogger.player.info("Chapter timer expired - playback paused")
   }
 
@@ -501,6 +504,9 @@ extension TimerPickerSheetViewModel {
 extension TimerPickerSheetViewModel {
   #if !targetEnvironment(macCatalyst)
   func startLiveActivity(duration: TimeInterval) {
+    liveActivityCleanupTask?.cancel()
+    liveActivityCleanupTask = nil
+
     let endTime = Date().addingTimeInterval(duration)
     let state = SleepTimerActivityAttributes.ContentState(
       timer: .countdown(endTime),
@@ -540,6 +546,9 @@ extension TimerPickerSheetViewModel {
   }
 
   func endLiveActivity() {
+    liveActivityCleanupTask?.cancel()
+    liveActivityCleanupTask = nil
+
     guard let liveActivity else { return }
 
     Task {
@@ -547,6 +556,18 @@ extension TimerPickerSheetViewModel {
       AppLogger.player.info("Sleep timer Live Activity ended")
     }
     self.liveActivity = nil
+  }
+
+  func scheduleLiveActivityCleanup() {
+    liveActivityCleanupTask?.cancel()
+    liveActivityCleanupTask = Task {
+      do {
+        try await Task.sleep(for: .seconds(300))
+        guard !Task.isCancelled else { return }
+        endLiveActivity()
+        AppLogger.player.info("Live Activity cleaned up after 5 minutes of inactivity")
+      } catch {}
+    }
   }
 
   func pauseLiveActivity(remaining: TimeInterval? = nil) {
@@ -572,5 +593,6 @@ extension TimerPickerSheetViewModel {
   func updateLiveActivity(_ state: Any) {}
   func endLiveActivity() {}
   func pauseLiveActivity(remaining: TimeInterval? = nil) {}
+  func scheduleLiveActivityCleanup() {}
   #endif
 }
