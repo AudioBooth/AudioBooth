@@ -1,11 +1,10 @@
-import AVFoundation
 import SwiftUI
 
 final class VolumeLevelSheetViewModel: FloatPickerSheet.Model {
-  private let player: AVPlayer
+  private let player: AudioPlayer
   private let userPreferences = UserPreferences.shared
 
-  init(player: AVPlayer) {
+  init(player: AudioPlayer) {
     self.player = player
     super.init(
       title: "Volume",

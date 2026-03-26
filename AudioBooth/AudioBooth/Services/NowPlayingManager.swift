@@ -16,11 +16,9 @@ final class NowPlayingManager {
   private let preferences = UserPreferences.shared
   private var playbackState: MPNowPlayingPlaybackState = .paused
 
-  private weak var player: AVPlayer?
-  private var speed: FloatPickerSheet.Model?
+  private weak var player: AudioPlayer?
   private var chapters: ChapterPickerSheet.Model?
   private var mediaProgress: MediaProgress?
-  private var timeObserver: Any?
   private var cancellables = Set<AnyCancellable>()
 
   init(
@@ -78,55 +76,34 @@ final class NowPlayingManager {
   }
 
   func configure(
-    player: AVPlayer,
-    speed: FloatPickerSheet.Model,
+    player: AudioPlayer,
     chapters: ChapterPickerSheet.Model?,
     mediaProgress: MediaProgress
   ) {
     self.player = player
-    self.speed = speed
     self.chapters = chapters
     self.mediaProgress = mediaProgress
-    self.player?.allowsExternalPlayback = false
 
-    observePlayerRate()
-    observeSpeedChanges()
     observeChapterChanges()
     observePreferenceChanges()
-    observeSeekEvents()
+
+    player.events
+      .sink { [weak self] event in
+        switch event {
+        case .seek, .rateChanged, .stateChanged:
+          self?.update()
+        default:
+          break
+        }
+      }
+      .store(in: &cancellables)
 
     update()
   }
 
   func clear() {
-    timeObserver = nil
     cancellables.removeAll()
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-  }
-
-  private func observePlayerRate() {
-    guard let player else { return }
-
-    player.publisher(for: \.rate)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in
-        self?.update()
-      }
-      .store(in: &cancellables)
-  }
-
-  private func observeSpeedChanges() {
-    guard let speed else { return }
-
-    withObservationTracking {
-      _ = speed.value
-    } onChange: { [weak self] in
-      guard let self else { return }
-      RunLoop.main.perform {
-        self.update()
-        self.observeSpeedChanges()
-      }
-    }
   }
 
   private func observeChapterChanges() {
@@ -155,24 +132,14 @@ final class NowPlayingManager {
     }
   }
 
-  private func observeSeekEvents() {
-    NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in
-        self?.update()
-      }
-      .store(in: &cancellables)
-  }
-
   func update() {
     guard let player, let mediaProgress else { return }
 
     info[MPMediaItemPropertyArtwork] = artwork
 
-    let rate = player.rate
-    playbackState = rate > 0 ? .playing : .paused
-    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = speed?.value ?? 1.0
-    info[MPNowPlayingInfoPropertyPlaybackRate] = rate
+    playbackState = player.isPlaying ? .playing : .paused
+    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = player.rate
+    info[MPNowPlayingInfoPropertyPlaybackRate] = player.isPlaying ? player.rate : 0.0
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current {
       info[MPMediaItemPropertyTitle] = current.title

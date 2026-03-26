@@ -1,11 +1,10 @@
-import AVFoundation
 import Combine
 import Models
 import SwiftUI
 
 final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var itemID: String
-  private var player: AVPlayer?
+  private var player: AudioPlayer?
   private var chapters: ChapterPickerSheet.Model?
   private var speed: FloatPickerSheet.Model?
   private let preferences = UserPreferences.shared
@@ -44,7 +43,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   }
 
   func configure(
-    player: AVPlayer?,
+    player: AudioPlayer?,
     chapters: ChapterPickerSheet.Model?,
     speed: FloatPickerSheet.Model
   ) {
@@ -136,11 +135,11 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     if !preferences.showFullBookDuration, let chapter = chapters?.current {
       let duration = chapter.end - chapter.start
       let currentTime = chapter.start + (duration * progress)
-      player.seek(to: CMTime(seconds: currentTime, preferredTimescale: 1000))
+      player.seek(to: currentTime)
       PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     } else {
       let currentTime = total * progress
-      player.seek(to: CMTime(seconds: currentTime, preferredTimescale: 1000))
+      player.seek(to: currentTime)
       PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     }
 
