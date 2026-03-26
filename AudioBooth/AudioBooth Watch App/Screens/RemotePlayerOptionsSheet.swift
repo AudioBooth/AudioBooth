@@ -14,7 +14,7 @@ struct RemotePlayerOptionsSheet: View {
         Text("Speed")
           .font(.headline)
 
-        Text(verbatim: "\(String(format: "%.1f", playbackSpeed))×")
+        Text(verbatim: "\(playbackSpeed.formatted(.number.precision(.fractionLength(0...2))))×")
           .font(.title2)
           .fontWeight(.medium)
 
@@ -44,7 +44,7 @@ struct RemotePlayerOptionsSheet: View {
       dismiss()
     } label: {
       VStack(spacing: 4) {
-        Text(String(format: "%.1f", speed))
+        Text(speed, format: .number.precision(.fractionLength(0...2)))
           .font(.body)
           .fontWeight(isSelected ? .bold : .regular)
 

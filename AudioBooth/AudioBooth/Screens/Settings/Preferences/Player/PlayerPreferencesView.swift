@@ -347,7 +347,7 @@ struct PlayerPreferencesView: View {
             .font(.subheadline)
             .bold()
           Spacer()
-          Text(verbatim: "\(String(format: "%.2f", preferences.defaultPlaybackSpeed))×")
+          Text(verbatim: "\(preferences.defaultPlaybackSpeed.formatted(.number.precision(.fractionLength(2))))×")
             .foregroundStyle(.secondary)
         }
       }

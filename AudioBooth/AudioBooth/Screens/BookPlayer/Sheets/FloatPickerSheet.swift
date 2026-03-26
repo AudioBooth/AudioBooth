@@ -13,7 +13,7 @@ struct FloatPickerSheet: View {
           .foregroundColor(.primary)
           .padding(.top, 50)
 
-        Text(verbatim: "\(String(format: "%.2f", model.value))×")
+        Text(verbatim: "\(model.value.formatted(.number.precision(.fractionLength(2))))×")
           .font(.largeTitle)
           .fontWeight(.medium)
           .foregroundColor(.primary)
@@ -78,7 +78,7 @@ struct FloatPickerSheet: View {
         .frame(height: 44)
         .overlay {
           VStack(spacing: 2) {
-            Text(String(format: "%.2f", preset))
+            Text(preset, format: .number.precision(.fractionLength(1)))
               .font(.system(size: 16, weight: .medium))
               .foregroundColor(.primary)
 

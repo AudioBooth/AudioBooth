@@ -132,7 +132,7 @@ final class CarPlayNowPlaying: NSObject {
   private func onPlaybackRateButtonTapped() {
     guard let current = PlayerManager.shared.current else { return }
 
-    let speeds: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
+    let speeds: [Float] = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
     let currentSpeed = Float(current.speed.value)
 
     if let currentIndex = speeds.firstIndex(of: currentSpeed) {
