@@ -1,4 +1,3 @@
-import AVFoundation
 import Combine
 import Models
 import WidgetKit
@@ -10,14 +9,12 @@ final class WidgetManager {
   private let coverURL: URL?
   private let watchConnectivity = WatchConnectivityManager.shared
 
-  private weak var player: AVPlayer?
-  private var speed: FloatPickerSheet.Model?
+  private weak var player: AudioPlayer?
   private var chapters: ChapterPickerSheet.Model?
   private var mediaProgress: MediaProgress?
   private var playbackProgress: PlaybackProgressView.Model?
   private var cancellables = Set<AnyCancellable>()
-  private var timeObserver: Any?
-  private var lastSyncedTime: Double = 0
+  private var lastSyncedTime: TimeInterval = 0
 
   init(
     id: String,
@@ -32,33 +29,34 @@ final class WidgetManager {
   }
 
   func configure(
-    player: AVPlayer,
-    speed: FloatPickerSheet.Model,
+    player: AudioPlayer,
     chapters: ChapterPickerSheet.Model?,
     mediaProgress: MediaProgress,
     playbackProgress: PlaybackProgressView.Model
   ) {
     self.player = player
-    self.speed = speed
     self.chapters = chapters
     self.mediaProgress = mediaProgress
     self.playbackProgress = playbackProgress
 
-    observePlayerRate()
-    observeSpeedChanges()
+    player.events
+      .sink { [weak self] event in
+        guard let self else { return }
+        if case .rateChanged(let rate) = event {
+          self.watchConnectivity.sendPlaybackRate(rate)
+          self.update()
+        }
+      }
+      .store(in: &cancellables)
+
+    observeProgressChanges()
     observeChapterChanges()
-    observeSeekEvents()
-    observePeriodicProgress()
 
     update()
-    watchConnectivity.sendPlaybackRate(Float(speed.value))
+    watchConnectivity.sendPlaybackRate(player.rate)
   }
 
   func clear() {
-    if let timeObserver, let player {
-      player.removeTimeObserver(timeObserver)
-    }
-    timeObserver = nil
     cancellables.removeAll()
     watchConnectivity.sendPlaybackRate(nil)
   }
@@ -66,7 +64,7 @@ final class WidgetManager {
   func update() {
     guard let mediaProgress else { return }
 
-    let isPlaying = (player?.rate ?? 0) > 0
+    let isPlaying = player?.isPlaying ?? false
 
     let state = PlaybackState(
       bookID: id,
@@ -76,7 +74,7 @@ final class WidgetManager {
       currentTime: mediaProgress.currentTime,
       duration: mediaProgress.duration,
       isPlaying: isPlaying,
-      playbackSpeed: Float(speed?.value ?? 1.0)
+      playbackSpeed: player?.rate ?? 1.0
     )
 
     if let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS"),
@@ -98,30 +96,20 @@ final class WidgetManager {
     watchConnectivity.syncProgress(id, chapterProgress: chapterProgress)
   }
 
-  private func observePlayerRate() {
-    guard let player else { return }
-
-    player.publisher(for: \.rate)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in
-        self?.update()
-      }
-      .store(in: &cancellables)
-  }
-
-  private func observeSpeedChanges() {
-    guard let speed else { return }
+  private func observeProgressChanges() {
+    guard let mediaProgress else { return }
 
     withObservationTracking {
-      _ = speed.value
+      _ = mediaProgress.currentTime
     } onChange: { [weak self] in
       guard let self else { return }
       RunLoop.main.perform {
-        if let speed = self.speed {
-          self.watchConnectivity.sendPlaybackRate(Float(speed.value))
+        let currentTime = self.mediaProgress?.currentTime ?? 0
+        if abs(currentTime - self.lastSyncedTime) >= 10 {
+          self.lastSyncedTime = currentTime
+          self.update()
         }
-        self.update()
-        self.observeSpeedChanges()
+        self.observeProgressChanges()
       }
     }
   }
@@ -136,30 +124,6 @@ final class WidgetManager {
       RunLoop.main.perform {
         self.update()
         self.observeChapterChanges()
-      }
-    }
-  }
-
-  private func observeSeekEvents() {
-    NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in
-        self?.update()
-      }
-      .store(in: &cancellables)
-  }
-
-  private func observePeriodicProgress() {
-    guard let player else { return }
-
-    let interval = CMTime(seconds: 5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-    timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) {
-      [weak self] time in
-      guard let self else { return }
-      let currentTime = CMTimeGetSeconds(time)
-      if abs(currentTime - lastSyncedTime) >= 10 {
-        lastSyncedTime = currentTime
-        update()
       }
     }
   }

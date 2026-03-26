@@ -1,9 +1,8 @@
-import AVFoundation
 import Models
 import SwiftUI
 
 final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
-  let player: AVPlayer
+  let player: AudioPlayer
 
   private var itemID: String
 
@@ -15,7 +14,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     itemID: String,
     chapters: [Models.Chapter],
     mediaProgress: MediaProgress,
-    player: AVPlayer
+    player: AudioPlayer
   ) {
     self.itemID = itemID
     self.mediaProgress = mediaProgress
@@ -90,11 +89,11 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       let previousChapter = chapters[currentIndex - 1]
       currentIndex -= 1
       let seekTime = previousChapter.start + 0.1
-      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+      player.seek(to: seekTime)
       record(chapter: previousChapter, position: seekTime)
     } else {
       let seekTime = currentChapter.start + 0.1
-      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+      player.seek(to: seekTime)
       record(chapter: currentChapter, position: seekTime)
     }
   }
@@ -109,7 +108,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     currentIndex += 1
     let nextChapter = chapters[currentIndex]
     let seekTime = nextChapter.start + 0.1
-    player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+    player.seek(to: seekTime)
     record(chapter: nextChapter, position: seekTime)
   }
 
@@ -117,7 +116,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     let chapter = chapters[index]
     currentIndex = index
     let seekTime = chapter.start + 0.1
-    player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+    player.seek(to: seekTime)
     record(chapter: chapter, position: seekTime)
   }
 
