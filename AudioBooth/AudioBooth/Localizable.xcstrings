@@ -1835,7 +1835,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "從圖書館新增書籍到佇列"
+            "value" : "從資源庫新增書籍到佇列"
           }
         }
       }
@@ -7600,7 +7600,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "篩選圖書館"
+            "value" : "篩選資源庫"
           }
         }
       }
@@ -8744,7 +8744,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "圖書館"
+            "value" : "資源庫"
           }
         }
       }
@@ -8780,7 +8780,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "圖書館類型"
+            "value" : "資源庫類型"
           }
         }
       }
@@ -9284,7 +9284,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "載入圖書館⋯"
+            "value" : "載入資源庫⋯"
           }
         }
       }
@@ -19225,7 +19225,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的圖書館似乎為空，或沒有選擇圖書館。"
+            "value" : "你的資源庫似乎為空，或沒有選擇資源庫。"
           }
         }
       }
@@ -19261,7 +19261,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的圖書館似乎沒有作者，或沒有選擇圖書館。"
+            "value" : "你的資源庫似乎沒有作者，或沒有選擇資源庫。"
           }
         }
       }
@@ -19297,7 +19297,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的圖書館似乎沒有朗讀者，或沒有選擇圖書館。"
+            "value" : "你的資源庫似乎沒有朗讀者，或沒有選擇資源庫。"
           }
         }
       }
@@ -19333,7 +19333,7 @@
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的圖書館似乎沒有系列，或沒有選擇圖書館。"
+            "value" : "你的資源庫似乎沒有系列，或沒有選擇資源庫。"
           }
         }
       }
