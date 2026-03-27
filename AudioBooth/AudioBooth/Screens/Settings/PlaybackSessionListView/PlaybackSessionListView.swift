@@ -72,7 +72,7 @@ struct PlaybackSessionListView: View {
           VStack(alignment: .leading, spacing: 4) {
             HStack {
               HStack(spacing: 6) {
-                Text("\(Int(session.progress * 100))% complete")
+                Text("\(session.progress.formatted(.percent.precision(.fractionLength(0)))) complete")
 
                 Text(verbatim: "•")
 

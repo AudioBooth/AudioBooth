@@ -371,9 +371,9 @@ struct BookDetailsView: View {
 
   private var headerSection: some View {
     VStack(alignment: .leading, spacing: 16) {
-      if !model.authors.isEmpty || (model.metadata.hasAudio && !model.narrators.isEmpty) {
+      if !model.authors.isEmpty {
         VStack(alignment: .leading, spacing: 12) {
-          Text(model.metadata.hasAudio ? "Authors & Narrators" : "Authors")
+          Text("Authors")
             .font(.headline)
 
           FlowLayout(spacing: 4) {
@@ -390,19 +390,26 @@ struct BookDetailsView: View {
               }
               .disabled(model.libraryID == nil)
             }
+          }
+        }
+      }
 
-            if model.metadata.hasAudio {
-              ForEach(model.narrators, id: \.self) { narrator in
-                NavigationLink(value: NavigationDestination.narrator(name: narrator, libraryID: model.libraryID)) {
-                  Chip(
-                    title: narrator,
-                    icon: "person.wave.2.fill",
-                    color: .blue
-                  )
-                  .accessibilityLabel("\(narrator) narrator")
-                }
-                .disabled(model.libraryID == nil)
+      if model.metadata.hasAudio && !model.narrators.isEmpty {
+        VStack(alignment: .leading, spacing: 12) {
+          Text("Narrators")
+            .font(.headline)
+
+          FlowLayout(spacing: 4) {
+            ForEach(model.narrators, id: \.self) { narrator in
+              NavigationLink(value: NavigationDestination.narrator(name: narrator, libraryID: model.libraryID)) {
+                Chip(
+                  title: narrator,
+                  icon: "person.wave.2.fill",
+                  color: .blue
+                )
+                .accessibilityLabel("\(narrator) narrator")
               }
+              .disabled(model.libraryID == nil)
             }
           }
         }
