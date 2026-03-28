@@ -125,16 +125,7 @@ final class ServerViewModel: ServerView.Model {
     if let server {
       authModel = nil
 
-      let needsReauth: Bool
       if server.status == .authenticationError {
-        needsReauth = true
-      } else if case .bearer(_, _, let expiresAt) = server.token {
-        needsReauth = Date().timeIntervalSince1970 >= expiresAt
-      } else {
-        needsReauth = false
-      }
-
-      if needsReauth {
         reauthModel = AuthenticationViewModel(server: server)
       } else {
         reauthModel = nil
@@ -192,17 +183,7 @@ final class ServerViewModel: ServerView.Model {
 
   override func onAppear() {
     if let server {
-      let needsReauth: Bool
-
       if server.status == .authenticationError {
-        needsReauth = true
-      } else if case .bearer(_, _, let expiresAt) = server.token {
-        needsReauth = Date().timeIntervalSince1970 >= expiresAt
-      } else {
-        needsReauth = false
-      }
-
-      if needsReauth {
         let reauthViewModel = AuthenticationViewModel(server: server)
         reauthViewModel.onAuthenticationSuccess = { [weak self] in
           self?.reauthenticationModel = nil
