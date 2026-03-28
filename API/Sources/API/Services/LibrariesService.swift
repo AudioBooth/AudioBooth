@@ -221,6 +221,42 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     }
   }
 
+  public func fetchRecentEpisodes(limit: Int = 50, page: Int = 0) async throws -> [RecentEpisode] {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first."
+      )
+    }
+
+    guard let library = audiobookshelf.libraries.current else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "No library selected. Please select a library first."
+      )
+    }
+
+    struct Response: Codable {
+      let episodes: [RecentEpisode]
+    }
+
+    let request = NetworkRequest<Response>(
+      path: "/api/libraries/\(library.id)/recent-episodes",
+      method: .get,
+      query: [
+        "limit": "\(limit)",
+        "page": "\(page)",
+      ]
+    )
+
+    do {
+      let response = try await networkService.send(request)
+      return response.value.episodes
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to fetch recent episodes: \(error.localizedDescription)"
+      )
+    }
+  }
+
   public func resetBookProgress(progressID: String) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
