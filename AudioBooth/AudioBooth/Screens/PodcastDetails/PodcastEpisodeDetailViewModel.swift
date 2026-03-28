@@ -97,14 +97,6 @@ final class PodcastEpisodeDetailViewModel: PodcastEpisodeDetailView.Model {
     switch downloadState {
     case .notDownloaded:
       let size = episodeSize ?? 0
-      var details = ""
-      if let duration, duration > 0 {
-        details = Duration.seconds(duration).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
-      }
-      if size > 0 {
-        if !details.isEmpty { details += " • " }
-        details += size.formatted(.byteCount(style: .file))
-      }
       Task {
         let canDownload = await StorageManager.shared.canDownload(additionalBytes: size)
         guard canDownload else {
@@ -116,8 +108,9 @@ final class PodcastEpisodeDetailViewModel: PodcastEpisodeDetailView.Model {
           type: .episode(podcastID: podcastID, episodeID: episodeID),
           info: .init(
             title: title,
-            details: details.isEmpty ? nil : details,
             coverURL: coverURL,
+            duration: duration,
+            size: size > 0 ? size : nil,
             startedAt: Date()
           )
         )

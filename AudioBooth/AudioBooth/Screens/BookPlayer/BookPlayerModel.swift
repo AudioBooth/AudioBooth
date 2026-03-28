@@ -352,19 +352,25 @@ final class BookPlayerModel: BookPlayer.Model {
         downloadState = .downloading(progress: 0)
         try? localBook.download()
       }
-    } else if let episodeID, let podcastID {
+    } else if let episode = item as? LocalEpisode, let podcast = episode.podcast {
       switch downloadState {
       case .downloading:
         downloadState = .notDownloaded
-        downloadManager.cancelDownload(for: episodeID)
+        downloadManager.cancelDownload(for: episode.episodeID)
       case .downloaded:
-        downloadManager.deleteEpisodeDownload(episodeID: episodeID, podcastID: podcastID)
+        downloadManager.deleteEpisodeDownload(episodeID: episode.episodeID, podcastID: podcast.podcastID)
       case .notDownloaded:
         downloadState = .downloading(progress: 0)
         downloadManager.startDownload(
-          for: episodeID,
-          type: .episode(podcastID: podcastID, episodeID: episodeID),
-          info: .init(title: title, details: nil, coverURL: coverURL, startedAt: Date())
+          for: episode.episodeID,
+          type: .episode(podcastID: podcast.podcastID, episodeID: episode.episodeID),
+          info: .init(
+            title: title,
+            coverURL: coverURL,
+            duration: episode.duration,
+            size: episode.track?.size,
+            startedAt: Date()
+          )
         )
       }
     }

@@ -44,8 +44,15 @@ extension DownloadingListView {
               .lineLimit(1)
           }
 
-          ProgressView(value: book.progress)
-            .tint(.accentColor)
+          HStack {
+            ProgressView(value: book.progress)
+              .tint(.accentColor)
+
+            Text(book.progress.formatted(.percent.precision(.fractionLength(0))))
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+              .monospacedDigit()
+          }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 

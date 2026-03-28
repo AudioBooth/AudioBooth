@@ -24,8 +24,9 @@ final class DownloadManager: NSObject, ObservableObject {
 
   struct DownloadInfo {
     let title: String
-    let details: String?
     let coverURL: URL?
+    let duration: Double?
+    let size: Int64?
     let startedAt: Date
   }
 

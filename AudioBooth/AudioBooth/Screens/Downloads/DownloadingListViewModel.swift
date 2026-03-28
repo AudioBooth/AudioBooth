@@ -30,10 +30,23 @@ final class DownloadingListViewModel: DownloadingListView.Model {
           return nil
         }
 
+        var parts: [String] = []
+        if let duration = info.duration, duration > 0 {
+          parts.append(
+            Duration.seconds(duration).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+          )
+        }
+        if let totalSize = info.size {
+          let currentBytes = Int64(Double(totalSize) * progress)
+          let currentText = currentBytes.formatted(.byteCount(style: .file))
+          let totalText = totalSize.formatted(.byteCount(style: .file))
+          parts.append("\(currentText) of \(totalText)")
+        }
+
         return DownloadingListView.BookItem(
           id: bookID,
           title: info.title,
-          details: info.details,
+          details: parts.isEmpty ? nil : parts.joined(separator: " • "),
           coverURL: info.coverURL,
           progress: progress
         )

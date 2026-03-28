@@ -114,14 +114,6 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
 
   override func onDownloadTapped() {
     let size = episodeSize ?? 0
-    var details = ""
-    if let duration = episodeDuration, duration > 0 {
-      details = Duration.seconds(duration).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
-    }
-    if size > 0 {
-      if !details.isEmpty { details += " • " }
-      details += size.formatted(.byteCount(style: .file))
-    }
 
     Task {
       let canDownload = await StorageManager.shared.canDownload(additionalBytes: size)
@@ -134,8 +126,9 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
         type: .episode(podcastID: podcastID, episodeID: episodeID),
         info: .init(
           title: episodeTitle,
-          details: details.isEmpty ? nil : details,
           coverURL: coverURL,
+          duration: episodeDuration,
+          size: size > 0 ? size : nil,
           startedAt: Date()
         )
       )

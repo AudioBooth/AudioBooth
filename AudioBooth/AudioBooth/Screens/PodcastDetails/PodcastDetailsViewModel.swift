@@ -72,21 +72,14 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
     Task {
       for episode in episodes {
         let size = episode.size ?? 0
-        var details = ""
-        if let duration = episode.duration, duration > 0 {
-          details = Duration.seconds(duration).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
-        }
-        if size > 0 {
-          if !details.isEmpty { details += " • " }
-          details += size.formatted(.byteCount(style: .file))
-        }
         downloadManager.startDownload(
           for: episode.id,
           type: .episode(podcastID: podcastID, episodeID: episode.id),
           info: .init(
             title: episode.title,
-            details: details.isEmpty ? nil : details,
             coverURL: coverURL,
+            duration: episode.duration,
+            size: size > 0 ? size : nil,
             startedAt: Date()
           )
         )

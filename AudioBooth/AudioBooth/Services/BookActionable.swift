@@ -71,17 +71,6 @@ extension BookActionable {
       throw BookActionableError.unsupportedType
     }
 
-    var details = Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    )
-
-    if size > 0 {
-      details += " • \(size.formatted(.byteCount(style: .file)))"
-    }
-
     Task {
       let canDownload = await StorageManager.shared.canDownload(additionalBytes: size)
       guard canDownload else {
@@ -94,8 +83,9 @@ extension BookActionable {
         type: downloadType,
         info: .init(
           title: title,
-          details: details,
           coverURL: coverURL,
+          duration: duration,
+          size: size > 0 ? size : nil,
           startedAt: Date()
         )
       )
