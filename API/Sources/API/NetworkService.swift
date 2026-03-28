@@ -71,7 +71,7 @@ struct NetworkResponse<T: Decodable> {
 }
 
 final class NetworkService {
-  private let baseURL: URL
+  private let baseURL: URL?
   private let headersProvider: () async -> [String: String]
   private weak var server: Server?
 
@@ -123,7 +123,7 @@ final class NetworkService {
   }()
 
   init(
-    baseURL: URL,
+    baseURL: URL? = nil,
     server: Server? = nil,
     headersProvider: @escaping () async -> [String: String] = { [:] }
   ) {
@@ -132,7 +132,45 @@ final class NetworkService {
     self.headersProvider = headersProvider
   }
 
+  private static let fallbackURLErrorCodes: Set<URLError.Code> = [
+    .timedOut,
+    .cannotFindHost,
+    .cannotConnectToHost,
+    .networkConnectionLost,
+    .dnsLookupFailed,
+    .notConnectedToInternet,
+    .secureConnectionFailed,
+  ]
+
   func send<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
+    do {
+      return try await performRequest(request)
+    } catch {
+      guard let urlError = error as? URLError,
+        Self.fallbackURLErrorCodes.contains(urlError.code),
+        let server,
+        server.alternativeURL != nil
+      else {
+        throw error
+      }
+
+      let previousMode = server.urlMode
+      server.urlMode = previousMode == .primary ? .fallback : .primary
+
+      AppLogger.network.info(
+        "Request failed with network error, retrying with \(server.urlMode == .fallback ? "alternative" : "primary") URL"
+      )
+
+      do {
+        return try await performRequest(request)
+      } catch {
+        server.urlMode = previousMode
+        throw error
+      }
+    }
+  }
+
+  private func performRequest<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
     let urlRequest = try await buildURLRequest(from: request)
 
     AppLogger.network.info(
@@ -224,6 +262,10 @@ final class NetworkService {
   ) async throws
     -> URLRequest
   {
+    guard let baseURL = baseURL ?? server?.activeURL else {
+      throw NetworkError.invalidResponse
+    }
+
     var url = baseURL.appendingPathComponent(request.path)
 
     if let query = request.query {

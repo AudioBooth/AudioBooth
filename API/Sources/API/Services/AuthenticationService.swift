@@ -334,11 +334,8 @@ public final class AuthenticationService: ObservableObject {
 
   public func setUsingAlternativeURL(_ serverID: String, isUsing: Bool) {
     guard let server = servers[serverID] else { return }
-    server.isUsingAlternativeURL = isUsing
+    server.urlMode = isUsing ? .alternative : .primary
     connections[serverID] = Connection(server)
-    if server.id == self.server?.id {
-      audiobookshelf.setupNetworkService()
-    }
   }
 
   public func updateAlias(_ serverID: String, alias: String?) {

@@ -53,7 +53,6 @@ public final class Audiobookshelf: @unchecked Sendable {
     }
 
     networkService = NetworkService(
-      baseURL: server.activeURL,
       server: server
     ) { [weak self] in
       guard let self = self,

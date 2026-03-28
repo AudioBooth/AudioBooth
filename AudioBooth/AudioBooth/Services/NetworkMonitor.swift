@@ -1,3 +1,4 @@
+import API
 import Foundation
 import Network
 
@@ -14,20 +15,46 @@ final class NetworkMonitor {
     monitor.pathUpdateHandler = { [weak self] path in
       self?.isConnected = path.status == .satisfied
 
+      let previousInterfaceType = self?.interfaceType
+      let newInterfaceType: NWInterface.InterfaceType?
+
       if path.usesInterfaceType(.wifi) {
-        self?.interfaceType = .wifi
+        newInterfaceType = .wifi
       } else if path.usesInterfaceType(.cellular) {
-        self?.interfaceType = .cellular
+        newInterfaceType = .cellular
       } else if path.usesInterfaceType(.wiredEthernet) {
-        self?.interfaceType = .wiredEthernet
+        newInterfaceType = .wiredEthernet
       } else if path.usesInterfaceType(.loopback) {
-        self?.interfaceType = .loopback
+        newInterfaceType = .loopback
       } else if path.usesInterfaceType(.other) {
-        self?.interfaceType = .other
+        newInterfaceType = .other
       } else {
-        self?.interfaceType = nil
+        newInterfaceType = nil
+      }
+
+      self?.interfaceType = newInterfaceType
+
+      if previousInterfaceType != nil,
+        newInterfaceType != nil,
+        previousInterfaceType != newInterfaceType
+      {
+        self?.onNetworkInterfaceChanged()
       }
     }
     monitor.start(queue: queue)
+  }
+
+  private func onNetworkInterfaceChanged() {
+    guard let server = Audiobookshelf.shared.authentication.server else { return }
+
+    if server.urlMode == .fallback {
+      server.urlMode = .primary
+    }
+
+    if server.status == .connectionError {
+      Task {
+        _ = try? await Audiobookshelf.shared.libraries.fetch(serverID: server.id)
+      }
+    }
   }
 }

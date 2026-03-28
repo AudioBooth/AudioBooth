@@ -9,7 +9,17 @@ public final class Server: @unchecked Sendable {
   public internal(set) var customHeaders: [String: String]
   public internal(set) var alias: String?
   public internal(set) var alternativeURL: URL?
-  public internal(set) var isUsingAlternativeURL: Bool
+  public var urlMode: URLMode
+
+  public enum URLMode {
+    case primary
+    case alternative
+    case fallback
+  }
+
+  public var isUsingAlternativeURL: Bool {
+    urlMode == .alternative || urlMode == .fallback
+  }
 
   public var activeURL: URL {
     isUsingAlternativeURL ? alternativeURL ?? baseURL : baseURL
@@ -39,6 +49,6 @@ public final class Server: @unchecked Sendable {
     self.customHeaders = connection.customHeaders
     self.alias = connection.alias
     self.alternativeURL = connection.alternativeURL
-    self.isUsingAlternativeURL = connection.isUsingAlternativeURL
+    self.urlMode = connection.isUsingAlternativeURL ? .alternative : .primary
   }
 }
