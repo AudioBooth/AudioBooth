@@ -29,13 +29,13 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
   }
 
   private func observeDownloadProgress() {
-    guard let playerModel else { return }
+    guard let bookID = playerModel?.bookID else { return }
 
     downloadManager.$currentProgress
       .receive(on: DispatchQueue.main)
       .sink { [weak self] progressMap in
         guard let self else { return }
-        if let progress = progressMap[playerModel.bookID] {
+        if let progress = progressMap[bookID] {
           self.downloadState = .downloading(progress: progress)
         }
       }
@@ -45,13 +45,13 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] books in
         guard let self else { return }
-        if let localBook = books.first(where: { $0.id == playerModel.bookID }),
+        if let localBook = books.first(where: { $0.id == bookID }),
           localBook.isDownloaded
         {
           self.downloadState = .downloaded
           if !self.hasSwitchedToLocal {
             self.hasSwitchedToLocal = true
-            playerModel.switchToLocalPlayback(localBook)
+            self.playerModel?.switchToLocalPlayback(localBook)
           }
         } else if case .downloading = self.downloadState {
         } else {

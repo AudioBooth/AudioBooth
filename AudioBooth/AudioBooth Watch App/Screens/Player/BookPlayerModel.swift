@@ -10,14 +10,12 @@ final class BookPlayerModel: PlayerView.Model {
 
   private let connectivityManager = WatchConnectivityManager.shared
   private let localStorage = LocalBookStorage.shared
-  private var player: AVPlayer?
-  private var timeObserver: Any?
+  private let audioPlayer = WatchAudioPlayer()
   private var cancellables = Set<AnyCancellable>()
 
   private(set) var book: WatchBook
   private var localBook: WatchBook?
   private var sessionID: String?
-  private var currentTrackIndex: Int = 0
   private var currentChapterIndex: Int = 0
   private var totalDuration: Double = 0
   private var lastProgressReportTime: Date?
@@ -55,10 +53,95 @@ final class BookPlayerModel: PlayerView.Model {
       chapters: nil
     )
 
+    subscribeToPlayerEvents()
     setupProgressObserver()
     setupOptionsModel()
     setupChapters()
     load()
+  }
+
+  private func subscribeToPlayerEvents() {
+    audioPlayer.events
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] event in
+        self?.handlePlayerEvent(event)
+      }
+      .store(in: &cancellables)
+  }
+
+  private func handlePlayerEvent(_ event: WatchAudioPlayer.Event) {
+    switch event {
+    case .timeUpdate(let globalTime):
+      current = globalTime
+      remaining = max(0, totalDuration - globalTime)
+      progress = totalDuration > 0 ? globalTime / totalDuration : 0
+      totalTimeRemaining = remaining
+
+      updateCurrentChapter(currentTime: globalTime)
+      updateNowPlayingInfo()
+
+      progressSaveCounter += 1
+      reportProgressIfNeeded(currentTime: globalTime)
+
+      if isLocal && progressSaveCounter % 60 == 0 {
+        saveProgress(currentTime: globalTime)
+      }
+
+      if progressSaveCounter % 20 == 0 {
+        updateComplicationState()
+      }
+
+    case .stateChanged(let state):
+      switch state {
+      case .playing:
+        isPlaying = true
+        updateComplicationState()
+      case .paused:
+        isPlaying = false
+        updateComplicationState()
+      case .ready:
+        playbackState = .ready
+      case .buffering:
+        break
+      case .stopped:
+        isPlaying = false
+      case .error:
+        break
+      }
+
+    case .seek:
+      break
+
+    case .finished:
+      isPlaying = false
+      saveProgress(currentTime: current)
+      updateComplicationState()
+
+    case .stalled:
+      break
+
+    case .error(let error):
+      handlePlaybackError(error)
+    }
+  }
+
+  private func handlePlaybackError(_ error: Error?) {
+    if localBook != nil {
+      AppLogger.player.warning("Local playback failed, falling back to streaming.")
+      Task {
+        await handleCorruptedDownload()
+      }
+    } else {
+      let isNetworkError: Bool
+      if let error {
+        let nsError = error as NSError
+        isNetworkError = nsError.domain == NSURLErrorDomain || nsError.code == -1009
+      } else {
+        isNetworkError = false
+      }
+      playbackState = .error(retryable: isNetworkError)
+      errorMessage = isNetworkError ? "Network error. Tap to retry." : "Playback failed."
+    }
   }
 
   private func setupOptionsModel() {
@@ -84,7 +167,10 @@ final class BookPlayerModel: PlayerView.Model {
   private func load() {
     if localBook != nil {
       Task {
-        await setupPlayerWithLocalBook()
+        await configureAudioSession()
+        preparePlayerWithLocalBook()
+        audioPlayer.resume(at: book.currentTime)
+        setupRemoteCommandCenter()
         startSessionInBackground()
       }
     } else {
@@ -136,126 +222,20 @@ final class BookPlayerModel: PlayerView.Model {
       options.hasChapters = true
     }
 
-    await setupPlayerWithStreamingBook(info)
-  }
-
-  private func setupPlayerWithLocalBook() async {
-    guard let localBook = localBook else {
-      AppLogger.player.error("setupPlayerWithLocalBook called but localBook is nil")
-      return
-    }
-
-    playbackState = .loading
-    AppLogger.player.info(
-      "Setting up local playback for \(self.bookID) at time \(self.book.currentTime)"
-    )
-
-    guard let track = localBook.track(at: book.currentTime) else {
-      AppLogger.player.error(
-        "Failed to find track at time \(self.book.currentTime), total tracks: \(localBook.tracks.count)"
-      )
-      playbackState = .error(retryable: false)
-      errorMessage = "Local playback failed."
-      return
-    }
-
-    guard let trackURL = localBook.localURL(for: track) else {
-      AppLogger.player.error(
-        "Failed to get local URL for track \(track.index), relativePath: \(track.relativePath ?? "nil")"
-      )
-      playbackState = .error(retryable: false)
-      errorMessage = "Local playback failed."
-      return
-    }
-
-    guard FileManager.default.fileExists(atPath: trackURL.path) else {
-      AppLogger.player.error("Track file does not exist at: \(trackURL.path)")
-      if let attributes = try? FileManager.default.attributesOfItem(
-        atPath: trackURL.deletingLastPathComponent().path
-      ) {
-        AppLogger.player.error("Parent directory exists with attributes: \(attributes)")
-      } else {
-        AppLogger.player.error("Parent directory does not exist")
-      }
-      playbackState = .error(retryable: false)
-      errorMessage = "Local playback failed."
-      return
-    }
-
-    if let fileSize = try? FileManager.default.attributesOfItem(atPath: trackURL.path)[.size]
-      as? Int64
-    {
-      AppLogger.player.info(
-        "Track file size: \(fileSize) bytes, expected: \(track.size ?? 0) bytes"
-      )
-    }
-
-    AppLogger.player.info(
-      "Track found: index=\(track.index), duration=\(track.duration), url=\(trackURL.path)"
-    )
-
-    currentTrackIndex = track.index
-
     await configureAudioSession()
 
-    await MainActor.run {
-      let playerItem = AVPlayerItem(url: trackURL)
-      let player = AVPlayer(playerItem: playerItem)
-      self.player = player
-
-      setupPlayerObservers()
-      setupTimeObserver()
-      setupRemoteCommandCenter()
-
-      let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
-      let seekTime = book.currentTime - trackStartTime
-
-      if seekTime > 0 {
-        player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-      }
-
-      AppLogger.player.info(
-        "Local player setup complete for \(self.bookID), waiting for AVPlayer to become ready"
-      )
+    audioPlayer.prepare(tracks: info.tracks) { track in
+      track.url
     }
+    audioPlayer.resume(at: book.currentTime)
+    setupRemoteCommandCenter()
   }
 
-  private func setupPlayerWithStreamingBook(_ info: WatchBook) async {
-    guard let track = findTrack(for: book.currentTime, in: info.tracks),
-      let trackURL = track.url
-    else {
-      AppLogger.player.error("Failed to get track or URL")
-      playbackState = .error(retryable: true)
-      errorMessage = "Failed to load track. Tap to retry."
-      return
-    }
+  private func preparePlayerWithLocalBook() {
+    guard let localBook else { return }
 
-    currentTrackIndex = track.index
-    AppLogger.player.info("Track URL: \(trackURL.relativePath)")
-
-    await configureAudioSession()
-
-    await MainActor.run {
-      let playerItem = AVPlayerItem(url: trackURL)
-      playerItem.audioTimePitchAlgorithm = .timeDomain
-
-      let player = AVPlayer(playerItem: playerItem)
-      self.player = player
-
-      setupPlayerObservers()
-      setupTimeObserver()
-      setupRemoteCommandCenter()
-
-      let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
-      let seekTime = book.currentTime - trackStartTime
-
-      if seekTime > 0 {
-        player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-      }
-
-      AppLogger.player.info(
-        "Streaming player setup complete for \(self.bookID), waiting for ready state"
-      )
+    audioPlayer.prepare(tracks: localBook.tracks) { track in
+      localBook.localURL(for: track)
     }
   }
 
@@ -275,69 +255,28 @@ final class BookPlayerModel: PlayerView.Model {
     }
   }
 
-  private func findTrack(for time: Double, in tracks: [WatchTrack]) -> WatchTrack? {
-    let sortedTracks = tracks.sorted { $0.index < $1.index }
-    var accumulatedTime: Double = 0
-
-    for track in sortedTracks {
-      if time >= accumulatedTime && time < accumulatedTime + track.duration {
-        return track
-      }
-      accumulatedTime += track.duration
-    }
-
-    return sortedTracks.first
-  }
-
-  private func calculateTrackStartTime(trackIndex: Int) -> Double {
-    let tracks = localBook?.tracks ?? book.tracks
-    let sortedTracks = tracks.sorted { $0.index < $1.index }
-    var startTime: Double = 0
-
-    for track in sortedTracks {
-      if track.index >= trackIndex {
-        break
-      }
-      startTime += track.duration
-    }
-
-    return startTime
-  }
-
   override func togglePlayback() {
-    guard let player else { return }
-
     if isPlaying {
-      player.rate = 0
+      audioPlayer.pause()
     } else {
       syncToLatestKnownProgressIfNeeded()
-      player.rate = 1.0
+      audioPlayer.resume()
     }
   }
 
   override func skipForward() {
-    guard let player else { return }
-    let currentTime = player.currentTime()
-    let newTime = CMTimeAdd(currentTime, CMTime(seconds: 30, preferredTimescale: 1))
-    player.seek(to: newTime)
+    let newTime = min(current + 30, totalDuration)
+    audioPlayer.seek(to: newTime)
   }
 
   override func skipBackward() {
-    guard let player else { return }
-    let currentTime = player.currentTime()
-    let newTime = CMTimeSubtract(currentTime, CMTime(seconds: 30, preferredTimescale: 1))
-    let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
-    player.seek(to: CMTimeMaximum(newTime, zeroTime))
+    let newTime = max(current - 30, 0)
+    audioPlayer.seek(to: newTime)
   }
 
   override func stop() {
-    if let timeObserver, let player {
-      player.removeTimeObserver(timeObserver)
-      self.timeObserver = nil
-    }
-    player?.pause()
+    audioPlayer.stop()
     saveProgress(currentTime: current)
-    player = nil
   }
 
   override func onDownloadTapped() {
@@ -349,13 +288,14 @@ final class BookPlayerModel: PlayerView.Model {
     AppLogger.player.info("Retrying playback for \(self.bookID)")
     errorMessage = nil
 
-    player?.pause()
-    player = nil
-    cancellables.removeAll()
+    audioPlayer.stop()
 
     if localBook != nil {
       Task {
-        await setupPlayerWithLocalBook()
+        await configureAudioSession()
+        preparePlayerWithLocalBook()
+        audioPlayer.resume(at: book.currentTime)
+        setupRemoteCommandCenter()
         startSessionInBackground()
       }
     } else {
@@ -381,9 +321,7 @@ final class BookPlayerModel: PlayerView.Model {
 
     AppLogger.player.info("Cleaning up corrupted download for \(self.bookID)")
 
-    player?.pause()
-    player = nil
-    cancellables.removeAll()
+    audioPlayer.stop()
 
     DownloadManager.shared.deleteDownload(for: bookID)
 
@@ -401,7 +339,7 @@ final class BookPlayerModel: PlayerView.Model {
 
     let chapter = chapters[index]
 
-    seekToGlobalTime(chapter.start)
+    audioPlayer.seek(to: chapter.start)
 
     currentChapterIndex = index
     self.chapters?.currentIndex = index
@@ -410,37 +348,6 @@ final class BookPlayerModel: PlayerView.Model {
       saveProgress(currentTime: chapter.start)
     }
     reportProgressNow(currentTime: chapter.start)
-  }
-
-  private func loadTrack(_ track: WatchTrack, seekTo globalTime: Double) {
-    let trackURL: URL
-    if let localBook,
-      let localTrack = localBook.tracks.first(where: { $0.index == track.index }),
-      let localURL = localBook.localURL(for: localTrack)
-    {
-      trackURL = localURL
-    } else if let url = track.url {
-      trackURL = url
-    } else {
-      return
-    }
-
-    let wasPlaying = isPlaying
-    player?.pause()
-
-    let playerItem = AVPlayerItem(url: trackURL)
-    player?.replaceCurrentItem(with: playerItem)
-
-    currentTrackIndex = track.index
-
-    let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
-    let seekTime = globalTime - trackStartTime
-
-    player?.seek(to: CMTime(seconds: max(0, seekTime), preferredTimescale: 1000)) { [weak self] _ in
-      if wasPlaying {
-        self?.player?.rate = 1.0
-      }
-    }
   }
 
   private func setupRemoteCommandCenter() {
@@ -467,122 +374,6 @@ final class BookPlayerModel: PlayerView.Model {
     commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
       self?.skipBackward()
       return .success
-    }
-  }
-
-  private func setupPlayerObservers() {
-    guard let player else { return }
-
-    player.publisher(for: \.rate)
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] rate in
-        guard let self else { return }
-        self.isPlaying = rate > 0
-        self.updateNowPlayingInfo()
-        self.updateComplicationState()
-      }
-      .store(in: &cancellables)
-
-    if let currentItem = player.currentItem {
-      currentItem.publisher(for: \.status)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] status in
-          guard let self else { return }
-          switch status {
-          case .readyToPlay:
-            self.playbackState = .ready
-            AppLogger.player.info("Player item ready to play")
-          case .failed:
-            let errorDetails: String
-            let isNetworkError: Bool
-            if let error = currentItem.error {
-              let nsError = error as NSError
-              errorDetails =
-                "domain: \(nsError.domain), code: \(nsError.code), description: \(error.localizedDescription)"
-              if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
-                AppLogger.player.error(
-                  "Underlying error: domain: \(underlyingError.domain), code: \(underlyingError.code)"
-                )
-              }
-              isNetworkError = nsError.domain == NSURLErrorDomain || nsError.code == -1009
-            } else {
-              errorDetails = "unknown error"
-              isNetworkError = false
-            }
-
-            AppLogger.player.error(
-              "Player item failed - \(errorDetails), isLocal: \(self.localBook != nil)"
-            )
-
-            if self.localBook != nil {
-              AppLogger.player.warning(
-                "Local playback failed, likely corrupted download. Cleaning up and falling back to streaming."
-              )
-              Task {
-                await self.handleCorruptedDownload()
-              }
-            } else {
-              self.playbackState = .error(retryable: isNetworkError)
-              self.errorMessage =
-                isNetworkError ? "Network error. Tap to retry." : "Playback failed."
-            }
-          case .unknown:
-            self.playbackState = .loading
-          @unknown default:
-            break
-          }
-        }
-        .store(in: &cancellables)
-    }
-  }
-
-  private func setupTimeObserver() {
-    guard let player else { return }
-
-    let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-    timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) {
-      [weak self] time in
-      guard let self, time.isValid, !time.isIndefinite else { return }
-
-      let trackTime = CMTimeGetSeconds(time)
-      let trackStartTime = self.calculateTrackStartTime(trackIndex: self.currentTrackIndex)
-      let globalTime = trackStartTime + trackTime
-
-      self.current = globalTime
-      self.remaining = max(0, self.totalDuration - globalTime)
-      self.progress = self.totalDuration > 0 ? globalTime / self.totalDuration : 0
-      self.totalTimeRemaining = self.remaining
-
-      self.updateCurrentChapter(currentTime: globalTime)
-
-      self.progressSaveCounter += 1
-
-      if let sessionID = self.sessionID {
-        let now = Date()
-        if let lastReport = self.lastProgressReportTime {
-          let timeSinceLastReport = now.timeIntervalSince(lastReport)
-          if timeSinceLastReport >= 30 || globalTime < 1.0 {
-            self.connectivityManager.reportProgress(
-              bookID: book.id,
-              sessionID: sessionID,
-              currentTime: globalTime,
-              timeListened: timeSinceLastReport,
-              duration: self.totalDuration
-            )
-            self.lastProgressReportTime = now
-          }
-        } else {
-          self.lastProgressReportTime = now
-        }
-      }
-
-      if self.isLocal && self.progressSaveCounter % 60 == 0 {
-        self.saveProgress(currentTime: globalTime)
-      }
-
-      if self.progressSaveCounter % 20 == 0 {
-        self.updateComplicationState()
-      }
     }
   }
 
@@ -614,6 +405,26 @@ final class BookPlayerModel: PlayerView.Model {
 
   private func saveProgress(currentTime: Double) {
     localStorage.updateProgress(for: bookID, currentTime: currentTime)
+  }
+
+  private func reportProgressIfNeeded(currentTime: Double) {
+    guard let sessionID else { return }
+    let now = Date()
+    if let lastReport = lastProgressReportTime {
+      let timeSinceLastReport = now.timeIntervalSince(lastReport)
+      if timeSinceLastReport >= 30 || currentTime < 1.0 {
+        connectivityManager.reportProgress(
+          bookID: book.id,
+          sessionID: sessionID,
+          currentTime: currentTime,
+          timeListened: timeSinceLastReport,
+          duration: totalDuration
+        )
+        lastProgressReportTime = now
+      }
+    } else {
+      lastProgressReportTime = now
+    }
   }
 
   private func reportProgressNow(currentTime: Double) {
@@ -679,32 +490,12 @@ final class BookPlayerModel: PlayerView.Model {
     progress = min(1, max(0, latest / duration))
     totalTimeRemaining = remaining
 
-    seekToGlobalTime(latest)
-  }
-
-  private func seekToGlobalTime(_ globalTime: Double) {
-    guard let player else { return }
-
-    let tracks = localBook?.tracks ?? book.tracks
-    guard let track = findTrack(for: globalTime, in: tracks) else { return }
-
-    if track.index != currentTrackIndex {
-      loadTrack(track, seekTo: globalTime)
-      return
-    }
-
-    let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
-    let seekTime = max(0, globalTime - trackStartTime)
-
-    player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+    audioPlayer.seek(to: latest)
   }
 
   @MainActor
   deinit {
-    if let timeObserver, let player {
-      player.removeTimeObserver(timeObserver)
-    }
-    player?.pause()
+    audioPlayer.stop()
     saveProgress(currentTime: current)
   }
 }
