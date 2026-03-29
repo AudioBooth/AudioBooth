@@ -2,6 +2,7 @@ import API
 @preconcurrency import CarPlay
 import Combine
 import Foundation
+import Models
 import Nuke
 
 final class CarPlayHome: CarPlayPageProtocol {
@@ -11,6 +12,7 @@ final class CarPlayHome: CarPlayPageProtocol {
   private var loadingCancellable: Task<Void, Never>?
   private var selected: CarPlayLibrary?
   private var selectedPodcast: CarPlayPodcastDetails?
+  private var selectedSectionTemplate: CPListTemplate?
 
   let template: CPListTemplate
 
@@ -41,26 +43,64 @@ final class CarPlayHome: CarPlayPageProtocol {
   }
 
   private func buildSections() async -> [CPListSection] {
-    var sections: [CPListSection] = []
-
-    if let continueListeningSection = await buildContinueListeningSection() {
-      sections.append(continueListeningSection)
+    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
+      template.emptyViewTitleVariants = ["No Content"]
+      template.emptyViewSubtitleVariants = ["Your library content will appear here"]
+      return []
     }
 
-    let bookSections = await buildBookSections()
-    sections.append(contentsOf: bookSections)
+    var sections: [CPListSection] = []
 
-    let podcastSections = await buildPodcastSections()
-    sections.append(contentsOf: podcastSections)
+    for personalizedSection in personalized.sections {
+      let header = HomeSection(rawValue: personalizedSection.id)?.displayName ?? personalizedSection.label
 
-    let episodeSections = await buildEpisodeSections()
-    sections.append(contentsOf: episodeSections)
+      switch personalizedSection.entities {
+      case .books(let books):
+        let filtered = books.filter { $0.duration > 0 }
+        guard !filtered.isEmpty else { continue }
+        let isContinueListening = personalizedSection.id == "continue-listening"
+        if let built = await buildImageRowSection(
+          header: header,
+          items: filtered,
+          isContinueListening: isContinueListening
+        ) {
+          sections.append(built)
+        }
 
-    let seriesSections = await buildSeriesSections()
-    sections.append(contentsOf: seriesSections)
+      case .podcasts(let podcasts):
+        guard !podcasts.isEmpty else { continue }
+        if let built = await buildImageRowSection(header: header, items: podcasts) {
+          sections.append(built)
+        }
 
-    let authorSections = await buildAuthorSections()
-    sections.append(contentsOf: authorSections)
+      case .episodes(let podcasts):
+        guard !podcasts.isEmpty else { continue }
+        let isContinueListening = personalizedSection.id == "continue-listening"
+        if let built = await buildImageRowSection(
+          header: header,
+          items: podcasts,
+          isEpisode: true,
+          isContinueListening: isContinueListening
+        ) {
+          sections.append(built)
+        }
+
+      case .series(let seriesList):
+        guard !seriesList.isEmpty else { continue }
+        if let built = await buildImageRowSection(header: header, items: seriesList as [API.Series]) {
+          sections.append(built)
+        }
+
+      case .authors(let authors):
+        guard !authors.isEmpty else { continue }
+        if let built = await buildImageRowSection(header: header, items: authors as [API.Author]) {
+          sections.append(built)
+        }
+
+      default:
+        continue
+      }
+    }
 
     if sections.isEmpty {
       template.emptyViewTitleVariants = ["No Content"]
@@ -162,6 +202,12 @@ final class CarPlayHome: CarPlayPageProtocol {
     }
   }
 
+  private func showSectionList(title: String, items: [CPListItem]) {
+    let template = CPListTemplate(title: title, sections: [CPListSection(items: items)])
+    selectedSectionTemplate = template
+    interfaceController.pushTemplate(template, animated: true, completion: nil)
+  }
+
   private func showLibrary(filterType: CarPlayLibrary.FilterType) {
     guard let nowPlaying else { return }
     let library = CarPlayLibrary(
@@ -175,174 +221,168 @@ final class CarPlayHome: CarPlayPageProtocol {
 }
 
 extension CarPlayHome {
-  private func buildContinueListeningSection() async -> CPListSection? {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return nil
-    }
-
-    guard let continueListeningData = personalized.sections.first(where: { $0.id == "continue-listening" }) else {
-      return nil
-    }
-
-    let header = String(localized: "Continue Listening")
-
-    switch continueListeningData.entities {
-    case .books(let books):
-      let audioBooks = books.filter { $0.duration > 0 }
-      guard !audioBooks.isEmpty else { return nil }
-      let items = audioBooks.map { book in createListItem(for: book) }
-      return CPListSection(items: items, header: header, sectionIndexTitle: nil)
-
-    case .episodes(let podcasts):
-      guard !podcasts.isEmpty else { return nil }
-      let items = podcasts.map { podcast in createEpisodeListItem(for: podcast) }
-      return CPListSection(items: items, header: header, sectionIndexTitle: nil)
-
-    default:
-      return nil
+  private func buildImageRowSection(
+    header: String,
+    items: [Book],
+    isContinueListening: Bool = false
+  ) async -> CPListSection? {
+    if #available(iOS 26.0, *) {
+      let images = await loadImages(items.map { $0.coverURL() })
+      let elements = zip(items, images).map { book, image in
+        var subtitle = book.authorName
+        if isContinueListening, let progress = try? MediaProgress.fetch(bookID: book.id) {
+          subtitle = progress.remaining.formattedTimeLeft
+        }
+        return CPListImageRowItemRowElement(
+          image: image ?? UIImage(),
+          title: book.title,
+          subtitle: subtitle
+        )
+      }
+      let rowItem = CPListImageRowItem(text: header, elements: elements, allowsMultipleLines: false)
+      rowItem.listImageRowHandler = {
+        [weak self] (_: CPListImageRowItem, index: Int, completion: @escaping () -> Void) in
+        self?.onBookSelected(items[index], completion: completion)
+      }
+      rowItem.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
+        let listItems = items.map { book in self?.createListItem(for: book) }.compactMap { $0 }
+        self?.showSectionList(title: header, items: listItems)
+        completion()
+      }
+      return CPListSection(items: [rowItem])
+    } else {
+      let listItems = items.map { book in createListItem(for: book) }
+      return CPListSection(items: listItems, header: header, sectionIndexTitle: nil)
     }
   }
 
-  private func buildBookSections() async -> [CPListSection] {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return []
-    }
-
-    var sections: [CPListSection] = []
-
-    for section in personalized.sections {
-      guard section.id != "continue-listening",
-        case .books(let books) = section.entities,
-        !books.isEmpty
-      else {
-        continue
+  private func buildImageRowSection(
+    header: String,
+    items: [Podcast],
+    isEpisode: Bool = false,
+    isContinueListening: Bool = false
+  ) async -> CPListSection? {
+    if #available(iOS 26.0, *) {
+      let images = await loadImages(items.map { $0.coverURL() })
+      let elements = zip(items, images).map { podcast, image in
+        var title = isEpisode ? (podcast.recentEpisode?.title ?? podcast.title) : podcast.title
+        var subtitle = isEpisode ? podcast.title : podcast.author
+        if isContinueListening, let episodeID = podcast.recentEpisode?.id,
+          let progress = try? MediaProgress.fetch(bookID: episodeID)
+        {
+          title = podcast.recentEpisode?.title ?? podcast.title
+          subtitle = progress.remaining.formattedTimeLeft
+        }
+        return CPListImageRowItemRowElement(
+          image: image ?? UIImage(),
+          title: title,
+          subtitle: subtitle
+        )
       }
-
-      let audioBooks = books.filter { $0.duration > 0 }
-      guard !audioBooks.isEmpty else { continue }
-
-      let items = audioBooks.map { book in
-        createListItem(for: book)
+      let rowItem = CPListImageRowItem(text: header, elements: elements, allowsMultipleLines: false)
+      rowItem.listImageRowHandler = {
+        [weak self] (_: CPListImageRowItem, index: Int, completion: @escaping () -> Void) in
+        let podcast = items[index]
+        if isEpisode {
+          self?.onEpisodeSelected(podcast, completion: completion)
+        } else {
+          self?.showPodcastDetails(podcast)
+          completion()
+        }
       }
-
-      let header =
-        HomeSection(rawValue: section.id)?.displayName
-        ?? section.label
-
-      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
+      rowItem.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
+        if isEpisode {
+          let listItems = items.map { podcast in self?.createEpisodeListItem(for: podcast) }.compactMap { $0 }
+          self?.showSectionList(title: header, items: listItems)
+        } else {
+          let listItems = items.map { podcast in self?.createPodcastListItem(for: podcast) }.compactMap { $0 }
+          self?.showSectionList(title: header, items: listItems)
+        }
+        completion()
+      }
+      return CPListSection(items: [rowItem])
+    } else {
+      if isEpisode {
+        let listItems = items.map { podcast in createEpisodeListItem(for: podcast) }
+        return CPListSection(items: listItems, header: header, sectionIndexTitle: nil)
+      } else {
+        let listItems = items.map { podcast in createPodcastListItem(for: podcast) }
+        return CPListSection(items: listItems, header: header, sectionIndexTitle: nil)
+      }
     }
-
-    return sections
   }
 
-  private func buildSeriesSections() async -> [CPListSection] {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return []
-    }
-
-    var sections: [CPListSection] = []
-
-    for section in personalized.sections {
-      guard case .series(let seriesList) = section.entities, !seriesList.isEmpty else {
-        continue
+  private func buildImageRowSection(header: String, items: [API.Series]) async -> CPListSection? {
+    if #available(iOS 26.0, *) {
+      let images = await loadImages(items.map { $0.books.first?.coverURL() })
+      let elements = zip(items, images).map { series, image in
+        let bookCount = series.books.count
+        return CPListImageRowItemRowElement(
+          image: image ?? UIImage(),
+          title: series.name,
+          subtitle: "\(bookCount) book\(bookCount == 1 ? "" : "s")"
+        )
       }
-
-      let items = seriesList.map { series in
-        createListItem(for: series)
+      let rowItem = CPListImageRowItem(text: header, elements: elements, allowsMultipleLines: false)
+      rowItem.listImageRowHandler = {
+        [weak self] (_: CPListImageRowItem, index: Int, completion: @escaping () -> Void) in
+        self?.showLibrary(filterType: .series(items[index]))
+        completion()
       }
-
-      let header =
-        HomeSection(rawValue: section.id)?.displayName
-        ?? section.label
-
-      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
+      rowItem.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
+        let listItems = items.map { series in self?.createListItem(for: series) }.compactMap { $0 }
+        self?.showSectionList(title: header, items: listItems)
+        completion()
+      }
+      return CPListSection(items: [rowItem])
+    } else {
+      let listItems = items.map { series in createListItem(for: series) }
+      return CPListSection(items: listItems, header: header, sectionIndexTitle: nil)
     }
-
-    return sections
   }
 
-  private func buildAuthorSections() async -> [CPListSection] {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return []
-    }
-
-    var sections: [CPListSection] = []
-
-    for section in personalized.sections {
-      guard case .authors(let authors) = section.entities, !authors.isEmpty else {
-        continue
+  private func buildImageRowSection(header: String, items: [API.Author]) async -> CPListSection? {
+    if #available(iOS 26.0, *) {
+      let elements = items.map { author in
+        let bookCount = author.numBooks ?? 0
+        return CPListImageRowItemRowElement(
+          image: UIImage(),
+          title: author.name,
+          subtitle: "\(bookCount) book\(bookCount == 1 ? "" : "s")"
+        )
       }
-
-      let items = authors.map { author in
-        createListItem(for: author)
+      let rowItem = CPListImageRowItem(text: header, elements: elements, allowsMultipleLines: false)
+      rowItem.listImageRowHandler = {
+        [weak self] (_: CPListImageRowItem, index: Int, completion: @escaping () -> Void) in
+        self?.showLibrary(filterType: .author(items[index]))
+        completion()
       }
-
-      let header =
-        HomeSection(rawValue: section.id)?.displayName
-        ?? section.label
-
-      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
+      rowItem.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
+        let listItems = items.map { author in self?.createListItem(for: author) }.compactMap { $0 }
+        self?.showSectionList(title: header, items: listItems)
+        completion()
+      }
+      return CPListSection(items: [rowItem])
+    } else {
+      let listItems = items.map { author in createListItem(for: author) }
+      return CPListSection(items: listItems, header: header, sectionIndexTitle: nil)
     }
-
-    return sections
   }
 
-  private func buildPodcastSections() async -> [CPListSection] {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return []
-    }
-
-    var sections: [CPListSection] = []
-
-    for section in personalized.sections {
-      guard section.id != "continue-listening",
-        case .podcasts(let podcasts) = section.entities,
-        !podcasts.isEmpty
-      else {
-        continue
+  private func loadImages(_ urls: [URL?]) async -> [UIImage?] {
+    await withTaskGroup(of: (Int, UIImage?).self) { group in
+      for (index, url) in urls.enumerated() {
+        group.addTask {
+          guard let url else { return (index, nil) }
+          return (index, await self.loadImage(from: url))
+        }
       }
-
-      let items = podcasts.map { podcast in
-        createPodcastListItem(for: podcast)
+      var results = [UIImage?](repeating: nil, count: urls.count)
+      for await (index, image) in group {
+        results[index] = image
       }
-
-      let header =
-        HomeSection(rawValue: section.id)?.displayName
-        ?? section.label
-
-      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
+      return results
     }
-
-    return sections
-  }
-
-  private func buildEpisodeSections() async -> [CPListSection] {
-    guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
-      return []
-    }
-
-    var sections: [CPListSection] = []
-
-    for section in personalized.sections {
-      guard section.id != "continue-listening",
-        case .episodes(let podcasts) = section.entities,
-        !podcasts.isEmpty
-      else {
-        continue
-      }
-
-      let items = podcasts.map { podcast in
-        createEpisodeListItem(for: podcast)
-      }
-
-      let header =
-        HomeSection(rawValue: section.id)?.displayName
-        ?? section.label
-
-      sections.append(CPListSection(items: items, header: header, sectionIndexTitle: nil))
-    }
-
-    return sections
   }
 
   private func createPodcastListItem(for podcast: Podcast) -> CPListItem {
@@ -413,7 +453,7 @@ extension CarPlayHome {
     return item
   }
 
-  private func createListItem(for series: Series) -> CPListItem {
+  private func createListItem(for series: API.Series) -> CPListItem {
     let bookCount = series.books.count
     let item = CPListItem(
       text: series.name,
@@ -428,7 +468,7 @@ extension CarPlayHome {
       }
     }
 
-    item.handler = { [weak self] _, completion in
+    item.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
       self?.showLibrary(filterType: .series(series))
       completion()
     }
@@ -436,14 +476,14 @@ extension CarPlayHome {
     return item
   }
 
-  private func createListItem(for author: Author) -> CPListItem {
+  private func createListItem(for author: API.Author) -> CPListItem {
     let bookCount = author.numBooks ?? 0
     let item = CPListItem(
       text: author.name,
       detailText: "\(bookCount) book\(bookCount == 1 ? "" : "s")"
     )
 
-    item.handler = { [weak self] _, completion in
+    item.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
       self?.showLibrary(filterType: .author(author))
       completion()
     }
