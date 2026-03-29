@@ -43,11 +43,21 @@ final class CarPlayTabBar: NSObject {
 
     let newTemplate: CPTemplate
 
-    if Audiobookshelf.shared.authentication.server != nil, Audiobookshelf.shared.libraries.current != nil {
+    if Audiobookshelf.shared.authentication.server != nil, let library = Audiobookshelf.shared.libraries.current {
       let home = CarPlayHome(interfaceController: interfaceController, nowPlaying: nowPlaying)
       let offline = CarPlayOffline(interfaceController: interfaceController, nowPlaying: nowPlaying)
+
+      var templates: [CPTemplate] = [home.template]
       tabs = [home.template: home, offline.template: offline]
-      newTemplate = CPTabBarTemplate(templates: [home.template, offline.template])
+
+      if library.mediaType == .podcast {
+        let podcastLibrary = CarPlayPodcastLibrary(interfaceController: interfaceController, nowPlaying: nowPlaying)
+        tabs[podcastLibrary.template] = podcastLibrary
+        templates.append(podcastLibrary.template)
+      }
+
+      templates.append(offline.template)
+      newTemplate = CPTabBarTemplate(templates: templates)
     } else {
       tabs = [:]
       newTemplate = Self.emptyTemplate

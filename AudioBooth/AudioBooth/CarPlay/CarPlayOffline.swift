@@ -23,29 +23,39 @@ final class CarPlayOffline: CarPlayPageProtocol {
 
     currentPlayerCancellable = PlayerManager.shared.$current.sink { [weak self] _ in
       Task {
-        await self?.loadBooks()
+        await self?.loadContent()
       }
     }
 
     Task {
-      await loadBooks()
+      await loadContent()
     }
   }
 
   func willAppear() {
-    Task { await loadBooks() }
+    Task { await loadContent() }
   }
 
-  private func loadBooks() async {
-    let items = await buildBookItems()
-    if items.isEmpty {
+  private func loadContent() async {
+    var sections: [CPListSection] = []
+
+    let bookItems = await buildBookItems()
+    if !bookItems.isEmpty {
+      sections.append(CPListSection(items: bookItems, header: String(localized: "Books"), sectionIndexTitle: nil))
+    }
+
+    let episodeItems = await buildEpisodeItems()
+    if !episodeItems.isEmpty {
+      sections.append(CPListSection(items: episodeItems, header: String(localized: "Episodes"), sectionIndexTitle: nil))
+    }
+
+    if sections.isEmpty {
       template.updateSections([])
       template.emptyViewTitleVariants = [
-        String(localized: "No offline books")
+        String(localized: "No offline content")
       ]
     } else {
-      let section = CPListSection(items: items)
-      template.updateSections([section])
+      template.updateSections(sections)
     }
   }
 
@@ -99,6 +109,58 @@ final class CarPlayOffline: CarPlayPageProtocol {
 
     Task {
       PlayerManager.shared.setCurrent(book)
+      try? await Task.sleep(for: .milliseconds(500))
+      PlayerManager.shared.play()
+      nowPlaying?.showNowPlaying()
+      completion()
+    }
+  }
+
+  private func buildEpisodeItems() async -> [CPListItem] {
+    do {
+      let offlineEpisodes = try LocalEpisode.fetchAll()
+        .filter { downloadManager.downloadStates[$0.episodeID] == .downloaded && $0.duration > 0 }
+        .sorted { ($0.publishedAt ?? .distantPast) > ($1.publishedAt ?? .distantPast) }
+
+      return offlineEpisodes.map { episode in
+        createListItem(for: episode)
+      }
+    } catch {
+      return []
+    }
+  }
+
+  private func createListItem(for episode: LocalEpisode) -> CPListItem {
+    let item = CPListItem(
+      text: episode.title,
+      detailText: episode.podcast?.title
+    )
+
+    item.isPlaying = episode.episodeID == PlayerManager.shared.current?.id
+
+    if let coverURL = episode.coverURL() {
+      Task {
+        if let image = await loadImage(from: coverURL) {
+          item.setImage(image)
+        }
+      }
+    }
+
+    item.handler = { [weak self] _, completion in
+      self?.onEpisodeSelected(episodeID: episode.episodeID, completion: completion)
+    }
+
+    return item
+  }
+
+  private func onEpisodeSelected(episodeID: String, completion: @escaping () -> Void) {
+    guard let episode = try? LocalEpisode.fetch(episodeID: episodeID) else {
+      completion()
+      return
+    }
+
+    Task {
+      PlayerManager.shared.setCurrent(episode)
       try? await Task.sleep(for: .milliseconds(500))
       PlayerManager.shared.play()
       nowPlaying?.showNowPlaying()
