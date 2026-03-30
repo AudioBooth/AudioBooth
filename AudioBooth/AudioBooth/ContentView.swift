@@ -16,9 +16,10 @@ struct ContentView: View {
   @StateObject private var libraryModel = LibraryRootPage.Model()
   @StateObject private var podcastsModel = PodcastsRootPage.Model()
   @StateObject private var collectionsModel = CollectionsRootPage.Model()
+  @StateObject private var latestModel = LatestViewModel()
 
   enum TabSelection {
-    case home, library, collections, downloads, search
+    case home, latest, library, collections, downloads, search
   }
 
   private var tabSelection: Binding<TabSelection> {
@@ -104,6 +105,10 @@ struct ContentView: View {
 
       if let current = libraries.current {
         if current.mediaType == .podcast {
+          Tab("Latest", systemImage: "list.bullet", value: .latest) {
+            LatestView(model: latestModel)
+          }
+
           Tab("Library", systemImage: "antenna.radiowaves.left.and.right", value: .library) {
             PodcastsRootPage(model: podcastsModel)
           }
@@ -161,6 +166,14 @@ struct ContentView: View {
 
       if let current = libraries.current {
         if current.mediaType == .podcast {
+          LatestView(model: latestModel)
+            .padding(.bottom, 0.5)
+            .safeAreaInset(edge: .bottom) { miniPlayer }
+            .tabItem {
+              Image(systemName: "clock")
+              Text("Latest")
+            }
+
           PodcastsRootPage(model: podcastsModel)
             .padding(.bottom, 0.5)
             .safeAreaInset(edge: .bottom) { miniPlayer }
