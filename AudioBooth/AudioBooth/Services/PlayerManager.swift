@@ -271,6 +271,35 @@ extension PlayerManager: PlayerManagerProtocol {
       print("Failed to open book: \(error)")
     }
   }
+
+  private func open(episodeID: String, podcastID: String) async {
+    if current?.id == episodeID {
+      showFullPlayer()
+      return
+    }
+
+    if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
+      setCurrent(localEpisode)
+      showFullPlayer()
+      return
+    }
+
+    do {
+      let podcast = try await Audiobookshelf.shared.podcasts.fetch(id: podcastID)
+      if let episode = podcast.media.episodes?.first(where: { $0.id == episodeID }) {
+        setCurrent(
+          episode: episode,
+          podcastID: podcastID,
+          podcastTitle: podcast.title,
+          podcastAuthor: podcast.author,
+          coverURL: podcast.coverURL()
+        )
+        showFullPlayer()
+      }
+    } catch {
+      print("Failed to open episode: \(error)")
+    }
+  }
 }
 
 extension PlayerManager {
@@ -500,7 +529,7 @@ extension PlayerManager {
     queue.removeAll()
   }
 
-  func playNext() {
+  func playNext(autoPlay: Bool = true) {
     guard !queue.isEmpty else { return }
     guard userPreferences.autoPlayNextInQueue else { return }
 
@@ -508,9 +537,17 @@ extension PlayerManager {
 
     Task {
       if let podcastID = nextItem.podcastID {
-        await play(episodeID: nextItem.bookID, podcastID: podcastID)
+        if autoPlay {
+          await play(episodeID: nextItem.bookID, podcastID: podcastID)
+        } else {
+          await open(episodeID: nextItem.bookID, podcastID: podcastID)
+        }
       } else {
-        await play(nextItem.bookID)
+        if autoPlay {
+          await play(nextItem.bookID)
+        } else {
+          await open(nextItem.bookID)
+        }
       }
     }
   }

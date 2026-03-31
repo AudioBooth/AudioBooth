@@ -872,7 +872,7 @@ extension BookPlayerModel {
           self.handleStreamFailure(error: error)
 
         case .finished:
-          self.recordBookCompletionIfNeeded()
+          self.recordBookCompletionIfNeeded(autoPlayNext: true)
 
         case .seek, .rateChanged:
           break
@@ -1102,7 +1102,7 @@ extension BookPlayerModel {
         mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
       }
 
-      recordBookCompletionIfNeeded()
+      recordBookCompletionIfNeeded(autoPlayNext: false)
       sessionManager.notifyPlaybackStopped()
     } else {
       AppLogger.player.debug(
@@ -1115,7 +1115,7 @@ extension BookPlayerModel {
     isPlaying = isNowPlaying
   }
 
-  private func recordBookCompletionIfNeeded() {
+  private func recordBookCompletionIfNeeded(autoPlayNext: Bool) {
     guard
       chapters?.isShuffled != true,
       !mediaProgress.isFinished,
@@ -1136,7 +1136,7 @@ extension BookPlayerModel {
     }
 
     ReviewRequestManager.shared.recordBookCompletion()
-    playerManager.playNext()
+    playerManager.playNext(autoPlay: autoPlayNext)
   }
 }
 
