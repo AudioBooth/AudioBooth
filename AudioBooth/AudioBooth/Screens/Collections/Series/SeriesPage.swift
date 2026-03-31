@@ -1,3 +1,4 @@
+import API
 import Combine
 import SwiftUI
 
@@ -70,6 +71,22 @@ struct SeriesPage: View {
           ) {
             Label("List View", systemImage: "rectangle.grid.1x3")
           }
+
+          Divider()
+
+          Menu("Sort By") {
+            ForEach(model.sortOptions, id: \.self) { sortBy in
+              if model.currentSort == sortBy {
+                Button(
+                  sortBy.displayTitle,
+                  systemImage: model.ascending ? "chevron.up" : "chevron.down",
+                  action: { model.onSortOptionTapped(sortBy) }
+                )
+              } else {
+                Button(sortBy.displayTitle, action: { model.onSortOptionTapped(sortBy) })
+              }
+            }
+          }
         } label: {
           Image(systemName: "ellipsis")
         }
@@ -100,19 +117,30 @@ extension SeriesPage {
     var series: [SeriesCard.Model]
     var search: SearchView.Model = SearchView.Model()
 
+    var sortOptions: [SeriesService.SortBy]
+    var currentSort: SeriesService.SortBy
+    var ascending: Bool
+
     func onAppear() {}
     func refresh() async {}
     func loadNextPageIfNeeded() {}
     func onDisplayModeTapped() {}
+    func onSortOptionTapped(_ sortBy: SeriesService.SortBy) {}
 
     init(
       isLoading: Bool = false,
       hasMorePages: Bool = false,
-      series: [SeriesCard.Model] = []
+      series: [SeriesCard.Model] = [],
+      sortOptions: [SeriesService.SortBy] = SeriesService.SortBy.allCases,
+      currentSort: SeriesService.SortBy = .name,
+      ascending: Bool = true
     ) {
       self.isLoading = isLoading
       self.hasMorePages = hasMorePages
       self.series = series
+      self.sortOptions = sortOptions
+      self.currentSort = currentSort
+      self.ascending = ascending
     }
   }
 }

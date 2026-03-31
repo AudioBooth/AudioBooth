@@ -7,13 +7,26 @@ public final class SeriesService {
     self.audiobookshelf = audiobookshelf
   }
 
-  public enum SortBy: String {
+  public enum SortBy: String, CaseIterable {
     case name
     case numBooks
     case addedAt
     case lastBookAdded
     case lastBookUpdated
     case totalDuration
+    case random
+
+    public var displayTitle: LocalizedStringResource {
+      switch self {
+      case .name: "Name"
+      case .numBooks: "Number of Books"
+      case .addedAt: "Date Added"
+      case .lastBookAdded: "Last Book Added"
+      case .lastBookUpdated: "Last Book Updated"
+      case .totalDuration: "Total Duration"
+      case .random: "Randomly"
+      }
+    }
   }
 
   public func fetch(

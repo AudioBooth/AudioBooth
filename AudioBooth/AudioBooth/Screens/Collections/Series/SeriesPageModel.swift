@@ -13,12 +13,24 @@ final class SeriesPageModel: SeriesPage.Model {
   private let itemsPerPage: Int = 50
 
   init() {
-    super.init(hasMorePages: true)
+    super.init(hasMorePages: true, currentSort: .name, ascending: true)
     self.search = SearchViewModel()
   }
 
   override func onDisplayModeTapped() {
     preferences.libraryDisplayMode = preferences.libraryDisplayMode == .row ? .card : .row
+  }
+
+  override func onSortOptionTapped(_ sortBy: SeriesService.SortBy) {
+    if currentSort == sortBy {
+      ascending.toggle()
+    } else {
+      currentSort = sortBy
+      ascending = true
+    }
+    Task {
+      await refresh()
+    }
   }
 
   override func onAppear() {
@@ -45,8 +57,8 @@ final class SeriesPageModel: SeriesPage.Model {
       let response = try await audiobookshelf.series.fetch(
         limit: itemsPerPage,
         page: currentPage,
-        sortBy: .name,
-        ascending: true
+        sortBy: currentSort,
+        ascending: ascending
       )
 
       let ignorePrefix = Audiobookshelf.shared.libraries.sortingIgnorePrefix
