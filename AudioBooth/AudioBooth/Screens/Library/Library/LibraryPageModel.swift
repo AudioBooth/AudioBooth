@@ -182,7 +182,7 @@ final class LibraryPageModel: LibraryPage.Model {
     showingFilterSelection = true
   }
 
-  override func onFilterPreferenceChanged(_ newFilter: Filter) {
+  override func onFilterPreferenceChanged(_ newFilter: LibraryPageModel.Filter) {
     let resolved = newFilter == .all ? nil : newFilter
     guard filter != resolved else { return }
 
@@ -443,7 +443,9 @@ extension LibraryPageModel.Filter: RawRepresentable, Codable {
   }
 
   public var rawValue: String {
-    guard let data = try? JSONEncoder().encode(self),
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    guard let data = try? encoder.encode(self),
       let result = String(data: data, encoding: .utf8)
     else {
       return ""

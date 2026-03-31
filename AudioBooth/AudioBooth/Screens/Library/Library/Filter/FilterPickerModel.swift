@@ -15,14 +15,9 @@ final class FilterPickerModel: FilterPicker.Model {
     }
   }
 
-  override func onFilterChanged() {
-    Task { @MainActor in
-      if let selectedFilter {
-        UserPreferences.shared.libraryFilter = selectedFilter
-      } else {
-        UserPreferences.shared.libraryFilter = .all
-      }
-    }
+  override func onFilterChanged(_ filter: LibraryPageModel.Filter?) {
+    selectedFilter = filter
+    UserPreferences.shared.libraryFilter = filter ?? .all
   }
 
   override func refresh() async {

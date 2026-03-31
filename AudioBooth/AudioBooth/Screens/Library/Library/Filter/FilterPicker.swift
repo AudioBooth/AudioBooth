@@ -14,7 +14,7 @@ struct FilterPicker: View {
           title: String(localized: "All"),
           isSelected: model.selectedFilter == nil,
           action: {
-            model.selectedFilter = nil
+            model.onFilterChanged(nil)
             dismiss()
           }
         )
@@ -32,7 +32,7 @@ struct FilterPicker: View {
               title: option,
               isSelected: isSelected(.progress(option)),
               action: {
-                model.selectedFilter = .progress(option)
+                model.onFilterChanged(.progress(option))
                 dismiss()
               }
             )
@@ -52,7 +52,7 @@ struct FilterPicker: View {
               title: author.name,
               isSelected: isSelected(.authors(author.id, author.name)),
               action: {
-                model.selectedFilter = .authors(author.id, author.name)
+                model.onFilterChanged(.authors(author.id, author.name))
                 dismiss()
               }
             )
@@ -72,7 +72,7 @@ struct FilterPicker: View {
               title: genre,
               isSelected: isSelected(.genres(genre)),
               action: {
-                model.selectedFilter = .genres(genre)
+                model.onFilterChanged(.genres(genre))
                 dismiss()
               }
             )
@@ -92,7 +92,7 @@ struct FilterPicker: View {
               title: narrator,
               isSelected: isSelected(.narrators(narrator)),
               action: {
-                model.selectedFilter = .narrators(narrator)
+                model.onFilterChanged(.narrators(narrator))
                 dismiss()
               }
             )
@@ -112,7 +112,7 @@ struct FilterPicker: View {
               title: series.name,
               isSelected: isSelected(.series(series.id, series.name)),
               action: {
-                model.selectedFilter = .series(series.id, series.name)
+                model.onFilterChanged(.series(series.id, series.name))
                 dismiss()
               }
             )
@@ -132,7 +132,7 @@ struct FilterPicker: View {
               title: tag,
               isSelected: isSelected(.tags(tag)),
               action: {
-                model.selectedFilter = .tags(tag)
+                model.onFilterChanged(.tags(tag))
                 dismiss()
               }
             )
@@ -152,7 +152,7 @@ struct FilterPicker: View {
               title: language,
               isSelected: isSelected(.languages(language)),
               action: {
-                model.selectedFilter = .languages(language)
+                model.onFilterChanged(.languages(language))
                 dismiss()
               }
             )
@@ -172,7 +172,7 @@ struct FilterPicker: View {
               title: publisher,
               isSelected: isSelected(.publishers(publisher)),
               action: {
-                model.selectedFilter = .publishers(publisher)
+                model.onFilterChanged(.publishers(publisher))
                 dismiss()
               }
             )
@@ -192,7 +192,7 @@ struct FilterPicker: View {
               title: decade,
               isSelected: isSelected(.publishedDecades(decade)),
               action: {
-                model.selectedFilter = .publishedDecades(decade)
+                model.onFilterChanged(.publishedDecades(decade))
                 dismiss()
               }
             )
@@ -205,7 +205,7 @@ struct FilterPicker: View {
           title: String(localized: "Explicit"),
           isSelected: model.selectedFilter == .explicit,
           action: {
-            model.selectedFilter = .explicit
+            model.onFilterChanged(.explicit)
             dismiss()
           }
         )
@@ -216,7 +216,7 @@ struct FilterPicker: View {
           title: String(localized: "Abridged"),
           isSelected: model.selectedFilter == .abridged,
           action: {
-            model.selectedFilter = .abridged
+            model.onFilterChanged(.abridged)
             dismiss()
           }
         )
@@ -343,13 +343,9 @@ extension FilterPicker {
     var publishers: [String]
     var publishedDecades: [String]
 
-    var selectedFilter: LibraryPageModel.Filter? {
-      didSet {
-        onFilterChanged()
-      }
-    }
+    var selectedFilter: LibraryPageModel.Filter?
 
-    func onFilterChanged() {}
+    func onFilterChanged(_ filter: LibraryPageModel.Filter?) {}
     func refresh() async {}
 
     init(

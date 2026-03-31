@@ -30,13 +30,13 @@ struct LibraryPage: View {
         if model.isLoading && model.items.isEmpty {
           ProgressView("Loading books...")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if model.items.isEmpty && !model.isLoading {
+        } else if model.items.isEmpty, !model.isLoading, model.filters?.selectedFilter != nil {
           ContentUnavailableView(
             "No Books Found",
             systemImage: "magnifyingglass",
             description: Text("No books match your search.")
           )
-        } else if model.items.isEmpty && !model.isLoading {
+        } else if model.items.isEmpty, !model.isLoading {
           ContentUnavailableView(
             "No Books Found",
             systemImage: "books.vertical",
@@ -192,9 +192,7 @@ struct LibraryPage: View {
   }
 
   var filterButtonLabel: String? {
-    guard let filters = model.filters else { return nil }
-
-    switch filters.selectedFilter {
+    switch model.filters?.selectedFilter {
     case .all: return nil
     case .explicit: return "Explicit"
     case .abridged: return "Abridged"
