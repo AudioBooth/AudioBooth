@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
  
 ### Added
+- Pinned playlist preferences - Auto-download uncompleted books and auto-remove completed books from your pinned playlist
 - Series page sort by - Sort series by name, number of books, date added, and more
 - CarPlay podcast support - Browse and play podcasts and episodes directly from CarPlay
 - Latest podcast episodes tab - Quickly access the latest podcast episodes in a dedicated tab
@@ -24,4 +25,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed book listen again - Enhanced listen again functionality for completed books with better user experience
  
 ### Fixed
+- Ebook remote progress - Fixed ebook remote progress sync issue
 - Library filters - Fixed excessive page refreshing when applying filters
