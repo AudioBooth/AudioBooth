@@ -92,6 +92,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         if localBook.isExplicit { flags.insert(.explicit) }
         if localBook.isAbridged { flags.insert(.abridged) }
 
+        let size: Int64 = localBook.tracks.reduce(0) { $0 + ($1.size ?? 0) }
+
         updateUI(
           title: localBook.title,
           subtitle: localBook.subtitle,
@@ -100,6 +102,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           series: series,
           coverURL: localBook.coverURL(raw: true),
           duration: localBook.duration,
+          size: size > 0 ? size : nil,
           mediaType: mediaType,
           publisher: localBook.publisher,
           publishedYear: localBook.publishedYear,
@@ -192,6 +195,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         series: series,
         coverURL: book.coverURL(raw: true),
         duration: book.duration,
+        size: book.size,
         mediaType: book.mediaType,
         publisher: book.publisher,
         publishedYear: book.publishedYear,
@@ -246,6 +250,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     series: [Series],
     coverURL: URL?,
     duration: TimeInterval,
+    size: Int64? = nil,
     mediaType: Book.MediaType?,
     publisher: String? = nil,
     publishedYear: String? = nil,
@@ -292,6 +297,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     metadata.publishedYear = publishedYear
     metadata.language = language
     metadata.durationText = durationText
+    metadata.size = size.map { $0.formatted(.byteCount(style: .file)) }
     metadata.hasAudio = hasAudio
     metadata.isEbook = isEbook
 

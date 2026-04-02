@@ -64,6 +64,12 @@ struct PodcastEpisodeDetailView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+
+        if let size = model.size {
+          Label(size, systemImage: "internaldrive")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
       }
 
       HStack(spacing: 12) {
@@ -221,6 +227,7 @@ extension PodcastEpisodeDetailView {
     let episode: String?
     let chapters: [PodcastDetailsView.Model.Chapter]
 
+    var size: String?
     var isPlaying: Bool
     var isCompleted: Bool
     var progress: Double
@@ -259,6 +266,7 @@ extension PodcastEpisodeDetailView {
       season: String? = nil,
       episode: String? = nil,
       chapters: [PodcastDetailsView.Model.Chapter] = [],
+      size: String? = nil,
       isPlaying: Bool = false,
       isCompleted: Bool = false,
       progress: Double = 0,
@@ -271,6 +279,7 @@ extension PodcastEpisodeDetailView {
       self.season = season
       self.episode = episode
       self.chapters = chapters
+      self.size = size
       self.isPlaying = isPlaying
       self.isCompleted = isCompleted
       self.progress = progress
@@ -285,6 +294,7 @@ extension PodcastEpisodeDetailView {
       self.season = episode.season
       self.episode = episode.episode
       self.chapters = episode.chapters
+      self.size = episode.size.map { $0.formatted(.byteCount(style: .file)) }
       self.isPlaying = false
       self.isCompleted = episode.isCompleted
       self.progress = episode.progress

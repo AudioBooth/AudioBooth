@@ -44,6 +44,15 @@ struct MetadataSection: View {
           }
           .font(.subheadline)
         }
+
+        if let size = model.size {
+          HStack {
+            Image(systemName: "internaldrive")
+              .accessibilityHidden(true)
+            Text("**Size:** \(size)")
+          }
+          .font(.subheadline)
+        }
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,6 +65,7 @@ extension MetadataSection {
     var publishedYear: String?
     var language: String?
     var durationText: String?
+    var size: String?
     var hasAudio: Bool
     var isEbook: Bool
 
@@ -64,6 +74,7 @@ extension MetadataSection {
       publishedYear: String? = nil,
       language: String? = nil,
       durationText: String? = nil,
+      size: String? = nil,
       hasAudio: Bool = false,
       isEbook: Bool = false
     ) {
@@ -71,6 +82,7 @@ extension MetadataSection {
       self.publishedYear = publishedYear
       self.language = language
       self.durationText = durationText
+      self.size = size
       self.hasAudio = hasAudio
       self.isEbook = isEbook
     }
