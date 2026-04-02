@@ -135,6 +135,7 @@ extension MediaProgress {
       existingProgress.currentTime = currentTime
       existingProgress.duration = duration
       existingProgress.progress = progress
+      existingProgress.ebookProgress = ebookProgress
       existingProgress.ebookLocation = ebookLocation
       existingProgress.isFinished = isFinished
       existingProgress.finishedAt = finishedAt
@@ -305,6 +306,7 @@ extension MediaProgress {
           local.lastPlayedAt = remote.lastPlayedAt
           local.currentTime = remote.currentTime
           local.progress = remote.progress
+          local.ebookProgress = remote.ebookProgress
           local.ebookLocation = remote.ebookLocation
           local.isFinished = remote.isFinished
           local.finishedAt = remote.finishedAt
