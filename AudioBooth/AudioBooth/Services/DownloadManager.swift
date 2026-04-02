@@ -398,7 +398,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let localBook = LocalBook(from: book)
     for track in localBook.tracks {
       guard let ext = track.ext else { continue }
-      track.relativePath = URL(string: "\(serverID)/audiobooks/\(bookID)/\(track.index)\(ext)")
+      let resolvedExt = Self.correctExtension(mimeType: track.mimeType, codec: track.codec) ?? ext
+      track.relativePath = URL(string: "\(serverID)/audiobooks/\(bookID)/\(track.index)\(resolvedExt)")
     }
     try? localBook.save()
   }
@@ -487,8 +488,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     try? episodesDirectory.setResourceValues(resourceValues)
 
     let ext = audioTrack.metadata?.ext ?? ".mp3"
+    let resolvedExt = Self.correctExtension(mimeType: audioTrack.mimeType, codec: audioTrack.codec) ?? ext
     let trackURL = serverURL.appendingPathComponent("api/items/\(podcastID)/file/\(audioTrack.ino)/download")
-    let trackFile = episodeDirectory.appendingPathComponent("0\(ext)")
+    let trackFile = episodeDirectory.appendingPathComponent("0\(resolvedExt)")
 
     var request = URLRequest(url: trackURL)
     request.setValue(credentials.bearer, forHTTPHeaderField: "Authorization")
@@ -538,9 +540,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         startOffset: 0,
         duration: apiEpisode.duration ?? 0,
         filename: audioTrack.metadata?.filename,
-        ext: ext,
+        ext: resolvedExt,
         size: fileSize,
-        relativePath: URL(string: "\(serverID)/episodes/\(podcastID)/\(episodeID)/0\(ext)")
+        relativePath: URL(string: "\(serverID)/episodes/\(podcastID)/\(episodeID)/0\(resolvedExt)")
       ),
       chapters: (apiEpisode.chapters ?? []).map {
         Chapter(id: $0.id, start: $0.start, end: $0.end, title: $0.title)
@@ -601,9 +603,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         throw URLError(.badURL)
       }
 
+      let resolvedExt = Self.correctExtension(mimeType: apiTrack.mimeType, codec: apiTrack.codec) ?? ext
       let trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
 
-      let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
+      let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(resolvedExt)")
 
       var request = URLRequest(url: trackURL)
 
@@ -772,6 +775,31 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     try FileManager.default.moveItem(at: location, to: destination)
     continuation?.resume()
+  }
+
+  static func correctExtension(mimeType: String?, codec: String?) -> String? {
+    if let mimeType {
+      switch mimeType.lowercased() {
+      case "audio/mpeg": return ".mp3"
+      case "audio/mp4": return ".m4a"
+      case "audio/ogg": return ".ogg"
+      case "audio/flac": return ".flac"
+      case "audio/aac": return ".aac"
+      case "audio/x-aiff": return ".aiff"
+      case "audio/webm": return ".webm"
+      default: break
+      }
+    }
+    if let codec {
+      switch codec.lowercased() {
+      case "mp3": return ".mp3"
+      case "aac": return ".m4a"
+      case "opus", "vorbis": return ".ogg"
+      case "flac": return ".flac"
+      default: break
+      }
+    }
+    return nil
   }
 }
 

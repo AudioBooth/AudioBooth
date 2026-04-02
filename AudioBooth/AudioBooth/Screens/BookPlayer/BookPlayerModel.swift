@@ -1224,7 +1224,7 @@ extension BookPlayerModel {
     }
 
     do {
-      try await setupSession(forceTranscode: true)
+      try await setupSession(forceTranscode: recoveryAttempts > 1)
 
       if !isDownloaded {
         reloadPlayer()

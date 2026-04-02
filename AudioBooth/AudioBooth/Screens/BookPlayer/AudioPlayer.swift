@@ -35,7 +35,6 @@ final class AudioPlayer {
   private var timeObserver: Any?
   private var cancellables = Set<AnyCancellable>()
   private var itemObservers = Set<AnyCancellable>()
-  private var tempSymlinks: [URL] = []
 
   let events = PassthroughSubject<Event, Never>()
 
@@ -86,15 +85,12 @@ final class AudioPlayer {
 
   deinit {
     removeTimeObserver()
-    cleanupSymlinks()
   }
 
   func prepare(
     tracks: [Track],
     urlResolver: (Track) -> URL?
   ) {
-    cleanupSymlinks()
-
     var resolvedTracks: [Track] = []
     var urls: [URL] = []
     for track in tracks {
@@ -137,7 +133,6 @@ final class AudioPlayer {
     removeTimeObserver()
     player.pause()
     player.replaceCurrentItem(with: nil)
-    cleanupSymlinks()
     events.send(.stateChanged(.stopped))
   }
 
@@ -196,9 +191,7 @@ private extension AudioPlayer {
   func loadTrack(at index: Int, seekTo offset: TimeInterval, autoPlay: Bool) {
     guard index < trackURLs.count else { return }
 
-    cleanupSymlinks()
-    let url = resolvedURL(for: index)
-    let item = AVPlayerItem(url: url)
+    let item = AVPlayerItem(url: trackURLs[index])
     observeItem(item)
     applyEQ(to: item)
     player.replaceCurrentItem(with: item)
@@ -224,62 +217,6 @@ private extension AudioPlayer {
     currentTrackIndex += 1
     AppLogger.player.debug("Advanced to track \(self.currentTrackIndex)/\(self.tracks.count)")
     loadTrack(at: currentTrackIndex, seekTo: 0, autoPlay: true)
-  }
-
-  func resolvedURL(for index: Int) -> URL {
-    let url = trackURLs[index]
-    guard url.isFileURL else { return url }
-
-    let track = tracks[index]
-    guard let expectedExt = correctExtension(for: track) else { return url }
-
-    let currentExt = url.pathExtension.lowercased()
-    guard currentExt != expectedExt else { return url }
-
-    let symlinkURL = FileManager.default.temporaryDirectory
-      .appendingPathComponent(UUID().uuidString)
-      .appendingPathExtension(expectedExt)
-    do {
-      try FileManager.default.createSymbolicLink(at: symlinkURL, withDestinationURL: url)
-      tempSymlinks.append(symlinkURL)
-      AppLogger.player.debug("Created type-hint symlink: \(currentExt) → \(expectedExt)")
-      return symlinkURL
-    } catch {
-      AppLogger.player.error("Failed to create type-hint symlink: \(error)")
-      return url
-    }
-  }
-
-  func correctExtension(for track: Track) -> String? {
-    if let mimeType = track.mimeType {
-      switch mimeType.lowercased() {
-      case "audio/mpeg": return "mp3"
-      case "audio/mp4": return "m4a"
-      case "audio/ogg": return "ogg"
-      case "audio/flac": return "flac"
-      case "audio/aac": return "aac"
-      case "audio/x-aiff": return "aiff"
-      case "audio/webm": return "webm"
-      default: break
-      }
-    }
-    if let codec = track.codec {
-      switch codec.lowercased() {
-      case "mp3": return "mp3"
-      case "aac": return "m4a"
-      case "opus", "vorbis": return "ogg"
-      case "flac": return "flac"
-      default: break
-      }
-    }
-    return nil
-  }
-
-  func cleanupSymlinks() {
-    for url in tempSymlinks {
-      try? FileManager.default.removeItem(at: url)
-    }
-    tempSymlinks.removeAll()
   }
 
   func trackAndOffset(for time: TimeInterval) -> (Int, TimeInterval) {
