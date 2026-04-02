@@ -30,8 +30,16 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
     }
 
     let isPinned = pinnedPlaylistManager.isPinned(collectionID)
+    let config = pinnedPlaylistManager.config
 
-    super.init(mode: mode, canEdit: canEdit, canDelete: canDelete, isPinned: isPinned)
+    super.init(
+      mode: mode,
+      canEdit: canEdit,
+      canDelete: canDelete,
+      isPinned: isPinned,
+      autoDownload: isPinned ? (config?.autoDownload ?? .off) : .off,
+      removeCompleted: isPinned ? (config?.removeCompleted ?? false) : false
+    )
   }
 
   override func onAppear() {
@@ -161,10 +169,26 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
     if isPinned {
       pinnedPlaylistManager.unpin()
       isPinned = false
+      autoDownload = .off
+      removeCompleted = false
     } else {
       pinnedPlaylistManager.pin(collectionID)
       isPinned = true
     }
+  }
+
+  override func onAutoDownloadChanged(_ mode: AutoDownloadMode) {
+    autoDownload = mode
+    guard var config = pinnedPlaylistManager.config else { return }
+    config.autoDownload = mode
+    pinnedPlaylistManager.config = config
+  }
+
+  override func onRemoveCompletedChanged(_ value: Bool) {
+    removeCompleted = value
+    guard var config = pinnedPlaylistManager.config else { return }
+    config.removeCompleted = value
+    pinnedPlaylistManager.config = config
   }
 
   override func onPlayItem(_ item: BookCard.Model) {

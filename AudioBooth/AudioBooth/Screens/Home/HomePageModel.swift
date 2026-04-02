@@ -109,16 +109,8 @@ extension HomePageModel {
   }
 
   private func fetchPinnedPlaylist() async {
-    guard let playlistID = pinnedPlaylistManager.pinnedPlaylistID else {
-      pinnedPlaylist = nil
-      Audiobookshelf.shared.playlists.pinnedPlaylist = nil
-      return
-    }
-
     do {
-      let playlist = try await Audiobookshelf.shared.playlists.fetch(id: playlistID)
-      pinnedPlaylist = playlist
-      Audiobookshelf.shared.playlists.pinnedPlaylist = playlist
+      pinnedPlaylist = try await pinnedPlaylistManager.fetch()
     } catch {
       AppLogger.viewModel.error("Failed to fetch pinned playlist: \(error)")
     }
@@ -421,9 +413,7 @@ extension HomePageModel {
 
     guard Audiobookshelf.shared.isAuthenticated else { return }
 
-    if let cachedPlaylist = Audiobookshelf.shared.playlists.pinnedPlaylist,
-      cachedPlaylist.id == pinnedPlaylistManager.pinnedPlaylistID
-    {
+    if let cachedPlaylist = pinnedPlaylistManager.loadCached() {
       pinnedPlaylist = cachedPlaylist
     }
 

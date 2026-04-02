@@ -236,7 +236,7 @@ extension Array: @retroactive RawRepresentable where Element: Codable {
   }
 }
 
-enum AutoDownloadMode: String, CaseIterable {
+enum AutoDownloadMode: String, CaseIterable, Codable {
   case off
   case wifiOnly
   case wifiAndCellular

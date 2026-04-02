@@ -10,6 +10,7 @@ struct CollectionDetailPage: View {
   @Environment(\.editMode) private var editMode
   @State private var showDeleteConfirmation = false
   @State private var showEditSheet = false
+  @State private var showPinnedPreferences = false
 
   @ScaledMetric(relativeTo: .title) private var gridMinimum: CGFloat = 100
   @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
@@ -36,12 +37,34 @@ struct CollectionDetailPage: View {
     .toolbar {
       if model.mode == .playlists {
         ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            model.onTogglePin()
-          } label: {
-            Image(systemName: model.isPinned ? "pin.fill" : "pin")
+          if model.isPinned {
+            Menu {
+              Button {
+                showPinnedPreferences = true
+              } label: {
+                Label("Preferences", systemImage: "gearshape")
+              }
+
+              Divider()
+
+              Button(role: .destructive) {
+                model.onTogglePin()
+              } label: {
+                Label("Unpin", systemImage: "pin.slash")
+              }
+              .tint(.red)
+            } label: {
+              Image(systemName: "pin.fill")
+            }
+            .tint(.primary)
+          } else {
+            Button {
+              model.onTogglePin()
+            } label: {
+              Image(systemName: "pin")
+            }
+            .tint(.primary)
           }
-          .tint(.primary)
         }
       }
 
@@ -119,6 +142,9 @@ struct CollectionDetailPage: View {
           model.onUpdateCollection(name: name, description: description.isEmpty ? nil : description)
         }
       )
+    }
+    .adaptiveSheet(isPresented: $showPinnedPreferences) {
+      PinnedPlaylistPreferencesSheet(model: model)
     }
     .onAppear {
       model.onAppear()
@@ -306,6 +332,8 @@ extension CollectionDetailPage {
     var canEdit: Bool
     var canDelete: Bool
     var isPinned: Bool
+    var autoDownload: AutoDownloadMode
+    var removeCompleted: Bool
 
     func onAppear() {}
     func refresh() async {}
@@ -315,6 +343,8 @@ extension CollectionDetailPage {
     func onDelete(at indexSet: IndexSet) {}
     func onTogglePin() {}
     func onPlayItem(_ item: BookCard.Model) {}
+    func onAutoDownloadChanged(_ mode: AutoDownloadMode) {}
+    func onRemoveCompletedChanged(_ value: Bool) {}
 
     init(
       isLoading: Bool = false,
@@ -324,7 +354,9 @@ extension CollectionDetailPage {
       mode: CollectionMode = .playlists,
       canEdit: Bool = false,
       canDelete: Bool = false,
-      isPinned: Bool = false
+      isPinned: Bool = false,
+      autoDownload: AutoDownloadMode = .off,
+      removeCompleted: Bool = false
     ) {
       self.isLoading = isLoading
       self.collectionName = collectionName
@@ -334,6 +366,8 @@ extension CollectionDetailPage {
       self.canEdit = canEdit
       self.canDelete = canDelete
       self.isPinned = isPinned
+      self.autoDownload = autoDownload
+      self.removeCompleted = removeCompleted
     }
   }
 }
@@ -373,6 +407,64 @@ extension CollectionDetailPage.Model {
         ),
       ]
     )
+  }
+}
+
+private struct PinnedPlaylistPreferencesSheet: View {
+  @ObservedObject var model: CollectionDetailPage.Model
+
+  var body: some View {
+    VStack(spacing: 0) {
+      Text("Pinned Playlist")
+        .font(.title3)
+        .fontWeight(.semibold)
+        .padding(.top, 32)
+        .padding(.bottom, 20)
+
+      VStack(spacing: 0) {
+        HStack {
+          Text("Auto-Download")
+            .font(.subheadline)
+            .bold()
+
+          Spacer()
+
+          Picker(
+            "Auto-Download",
+            selection: Binding(
+              get: { model.autoDownload },
+              set: { model.onAutoDownloadChanged($0) }
+            )
+          ) {
+            ForEach(AutoDownloadMode.allCases, id: \.rawValue) { mode in
+              Text(mode.displayName).tag(mode)
+                .foregroundStyle(.secondary)
+            }
+          }
+          .labelsHidden()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+
+        Divider()
+          .padding(.leading)
+
+        Toggle(
+          "Remove Completed",
+          isOn: Binding(
+            get: { model.removeCompleted },
+            set: { model.onRemoveCompletedChanged($0) }
+          )
+        )
+        .font(.subheadline)
+        .bold()
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+      }
+      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+      .padding(.horizontal)
+      .padding(.bottom, 32)
+    }
   }
 }
 
