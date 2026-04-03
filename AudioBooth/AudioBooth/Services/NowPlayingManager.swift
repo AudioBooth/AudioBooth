@@ -61,11 +61,12 @@ final class NowPlayingManager {
         let audioSession = AVAudioSession.sharedInstance()
         guard !audioSession.secondaryAudioShouldBeSilencedHint else { return }
 
-        try audioSession.setCategory(.playback, mode: .spokenAudio)
+        try audioSession.setCategory(.playback, mode: .spokenAudio, policy: .longFormAudio)
         try audioSession.setActive(true)
 
         let url = URL(string: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=")!
         let player = AVPlayer(url: url)
+        player.allowsExternalPlayback = false
         player.volume = 0
         player.play()
         try? await Task.sleep(for: .milliseconds(500))
