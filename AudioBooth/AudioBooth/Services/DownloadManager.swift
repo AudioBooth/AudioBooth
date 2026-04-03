@@ -389,18 +389,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let trackCount = book.tracks?.count ?? 0
     AppLogger.download.info("Downloading audiobook: \(trackCount) tracks, \(totalBytes.formattedByteSize)")
 
-    try await downloadTracks()
-
-    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
-      throw URLError(.userAuthenticationRequired)
-    }
+    let tracks = try await downloadTracks()
 
     let localBook = LocalBook(from: book)
-    for track in localBook.tracks {
-      guard let ext = track.ext else { continue }
-      let resolvedExt = Self.correctExtension(mimeType: track.mimeType, codec: track.codec) ?? ext
-      track.relativePath = URL(string: "\(serverID)/audiobooks/\(bookID)/\(track.index)\(resolvedExt)")
-    }
+    localBook.tracks = tracks
     try? localBook.save()
   }
 
@@ -487,10 +479,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     resourceValues.isExcludedFromBackup = true
     try? episodesDirectory.setResourceValues(resourceValues)
 
-    let ext = audioTrack.metadata?.ext ?? ".mp3"
-    let resolvedExt = Self.correctExtension(mimeType: audioTrack.mimeType, codec: audioTrack.codec) ?? ext
+    let ext = audioTrack.sanitizedExt
     let trackURL = serverURL.appendingPathComponent("api/items/\(podcastID)/file/\(audioTrack.ino)/download")
-    let trackFile = episodeDirectory.appendingPathComponent("0\(resolvedExt)")
+    let trackFile = episodeDirectory.appendingPathComponent("0\(ext)")
 
     var request = URLRequest(url: trackURL)
     request.setValue(credentials.bearer, forHTTPHeaderField: "Authorization")
@@ -540,9 +531,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         startOffset: 0,
         duration: apiEpisode.duration ?? 0,
         filename: audioTrack.metadata?.filename,
-        ext: resolvedExt,
+        ext: ext,
         size: fileSize,
-        relativePath: URL(string: "\(serverID)/episodes/\(podcastID)/\(episodeID)/0\(resolvedExt)")
+        relativePath: URL(string: "\(serverID)/episodes/\(podcastID)/\(episodeID)/0\(ext)")
       ),
       chapters: (apiEpisode.chapters ?? []).map {
         Chapter(id: $0.id, start: $0.start, end: $0.end, title: $0.title)
@@ -551,7 +542,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     try? localEpisode.save()
   }
 
-  private func downloadTracks() async throws {
+  private func downloadTracks() async throws -> [Track] {
     guard let apiBook else { throw URLError(.unknown) }
 
     let apiTracks = apiBook.tracks ?? []
@@ -592,21 +583,15 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     resourceValues.isExcludedFromBackup = true
     try? audiobooksDirectory.setResourceValues(resourceValues)
 
+    var tracks: [Track] = []
+
     for apiTrack in apiTracks {
       guard !isCancelled else { throw CancellationError() }
 
-      guard
-        let ext = apiTrack.metadata?.ext,
-        let ino = apiTrack.ino
-      else {
-        AppLogger.download.error("Invalid track metadata for track \(apiTrack.index)")
-        throw URLError(.badURL)
-      }
+      let ext = apiTrack.sanitizedExt
+      let trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(apiTrack.ino)/download")
 
-      let resolvedExt = Self.correctExtension(mimeType: apiTrack.mimeType, codec: apiTrack.codec) ?? ext
-      let trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
-
-      let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(resolvedExt)")
+      let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
 
       var request = URLRequest(url: trackURL)
 
@@ -627,7 +612,14 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       if let size = apiTrack.metadata?.size {
         bytesDownloadedSoFar += size
       }
+
+      let relativePath = URL(string: "\(serverID)/audiobooks/\(bookID)/\(apiTrack.index)\(ext)")
+      let track = Track(from: apiTrack)
+      track.relativePath = relativePath
+      tracks.append(track)
     }
+
+    return tracks
   }
 
   private func downloadEbook(from ebookURL: URL, ext: String) async throws {
@@ -777,30 +769,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     continuation?.resume()
   }
 
-  static func correctExtension(mimeType: String?, codec: String?) -> String? {
-    if let mimeType {
-      switch mimeType.lowercased() {
-      case "audio/mpeg": return ".mp3"
-      case "audio/mp4": return ".m4a"
-      case "audio/ogg": return ".ogg"
-      case "audio/flac": return ".flac"
-      case "audio/aac": return ".aac"
-      case "audio/x-aiff": return ".aiff"
-      case "audio/webm": return ".webm"
-      default: break
-      }
-    }
-    if let codec {
-      switch codec.lowercased() {
-      case "mp3": return ".mp3"
-      case "aac": return ".m4a"
-      case "opus", "vorbis": return ".ogg"
-      case "flac": return ".flac"
-      default: break
-      }
-    }
-    return nil
-  }
 }
 
 extension DownloadOperation: URLSessionDownloadDelegate {
@@ -861,5 +829,35 @@ extension DownloadOperation: URLSessionDownloadDelegate {
       DownloadManager.shared.backgroundCompletionHandler = nil
       completionHandler()
     }
+  }
+}
+
+extension AudioTrack {
+  var sanitizedExt: String {
+    switch mimeType?.lowercased() {
+    case "audio/mpeg": return ".mp3"
+    case "audio/mp4", "audio/x-m4a": return ".m4a"
+    case "audio/ogg": return ".ogg"
+    case "audio/flac": return ".flac"
+    case "audio/aac": return ".aac"
+    case "audio/x-aiff": return ".aiff"
+    case "audio/webm": return ".webm"
+    case "audio/wav", "audio/x-wav": return ".wav"
+    case "audio/x-caf": return ".caf"
+    case "audio/opus": return ".opus"
+    default: break
+    }
+
+    switch codec?.lowercased() {
+    case "mp3": return ".mp3"
+    case "aac", "alac": return ".m4a"
+    case "opus": return ".opus"
+    case "vorbis": return ".ogg"
+    case "flac": return ".flac"
+    case let codec where codec?.hasPrefix("pcm") == true: return ".wav"
+    default: break
+    }
+
+    return metadata?.ext ?? ".mp3"
   }
 }

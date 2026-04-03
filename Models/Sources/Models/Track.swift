@@ -44,7 +44,7 @@ public final class Track {
     self.relativePath = nil
   }
 
-  public init(from track: Book.Media.Track) {
+  public init(from track: AudioTrack) {
     self.index = track.index
     self.startOffset = track.startOffset
     self.duration = track.duration
