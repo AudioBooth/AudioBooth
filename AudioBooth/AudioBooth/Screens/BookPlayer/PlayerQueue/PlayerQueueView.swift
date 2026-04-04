@@ -3,6 +3,7 @@ import SwiftUI
 
 struct PlayerQueueView: View {
   @ObservedObject var model: Model
+  @ObservedObject private var preferences = UserPreferences.shared
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -68,11 +69,19 @@ struct PlayerQueueView: View {
         }
       }
       .safeAreaInset(edge: .bottom) {
-        Toggle("Auto-play next", isOn: $model.autoPlayNext)
-          .padding()
-          .font(.subheadline)
-          .bold()
-          .background(.regularMaterial)
+        VStack(spacing: 0) {
+          Divider()
+          Toggle("Auto-play next", isOn: $preferences.autoPlayNextInQueue)
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+          Divider()
+          Toggle("Smart continue", isOn: $preferences.smartContinuePlayback)
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+        }
+        .font(.subheadline)
+        .bold()
+        .background(.regularMaterial)
       }
       .navigationDestination(for: NavigationDestination.self) { destination in
         switch destination {
@@ -235,7 +244,6 @@ extension PlayerQueueView {
   class Model: ObservableObject {
     var currentItem: QueueItem?
     var queue: [QueueItem]
-    var autoPlayNext: Bool
 
     func onDelete(at offsets: IndexSet) {}
     func onMove(from source: IndexSet, to destination: Int) {}
@@ -245,13 +253,10 @@ extension PlayerQueueView {
 
     init(
       currentItem: QueueItem? = nil,
-      queue: [QueueItem] = [],
-      autoPlayNext: Bool = true,
-      isPlaying: Bool = false
+      queue: [QueueItem] = []
     ) {
       self.currentItem = currentItem
       self.queue = queue
-      self.autoPlayNext = autoPlayNext
     }
   }
 }

@@ -50,7 +50,7 @@ final class DownloadManager: NSObject, ObservableObject {
   }
 
   func updateDownloadStates() {
-    guard Audiobookshelf.shared.isAuthenticated else { return }
+    guard Audiobookshelf.shared.libraries.current != nil else { return }
 
     if let books = try? LocalBook.fetchAll() {
       for book in books {

@@ -118,10 +118,8 @@ struct BookPlayer: View {
               }
             }
 
-            if !playerManager.queue.isEmpty {
-              Button(action: { model.isQueuePresented = true }) {
-                Label("Queue", systemImage: "list.bullet")
-              }
+            Button(action: { model.isQueuePresented = true }) {
+              Label("Queue", systemImage: "list.bullet")
             }
 
             Divider()

@@ -31,14 +31,22 @@ final class PlayerManager: ObservableObject, Sendable {
     }
   }
 
+  private var origin: Origin? {
+    didSet {
+      saveOrigin()
+    }
+  }
+
   private static let currentIDKey = "currentBookID"
   private static let queueKey = "playerQueue"
+  private static let originKey = "origin"
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
 
   private var cancellables = Set<AnyCancellable>()
 
   private init() {
     loadQueue()
+    loadOrigin()
     setupRemoteCommandCenter()
     setupServerObserver()
   }
@@ -82,7 +90,7 @@ final class PlayerManager: ObservableObject, Sendable {
     current?.isPlaying ?? false
   }
 
-  func setCurrent(_ book: LocalBook) {
+  func setCurrent(_ book: LocalBook, origin: Origin? = nil) {
     if book.bookID == current?.id {
       isShowingFullPlayer = true
     } else {
@@ -91,11 +99,12 @@ final class PlayerManager: ObservableObject, Sendable {
       }
       removeFromQueue(bookID: book.bookID)
       current = BookPlayerModel(book)
+      self.origin = origin
       WidgetCenter.shared.reloadAllTimelines()
     }
   }
 
-  func setCurrent(_ book: Book) {
+  func setCurrent(_ book: Book, origin: Origin? = nil) {
     if book.id == current?.id {
       isShowingFullPlayer = true
     } else {
@@ -104,6 +113,7 @@ final class PlayerManager: ObservableObject, Sendable {
       }
       removeFromQueue(bookID: book.id)
       current = BookPlayerModel(book)
+      self.origin = origin
       WidgetCenter.shared.reloadAllTimelines()
     }
   }
@@ -113,7 +123,8 @@ final class PlayerManager: ObservableObject, Sendable {
     podcastID: String,
     podcastTitle: String,
     podcastAuthor: String?,
-    coverURL: URL?
+    coverURL: URL?,
+    origin: Origin? = nil
   ) {
     if episode.id == current?.id {
       isShowingFullPlayer = true
@@ -128,10 +139,11 @@ final class PlayerManager: ObservableObject, Sendable {
         podcastAuthor: podcastAuthor,
         coverURL: coverURL
       )
+      self.origin = origin
     }
   }
 
-  func setCurrent(_ episode: LocalEpisode) {
+  func setCurrent(_ episode: LocalEpisode, origin: Origin? = nil) {
     if episode.episodeID == current?.id {
       isShowingFullPlayer = true
     } else {
@@ -139,6 +151,7 @@ final class PlayerManager: ObservableObject, Sendable {
         currentPlayer.stopPlayer()
       }
       current = BookPlayerModel(episode)
+      self.origin = origin
     }
   }
 
@@ -148,6 +161,7 @@ final class PlayerManager: ObservableObject, Sendable {
       currentPlayer.closeSession()
     }
     current = nil
+    origin = nil
     isShowingFullPlayer = false
     sharedDefaults?.removeObject(forKey: "playbackState")
     watchConnectivity.sendPlaybackRate(nil)
@@ -194,12 +208,16 @@ extension PlayerManager: PlayerManagerProtocol {
   }
 
   func play(_ bookID: String) async {
+    await play(bookID, origin: nil)
+  }
+
+  func play(_ bookID: String, origin: Origin?) async {
     do {
       if current?.id == bookID {
         play()
       } else if let localBook = try LocalBook.fetch(bookID: bookID) {
         if !localBook.tracks.isEmpty {
-          setCurrent(localBook)
+          setCurrent(localBook, origin: origin)
           play()
         } else if localBook.ebookFile != nil {
           openLocalBookAsEbook(localBook)
@@ -207,7 +225,7 @@ extension PlayerManager: PlayerManagerProtocol {
       } else {
         let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
         if book.mediaType.contains(.audiobook) {
-          setCurrent(book)
+          setCurrent(book, origin: origin)
           play()
         } else if book.mediaType.contains(.ebook) {
           openRemoteBookAsEbook(book)
@@ -218,14 +236,14 @@ extension PlayerManager: PlayerManagerProtocol {
     }
   }
 
-  private func play(episodeID: String, podcastID: String) async {
+  private func play(episodeID: String, podcastID: String, origin: Origin? = nil) async {
     if current?.id == episodeID {
       play()
       return
     }
 
     if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
-      setCurrent(localEpisode)
+      setCurrent(localEpisode, origin: origin)
       play()
       return
     }
@@ -238,7 +256,8 @@ extension PlayerManager: PlayerManagerProtocol {
           podcastID: podcastID,
           podcastTitle: podcast.title,
           podcastAuthor: podcast.author,
-          coverURL: podcast.coverURL()
+          coverURL: podcast.coverURL(),
+          origin: origin
         )
         play()
       }
@@ -530,30 +549,58 @@ extension PlayerManager {
   }
 
   func playNext(autoPlay: Bool = true) {
-    guard !queue.isEmpty else { return }
-    guard userPreferences.autoPlayNextInQueue else { return }
+    if !queue.isEmpty, userPreferences.autoPlayNextInQueue {
+      let nextItem = queue.removeFirst()
+      playItem(nextItem, autoPlay: autoPlay)
+      return
+    }
 
-    let nextItem = queue.removeFirst()
+    guard userPreferences.smartContinuePlayback else { return }
+    guard let origin else { return }
+    guard let currentID = current?.id else { return }
+    let currentPodcastID = current?.podcastID
 
     Task {
-      if let podcastID = nextItem.podcastID {
+      let resolver = SmartContinueResolver()
+      guard
+        let resolved = await resolver.resolve(
+          currentItemID: currentID,
+          currentPodcastID: currentPodcastID,
+          origin: origin
+        )
+      else { return }
+
+      let item = QueueItem(
+        bookID: resolved.bookID,
+        title: resolved.title,
+        details: resolved.details,
+        coverURL: resolved.coverURL,
+        podcastID: resolved.podcastID
+      )
+      playItem(item, autoPlay: autoPlay, origin: origin)
+    }
+  }
+
+  private func playItem(_ item: QueueItem, autoPlay: Bool, origin: Origin? = nil) {
+    Task {
+      if let podcastID = item.podcastID {
         if autoPlay {
-          await play(episodeID: nextItem.bookID, podcastID: podcastID)
+          await play(episodeID: item.bookID, podcastID: podcastID, origin: origin)
         } else {
-          await open(episodeID: nextItem.bookID, podcastID: podcastID)
+          await open(episodeID: item.bookID, podcastID: podcastID)
         }
       } else {
         if autoPlay {
-          await play(nextItem.bookID)
+          await play(item.bookID, origin: origin)
         } else {
-          await open(nextItem.bookID)
+          await open(item.bookID)
         }
       }
     }
   }
 
   func playFromQueue(_ item: QueueItem) {
-    if let current, !isCurrentBookCompleted() {
+    if let current, MediaProgress.progress(for: current.id) < 1 {
       let currentQueueItem = QueueItem(
         bookID: current.id,
         title: current.title,
@@ -575,12 +622,6 @@ extension PlayerManager {
     }
   }
 
-  fileprivate func isCurrentBookCompleted() -> Bool {
-    guard let current else { return true }
-    let progress = MediaProgress.progress(for: current.id)
-    return progress >= 1.0
-  }
-
   fileprivate func saveQueue() {
     if let data = try? JSONEncoder().encode(queue) {
       UserDefaults.standard.set(data, forKey: Self.queueKey)
@@ -592,6 +633,34 @@ extension PlayerManager {
       let savedQueue = try? JSONDecoder().decode([QueueItem].self, from: data)
     {
       queue = savedQueue
+    }
+  }
+
+}
+
+extension PlayerManager {
+  enum Origin: Codable, Equatable {
+    case podcast(podcastID: String)
+    case series(seriesID: String, libraryID: String)
+    case playlist(playlistID: String)
+    case collection(collectionID: String)
+  }
+
+  private func saveOrigin() {
+    if let origin = origin,
+      let data = try? JSONEncoder().encode(origin)
+    {
+      UserDefaults.standard.set(data, forKey: Self.originKey)
+    } else {
+      UserDefaults.standard.removeObject(forKey: Self.originKey)
+    }
+  }
+
+  private func loadOrigin() {
+    if let data = UserDefaults.standard.data(forKey: Self.originKey),
+      let origin = try? JSONDecoder().decode(Origin.self, from: data)
+    {
+      self.origin = origin
     }
   }
 }

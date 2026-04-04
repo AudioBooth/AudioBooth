@@ -130,6 +130,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("autoPlayNextInQueue")
   var autoPlayNextInQueue: Bool = true
 
+  @AppStorage("smartContinuePlayback")
+  var smartContinuePlayback: Bool = true
+
   @AppStorage("podcastEpisodeFilter")
   var podcastEpisodeFilter: PodcastDetailsView.Model.EpisodeFilter = .all
 

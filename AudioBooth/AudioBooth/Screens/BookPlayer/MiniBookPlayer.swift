@@ -84,16 +84,14 @@ struct MiniBookPlayer: View, Equatable {
         .disabled(player.isLoading)
         .buttonStyle(.borderless)
 
-        if !playerManager.queue.isEmpty {
-          Button {
-            player.isQueuePresented = true
-          } label: {
-            Image(systemName: "list.bullet")
-              .font(.system(size: 12))
-              .foregroundColor(.secondary)
-          }
-          .buttonStyle(.borderless)
+        Button {
+          player.isQueuePresented = true
+        } label: {
+          Image(systemName: "list.bullet")
+            .font(.system(size: 12))
+            .foregroundColor(.secondary)
         }
+        .buttonStyle(.borderless)
       }
     }
   }
@@ -162,16 +160,14 @@ struct LegacyMiniBookPlayer: View {
         .disabled(player.isLoading)
         .buttonStyle(.borderless)
 
-        if !playerManager.queue.isEmpty {
-          Button {
-            player.isQueuePresented = true
-          } label: {
-            Image(systemName: "list.bullet")
-              .font(.system(size: 16))
-              .foregroundColor(.secondary)
-          }
-          .buttonStyle(.borderless)
+        Button {
+          player.isQueuePresented = true
+        } label: {
+          Image(systemName: "list.bullet")
+            .font(.system(size: 16))
+            .foregroundColor(.secondary)
         }
+        .buttonStyle(.borderless)
       }
     }
   }

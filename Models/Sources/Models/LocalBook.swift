@@ -5,6 +5,7 @@ import SwiftData
 @Model
 public final class LocalBook {
   @Attribute(.unique) public var bookID: String
+  public var libraryID: String?
   public var title: String
   public var authors: [Author]
   public var narrators: [String]
@@ -62,6 +63,7 @@ public final class LocalBook {
 
   public init(
     bookID: String,
+    libraryID: String? = nil,
     title: String,
     authors: [Author] = [],
     narrators: [String] = [],
@@ -84,6 +86,7 @@ public final class LocalBook {
     ebookFile: URL? = nil
   ) {
     self.bookID = bookID
+    self.libraryID = libraryID
     self.title = title
     self.authors = authors
     self.narrators = narrators
@@ -128,6 +131,7 @@ extension LocalBook {
     let context = ModelContextProvider.shared.context
 
     if let existingItem = try LocalBook.fetch(bookID: self.bookID) {
+      existingItem.libraryID = self.libraryID
       existingItem.title = self.title
       existingItem.authors = self.authors
       existingItem.narrators = self.narrators
@@ -234,6 +238,7 @@ extension LocalBook {
 
     self.init(
       bookID: book.id,
+      libraryID: book.libraryID,
       title: book.title,
       authors: authors,
       narrators: narrators,

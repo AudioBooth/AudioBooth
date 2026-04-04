@@ -192,25 +192,36 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
   }
 
   override func onPlayItem(_ item: BookCard.Model) {
-    guard let podcastID = item.podcastID,
-      let playlistItem = playlistItems.first(where: { $0.episodeID == item.id }),
-      let episode = playlistItem.episode
-    else { return }
-
     if playerManager.current?.id == item.id {
       if let currentPlayer = playerManager.current as? BookPlayerModel {
         currentPlayer.onTogglePlaybackTapped()
       }
-    } else {
+      return
+    }
+
+    let origin: PlayerManager.Origin =
+      mode == .playlists
+      ? .playlist(playlistID: collectionID)
+      : .collection(collectionID: collectionID)
+
+    if let podcastID = item.podcastID,
+      let playlistItem = playlistItems.first(where: { $0.episodeID == item.id }),
+      let episode = playlistItem.episode
+    {
       let podcast: Podcast? = if case .podcast(let p) = playlistItem.libraryItem { p } else { nil }
       playerManager.setCurrent(
         episode: episode,
         podcastID: podcastID,
         podcastTitle: podcast?.title ?? "",
         podcastAuthor: podcast?.author,
-        coverURL: item.cover.url
+        coverURL: item.cover.url,
+        origin: origin
       )
       playerManager.play()
+    } else {
+      Task {
+        await playerManager.play(item.id, origin: origin)
+      }
     }
   }
 

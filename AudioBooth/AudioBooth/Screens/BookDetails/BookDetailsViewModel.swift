@@ -487,8 +487,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           currentPlayer.onTogglePlaybackTapped()
         }
       } else {
-        playerManager.setCurrent(book)
-        PlayerManager.shared.play()
+        playerManager.setCurrent(book, origin: playbackOrigin)
+        playerManager.play()
       }
     } else if let localBook {
       if playerManager.current?.id == bookID {
@@ -496,12 +496,23 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           currentPlayer.onTogglePlaybackTapped()
         }
       } else {
-        playerManager.setCurrent(localBook)
-        PlayerManager.shared.play()
+        playerManager.setCurrent(localBook, origin: playbackOrigin)
+        playerManager.play()
       }
     } else {
       Toast(error: "Book not available").show()
     }
+  }
+
+  private var playbackOrigin: PlayerManager.Origin? {
+    if let series = book?.series?.first {
+      return .series(seriesID: series.id, libraryID: book?.libraryID ?? "")
+    } else if let series = localBook?.series.first,
+      let libraryID = Audiobookshelf.shared.libraries.current?.id
+    {
+      return .series(seriesID: series.id, libraryID: libraryID)
+    }
+    return nil
   }
 
   override func onReadTapped() {

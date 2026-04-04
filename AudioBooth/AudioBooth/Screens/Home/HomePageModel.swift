@@ -137,7 +137,7 @@ extension HomePageModel {
   }
 
   private func rebuildSections() {
-    guard Audiobookshelf.shared.isAuthenticated else {
+    guard Audiobookshelf.shared.libraries.current != nil else {
       self.sections = []
       return
     }
@@ -411,7 +411,7 @@ extension HomePageModel {
   private func loadCachedContent() {
     availableLibraries = Audiobookshelf.shared.libraries.libraries.map { LibraryItem(id: $0.id, name: $0.name) }
 
-    guard Audiobookshelf.shared.isAuthenticated else { return }
+    guard Audiobookshelf.shared.libraries.current != nil else { return }
 
     if let cachedPlaylist = pinnedPlaylistManager.loadCached() {
       pinnedPlaylist = cachedPlaylist
@@ -425,7 +425,7 @@ extension HomePageModel {
   }
 
   private func fetchRemoteContent() async {
-    guard Audiobookshelf.shared.isAuthenticated, !isFetchingRemoteContent else { return }
+    guard Audiobookshelf.shared.libraries.current != nil, !isFetchingRemoteContent else { return }
 
     isFetchingRemoteContent = true
 
