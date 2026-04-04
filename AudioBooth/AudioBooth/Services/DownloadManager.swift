@@ -695,6 +695,12 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       }
 
       do {
+        let isStreaming = await MainActor.run {
+          guard let current = PlayerManager.shared.current else { return false }
+          return current.isPlaying && current.downloadState == .notDownloaded
+        }
+        let priority = isStreaming ? URLSessionTask.lowPriority : URLSessionTask.defaultPriority
+
         try await withCheckedThrowingContinuation { continuation in
           let downloadTask: URLSessionDownloadTask
           if let resumeData = lastResumeData {
@@ -703,7 +709,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
             downloadTask = downloadSession.downloadTask(with: request)
           }
           downloadTask.countOfBytesClientExpectsToReceive = expectedSize > 0 ? expectedSize : 500_000_000
-          downloadTask.priority = URLSessionTask.lowPriority
+          downloadTask.priority = priority
 
           self.currentTrack = downloadTask
           self.continuation = continuation
