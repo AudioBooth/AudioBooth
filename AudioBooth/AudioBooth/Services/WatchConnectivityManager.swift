@@ -343,7 +343,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
       let book: Book
       let sessionID: String?
-      let audioTracks: [Book.Media.Track]
+      let audioTracks: [AudioTrack]
 
       if forDownload {
         book = try await Audiobookshelf.shared.books.fetch(id: bookID)
@@ -366,8 +366,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
       let tracks: [[String: Any]] = audioTracks.map { audioTrack in
         let trackURL: String
-        if forDownload, let ino = audioTrack.ino {
-          var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
+        if forDownload {
+          var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(audioTrack.ino)/download")
           switch token {
           case .legacy(let tokenValue):
             url.append(queryItems: [URLQueryItem(name: "token", value: tokenValue)])

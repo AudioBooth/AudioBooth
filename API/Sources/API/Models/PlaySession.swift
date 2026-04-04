@@ -8,7 +8,7 @@ public struct PlaySession: Sendable {
   public let mediaType: String?
   public let currentTime: Double
   public let duration: Double
-  public let audioTracks: [Book.Media.Track]?
+  public let audioTracks: [AudioTrack]?
   public let chapters: [Book.Media.Chapter]?
   public let libraryItem: LibraryItem
 
@@ -18,7 +18,7 @@ public struct PlaySession: Sendable {
   }
 
   public struct StreamingTrack {
-    public var track: Book.Media.Track
+    public var track: AudioTrack
     public var url: URL
   }
 }
@@ -38,7 +38,7 @@ extension PlaySession: Codable {
     mediaType = try container.decodeIfPresent(String.self, forKey: .mediaType)
     currentTime = try container.decode(Double.self, forKey: .currentTime)
     duration = try container.decode(Double.self, forKey: .duration)
-    audioTracks = try container.decodeIfPresent([Book.Media.Track].self, forKey: .audioTracks)
+    audioTracks = try container.decodeIfPresent([AudioTrack].self, forKey: .audioTracks)
     chapters = try container.decodeIfPresent([Book.Media.Chapter].self, forKey: .chapters)
 
     if mediaType == "podcast" {

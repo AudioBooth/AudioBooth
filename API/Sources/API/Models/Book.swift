@@ -53,7 +53,7 @@ extension Book {
   public var duration: Double { media.duration ?? 0 }
   public var size: Int64? { media.size }
   public var chapters: [Media.Chapter]? { media.chapters }
-  public var tracks: [Media.Track]? { media.tracks }
+  public var tracks: [AudioTrack]? { media.tracks }
   public var tags: [String]? { media.tags }
 
   public struct MediaType: OptionSet, Sendable {
@@ -105,7 +105,7 @@ extension Book {
     public let size: Int64?
     public let numTracks: Int?
     public let chapters: [Chapter]?
-    public let tracks: [Track]?
+    public let tracks: [AudioTrack]?
     public let tags: [String]?
     public let ebookFile: LibraryFile?
     public let ebookFormat: String?
@@ -151,27 +151,6 @@ extension Book {
       public let title: String
     }
 
-    public struct Track: Codable, Sendable {
-      public let index: Int
-      public let startOffset: Double
-      public let duration: Double
-      public let title: String?
-      public let updatedAt: Date?
-      public let metadata: Metadata?
-      public let format: String?
-      public let bitRate: Int?
-      public let codec: String?
-      public let channels: Int?
-      public let channelLayout: String?
-      public let mimeType: String?
-      public let ino: String?
-
-      public struct Metadata: Codable, Sendable {
-        public let filename: String?
-        public let ext: String?
-        public let size: Int64?
-      }
-    }
   }
 
   public struct CollapsedSeries: Codable, Sendable {
