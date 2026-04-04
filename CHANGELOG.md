@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
  
 ### Added
+- Smart continue playback - Automatically play the next episode, book in series, or playlist/collection item when playback ends
 - Pinned playlist preferences - Auto-download uncompleted books and auto-remove completed books from your pinned playlist
 - Series page sort by - Sort series by name, number of books, date added, and more
 - CarPlay podcast support - Browse and play podcasts and episodes directly from CarPlay
@@ -25,5 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed book listen again - Enhanced listen again functionality for completed books with better user experience
  
 ### Fixed
+- Playback codec mismatch - Fixed playback failure when file codec doesn't match extension (thanks @Creationsss)
 - Ebook remote progress - Fixed ebook remote progress sync issue
 - Library filters - Fixed excessive page refreshing when applying filters
