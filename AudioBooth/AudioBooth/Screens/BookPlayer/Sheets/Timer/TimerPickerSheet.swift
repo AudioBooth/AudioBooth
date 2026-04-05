@@ -160,7 +160,7 @@ struct TimerPickerSheet: View {
     }()
 
     HStack {
-      Button(action: { model.onChaptersChanged(1) }) {
+      Button(action: { model.onChaptersChanged(chapterCount, autoStart: true) }) {
         VStack(alignment: .leading, spacing: 2) {
           Text(chapterCount == 1 ? "End of chapter" : "End of \(chapterCount) chapters")
             .font(.system(size: 16, weight: .medium))
@@ -274,7 +274,7 @@ extension TimerPickerSheet {
     init() {}
 
     func onQuickTimerSelected(_ minutes: Int) {}
-    func onChaptersChanged(_ value: Int) {}
+    func onChaptersChanged(_ value: Int, autoStart: Bool = false) {}
     func onOffSelected() {}
     func onStartTimerTapped() {}
   }

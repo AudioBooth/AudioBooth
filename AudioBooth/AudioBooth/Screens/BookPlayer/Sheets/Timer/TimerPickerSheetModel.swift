@@ -110,9 +110,12 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     onStartTimerTapped()
   }
 
-  override func onChaptersChanged(_ value: Int) {
+  override func onChaptersChanged(_ value: Int, autoStart: Bool = false) {
     selected = .chapters(value)
     updateEstimatedEndTime(for: value)
+    if autoStart {
+      onStartTimerTapped()
+    }
   }
 
   private func updateEstimatedEndTime(for chapterCount: Int) {
