@@ -84,6 +84,22 @@ struct LibraryPage: View {
           .tint(.primary)
         }
 
+        ToolbarItem(placement: .topBarTrailing) {
+          ConfirmationButton(
+            role: .destructive,
+            confirmation: .init(
+              title: "Reset All Progress",
+              message:
+                "This will clear all listening progress for all books in this collection. This cannot be undone.",
+              action: "Reset All"
+            ),
+            action: model.onResetAllProgressTapped
+          ) {
+            Label("Reset All Progress", systemImage: "arrow.counterclockwise")
+          }
+          .tint(.primary)
+        }
+
         if #available(iOS 26.0, *) {
           ToolbarSpacer(.fixed, placement: .topBarTrailing)
         }
@@ -240,6 +256,7 @@ extension LibraryPage {
     func onDisplayModeTapped() {}
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
+    func onResetAllProgressTapped() {}
     func onFilterButtonTapped() {}
     func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
 
