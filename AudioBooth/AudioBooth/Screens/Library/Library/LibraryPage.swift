@@ -146,19 +146,19 @@ struct LibraryPage: View {
             }
           }
 
-          if model.showSeriesActions {
-            if model.hasAnyProgress {
-              Divider()
+          if model.actions.contains(.resetProgress) || model.actions.contains(.markAsFinished) {
+            Divider()
+          }
 
-              Button(action: model.onResetAllProgressTapped) {
-                Label("Reset All Progress", systemImage: "arrow.counterclockwise")
-              }
+          if model.actions.contains(.resetProgress) {
+            Button(action: model.onResetAllProgressTapped) {
+              Label("Reset All Progress", systemImage: "arrow.counterclockwise")
             }
+          }
 
-            if model.hasUnfinishedBooks {
-              Button(action: model.onMarkAllFinishedTapped) {
-                Label("Mark All as Finished", systemImage: "checkmark.shield")
-              }
+          if model.actions.contains(.markAsFinished) {
+            Button(action: model.onMarkAllFinishedTapped) {
+              Label("Mark All as Finished", systemImage: "checkmark.shield")
             }
           }
         } label: {
@@ -229,6 +229,13 @@ struct LibraryPage: View {
 extension LibraryPage {
   @Observable
   class Model: ObservableObject {
+    struct Actions: OptionSet {
+      let rawValue: Int
+
+      static let markAsFinished = Actions(rawValue: 1 << 0)
+      static let resetProgress = Actions(rawValue: 1 << 1)
+    }
+
     var isLoading: Bool
     var hasMorePages: Bool
 
@@ -244,24 +251,10 @@ extension LibraryPage {
     var search: SearchView.Model
 
     var showCollapseSeries: Bool
-    var showSeriesActions: Bool
+    var actions: Actions = []
 
     var filters: FilterPicker.Model?
     var showingFilterSelection: Bool = false
-
-    var hasAnyProgress: Bool {
-      items.contains { item in
-        if case .book(let model) = item { return (model.cover.progress ?? 0) > 0 }
-        return false
-      }
-    }
-
-    var hasUnfinishedBooks: Bool {
-      items.contains { item in
-        if case .book(let model) = item { return (model.cover.progress ?? 0) < 1.0 }
-        return false
-      }
-    }
 
     func onAppear() {}
     func refresh() async {}
@@ -283,7 +276,6 @@ extension LibraryPage {
       sortOptions: [SortBy] = [],
       currentSort: SortBy? = nil,
       showCollapseSeries: Bool = false,
-      showSeriesActions: Bool = false,
       items: [LibraryView.Item] = [],
       search: SearchView.Model = SearchView.Model(),
       filters: FilterPicker.Model? = nil,
@@ -294,7 +286,6 @@ extension LibraryPage {
       self.isRoot = isRoot
       self.sortOptions = sortOptions
       self.showCollapseSeries = showCollapseSeries
-      self.showSeriesActions = showSeriesActions
       self.currentSort = currentSort
       self.items = items
       self.search = search

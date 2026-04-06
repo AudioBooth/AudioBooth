@@ -44,7 +44,6 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
-        showSeriesActions: true,
         title: name
       )
     case .authorLibrary(let id, let name, let libraryID):
@@ -87,6 +86,7 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func onAppear() {
+    updateActions()
     guard fetched.isEmpty else { return }
 
     Task {
@@ -183,12 +183,30 @@ final class LibraryPageModel: LibraryPage.Model {
     for case let .book(model) in items {
       model.contextMenu?.onResetProgressTapped()
     }
+    actions.remove(.resetProgress)
+    actions.insert(.markAsFinished)
   }
 
   override func onMarkAllFinishedTapped() {
     for case let .book(model) in items {
       model.contextMenu?.onMarkAsFinishedTapped()
     }
+    actions.remove(.markAsFinished)
+    actions.insert(.resetProgress)
+  }
+
+  private func updateActions() {
+    guard case .series = filter else { return }
+    var updatedActions: LibraryPage.Model.Actions = []
+    for case let .book(model) in items {
+      if (model.cover.progress ?? 0) > 0 {
+        updatedActions.insert(.resetProgress)
+      }
+      if (model.cover.progress ?? 0) < 1.0 {
+        updatedActions.insert(.markAsFinished)
+      }
+    }
+    actions = updatedActions
   }
 
   override func onFilterButtonTapped() {
@@ -324,6 +342,7 @@ final class LibraryPageModel: LibraryPage.Model {
       }
     }
 
+    updateActions()
     isLoadingNextPage = false
     isLoading = false
   }
