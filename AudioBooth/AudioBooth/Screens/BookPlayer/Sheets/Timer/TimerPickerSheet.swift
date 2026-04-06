@@ -160,7 +160,10 @@ struct TimerPickerSheet: View {
     }()
 
     HStack {
-      Button(action: { model.onChaptersChanged(1) }) {
+      Button(action: {
+        model.onChaptersChanged(chapterCount)
+        model.onStartTimerTapped()
+      }) {
         VStack(alignment: .leading, spacing: 2) {
           Text(chapterCount == 1 ? "End of chapter" : "End of \(chapterCount) chapters")
             .font(.system(size: 16, weight: .medium))
