@@ -44,6 +44,7 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
+        showSeriesActions: true,
         title: name
       )
     case .authorLibrary(let id, let name, let libraryID):
@@ -179,20 +180,14 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func onResetAllProgressTapped() {
-    Task {
-      for item in items {
-        guard case .book(let model) = item else { continue }
-        guard (model.cover.progress ?? 0) > 0 else { continue }
+    for case let .book(model) in items {
+      model.contextMenu?.onResetProgressTapped()
+    }
+  }
 
-        if let localBook = try? LocalBook.fetch(bookID: model.id) {
-          try? await localBook.resetProgress()
-        } else {
-          let book = try? await audiobookshelf.books.fetch(id: model.id)
-          try? await book?.resetProgress()
-        }
-
-        model.cover.progress = 0
-      }
+  override func onMarkAllFinishedTapped() {
+    for case let .book(model) in items {
+      model.contextMenu?.onMarkAsFinishedTapped()
     }
   }
 

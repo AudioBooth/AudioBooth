@@ -84,22 +84,6 @@ struct LibraryPage: View {
           .tint(.primary)
         }
 
-        ToolbarItem(placement: .topBarTrailing) {
-          ConfirmationButton(
-            role: .destructive,
-            confirmation: .init(
-              title: "Reset All Progress",
-              message:
-                "This will clear all listening progress for all books in this collection. This cannot be undone.",
-              action: "Reset All"
-            ),
-            action: model.onResetAllProgressTapped
-          ) {
-            Label("Reset All Progress", systemImage: "arrow.counterclockwise")
-          }
-          .tint(.primary)
-        }
-
         if #available(iOS 26.0, *) {
           ToolbarSpacer(.fixed, placement: .topBarTrailing)
         }
@@ -158,6 +142,22 @@ struct LibraryPage: View {
                 } else {
                   Button(sortBy.displayTitle, action: { model.onSortOptionTapped(sortBy) })
                 }
+              }
+            }
+          }
+
+          if model.showSeriesActions {
+            if model.hasAnyProgress {
+              Divider()
+
+              Button(action: model.onResetAllProgressTapped) {
+                Label("Reset All Progress", systemImage: "arrow.counterclockwise")
+              }
+            }
+
+            if model.hasUnfinishedBooks {
+              Button(action: model.onMarkAllFinishedTapped) {
+                Label("Mark All as Finished", systemImage: "checkmark.shield")
               }
             }
           }
@@ -244,9 +244,24 @@ extension LibraryPage {
     var search: SearchView.Model
 
     var showCollapseSeries: Bool
+    var showSeriesActions: Bool
 
     var filters: FilterPicker.Model?
     var showingFilterSelection: Bool = false
+
+    var hasAnyProgress: Bool {
+      items.contains { item in
+        if case .book(let model) = item { return (model.cover.progress ?? 0) > 0 }
+        return false
+      }
+    }
+
+    var hasUnfinishedBooks: Bool {
+      items.contains { item in
+        if case .book(let model) = item { return (model.cover.progress ?? 0) < 1.0 }
+        return false
+      }
+    }
 
     func onAppear() {}
     func refresh() async {}
@@ -257,6 +272,7 @@ extension LibraryPage {
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
     func onResetAllProgressTapped() {}
+    func onMarkAllFinishedTapped() {}
     func onFilterButtonTapped() {}
     func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
 
@@ -267,6 +283,7 @@ extension LibraryPage {
       sortOptions: [SortBy] = [],
       currentSort: SortBy? = nil,
       showCollapseSeries: Bool = false,
+      showSeriesActions: Bool = false,
       items: [LibraryView.Item] = [],
       search: SearchView.Model = SearchView.Model(),
       filters: FilterPicker.Model? = nil,
@@ -277,6 +294,7 @@ extension LibraryPage {
       self.isRoot = isRoot
       self.sortOptions = sortOptions
       self.showCollapseSeries = showCollapseSeries
+      self.showSeriesActions = showSeriesActions
       self.currentSort = currentSort
       self.items = items
       self.search = search
