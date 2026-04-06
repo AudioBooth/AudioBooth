@@ -471,6 +471,11 @@ extension BookPlayerModel {
   }
 
   private func applySmartRewind(reason: SmartRewindReason) {
+    guard !mediaProgress.isFinished else {
+      AppLogger.player.debug("Smart rewind not applied - book is completed")
+      return
+    }
+
     let interval = reason.interval
     let minimumTimeSinceLastPlayed = reason.minimumTimeSinceLastPlayed
 
