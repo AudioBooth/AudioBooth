@@ -199,11 +199,6 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
       return
     }
 
-    let origin: PlayerManager.Origin =
-      mode == .playlists
-      ? .playlist(playlistID: collectionID)
-      : .collection(collectionID: collectionID)
-
     if let podcastID = item.podcastID,
       let playlistItem = playlistItems.first(where: { $0.episodeID == item.id }),
       let episode = playlistItem.episode
@@ -214,13 +209,12 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
         podcastID: podcastID,
         podcastTitle: podcast?.title ?? "",
         podcastAuthor: podcast?.author,
-        coverURL: item.cover.url,
-        origin: origin
+        coverURL: item.cover.url
       )
       playerManager.play()
     } else {
       Task {
-        await playerManager.play(item.id, origin: origin)
+        await playerManager.play(item.id)
       }
     }
   }

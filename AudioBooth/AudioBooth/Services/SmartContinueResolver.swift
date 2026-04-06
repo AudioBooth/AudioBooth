@@ -1,6 +1,5 @@
 import API
 import Foundation
-import Logging
 import Models
 
 struct SmartContinueResolver {
@@ -16,55 +15,31 @@ struct SmartContinueResolver {
 
   func resolve(
     currentItemID: String,
-    currentPodcastID: String?,
-    origin: PlayerManager.Origin
+    currentPodcastID: String?
   ) async -> ResolvedItem? {
-    switch origin {
-    case .podcast(let podcastID):
-      return await resolveNextEpisode(
-        currentEpisodeID: currentItemID,
-        podcastID: podcastID
-      )
-
-    case .series(let seriesID, let libraryID):
-      return await resolveNextBook(
-        currentBookID: currentItemID,
-        seriesID: seriesID,
-        libraryID: libraryID
-      )
-
-    case .playlist(let playlistID):
-      return await resolveFromPlaylist(
-        currentItemID: currentItemID,
-        currentPodcastID: currentPodcastID,
-        playlistID: playlistID
-      )
-
-    case .collection(let collectionID):
-      return await resolveFromCollection(
-        currentItemID: currentItemID,
-        collectionID: collectionID
-      )
+    if let currentPodcastID {
+      if let next = await resolveNextEpisode(currentEpisodeID: currentItemID, podcastID: currentPodcastID) {
+        return next
+      }
+      return resolveNextOfflineEpisode(currentEpisodeID: currentItemID)
+    } else {
+      if let next = await resolveNextBookInSeries(currentBookID: currentItemID) {
+        return next
+      }
+      return resolveNextOfflineBook(currentBookID: currentItemID)
     }
   }
+}
 
+extension SmartContinueResolver {
   private func resolveNextEpisode(
     currentEpisodeID: String,
     podcastID: String
   ) async -> ResolvedItem? {
-    do {
-      let podcast = try await audiobookshelf.podcasts.fetch(id: podcastID)
-      return nextEpisode(
-        after: currentEpisodeID,
-        in: podcast
-      )
-    } catch {
-      AppLogger.player.warning("Smart continue: failed to fetch podcast, trying offline")
-      return resolveNextEpisodeOffline(
-        currentEpisodeID: currentEpisodeID,
-        podcastID: podcastID
-      )
+    guard let podcast = try? await audiobookshelf.podcasts.fetch(id: podcastID) else {
+      return nil
     }
+    return nextEpisode(after: currentEpisodeID, in: podcast)
   }
 
   private func nextEpisode(
@@ -100,13 +75,8 @@ struct SmartContinueResolver {
     }
   }
 
-  private func resolveNextEpisodeOffline(
-    currentEpisodeID: String,
-    podcastID: String
-  ) -> ResolvedItem? {
-    guard let podcast = try? LocalPodcast.fetch(podcastID: podcastID) else { return nil }
-
-    let episodes = podcast.episodes
+  private func resolveNextOfflineEpisode(currentEpisodeID: String) -> ResolvedItem? {
+    let episodes = (try? LocalEpisode.fetchAll()) ?? []
     guard let currentIndex = episodes.firstIndex(where: { $0.episodeID == currentEpisodeID }) else {
       return nil
     }
@@ -118,43 +88,40 @@ struct SmartContinueResolver {
     return ResolvedItem(
       bookID: next.episodeID,
       title: next.title,
-      details: podcast.title,
-      coverURL: podcast.coverURL(),
-      podcastID: podcast.podcastID
+      details: next.podcast?.title,
+      coverURL: next.coverURL,
+      podcastID: next.podcast?.podcastID
     )
   }
+}
 
-  private func resolveNextBook(
-    currentBookID: String,
-    seriesID: String,
-    libraryID: String
-  ) async -> ResolvedItem? {
-    let base64SeriesID = Data(seriesID.utf8).base64EncodedString()
+extension SmartContinueResolver {
+  private func resolveNextBookInSeries(currentBookID: String) async -> ResolvedItem? {
+    guard
+      let localBook = try? LocalBook.fetch(bookID: currentBookID),
+      let series = localBook.series.first,
+      let libraryID = localBook.libraryID
+    else { return nil }
+
+    let base64SeriesID = Data(series.id.utf8).base64EncodedString()
     let filter = "series.\(base64SeriesID)"
 
-    do {
-      let page = try await audiobookshelf.books.fetch(
+    guard
+      let page = try? await audiobookshelf.books.fetch(
         limit: 100,
-        sortBy: .title,
         filter: filter,
         libraryID: libraryID
       )
-      return nextBook(after: currentBookID, in: page.results)
-    } catch {
-      AppLogger.player.warning("Smart continue: failed to fetch series, trying offline")
-      return resolveNextBookOffline(currentBookID: currentBookID, seriesID: seriesID)
-    }
-  }
+    else { return nil }
 
-  private func nextBook(after currentBookID: String, in books: [Book]) -> ResolvedItem? {
-    guard let currentIndex = books.firstIndex(where: { $0.id == currentBookID }) else {
+    guard let currentIndex = page.results.firstIndex(where: { $0.id == currentBookID }) else {
       return nil
     }
 
-    let nextIndex = books.index(after: currentIndex)
-    guard nextIndex < books.endIndex else { return nil }
+    let nextIndex = page.results.index(after: currentIndex)
+    guard nextIndex < page.results.endIndex else { return nil }
 
-    let next = books[nextIndex]
+    let next = page.results[nextIndex]
     return ResolvedItem(
       bookID: next.id,
       title: next.title,
@@ -164,24 +131,16 @@ struct SmartContinueResolver {
     )
   }
 
-  private func resolveNextBookOffline(
-    currentBookID: String,
-    seriesID: String
-  ) -> ResolvedItem? {
-    guard let allBooks = try? LocalBook.fetchAll() else { return nil }
-
-    let booksInSeries =
-      allBooks
-      .filter { $0.series.contains(where: { $0.id == seriesID }) }
-
-    guard let currentIndex = booksInSeries.firstIndex(where: { $0.bookID == currentBookID }) else {
+  private func resolveNextOfflineBook(currentBookID: String) -> ResolvedItem? {
+    let books = (try? LocalBook.fetchAll())?.sorted() ?? []
+    guard let currentIndex = books.firstIndex(where: { $0.bookID == currentBookID }) else {
       return nil
     }
 
-    let nextIndex = booksInSeries.index(after: currentIndex)
-    guard nextIndex < booksInSeries.endIndex else { return nil }
+    let nextIndex = books.index(after: currentIndex)
+    guard nextIndex < books.endIndex else { return nil }
 
-    let next = booksInSeries[nextIndex]
+    let next = books[nextIndex]
     return ResolvedItem(
       bookID: next.bookID,
       title: next.title,
@@ -189,109 +148,5 @@ struct SmartContinueResolver {
       coverURL: next.coverURL,
       podcastID: nil
     )
-  }
-
-  private func resolveFromPlaylist(
-    currentItemID: String,
-    currentPodcastID: String?,
-    playlistID: String
-  ) async -> ResolvedItem? {
-    if let podcastID = currentPodcastID {
-      if let next = await resolveNextEpisode(
-        currentEpisodeID: currentItemID,
-        podcastID: podcastID
-      ) {
-        return next
-      }
-    } else {
-      if let next = await resolveNextBookInSeries(currentBookID: currentItemID) {
-        return next
-      }
-    }
-
-    return await resolveNextPlaylistItem(
-      currentItemID: currentItemID,
-      playlistID: playlistID
-    )
-  }
-
-  private func resolveNextPlaylistItem(
-    currentItemID: String,
-    playlistID: String
-  ) async -> ResolvedItem? {
-    guard let playlist = try? await audiobookshelf.playlists.fetch(id: playlistID) else {
-      return nil
-    }
-
-    let itemID = currentItemID
-    guard
-      let currentIndex = playlist.items.firstIndex(where: {
-        $0.episodeID == itemID || $0.libraryItemID == itemID
-      })
-    else {
-      return nil
-    }
-
-    let nextIndex = playlist.items.index(after: currentIndex)
-    guard nextIndex < playlist.items.endIndex else { return nil }
-
-    let next = playlist.items[nextIndex]
-    return resolvedItem(from: next)
-  }
-
-  private func resolveFromCollection(
-    currentItemID: String,
-    collectionID: String
-  ) async -> ResolvedItem? {
-    if let next = await resolveNextBookInSeries(currentBookID: currentItemID) {
-      return next
-    }
-
-    guard let collection = try? await audiobookshelf.collections.fetch(id: collectionID) else {
-      return nil
-    }
-
-    return nextBook(after: currentItemID, in: collection.books)
-  }
-
-  private func resolveNextBookInSeries(currentBookID: String) async -> ResolvedItem? {
-    guard let localBook = try? LocalBook.fetch(bookID: currentBookID),
-      let series = localBook.series.first,
-      let libraryID = localBook.libraryID
-    else {
-      return nil
-    }
-
-    return await resolveNextBook(
-      currentBookID: currentBookID,
-      seriesID: series.id,
-      libraryID: libraryID
-    )
-  }
-
-  private func resolvedItem(from playlistItem: PlaylistItem) -> ResolvedItem {
-    if let episode = playlistItem.episode {
-      let podcastID: String?
-      if case .podcast(let podcast) = playlistItem.libraryItem {
-        podcastID = podcast.id
-      } else {
-        podcastID = playlistItem.libraryItemID
-      }
-      return ResolvedItem(
-        bookID: episode.id,
-        title: episode.title,
-        details: playlistItem.title,
-        coverURL: playlistItem.coverURL,
-        podcastID: podcastID
-      )
-    } else {
-      return ResolvedItem(
-        bookID: playlistItem.libraryItemID,
-        title: playlistItem.title,
-        details: nil,
-        coverURL: playlistItem.coverURL,
-        podcastID: nil
-      )
-    }
   }
 }

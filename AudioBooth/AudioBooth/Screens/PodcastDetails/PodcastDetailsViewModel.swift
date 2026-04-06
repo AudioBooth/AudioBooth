@@ -51,20 +51,17 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       return
     }
 
-    let origin: PlayerManager.Origin = .podcast(podcastID: podcastID)
-
     if let apiEpisode = apiEpisodes.first(where: { $0.id == episode.id }) {
       playerManager.setCurrent(
         episode: apiEpisode,
         podcastID: podcastID,
         podcastTitle: title,
         podcastAuthor: author,
-        coverURL: coverURL,
-        origin: origin
+        coverURL: coverURL
       )
       playerManager.play()
     } else if let localEpisode = localPodcast?.episodes.first(where: { $0.episodeID == episode.id }) {
-      playerManager.setCurrent(localEpisode, origin: origin)
+      playerManager.setCurrent(localEpisode)
       playerManager.play()
     }
   }

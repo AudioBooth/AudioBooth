@@ -1117,8 +1117,8 @@ extension BookPlayerModel {
 
   private func recordBookCompletionIfNeeded(autoPlayNext: Bool) {
     guard
-      chapters?.isShuffled != true,
       !mediaProgress.isFinished,
+      chapters?.isShuffled != true,
       mediaProgress.duration > 0,
       mediaProgress.remaining <= 60
     else { return }
