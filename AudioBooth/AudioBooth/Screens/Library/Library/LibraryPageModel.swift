@@ -199,10 +199,11 @@ final class LibraryPageModel: LibraryPage.Model {
     guard case .series = filter else { return }
     var updatedActions: LibraryPage.Model.Actions = []
     for case let .book(model) in items {
-      if (model.cover.progress ?? 0) > 0 {
+      let progress = MediaProgress.progress(for: model.id)
+      if progress > 0 {
         updatedActions.insert(.resetProgress)
       }
-      if (model.cover.progress ?? 0) < 1.0 {
+      if progress < 1.0 {
         updatedActions.insert(.markAsFinished)
       }
     }
