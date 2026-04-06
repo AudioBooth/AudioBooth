@@ -325,48 +325,50 @@ extension HomePage {
   var serverMenuToolbarItem: some ToolbarContent {
     ToolbarItem(placement: .topBarLeading) {
       Menu {
-        ForEach(model.availableLibraries) { library in
-          if library.id == libraries.current?.id {
-            Button {
-              model.onLibrarySelected(library.id)
-            } label: {
-              Label(library.name, systemImage: "checkmark")
-            }
-          } else {
-            Button {
-              model.onLibrarySelected(library.id)
-            } label: {
-              Text(library.name)
-            }
-          }
-        }
-
-        if let server = authentication.server, server.alternativeURL != nil {
-          ControlGroup("Server URL") {
-            Button("Primary", systemImage: server.isUsingAlternativeURL ? "circle" : "checkmark.circle.fill") {
-              if server.isUsingAlternativeURL {
-                model.onToggleAlternativeURL()
+        if authentication.isAuthenticated {
+          ForEach(model.availableLibraries) { library in
+            if library.id == libraries.current?.id {
+              Button {
+                model.onLibrarySelected(library.id)
+              } label: {
+                Label(library.name, systemImage: "checkmark")
+              }
+            } else {
+              Button {
+                model.onLibrarySelected(library.id)
+              } label: {
+                Text(library.name)
               }
             }
-            .tint(server.isUsingAlternativeURL ? nil : .accentColor)
-
-            Button("Alternative", systemImage: server.isUsingAlternativeURL ? "checkmark.circle.fill" : "circle") {
-              if !server.isUsingAlternativeURL {
-                model.onToggleAlternativeURL()
-              }
-            }
-            .tint(server.isUsingAlternativeURL ? .accentColor : nil)
           }
-        }
 
-        if !model.availableLibraries.isEmpty {
-          Divider()
-        }
+          if let server = authentication.server, server.alternativeURL != nil {
+            ControlGroup("Server URL") {
+              Button("Primary", systemImage: server.isUsingAlternativeURL ? "circle" : "checkmark.circle.fill") {
+                if server.isUsingAlternativeURL {
+                  model.onToggleAlternativeURL()
+                }
+              }
+              .tint(server.isUsingAlternativeURL ? nil : .accentColor)
 
-        Button {
-          showingServerDetails = true
-        } label: {
-          Label("Server Details", systemImage: "info.circle")
+              Button("Alternative", systemImage: server.isUsingAlternativeURL ? "checkmark.circle.fill" : "circle") {
+                if !server.isUsingAlternativeURL {
+                  model.onToggleAlternativeURL()
+                }
+              }
+              .tint(server.isUsingAlternativeURL ? .accentColor : nil)
+            }
+          }
+
+          if !model.availableLibraries.isEmpty {
+            Divider()
+          }
+
+          Button {
+            showingServerDetails = true
+          } label: {
+            Label("Server Details", systemImage: "info.circle")
+          }
         }
 
         Button {
