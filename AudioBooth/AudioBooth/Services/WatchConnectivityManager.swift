@@ -366,8 +366,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
       let tracks: [[String: Any]] = audioTracks.map { audioTrack in
         let trackURL: String
-        if forDownload {
-          var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(audioTrack.ino)/download")
+        if forDownload, let ino = audioTrack.ino {
+          var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
           switch token {
           case .legacy(let tokenValue):
             url.append(queryItems: [URLQueryItem(name: "token", value: tokenValue)])

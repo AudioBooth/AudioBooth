@@ -436,7 +436,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       throw URLError(.badURL)
     }
 
-    guard let audioTrack = apiEpisode.audioTrack else {
+    guard let audioTrack = apiEpisode.audioTrack, let ino = audioTrack.ino else {
       AppLogger.download.error("No audio track for episode: \(episodeID)")
       throw URLError(.badURL)
     }
@@ -480,7 +480,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     try? episodesDirectory.setResourceValues(resourceValues)
 
     let ext = audioTrack.sanitizedExt
-    let trackURL = serverURL.appendingPathComponent("api/items/\(podcastID)/file/\(audioTrack.ino)/download")
+    let trackURL = serverURL.appendingPathComponent("api/items/\(podcastID)/file/\(ino)/download")
     let trackFile = episodeDirectory.appendingPathComponent("0\(ext)")
 
     var request = URLRequest(url: trackURL)
@@ -588,8 +588,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     for apiTrack in apiTracks {
       guard !isCancelled else { throw CancellationError() }
 
+      guard let ino = apiTrack.ino else { continue }
+
       let ext = apiTrack.sanitizedExt
-      let trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(apiTrack.ino)/download")
+      let trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
 
       let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
 
