@@ -32,6 +32,12 @@
             "value" : "**Débit :** %lld kbps"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**比特率：** %lld kbps"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +80,12 @@
             "value" : "**Canal :** %1$lld (%2$@)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**声道：** %1$lld (%2$@)"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -108,6 +120,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Codec :** %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**编码：** %@"
           }
         },
         "zh-TW" : {
@@ -146,6 +164,12 @@
             "value" : "**Durée :** %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**时长：** %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -180,6 +204,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Épisodes :** %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**集数：** %lld"
           }
         },
         "zh-TW" : {
@@ -218,6 +248,12 @@
             "value" : "**Langue :** %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**语言：** %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -252,6 +288,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Publié :** %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**出版：** %@"
           }
         },
         "zh-TW" : {
@@ -290,6 +332,12 @@
             "value" : "**Éditeur :** %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**出版社：** %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -324,6 +372,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Taille :** %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**大小：** %@"
           }
         },
         "zh-TW" : {
@@ -362,6 +416,12 @@
             "value" : "**Type :** %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**类型：** %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -398,6 +458,12 @@
             "value" : "# d'épisodes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# 集数"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -427,6 +493,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@"
@@ -468,6 +540,12 @@
             "value" : "%@ auteur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 作者"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -502,6 +580,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ terminé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 完成"
           }
         },
         "zh-TW" : {
@@ -540,6 +624,12 @@
             "value" : "%@ restant"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剩余 %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -574,6 +664,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ narrateur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 朗读者"
           }
         },
         "zh-TW" : {
@@ -618,6 +714,12 @@
             "value" : "%1$@ sur %2$@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -652,6 +754,12 @@
             "value" : "%@ restant"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剩余 %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -681,6 +789,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld"
@@ -722,6 +836,12 @@
             "value" : "%lld min"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -758,6 +878,12 @@
             "value" : "%lld minutes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -792,6 +918,12 @@
             "value" : "%lld secondes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -823,6 +955,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldms"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lldms"
@@ -864,6 +1002,12 @@
             "value" : "^[%lld livre](inflect: true)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld 本书](inflect: true)"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -900,6 +1044,12 @@
             "value" : "^[%lld Livre](inflect: true)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld 本书](inflect: true)"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -932,6 +1082,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "^[%lld jour](inflect: true)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 天"
           }
         },
         "zh-TW" : {
@@ -970,6 +1126,12 @@
             "value" : "^[%lld élément](inflect: true)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld 个项目](inflect: true)"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1004,6 +1166,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Encore ^[%lld minute](inflect: true)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还剩 %lld 分钟"
           }
         },
         "zh-TW" : {
@@ -1042,6 +1210,12 @@
             "value" : "⚠️ Cela supprimera TOUTES les données de l'app, y compris le contenu téléchargé, les réglages et la progression. Vous devrez vous reconnecter. Redémarrage de l'app requis."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ 这将删除所有应用资料，包括已下载的内容、设置和进度。你需要重新登入。需要重新启动应用。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1078,6 +1252,12 @@
             "value" : "1 h"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 小时"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1110,6 +1290,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "5 min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 分钟"
           }
         },
         "zh-TW" : {
@@ -1146,6 +1332,12 @@
             "value" : "5s"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1178,6 +1370,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "10 min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 分钟"
           }
         },
         "zh-TW" : {
@@ -1214,6 +1412,12 @@
             "value" : "10s"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1246,6 +1450,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "15 min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 分钟"
           }
         },
         "zh-TW" : {
@@ -1282,6 +1492,12 @@
             "value" : "15s"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1314,6 +1530,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "20 min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 分钟"
           }
         },
         "zh-TW" : {
@@ -1350,6 +1572,12 @@
             "value" : "30 min"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1382,6 +1610,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "30s"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 秒"
           }
         },
         "zh-TW" : {
@@ -1418,6 +1652,12 @@
             "value" : "45 min"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "45 分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1450,6 +1690,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "45s"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "45 秒"
           }
         },
         "zh-TW" : {
@@ -1486,6 +1732,12 @@
             "value" : "60 min"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "60 分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1518,6 +1770,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "60s"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "60 秒"
           }
         },
         "zh-TW" : {
@@ -1554,6 +1812,12 @@
             "value" : "75s"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "75 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1586,6 +1850,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "90s"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "90 秒"
           }
         },
         "zh-TW" : {
@@ -1624,6 +1894,12 @@
             "value" : "À propos"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1658,6 +1934,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrégé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删节版"
           }
         },
         "zh-TW" : {
@@ -1696,6 +1978,12 @@
             "value" : "Couleur d'accentuation"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "强调色"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1730,6 +2018,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compte"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帐号"
           }
         },
         "zh-TW" : {
@@ -1768,6 +2062,12 @@
             "value" : "Ajoutez **audiobooth://oauth** aux URI de redirection du serveur audiobookshelf"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 **audiobooth://oauth** 加入 audiobookshelf 服务器重定向 URI"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1802,6 +2102,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter un signet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入书签"
           }
         },
         "zh-TW" : {
@@ -1840,6 +2146,12 @@
             "value" : "Ajouter un signet"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入书签"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1872,6 +2184,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter un signet ${content}"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入书签 ${content}"
           }
         },
         "zh-TW" : {
@@ -1910,6 +2228,12 @@
             "value" : "Ajoutez des livres à la queue depuis la bibliothèque"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从资源库新增书籍到队列"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1944,6 +2268,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter un en-tête"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加请求头"
           }
         },
         "zh-TW" : {
@@ -1982,6 +2312,12 @@
             "value" : "Ajouter un serveur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增服务器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2016,6 +2352,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter à la collection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增到合集"
           }
         },
         "zh-TW" : {
@@ -2054,6 +2396,12 @@
             "value" : "Ajouter à la playlist"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增到播放列表"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2088,6 +2436,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter à la queue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增到队列"
           }
         },
         "zh-TW" : {
@@ -2126,6 +2480,12 @@
             "value" : "Ajoute un signet à la position actuelle du livre audio en cours de lecture."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在目前播放的有声书位置加入书签。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2162,6 +2522,12 @@
             "value" : "Ajuster l'objectif"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整目标"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2194,6 +2560,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajuste la progression du chapitre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整章节进度"
           }
         },
         "zh-TW" : {
@@ -2232,6 +2604,12 @@
             "value" : "Ajuste la taille des couvertures pour les sections Continuer l'écoute et Continuer la lecture."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整「继续聆听」和「继续阅读」区块的封面大小。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2264,6 +2642,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajuste le temps restant"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整剩余时间"
           }
         },
         "zh-TW" : {
@@ -2302,6 +2686,12 @@
             "value" : "Avancé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进阶"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2338,6 +2728,12 @@
             "value" : "Typographie avancée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进阶排版"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2370,6 +2766,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Après la pause"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停后"
           }
         },
         "zh-TW" : {
@@ -2408,6 +2810,12 @@
             "value" : "Alias (optionnel)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別名（选填）"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2443,6 +2851,12 @@
             "value" : "Tout"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2475,6 +2889,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Autoriser le changement de position de lecture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许变更播放位置"
           }
         },
         "zh-TW" : {
@@ -2513,6 +2933,12 @@
             "value" : "Vous êtes déjà au premier chapitre."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经在第一章。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2547,6 +2973,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vous êtes déjà au dernier chapitre."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经在最后一章。"
           }
         },
         "zh-TW" : {
@@ -2585,6 +3017,12 @@
             "value" : "Alternatif"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替代"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2619,6 +3057,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "URL alternative"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替代网址"
           }
         },
         "zh-TW" : {
@@ -2657,6 +3101,12 @@
             "value" : "Une URL alternative à utiliser lors de la connexion depuis un autre réseau (par ex. depuis la maison)."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从不同网路连线时使用的替代网址（例如在家时）。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2691,6 +3141,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clé API"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API 密钥"
           }
         },
         "zh-TW" : {
@@ -2729,6 +3185,12 @@
             "value" : "Icône de l'app"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用图标"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2763,6 +3225,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apparence"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
           }
         },
         "zh-TW" : {
@@ -2801,6 +3269,12 @@
             "value" : "Voulez-vous vraiment supprimer cette collection ?"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你确定要移除这个合集吗？"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2837,6 +3311,12 @@
             "value" : "Voulez-vous vraiment supprimer votre liste de lecture « %@ » ?"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你确定要移除播放列表「%@」吗？"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2869,6 +3349,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fondu audio"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音讯淡出"
           }
         },
         "zh-TW" : {
@@ -2907,6 +3393,12 @@
             "value" : "Livres audio et numériques"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有声书与电子书"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2941,6 +3433,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "S'authentifier"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证"
           }
         },
         "zh-TW" : {
@@ -2979,6 +3477,12 @@
             "value" : "Authentification..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证中⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3013,6 +3517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentification"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证"
           }
         },
         "zh-TW" : {
@@ -3051,6 +3561,12 @@
             "value" : "Erreur d'authentification"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证错误"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3085,6 +3601,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Méthode d'authentification"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证方式"
           }
         },
         "zh-TW" : {
@@ -3123,6 +3645,12 @@
             "value" : "Authentification requise"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要验证"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3157,6 +3685,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auteur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作者"
           }
         },
         "zh-TW" : {
@@ -3195,6 +3729,12 @@
             "value" : "Auteur (Nom, Prénom)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作者（姓，名）"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3229,6 +3769,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom de l'auteur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作者姓名"
           }
         },
         "zh-TW" : {
@@ -3267,6 +3813,12 @@
             "value" : "Auteurs"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作者"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3299,6 +3851,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auto"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动"
           }
         },
         "zh-TW" : {
@@ -3337,6 +3895,12 @@
             "value" : "Défilement automatique"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动滚动"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3369,6 +3933,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuterie automatique"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动计时器模式"
           }
         },
         "zh-TW" : {
@@ -3407,6 +3977,12 @@
             "value" : "Téléchargement automatique"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3441,6 +4017,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Téléchargement automatique"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动下载书籍"
           }
         },
         "zh-TW" : {
@@ -3479,6 +4061,12 @@
             "value" : "Lecture auto suivante"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动播放下一个"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3511,6 +4099,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuterie de sommeil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动睡眠计时器"
           }
         },
         "zh-TW" : {
@@ -3547,6 +4141,12 @@
             "value" : "Démarrer automatiquement une minuterie de sommeil lors de la lecture pendant une plage horaire définie."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在特定时段播放时自动启动睡眠计时器。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3579,6 +4179,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reculer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回"
           }
         },
         "zh-TW" : {
@@ -3621,6 +4227,12 @@
             "value" : "Reculer %1$llds Avancer %2$llds"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒退 %llds 快进 %llds"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3655,6 +4267,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Détails du livre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书籍詳情"
           }
         },
         "zh-TW" : {
@@ -3693,6 +4311,12 @@
             "value" : "Détails du livre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书籍詳情"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3727,6 +4351,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Signet ajouté à %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书签已新增至 %@"
           }
         },
         "zh-TW" : {
@@ -3765,6 +4395,12 @@
             "value" : "Titre du signet"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书签标题"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3799,6 +4435,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Signets"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书签"
           }
         },
         "zh-TW" : {
@@ -3837,6 +4479,12 @@
             "value" : "Livres"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书籍"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3871,6 +4519,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Les livres et épisodes que vous téléchargez apparaîtront ici."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您下载的书籍和集数将显示于此。"
           }
         },
         "zh-TW" : {
@@ -3909,6 +4563,12 @@
             "value" : "Taille du cache"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存大小"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3943,6 +4603,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annuler"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
           }
         },
         "zh-TW" : {
@@ -3981,6 +4647,12 @@
             "value" : "Annuler le téléchargement"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4015,6 +4687,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annuler la minuterie de sommeil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消睡眠计时器"
           }
         },
         "zh-TW" : {
@@ -4053,6 +4731,12 @@
             "value" : "Annule toute minuterie de sommeil active."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消任何启用中的睡眠计时器。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4085,6 +4769,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapitre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章节"
           }
         },
         "zh-TW" : {
@@ -4123,6 +4813,12 @@
             "value" : "Chapitres"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章节"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4155,6 +4851,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisissez la durée de saut en avant et en arrière pendant l'écoute."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择聆听时快进和倒退的时间长度。"
           }
         },
         "zh-TW" : {
@@ -4193,6 +4895,12 @@
             "value" : "Effacer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4227,6 +4935,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer tous les téléchargements"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除所有下载"
           }
         },
         "zh-TW" : {
@@ -4265,6 +4979,12 @@
             "value" : "Supprimer tous les téléchargements ?"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除所有下载？"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4299,6 +5019,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vider le cache d'images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除图片缓存"
           }
         },
         "zh-TW" : {
@@ -4337,6 +5063,12 @@
             "value" : "Vider le cache d'images ?"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除图片缓存？"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4371,6 +5103,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Effacer le stockage persistant"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除持久存储"
           }
         },
         "zh-TW" : {
@@ -4409,6 +5147,12 @@
             "value" : "Fermer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4443,6 +5187,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réduire les séries"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收合系列"
           }
         },
         "zh-TW" : {
@@ -4481,6 +5231,12 @@
             "value" : "Type de collection"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合集类型"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4515,6 +5271,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Collections"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合集"
           }
         },
         "zh-TW" : {
@@ -4553,6 +5315,12 @@
             "value" : "Les collections sont partagées entre tous les utilisateurs du serveur."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合集会在服务器上的所有使用者之间共享。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4587,6 +5355,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apparence"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配色方案"
           }
         },
         "zh-TW" : {
@@ -4625,6 +5399,12 @@
             "value" : "Colonnes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欄数"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4657,6 +5437,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Configurez l'affichage de la lecture et de la progression pour les livres avec chapitres."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置含有章节的书籍如何显示播放和进度。"
           }
         },
         "zh-TW" : {
@@ -4693,6 +5479,12 @@
             "value" : "Configurez le comportement des contrôles de lecture sur l'écran de verrouillage."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置锁定画面播放控制项的行为。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4725,6 +5517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Configurez l'impact de la vitesse de lecture sur l'affichage du temps."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置时间显示如何受播放速度影响。"
           }
         },
         "zh-TW" : {
@@ -4763,6 +5561,12 @@
             "value" : "Connecté"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连线"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4797,6 +5601,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erreur de connexion"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连线错误"
           }
         },
         "zh-TW" : {
@@ -4835,6 +5645,12 @@
             "value" : "Console"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "控制台"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4869,6 +5685,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contenu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内容"
           }
         },
         "zh-TW" : {
@@ -4907,6 +5729,12 @@
             "value" : "Table des matières"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目录"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4941,6 +5769,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continuer l'écoute"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续聆听"
           }
         },
         "zh-TW" : {
@@ -4979,6 +5813,12 @@
             "value" : "Continuer la lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续阅读"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5013,6 +5853,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Taille de la section Continuer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续区块大小"
           }
         },
         "zh-TW" : {
@@ -5051,6 +5897,12 @@
             "value" : "Continuer la série"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续系列"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5085,6 +5937,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contrôles"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "控制项"
           }
         },
         "zh-TW" : {
@@ -5123,6 +5981,12 @@
             "value" : "Les images de couverture seront retéléchargées si nécessaire."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "封面图片将依需要重新下载。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5157,6 +6021,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Créer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立"
           }
         },
         "zh-TW" : {
@@ -5195,6 +6065,12 @@
             "value" : "Créer une clé API"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立 API 密钥"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5229,6 +6105,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Créez votre premier signet ci-dessous."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在下方建立你的第一个书签。"
           }
         },
         "zh-TW" : {
@@ -5267,6 +6149,12 @@
             "value" : "Créez votre première collection ci-dessous."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在下方建立你的第一个合集。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5301,6 +6189,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Créez votre première liste de lecture ci-dessous."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在下方建立你的第一个播放列表。"
           }
         },
         "zh-TW" : {
@@ -5339,6 +6233,12 @@
             "value" : "Créez votre première liste de lecture pour commencer."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立你的第一个播放列表以开始使用。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5373,6 +6273,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Identifiants"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "凭证"
           }
         },
         "zh-TW" : {
@@ -5411,6 +6317,12 @@
             "value" : "En-têtes personnalisés"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义请求头"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5445,6 +6357,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Les en-têtes personnalisés seront envoyés avec chaque requête à votre serveur."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义请求头将会随着每个请求传送到你的服务器。"
           }
         },
         "zh-TW" : {
@@ -5483,6 +6401,12 @@
             "value" : "Durée personnalisée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自订时间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5517,6 +6441,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objectif d'écoute quotidien"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每日收听目标"
           }
         },
         "zh-TW" : {
@@ -5555,6 +6485,12 @@
             "value" : "Sombre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5591,6 +6527,12 @@
             "value" : "Date d'ajout"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增日期"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5623,6 +6565,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jour"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "天"
           }
         },
         "zh-TW" : {
@@ -5661,6 +6609,12 @@
             "value" : "jours consécutifs"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "天连续"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5695,6 +6649,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Débogage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调试"
           }
         },
         "zh-TW" : {
@@ -5733,6 +6693,12 @@
             "value" : "Par défaut"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预设"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5767,6 +6733,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DÉFAUT"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预设"
           }
         },
         "zh-TW" : {
@@ -5805,6 +6777,12 @@
             "value" : "Délai avant le téléchargement"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载前延迟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5839,6 +6817,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
           }
         },
         "zh-TW" : {
@@ -5877,6 +6861,12 @@
             "value" : "Supprimer la collection"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除合集"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5911,6 +6901,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer la liste de lecture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除播放列表"
           }
         },
         "zh-TW" : {
@@ -5949,6 +6945,12 @@
             "value" : "Description"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "描述"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5983,6 +6985,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Description (optionnel)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "描述（选填）"
           }
         },
         "zh-TW" : {
@@ -6021,6 +7029,12 @@
             "value" : "Déconnecté"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已中断连线"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6055,6 +7069,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Découvrir"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "探索"
           }
         },
         "zh-TW" : {
@@ -6093,6 +7113,12 @@
             "value" : "Port de découverte"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现端口"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6127,6 +7153,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
           }
         },
         "zh-TW" : {
@@ -6165,6 +7197,12 @@
             "value" : "Télécharger"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6199,6 +7237,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tout télécharger"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部下载"
           }
         },
         "zh-TW" : {
@@ -6237,6 +7281,12 @@
             "value" : "Réglages de téléchargement"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载设置"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6271,6 +7321,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Onglet téléchargement"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载标签页"
           }
         },
         "zh-TW" : {
@@ -6309,6 +7365,12 @@
             "value" : "Téléchargés"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6343,6 +7405,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Livres téléchargés"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已下载的书籍"
           }
         },
         "zh-TW" : {
@@ -6381,6 +7449,12 @@
             "value" : "Contenu téléchargé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已下载的内容"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6413,6 +7487,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Téléchargement"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载中"
           }
         },
         "zh-TW" : {
@@ -6451,6 +7531,12 @@
             "value" : "Téléchargements"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6485,6 +7571,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Faites glisser pour réordonner les sections. Continuer l'écoute et Continuer la lecture ne peuvent pas être désactivés."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖曳以重新排序已启用的区块。「继续聆听」和「继续阅读」无法停用。"
           }
         },
         "zh-TW" : {
@@ -6523,6 +7615,12 @@
             "value" : "Faites glisser pour réorganiser. Les contrôles désactivés passent dans le menu du lecteur."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖动以重新排列。已停用的控制项将移至播放器选單。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6557,6 +7655,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durée"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时长"
           }
         },
         "zh-TW" : {
@@ -6595,6 +7699,12 @@
             "value" : "Durée de la minuterie de sommeil"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "睡眠计时器的时长"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6629,6 +7739,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "La durée doit être supérieure à 0 minutes."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时长必须大于 0 分钟。"
           }
         },
         "zh-TW" : {
@@ -6667,6 +7783,12 @@
             "value" : "Durée du saut en arrière"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒退时长"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6703,6 +7825,12 @@
             "value" : "Durée du saut en avant"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进时长"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6734,6 +7862,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E%@"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "E%@"
@@ -6775,6 +7909,12 @@
             "value" : "Livres numériques"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电子书"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6809,6 +7949,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modifier le signet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编輯书签"
           }
         },
         "zh-TW" : {
@@ -6847,6 +7993,12 @@
             "value" : "Modifier la playlist"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编輯播放列表"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6883,6 +8035,12 @@
             "value" : "Contacter le support"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "邮件支持"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6917,6 +8075,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Activé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启用"
           }
         },
         "zh-TW" : {
@@ -6961,6 +8125,12 @@
             "value" : "Fin de %1$lld %2$@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld %@ 结束"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6997,6 +8167,12 @@
             "value" : "Fin de %lld chapitres"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 章结束"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7031,6 +8207,12 @@
             "value" : "Fin de 2 chapitres"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 章结束"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7063,6 +8245,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fin de 3 chapitres"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 章结束"
           }
         },
         "zh-TW" : {
@@ -7101,6 +8289,12 @@
             "value" : "Fin du chapitre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章节结束"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7133,6 +8327,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heure de fin"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束时间"
           }
         },
         "zh-TW" : {
@@ -7171,6 +8371,12 @@
             "value" : "Entrez un nouveau titre pour ce signet"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入此书签的新标题"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7205,6 +8411,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entrez du texte pour rechercher dans ce livre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入文字以在本书中搜索"
           }
         },
         "zh-TW" : {
@@ -7243,6 +8455,12 @@
             "value" : "Entrez le numéro de port pour rechercher les serveurs Audiobookshelf sur votre réseau local."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入端口号码以掃描本地网路上的 Audiobookshelf 服务器。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7279,6 +8497,12 @@
             "value" : "Épisodes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "單集"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7311,6 +8535,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Égaliseur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "均衡器"
           }
         },
         "zh-TW" : {
@@ -7349,6 +8579,12 @@
             "value" : "Exemple : X-API-Key, Authorization, etc."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "范例：X-API-Key、Authorization 等。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7383,6 +8619,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Explicite"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明确"
           }
         },
         "zh-TW" : {
@@ -7421,6 +8663,12 @@
             "value" : "Prolonger %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延长 %@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7455,6 +8703,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prolongez la minuterie ou secouez votre téléphone pour continuer l'écoute."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延长计时器或搖动你的手机以继续聆听。"
           }
         },
         "zh-TW" : {
@@ -7493,6 +8747,12 @@
             "value" : "Très grand"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超大"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7527,6 +8787,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Échec du chargement"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入失敗"
           }
         },
         "zh-TW" : {
@@ -7565,6 +8831,12 @@
             "value" : "Échec du chargement des épisodes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入單集失敗"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7599,6 +8871,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Création du fichier"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案建立时间"
           }
         },
         "zh-TW" : {
@@ -7637,6 +8915,12 @@
             "value" : "Modification du fichier"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案修改时间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7671,6 +8955,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Taille du fichier"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案大小"
           }
         },
         "zh-TW" : {
@@ -7709,6 +8999,12 @@
             "value" : "Filtrer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7743,6 +9039,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filtrer les livres"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选书籍"
           }
         },
         "zh-TW" : {
@@ -7781,6 +9083,12 @@
             "value" : "Filtrer les téléchargements"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7815,6 +9123,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filtrer la bibliothèque"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选资源库"
           }
         },
         "zh-TW" : {
@@ -7853,6 +9167,12 @@
             "value" : "Terminé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7887,6 +9207,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Police de caractères"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字体"
           }
         },
         "zh-TW" : {
@@ -7925,6 +9251,12 @@
             "value" : "Taille de police"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字号"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7961,6 +9293,12 @@
             "value" : "Épaisseur de police"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字重"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7993,6 +9331,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avancer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进"
           }
         },
         "zh-TW" : {
@@ -8031,6 +9375,12 @@
             "value" : "Général"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一般"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8065,6 +9415,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genres"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "类型"
           }
         },
         "zh-TW" : {
@@ -8103,6 +9459,12 @@
             "value" : "Objectif atteint !"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标达成！"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8137,6 +9499,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vue grille"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网格视图"
           }
         },
         "zh-TW" : {
@@ -8175,6 +9543,12 @@
             "value" : "Détails de l'en-tête"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求头详情"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8209,6 +9583,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom de l'en-tête"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求头名称"
           }
         },
         "zh-TW" : {
@@ -8247,6 +9627,12 @@
             "value" : "Valeur de l'en-tête"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求头值"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8283,6 +9669,12 @@
             "value" : "Aide et commentaires"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮助与反馈"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8317,6 +9709,12 @@
             "value" : "Masquer les boutons de saut de chapitre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏章节跳过按鈕"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8349,6 +9747,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Élevé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高"
           }
         },
         "zh-TW" : {
@@ -8387,6 +9791,12 @@
             "value" : "Historique"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8421,6 +9831,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Accueil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页"
           }
         },
         "zh-TW" : {
@@ -8459,6 +9875,12 @@
             "value" : "heure"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小时"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8493,6 +9915,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "heures"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小时"
           }
         },
         "zh-TW" : {
@@ -8531,6 +9959,12 @@
             "value" : "Heures"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小时"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8562,6 +9996,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "iCloud"
@@ -8603,6 +10043,12 @@
             "value" : "Cache d'images"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片缓存"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8637,6 +10083,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inclure les identifiants"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "包含凭证"
           }
         },
         "zh-TW" : {
@@ -8675,6 +10127,12 @@
             "value" : "Rejoignez notre Discord"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入我们的 Discord"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8707,6 +10165,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paysage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "橫向"
           }
         },
         "zh-TW" : {
@@ -8745,6 +10209,12 @@
             "value" : "Langues"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8779,6 +10249,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grand"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大"
           }
         },
         "zh-TW" : {
@@ -8817,6 +10293,12 @@
             "value" : "Dernière mise à jour"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最后更新"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8851,6 +10333,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Récents"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新"
           }
         },
         "zh-TW" : {
@@ -8889,6 +10377,12 @@
             "value" : "Mise en page"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "布局"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8923,6 +10417,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mentions légales"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "法律信息"
           }
         },
         "zh-TW" : {
@@ -8961,6 +10461,12 @@
             "value" : "Espacement des lettres"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字母间距"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8995,6 +10501,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bibliothèque"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资源库"
           }
         },
         "zh-TW" : {
@@ -9033,6 +10545,12 @@
             "value" : "Type de bibliothèque"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资源库类型"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9067,6 +10585,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clair"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "淺色"
           }
         },
         "zh-TW" : {
@@ -9105,6 +10629,12 @@
             "value" : "Hauteur de ligne"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行高"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9139,6 +10669,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vue liste"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表视图"
           }
         },
         "zh-TW" : {
@@ -9177,6 +10713,12 @@
             "value" : "Réécouter"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再次聆听"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9211,6 +10753,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Statistiques d'écoute"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聆听统计"
           }
         },
         "zh-TW" : {
@@ -9249,6 +10797,12 @@
             "value" : "Charger plus"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入更多"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9283,6 +10837,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des détails de l'auteur..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入作者詳细资讯⋯"
           }
         },
         "zh-TW" : {
@@ -9321,6 +10881,12 @@
             "value" : "Chargement des auteurs..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入作者⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9355,6 +10921,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des détails du livre..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入书籍詳细资讯⋯"
           }
         },
         "zh-TW" : {
@@ -9393,6 +10965,12 @@
             "value" : "Chargement des livres..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入书籍⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9427,6 +11005,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des collections..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入合集⋯"
           }
         },
         "zh-TW" : {
@@ -9465,6 +11049,12 @@
             "value" : "Chargement des téléchargements…"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在载入下载…"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9499,6 +11089,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement du livre numérique..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入电子书⋯"
           }
         },
         "zh-TW" : {
@@ -9537,6 +11133,12 @@
             "value" : "Chargement des épisodes..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在载入單集..."
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9571,6 +11173,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des bibliothèques..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入资源库⋯"
           }
         },
         "zh-TW" : {
@@ -9609,6 +11217,12 @@
             "value" : "Chargement des narrateurs..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入朗读者⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9643,6 +11257,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des listes de lecture..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入播放列表⋯"
           }
         },
         "zh-TW" : {
@@ -9681,6 +11301,12 @@
             "value" : "Chargement des détails du podcast…"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在载入播客詳细资讯…"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9715,6 +11341,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des podcasts..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在载入播客..."
           }
         },
         "zh-TW" : {
@@ -9753,6 +11385,12 @@
             "value" : "Chargement des séries..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入系列⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9789,6 +11427,12 @@
             "value" : "Chargement..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入中⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9821,6 +11465,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contrôles de l'écran de verrouillage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锁定画面控制项"
           }
         },
         "zh-TW" : {
@@ -9857,6 +11507,12 @@
             "value" : "Boutons suivant/précédent sur l'écran de verrouillage"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锁定画面上一个/下一个按鈕"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9889,6 +11545,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verrouiller l'orientation de l'écran du lecteur."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锁定播放器画面方向。"
           }
         },
         "zh-TW" : {
@@ -9927,6 +11589,12 @@
             "value" : "Connexion..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入中⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9961,6 +11629,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Se connecter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入"
           }
         },
         "zh-TW" : {
@@ -9999,6 +11673,12 @@
             "value" : "Se connecter avec SSO"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 SSO 登入"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10035,6 +11715,12 @@
             "value" : "Se déconnecter"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登出"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10067,6 +11753,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Faible"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "低"
           }
         },
         "zh-TW" : {
@@ -10105,6 +11797,12 @@
             "value" : "Gérer les serveurs"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理服务器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10137,6 +11835,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gérer le stockage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理存储空间"
           }
         },
         "zh-TW" : {
@@ -10175,6 +11879,12 @@
             "value" : "Tout marquer comme terminé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部标记为已完成"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10209,6 +11919,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Marquer comme lu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标记为已完成"
           }
         },
         "zh-TW" : {
@@ -10247,6 +11963,12 @@
             "value" : "Marquer comme lu"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标记完成"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10283,6 +12005,12 @@
             "value" : "Stockage maximum"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最大存储空间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10315,6 +12043,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Moyen"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中"
           }
         },
         "zh-TW" : {
@@ -10353,6 +12087,12 @@
             "value" : "Informations"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元数据"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10387,6 +12127,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Méthode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方法"
           }
         },
         "zh-TW" : {
@@ -10425,6 +12171,12 @@
             "value" : "min"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10459,6 +12211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "min/jour"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分钟/天"
           }
         },
         "zh-TW" : {
@@ -10497,6 +12255,12 @@
             "value" : "Réduire"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "压缩"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10531,6 +12295,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "mins"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分钟"
           }
         },
         "zh-TW" : {
@@ -10569,6 +12339,12 @@
             "value" : "Minutes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分钟"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10603,6 +12379,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minutes d'écoute (7 derniers jours)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聆听分钟数（过去 7 天）"
           }
         },
         "zh-TW" : {
@@ -10641,6 +12423,12 @@
             "value" : "Plus"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10677,6 +12465,12 @@
             "value" : "Nom"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10709,6 +12503,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vitesse de narration"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "朗读速度"
           }
         },
         "zh-TW" : {
@@ -10747,6 +12547,12 @@
             "value" : "Narrateurs"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "朗读者"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10781,6 +12587,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Découverte réseau"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络发现"
           }
         },
         "zh-TW" : {
@@ -10819,6 +12631,12 @@
             "value" : "Jamais"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从不"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10853,6 +12671,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom de la nouvelle collection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新的合集名称"
           }
         },
         "zh-TW" : {
@@ -10891,6 +12715,12 @@
             "value" : "Nom de la nouvelle liste de lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新的播放列表名称"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10925,6 +12755,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Derniers auteurs"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新作者"
           }
         },
         "zh-TW" : {
@@ -10963,6 +12799,12 @@
             "value" : "Derniers épisodes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新集数"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10997,6 +12839,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapitre suivant"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一章"
           }
         },
         "zh-TW" : {
@@ -11035,6 +12883,12 @@
             "value" : "Écriture de Tag NFC"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC 标签写入"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11069,6 +12923,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucune minuterie de sommeil active à annuler."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有启用中的睡眠计时器可取消。"
           }
         },
         "zh-TW" : {
@@ -11107,6 +12967,12 @@
             "value" : "Aucun livre audio n'est en cours de lecture."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前没有播放有声书。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11141,6 +13007,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun auteur trouvé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到作者"
           }
         },
         "zh-TW" : {
@@ -11179,6 +13051,12 @@
             "value" : "Aucun signet"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有书签"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11213,6 +13091,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun livre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有书籍"
           }
         },
         "zh-TW" : {
@@ -11251,6 +13135,12 @@
             "value" : "Aucun livre trouvé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到书籍"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11285,6 +13175,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun livre ne correspond à votre recherche."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有符合你搜索条件的书籍。"
           }
         },
         "zh-TW" : {
@@ -11323,6 +13219,12 @@
             "value" : "Aucune collection"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有合集"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11357,6 +13259,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucune collection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有合集"
           }
         },
         "zh-TW" : {
@@ -11395,6 +13303,12 @@
             "value" : "Aucune collection disponible."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可用的合集。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11429,6 +13343,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun contenu disponible"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可用内容"
           }
         },
         "zh-TW" : {
@@ -11467,6 +13387,12 @@
             "value" : "Aucun téléchargement"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无下载内容"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11501,6 +13427,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun épisode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有單集"
           }
         },
         "zh-TW" : {
@@ -11539,6 +13471,12 @@
             "value" : "Aucun historique"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有记录"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11573,6 +13511,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun résultat pour « %@ »"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到「%@」的符合项目"
           }
         },
         "zh-TW" : {
@@ -11611,6 +13555,12 @@
             "value" : "Aucun narrateur trouvé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到朗读者"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11645,6 +13595,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun contenu hors ligne"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无离线内容"
           }
         },
         "zh-TW" : {
@@ -11683,6 +13639,12 @@
             "value" : "Aucune liste de lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有播放列表"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11717,6 +13679,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun podcast"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有播客"
           }
         },
         "zh-TW" : {
@@ -11755,6 +13723,12 @@
             "value" : "Aucun épisode récent"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有最近的單集"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11789,6 +13763,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun résultat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有结果"
           }
         },
         "zh-TW" : {
@@ -11827,6 +13807,12 @@
             "value" : "Aucun résultat trouvé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到结果"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11861,6 +13847,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucune série trouvée"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到系列"
           }
         },
         "zh-TW" : {
@@ -11899,6 +13891,12 @@
             "value" : "Aucun serveur connecté"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有连线的服务器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11933,6 +13931,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无"
           }
         },
         "zh-TW" : {
@@ -11971,6 +13975,12 @@
             "value" : "Pas assez de chapitres restants. Le maximum est %lld."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剩余章节数不足。最大值为 %lld。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12005,6 +14015,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En cours de lecture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在播放"
           }
         },
         "zh-TW" : {
@@ -12043,6 +14059,12 @@
             "value" : "Nombre de chapitres (0 = chapitre actuel)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章节数（0 = 目前章节）"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12077,6 +14099,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "de mon objectif de %lld minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（目标 %lld 分钟）"
           }
         },
         "zh-TW" : {
@@ -12115,6 +14143,12 @@
             "value" : "Désactivé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12148,6 +14182,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hors ligne"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离线"
           }
         },
         "zh-TW" : {
@@ -12186,6 +14226,12 @@
             "value" : "OIDC (SSO)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC（SSO）"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12218,6 +14264,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En cas d'interruption"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中断时"
           }
         },
         "zh-TW" : {
@@ -12256,6 +14308,12 @@
             "value" : "Ouvrir sur le web"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在网页上开启"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12292,6 +14350,12 @@
             "value" : "Ouvrir le lecteur au lancement"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动时开启播放器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12326,6 +14390,12 @@
             "value" : "Orientation"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方向"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12358,6 +14428,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verrouillage de l'orientation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方向锁定"
           }
         },
         "zh-TW" : {
@@ -12396,6 +14472,12 @@
             "value" : "Marges de page"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面边距"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12430,6 +14512,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retrait de paragraphe"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落缩进"
           }
         },
         "zh-TW" : {
@@ -12468,6 +14556,12 @@
             "value" : "Espacement des paragraphes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落间距"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12502,6 +14596,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mot de passe"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码"
           }
         },
         "zh-TW" : {
@@ -12540,6 +14640,12 @@
             "value" : "Pause"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12576,6 +14682,12 @@
             "value" : "Mettre en pause"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停播放"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12608,6 +14720,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "S'arrête à %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将在 %@ 暫停"
           }
         },
         "zh-TW" : {
@@ -12646,6 +14764,12 @@
             "value" : "Liste de lecture épinglée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "置顶的播放列表"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12682,6 +14806,12 @@
             "value" : "Lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12714,6 +14844,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Affichage de la lecture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放显示"
           }
         },
         "zh-TW" : {
@@ -12752,6 +14888,12 @@
             "value" : "La lecture est déjà en cours."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放已在进行中。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12786,6 +14928,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "La lecture est déjà en pause."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放已暫停。"
           }
         },
         "zh-TW" : {
@@ -12824,6 +14972,12 @@
             "value" : "Sessions de lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放会话"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12856,6 +15010,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajustements de la vitesse de lecture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放速度调整"
           }
         },
         "zh-TW" : {
@@ -12894,6 +15054,12 @@
             "value" : "Lecteur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12926,6 +15092,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Orientation du lecteur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放器方向"
           }
         },
         "zh-TW" : {
@@ -12964,6 +15136,12 @@
             "value" : "Paramètres du lecteur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放器设置"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12998,6 +15176,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom de la playlist"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放列表名称"
           }
         },
         "zh-TW" : {
@@ -13036,6 +15220,12 @@
             "value" : "Playlists"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放列表"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13070,6 +15260,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Les listes de lecture sont privées. Seul l'utilisateur qui les crée peut les voir."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放列表为私人。只有建立者可以看到它们。"
           }
         },
         "zh-TW" : {
@@ -13108,6 +15304,12 @@
             "value" : "Détails du podcast"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播客詳情"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13144,6 +15346,12 @@
             "value" : "Podcasts"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播客"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13176,6 +15384,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Portrait"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直向"
           }
         },
         "zh-TW" : {
@@ -13214,6 +15428,12 @@
             "value" : "Préamplificateur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前置放大器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13248,6 +15468,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Préférences"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏好设置"
           }
         },
         "zh-TW" : {
@@ -13286,6 +15512,12 @@
             "value" : "Préréglages"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预设"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13320,6 +15552,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapitre précédent"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一章"
           }
         },
         "zh-TW" : {
@@ -13358,6 +15596,12 @@
             "value" : "Principal"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主要"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13392,6 +15636,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Politique de confidentialité"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私权政策"
           }
         },
         "zh-TW" : {
@@ -13430,6 +15680,12 @@
             "value" : "Progression"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13464,6 +15720,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Progression : Terminé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度：完成"
           }
         },
         "zh-TW" : {
@@ -13502,6 +15764,12 @@
             "value" : "Progression : Dernière mise à jour"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度：最后更新"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13536,6 +15804,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Progression : Commencé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度：已开始"
           }
         },
         "zh-TW" : {
@@ -13574,6 +15848,12 @@
             "value" : "Protocole"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "协议"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13608,6 +15888,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Décennies de publication"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出版年代"
           }
         },
         "zh-TW" : {
@@ -13646,6 +15932,12 @@
             "value" : "Année de publication"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出版年份"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13680,6 +15972,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Styles de l'éditeur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出版社樣式"
           }
         },
         "zh-TW" : {
@@ -13718,6 +16016,12 @@
             "value" : "Éditeurs"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出版社"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13752,6 +16056,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Queue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "队列"
           }
         },
         "zh-TW" : {
@@ -13790,6 +16100,12 @@
             "value" : "La file queue est vide"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "队列为空"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13824,6 +16140,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aléatoirement"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "随机"
           }
         },
         "zh-TW" : {
@@ -13862,6 +16184,12 @@
             "value" : "Se ré-authentifier"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新验证"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13896,6 +16224,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lire"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读"
           }
         },
         "zh-TW" : {
@@ -13934,6 +16268,12 @@
             "value" : "Relire"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再次阅读"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13968,6 +16308,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réglages de la liseuse"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读器设置"
           }
         },
         "zh-TW" : {
@@ -14006,6 +16352,12 @@
             "value" : "Les épisodes récents du podcast apparaîtront ici."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的播客單集将显示在此处。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14040,6 +16392,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Séries récentes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近系列"
           }
         },
         "zh-TW" : {
@@ -14078,6 +16436,12 @@
             "value" : "Sessions récentes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近会话"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14112,6 +16476,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajoutés récemment"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近新增"
           }
         },
         "zh-TW" : {
@@ -14150,6 +16520,12 @@
             "value" : "Supprimer après inutilisation pendant"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "闲置后移除"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14184,6 +16560,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer les terminés"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除已完成"
           }
         },
         "zh-TW" : {
@@ -14222,6 +16604,12 @@
             "value" : "Supprimer le téléchargement"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14256,6 +16644,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer le téléchargement une fois terminé"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成时移除下载"
           }
         },
         "zh-TW" : {
@@ -14294,6 +16688,12 @@
             "value" : "Supprimer les téléchargements"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除下载"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14328,6 +16728,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retirer de la playlist"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从「继续聆听」移除"
           }
         },
         "zh-TW" : {
@@ -14366,6 +16772,12 @@
             "value" : "Retirer de la queue"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从队列移除"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14400,6 +16812,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Renommer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名"
           }
         },
         "zh-TW" : {
@@ -14438,6 +16856,12 @@
             "value" : "Réinitialiser"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14472,6 +16896,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réinitialiser toute la progression"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置所有进度"
           }
         },
         "zh-TW" : {
@@ -14510,6 +16940,12 @@
             "value" : "Réinitialiser la progression"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重设进度"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14544,6 +16980,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réinitialiser la minuterie"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重设计时器"
           }
         },
         "zh-TW" : {
@@ -14582,6 +17024,12 @@
             "value" : "Réinitialiser"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重设为预设值"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14618,6 +17066,12 @@
             "value" : "Reprendre la lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续播放"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14650,6 +17104,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rembobiner après une pause de 10 minutes ou après des interruptions audio."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停 10 分钟或音讯中断后倒退。"
           }
         },
         "zh-TW" : {
@@ -14694,6 +17154,12 @@
             "value" : "S%1$@E%2$@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S%1$@E%2$@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14728,6 +17194,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enregistrer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "储存"
           }
         },
         "zh-TW" : {
@@ -14766,6 +17238,12 @@
             "value" : "Analyser"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "掃描"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14800,6 +17278,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Analyser le réseau local"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "掃描本地网路"
           }
         },
         "zh-TW" : {
@@ -14838,6 +17322,12 @@
             "value" : "Analyse du réseau..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "掃描网路中⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14872,6 +17362,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mode défilement"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滚动模式"
           }
         },
         "zh-TW" : {
@@ -14910,6 +17406,12 @@
             "value" : "Recherche"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14944,6 +17446,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rechercher un livre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索书籍"
           }
         },
         "zh-TW" : {
@@ -14982,6 +17490,12 @@
             "value" : "Rechercher des épisodes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索集数"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15016,6 +17530,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recherchez des livres, séries, auteurs, narrateurs, tags ou genres"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索书籍、系列、作者、朗读者、标签或类型"
           }
         },
         "zh-TW" : {
@@ -15054,6 +17574,12 @@
             "value" : "Recherche..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索中⋯"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15086,6 +17612,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Secondes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "秒"
           }
         },
         "zh-TW" : {
@@ -15124,6 +17656,12 @@
             "value" : "Section"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章节"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15158,6 +17696,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recherche"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定位"
           }
         },
         "zh-TW" : {
@@ -15196,6 +17740,12 @@
             "value" : "Sélectionner"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15230,6 +17780,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sélectionnez un livre pour commencer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择书籍以开始"
           }
         },
         "zh-TW" : {
@@ -15268,6 +17824,12 @@
             "value" : "Tout sélectionner"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全选"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15302,6 +17864,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Envoyer le livre numérique à"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传送电子书至"
           }
         },
         "zh-TW" : {
@@ -15340,6 +17908,12 @@
             "value" : "Séries"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系列"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15374,6 +17948,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Serveur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器"
           }
         },
         "zh-TW" : {
@@ -15412,6 +17992,12 @@
             "value" : "Configuration du serveur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器设置"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15448,6 +18034,12 @@
             "value" : "Détails du serveur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器詳情"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15482,6 +18074,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "URL du serveur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器网址"
           }
         },
         "zh-TW" : {
@@ -15526,6 +18124,12 @@
             "value" : "Serveur : %1$@, %2$@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器：%@，%@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15560,6 +18164,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Serveurs"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器"
           }
         },
         "zh-TW" : {
@@ -15598,6 +18208,12 @@
             "value" : "Sessions"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15634,6 +18250,12 @@
             "value" : "Régler la minuterie de sommeil"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置睡眠计时器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15668,6 +18290,12 @@
             "value" : "Régler la minuterie de sommeil pour ${duration}"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将睡眠计时器设为 ${duration}"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15700,6 +18328,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Régler la minuterie de sommeil à la fin de ${chapters} chapitres"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将睡眠计时器设为 ${chapters} 章结束"
           }
         },
         "zh-TW" : {
@@ -15738,6 +18372,12 @@
             "value" : "Régler la minuterie à la fin du chapitre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将睡眠计时器设为章节结束"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15774,6 +18414,12 @@
             "value" : "Régler la minuterie de sommeil avec une durée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置睡眠计时器时长"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15806,6 +18452,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Définissez votre vitesse de narration par défaut pour les nouveaux livres."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置新书的预设朗读速度。"
           }
         },
         "zh-TW" : {
@@ -15844,6 +18496,12 @@
             "value" : "Règle la minuterie de sommeil pour mettre en pause après une durée définie."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将睡眠计时器设置为在指定时长后暫停。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15878,6 +18536,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Règle la minuterie de sommeil pour mettre en pause à la fin d'un nombre de chapitres défini."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将睡眠计时器设置为在指定章节数结束时暫停。"
           }
         },
         "zh-TW" : {
@@ -15916,6 +18580,12 @@
             "value" : "Réglages"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15948,6 +18618,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sensibilité de la secousse pour réinitialiser"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搖动重设敏感度"
           }
         },
         "zh-TW" : {
@@ -15984,6 +18660,12 @@
             "value" : "Sensibilité de la secousse pour réinitialiser la minuterie"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搖动重设计时器敏感度"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16016,6 +18698,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Secouez votre téléphone pour réinitialiser la minuterie pendant la lecture."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在播放期间搖动你的手机以重设计时器。"
           }
         },
         "zh-TW" : {
@@ -16054,6 +18742,12 @@
             "value" : "Partager la connexion"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享连线"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16088,6 +18782,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Partager le lien"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享连结"
           }
         },
         "zh-TW" : {
@@ -16126,6 +18826,12 @@
             "value" : "Partager le code QR"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享 QR 码"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16160,6 +18866,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Partagez ce code QR ou ce lien avec un autre utilisateur AudioBooth pour l'aider à se connecter à votre serveur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与其他 AudioBooth 使用者分享此 QR 码或连结，以协助他们连线到你的服务器"
           }
         },
         "zh-TW" : {
@@ -16198,6 +18910,12 @@
             "value" : "Le partage des identifiants les invalidera sur cet appareil dès qu'un autre appareil les utilisera. Vous devrez vous reconnecter pour continuer à utiliser cette connexion."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享凭证会在其他装置使用后使其在此装置上失效。你需要重新连线以继续使用此连线。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16232,6 +18950,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voir moins"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示较少"
           }
         },
         "zh-TW" : {
@@ -16270,6 +18994,12 @@
             "value" : "Voir plus"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示更多"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16306,6 +19036,12 @@
             "value" : "Afficher l'option dans le menu des détails du livre pour écrire les informations sur des tags NFC pour un accès rapide."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在书籍詳细资讯选單中显示将书籍资讯写入 NFC 标签的选项，以快速存取播放。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16338,6 +19074,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Afficher la barre de progression supplémentaire"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示补充书籍进度条"
           }
         },
         "zh-TW" : {
@@ -16376,6 +19118,12 @@
             "value" : "Reculer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒退"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16412,6 +19160,12 @@
             "value" : "Reculer de %lld secondes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒退 %lld 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16444,6 +19198,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reculer de ${duration}"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒退 ${duration}"
           }
         },
         "zh-TW" : {
@@ -16482,6 +19242,12 @@
             "value" : "Reculer de la durée indiquée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒退指定时间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16514,6 +19280,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saut de"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳过"
           }
         },
         "zh-TW" : {
@@ -16552,6 +19324,12 @@
             "value" : "Avancer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16588,6 +19366,12 @@
             "value" : "Avancer de %lld secondes"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进 %lld 秒"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16622,6 +19406,12 @@
             "value" : "Avancer de ${duration}"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进 ${duration}"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16654,6 +19444,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avancer et Reculer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进和倒退"
           }
         },
         "zh-TW" : {
@@ -16692,6 +19488,12 @@
             "value" : "Avancer de la durée indiquée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进指定时间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16726,6 +19528,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passer au chapitre suivant"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳到下一章"
           }
         },
         "zh-TW" : {
@@ -16764,6 +19572,12 @@
             "value" : "Revenir au chapitre précédent"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳到上一章"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16798,6 +19612,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recule dans le livre audio en cours de lecture d'une durée définie."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在目前播放的有声书中倒退指定的时长。"
           }
         },
         "zh-TW" : {
@@ -16836,6 +19656,12 @@
             "value" : "Avance dans le livre audio en cours de lecture d'une durée définie."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在目前播放的有声书中快进指定的时长。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16870,6 +19696,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passe au chapitre suivant du livre audio en cours de lecture."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳到目前播放有声书的下一章。"
           }
         },
         "zh-TW" : {
@@ -16908,6 +19740,12 @@
             "value" : "Revient au chapitre précédent du livre audio en cours de lecture."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳到目前播放有声书的上一章。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16940,6 +19778,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuterie de sommeil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "睡眠计时器"
           }
         },
         "zh-TW" : {
@@ -16978,6 +19822,12 @@
             "value" : "Minuterie de sommeil annulée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "睡眠计时器已取消"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17012,6 +19862,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuterie de sommeil jusqu'à la fin du chapitre"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "睡眠计时器至章节结束"
           }
         },
         "zh-TW" : {
@@ -17050,6 +19906,12 @@
             "value" : "Reprise intelligente"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "智慧续播"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17082,6 +19944,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rembobinage intelligent"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "智慧倒退"
           }
         },
         "zh-TW" : {
@@ -17118,6 +19986,12 @@
             "value" : "Durée du rembobinage intelligent après pause"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停后智慧倒退时长"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17150,6 +20024,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durée du rembobinage intelligent en cas d'interruption"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中断时智慧倒退时长"
           }
         },
         "zh-TW" : {
@@ -17188,6 +20068,12 @@
             "value" : "Trier par"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排序方式"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17222,6 +20108,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vitesse"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "速度"
           }
         },
         "zh-TW" : {
@@ -17260,6 +20152,12 @@
             "value" : "Sponsor"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赞助"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17296,6 +20194,12 @@
             "value" : "Démarrer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17328,6 +20232,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heure de début"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始时间"
           }
         },
         "zh-TW" : {
@@ -17366,6 +20276,12 @@
             "value" : "Commencé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已开始"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17400,6 +20316,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arrêter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
           }
         },
         "zh-TW" : {
@@ -17438,6 +20360,12 @@
             "value" : "Stockage"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储空间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17472,6 +20400,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Limites de stockage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储空间限制"
           }
         },
         "zh-TW" : {
@@ -17510,6 +20444,12 @@
             "value" : "Assistance"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17544,6 +20484,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Balayez pour supprimer ou faites glisser pour réordonner"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑动以移除或拖曳以重新排序"
           }
         },
         "zh-TW" : {
@@ -17582,6 +20528,12 @@
             "value" : "Synchronisation"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17616,6 +20568,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Synchronisez vos préférences sur tous vos appareils avec iCloud."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 iCloud 在所有装置上同步你的偏好设置。"
           }
         },
         "zh-TW" : {
@@ -17654,6 +20612,12 @@
             "value" : "Tags"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17688,6 +20652,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toucher pour naviguer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击以导览"
           }
         },
         "zh-TW" : {
@@ -17726,6 +20696,12 @@
             "value" : "Touchez pour voir vos statistiques"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击以查看你的统计数据"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17760,6 +20736,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zones de pression"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击区域"
           }
         },
         "zh-TW" : {
@@ -17798,6 +20780,12 @@
             "value" : "Les appuis hors des zones affichent/masquent les contrôles"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在区域外点击可显示/隐藏控制项"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17832,6 +20820,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conditions d'utilisation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用条款"
           }
         },
         "zh-TW" : {
@@ -17870,6 +20864,12 @@
             "value" : "Avis TestFlight : "
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TestFlight 注意事项："
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17904,6 +20904,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Normalisation du texte"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字标准化"
           }
         },
         "zh-TW" : {
@@ -17942,6 +20948,12 @@
             "value" : "Merci pour votre soutien !"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感谢你的支援！"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17976,6 +20988,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le titre du signet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书签标题"
           }
         },
         "zh-TW" : {
@@ -18014,6 +21032,12 @@
             "value" : "Le livre audio actuel n'a pas de chapitres."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前的有声书没有章节。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18048,6 +21072,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thème"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题"
           }
         },
         "zh-TW" : {
@@ -18086,6 +21116,12 @@
             "value" : "Ce sont des achats de test uniquement. Vous souhaitez soutenir le développement ? Téléchargez depuis l'App Store pour laisser un vrai pourboire. [Ouvrir l'App Store](https://apps.apple.com/us/app/id6753017503)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些仅为测试购买。想要支援开发？从 App Store 下载並留下真实的小费。[开启 App Store](https://apps.apple.com/us/app/id6753017503)"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18120,6 +21156,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cette collection est vide."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此合集为空。"
           }
         },
         "zh-TW" : {
@@ -18158,6 +21200,12 @@
             "value" : "Cette liste de lecture est vide."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此播放列表为空。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18192,6 +21240,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "cette semaine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本週"
           }
         },
         "zh-TW" : {
@@ -18230,6 +21284,12 @@
             "value" : "Cela effacera toutes les images de couverture en cache. Elles seront retéléchargées si nécessaire."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这将清除所有缓存的封面图片。它们将依需要重新下载。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18264,6 +21324,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cela supprimera tous les livres audio et livres numériques téléchargés. Vous pourrez les retélécharger plus tard."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这将删除所有已下载的有声书和电子书。你可以稍后重新下载。"
           }
         },
         "zh-TW" : {
@@ -18302,6 +21368,12 @@
             "value" : "Cela supprimera tout le contenu téléchargé. Cette action est irréversible."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这将删除所有已下载的内容。此操作无法复原。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18336,6 +21408,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temps"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时间"
           }
         },
         "zh-TW" : {
@@ -18374,6 +21452,12 @@
             "value" : "Temps écoulé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时间到"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18410,6 +21494,12 @@
             "value" : "Minuterie"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计时器"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18442,6 +21532,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fondu audio de la minuterie"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计时器音讯淡出"
           }
         },
         "zh-TW" : {
@@ -18480,6 +21576,12 @@
             "value" : "Minuterie terminée"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计时器已完成"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18514,6 +21616,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuterie prolongée"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计时器延长"
           }
         },
         "zh-TW" : {
@@ -18552,6 +21660,12 @@
             "value" : "La minuterie n'est pas disponible."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计时器不可用。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18586,6 +21700,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuterie démarrée"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计时器已开始"
           }
         },
         "zh-TW" : {
@@ -18624,6 +21744,12 @@
             "value" : "Titre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18658,6 +21784,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aujourd'hui"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天"
           }
         },
         "zh-TW" : {
@@ -18696,6 +21828,12 @@
             "value" : "Aujourd'hui"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18730,6 +21868,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Écoute du jour"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日收听"
           }
         },
         "zh-TW" : {
@@ -18768,6 +21912,12 @@
             "value" : "Stockage total utilisé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已使用总存储空间"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18800,6 +21950,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pistes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "曲目"
           }
         },
         "zh-TW" : {
@@ -18838,6 +21994,12 @@
             "value" : "Essayez d'ajuster vos termes de recherche"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尝试调整你的搜索词汇"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18872,6 +22034,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réessayer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再试一次"
           }
         },
         "zh-TW" : {
@@ -18910,6 +22078,12 @@
             "value" : "Typographie"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排版"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18944,6 +22118,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impossible de charger l'auteur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法载入作者"
           }
         },
         "zh-TW" : {
@@ -18982,6 +22162,12 @@
             "value" : "Impossible de charger le livre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法载入书籍"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19016,6 +22202,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impossible de charger le livre numérique"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法载入电子书"
           }
         },
         "zh-TW" : {
@@ -19054,6 +22246,12 @@
             "value" : "Impossible de charger le podcast"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法载入播客"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19088,6 +22286,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Illimité"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无限制"
           }
         },
         "zh-TW" : {
@@ -19126,6 +22330,12 @@
             "value" : "Détacher"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消置顶"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19160,6 +22370,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tout désélectionner"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消全选"
           }
         },
         "zh-TW" : {
@@ -19198,6 +22414,12 @@
             "value" : "À suivre"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接下來"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19230,6 +22452,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Utiliser la durée du livre (au lieu du chapitre)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用书籍时长（而非章节）"
           }
         },
         "zh-TW" : {
@@ -19268,6 +22496,12 @@
             "value" : "Nom d'utilisateur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用者名称"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19302,6 +22536,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom d'utilisateur et mot de passe"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用者名称与密码"
           }
         },
         "zh-TW" : {
@@ -19340,6 +22580,12 @@
             "value" : "Vérifier et enregistrer"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证並储存"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19376,6 +22622,12 @@
             "value" : "Version : %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本：%@"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19410,6 +22662,12 @@
             "value" : "Très élevé"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非常高"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19442,6 +22700,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Très faible"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非常低"
           }
         },
         "zh-TW" : {
@@ -19480,6 +22744,12 @@
             "value" : "Voir l'auteur"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检视作者"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19512,6 +22782,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voir le narrateur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检视朗读者"
           }
         },
         "zh-TW" : {
@@ -19550,6 +22826,12 @@
             "value" : "Voir la série"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检视系列"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19584,6 +22866,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Visible"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可见"
           }
         },
         "zh-TW" : {
@@ -19622,6 +22910,12 @@
             "value" : "Volume"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音量"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19656,6 +22950,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Comment souhaitez-vous nommer le signet ?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书签应该取什么名称？"
           }
         },
         "zh-TW" : {
@@ -19694,6 +22994,12 @@
             "value" : "Espacement des mots"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词间距"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19728,6 +23034,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Écrire un tag NFC"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写入 NFC 标签"
           }
         },
         "zh-TW" : {
@@ -19766,6 +23078,12 @@
             "value" : "Rétrospective de l'année"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年度回顾"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19800,6 +23118,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hier"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昨天"
           }
         },
         "zh-TW" : {
@@ -19838,6 +23162,12 @@
             "value" : "Vous n'avez aucune liste de lecture"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你没有播放列表"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19872,6 +23202,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vous n'avez pas encore créé de signet pour ce livre."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你尚未为此书建立任何书签。"
           }
         },
         "zh-TW" : {
@@ -19910,6 +23246,12 @@
             "value" : "Vos signets"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的书签"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19944,6 +23286,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre bibliothèque semble vide ou aucune bibliothèque n'est sélectionnée."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的资源库似乎为空，或没有选择资源库。"
           }
         },
         "zh-TW" : {
@@ -19982,6 +23330,12 @@
             "value" : "Votre bibliothèque ne semble avoir aucun auteur ou aucune bibliothèque n'est sélectionnée."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的资源库似乎没有作者，或没有选择资源库。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20016,6 +23370,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre bibliothèque ne semble avoir aucun narrateur ou aucune bibliothèque n'est sélectionnée."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的资源库似乎没有朗读者，或没有选择资源库。"
           }
         },
         "zh-TW" : {
@@ -20054,6 +23414,12 @@
             "value" : "Votre bibliothèque ne semble avoir aucune série ou aucune bibliothèque n'est sélectionnée."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的资源库似乎没有系列，或没有选择资源库。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20088,6 +23454,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre contenu personnalisé apparaîtra ici"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的个性化内容将显示在这里"
           }
         },
         "zh-TW" : {
@@ -20126,6 +23498,12 @@
             "value" : "Votre historique de lecture apparaîtra ici."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的播放历史将显示在这里。"
+          }
+        },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20158,6 +23536,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre bibliothèque de podcasts est vide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您的播客资料庫是空的"
           }
         },
         "zh-TW" : {
@@ -20194,6 +23578,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vos statistiques"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的统计数据"
           }
         },
         "zh-TW" : {
