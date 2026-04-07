@@ -166,7 +166,6 @@ final class AudioPlayer {
   }
 
   func rebuildQueue(urlResolver: (Track) -> URL?) {
-    let currentGlobal = time
     let wasPlaying = isPlaying
 
     var resolvedTracks: [Track] = []
@@ -181,7 +180,7 @@ final class AudioPlayer {
 
     guard !urls.isEmpty else { return }
 
-    let (trackIndex, offset) = trackAndOffset(for: currentGlobal)
+    let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
     currentTrackIndex = trackIndex
     loadTrack(at: trackIndex, seekTo: offset, autoPlay: wasPlaying)
   }
@@ -308,7 +307,7 @@ private extension AudioPlayer {
     removeTimeObserver()
     let interval = CMTime(seconds: 0.5, preferredTimescale: 1000)
     timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] _ in
-      guard let self, !self.isPrepared else { return }
+      guard let self, !self.isPrepared, self.player.currentSeconds > 0 else { return }
       self.events.send(.timeUpdate(self.time))
     }
   }
