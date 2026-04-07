@@ -9,24 +9,26 @@ struct EbookChapterPickerSheet: View {
     NavigationStack {
       ScrollViewReader { proxy in
         List {
-          ForEach(Array(model.chapters.enumerated()), id: \.element.id) { index, chapter in
+          ForEach(model.displayedChapters, id: \.chapter.id) { originalIndex, chapter in
+            let isCurrent = model.displayedCurrentIndex == originalIndex
             Button(action: {
-              model.onChapterTapped(at: index)
+              model.onChapterTapped(at: originalIndex)
               model.isPresented = false
             }) {
               HStack {
                 Text(chapter.title)
-                  .font(.headline)
-                  .fontWeight(model.currentIndex == index ? .bold : .regular)
+                  .font(chapter.level == 0 ? .headline : .subheadline)
+                  .fontWeight(isCurrent ? .bold : .regular)
                   .foregroundColor(.primary)
                   .lineLimit(2)
 
                 Spacer()
               }
+              .padding(.leading, CGFloat(chapter.level) * 16)
               .padding(.vertical, 4)
               .contentShape(Rectangle())
               .overlay(alignment: .leading) {
-                if model.currentIndex == index {
+                if isCurrent {
                   RoundedRectangle(cornerRadius: 8)
                     .fill(Color.accentColor)
                     .frame(width: 10, height: 20)
@@ -47,6 +49,16 @@ struct EbookChapterPickerSheet: View {
       .navigationTitle("Contents")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
+        if model.hasSubchapters {
+          ToolbarItem(placement: .topBarLeading) {
+            Button {
+              model.showSubchapters.toggle()
+            } label: {
+              Image(systemName: model.showSubchapters ? "list.bullet.indent" : "list.bullet")
+            }
+            .tint(.primary)
+          }
+        }
         ToolbarItem(placement: .topBarTrailing) {
           Button("Close", systemImage: "xmark") {
             model.isPresented = false
@@ -65,11 +77,36 @@ extension EbookChapterPickerSheet {
       let id: String
       let title: String
       let link: ReadiumShared.Link
+      var level: Int = 0
     }
 
     var chapters: [Chapter]
     var currentIndex: Int
     var isPresented: Bool = false
+    var showSubchapters: Bool = false
+
+    var hasSubchapters: Bool {
+      chapters.contains(where: { $0.level > 0 })
+    }
+
+    var displayedCurrentIndex: Int {
+      guard currentIndex < chapters.count else { return currentIndex }
+      if chapters[currentIndex].level == 0 { return currentIndex }
+      // Walk backwards to find the parent (level 0) chapter
+      for i in stride(from: currentIndex - 1, through: 0, by: -1) {
+        if chapters[i].level == 0 { return i }
+      }
+      return currentIndex
+    }
+
+    var displayedChapters: [(originalIndex: Int, chapter: Chapter)] {
+      chapters.enumerated().compactMap { index, chapter in
+        if showSubchapters || chapter.level == 0 {
+          return (index, chapter)
+        }
+        return nil
+      }
+    }
 
     init(chapters: [Chapter] = [], currentIndex: Int = 0) {
       self.chapters = chapters

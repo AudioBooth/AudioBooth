@@ -213,13 +213,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     guard let publication = publication else { return }
 
     if let toc = try? await publication.tableOfContents().get(), !toc.isEmpty {
-      let chapterItems = toc.map { link in
-        EbookChapterPickerSheet.Model.Chapter(
-          id: link.url().path,
-          title: link.title ?? "Untitled",
-          link: link
-        )
-      }
+      let chapterItems = flattenTOC(toc)
 
       let chaptersModel = EbookChapterPickerViewModel(chapters: chapterItems)
       chaptersModel.onChapterSelected = { [weak self] chapter in
@@ -231,14 +225,33 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     }
   }
 
+  private func flattenTOC(
+    _ links: [ReadiumShared.Link],
+    level: Int = 0
+  ) -> [EbookChapterPickerSheet.Model.Chapter] {
+    links.flatMap { link in
+      let chapter = EbookChapterPickerSheet.Model.Chapter(
+        id: link.url().string,
+        title: link.title ?? "Untitled",
+        link: link,
+        level: level
+      )
+      return [chapter] + flattenTOC(link.children, level: level + 1)
+    }
+  }
+
   private func updateCurrentChapterIndex() {
     guard let chapters, let navigator else { return }
+    guard let current = navigator.currentLocation?.href else { return }
 
-    if let current = navigator.currentLocation?.href {
-      let index = chapters.chapters.firstIndex(where: { $0.id == current.string }) ?? 0
-      chapters.currentIndex = index
-      AppLogger.viewModel.info("Current chapter index: \(index)")
-    }
+    let currentPath = current.string
+    let index =
+      chapters.chapters.lastIndex(where: { chapter in
+        guard chapter.level == 0 else { return false }
+        let chapterPath = chapter.id.split(separator: "#", maxSplits: 1).first.map(String.init) ?? chapter.id
+        return chapterPath == currentPath
+      }) ?? 0
+    chapters.currentIndex = index
   }
 
   private func navigateToChapter(_ chapter: EbookChapterPickerSheet.Model.Chapter) {
