@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
  
 ### Added
+- Series progress management - Reset all progress or mark as read directly from the series details page (thanks @octopotato)
 - Smart continue playback - Automatically play the next episode, book in series, or playlist/collection item when playback ends
 - Pinned playlist preferences - Auto-download uncompleted books and auto-remove completed books from your pinned playlist
 - Series page sort by - Sort series by name, number of books, date added, and more
