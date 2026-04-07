@@ -145,6 +145,22 @@ struct LibraryPage: View {
               }
             }
           }
+
+          if model.actions.contains(.resetProgress) || model.actions.contains(.markAsFinished) {
+            Divider()
+          }
+
+          if model.actions.contains(.resetProgress) {
+            Button(action: model.onResetAllProgressTapped) {
+              Label("Reset All Progress", systemImage: "arrow.counterclockwise")
+            }
+          }
+
+          if model.actions.contains(.markAsFinished) {
+            Button(action: model.onMarkAllFinishedTapped) {
+              Label("Mark All as Finished", systemImage: "checkmark.shield")
+            }
+          }
         } label: {
           Image(systemName: "ellipsis")
         }
@@ -213,6 +229,13 @@ struct LibraryPage: View {
 extension LibraryPage {
   @Observable
   class Model: ObservableObject {
+    struct Actions: OptionSet {
+      let rawValue: Int
+
+      static let markAsFinished = Actions(rawValue: 1 << 0)
+      static let resetProgress = Actions(rawValue: 1 << 1)
+    }
+
     var isLoading: Bool
     var hasMorePages: Bool
 
@@ -228,6 +251,7 @@ extension LibraryPage {
     var search: SearchView.Model
 
     var showCollapseSeries: Bool
+    var actions: Actions = []
 
     var filters: FilterPicker.Model?
     var showingFilterSelection: Bool = false
@@ -240,6 +264,8 @@ extension LibraryPage {
     func onDisplayModeTapped() {}
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
+    func onResetAllProgressTapped() {}
+    func onMarkAllFinishedTapped() {}
     func onFilterButtonTapped() {}
     func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
 

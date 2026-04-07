@@ -86,6 +86,7 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func onAppear() {
+    updateActions()
     guard fetched.isEmpty else { return }
 
     Task {
@@ -176,6 +177,37 @@ final class LibraryPageModel: LibraryPage.Model {
         }
       }
     }
+  }
+
+  override func onResetAllProgressTapped() {
+    for case let .book(model) in items {
+      model.contextMenu?.onResetProgressTapped()
+    }
+    actions.remove(.resetProgress)
+    actions.insert(.markAsFinished)
+  }
+
+  override func onMarkAllFinishedTapped() {
+    for case let .book(model) in items {
+      model.contextMenu?.onMarkAsFinishedTapped()
+    }
+    actions.remove(.markAsFinished)
+    actions.insert(.resetProgress)
+  }
+
+  private func updateActions() {
+    guard case .series = filter else { return }
+    var updatedActions: LibraryPage.Model.Actions = []
+    for case let .book(model) in items {
+      let progress = MediaProgress.progress(for: model.id)
+      if progress > 0 {
+        updatedActions.insert(.resetProgress)
+      }
+      if progress < 1.0 {
+        updatedActions.insert(.markAsFinished)
+      }
+    }
+    actions = updatedActions
   }
 
   override func onFilterButtonTapped() {
@@ -311,6 +343,7 @@ final class LibraryPageModel: LibraryPage.Model {
       }
     }
 
+    updateActions()
     isLoadingNextPage = false
     isLoading = false
   }
