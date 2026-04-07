@@ -8,13 +8,11 @@ final class CarPlayTabBar: NSObject {
   private var tabs: [CPTemplate: CarPlayPageProtocol] = [:]
   private weak var nowPlaying: CarPlayNowPlaying?
   private var cancellables = Set<AnyCancellable>()
-
   private(set) var template: CPTemplate
 
   init(interfaceController: CPInterfaceController, nowPlaying: CarPlayNowPlaying) {
     self.interfaceController = interfaceController
     self.nowPlaying = nowPlaying
-
     self.template = Self.emptyTemplate
 
     super.init()
@@ -27,8 +25,6 @@ final class CarPlayTabBar: NSObject {
         self?.updateTemplate()
       }
       .store(in: &cancellables)
-
-    updateTemplate()
   }
 
   private static var emptyTemplate: CPListTemplate {
@@ -38,7 +34,7 @@ final class CarPlayTabBar: NSObject {
     return emptyTemplate
   }
 
-  private func updateTemplate() {
+  func updateTemplate() {
     guard let nowPlaying else { return }
 
     let newTemplate: CPTemplate

@@ -7,11 +7,18 @@ class CarPlayController {
   private let tabBar: CarPlayTabBar
   private let nowPlaying: CarPlayNowPlaying
 
-  init(interfaceController: CPInterfaceController) async throws {
+  init(interfaceController: CPInterfaceController) {
     self.interfaceController = interfaceController
 
     nowPlaying = .init(interfaceController: interfaceController)
     tabBar = .init(interfaceController: interfaceController, nowPlaying: nowPlaying)
-    try await interfaceController.setRootTemplate(tabBar.template, animated: false)
+
+    tabBar.updateTemplate()
+  }
+
+  func showNowPlayingIfNeeded() {
+    if UserPreferences.shared.openPlayerOnLaunch, PlayerManager.shared.current != nil {
+      nowPlaying.showNowPlaying()
+    }
   }
 }

@@ -21,16 +21,15 @@ public final class CarPlayDelegate: UIResponder, CPTemplateApplicationSceneDeleg
     self.interfaceController = nil
     controller = nil
   }
+
+  public func sceneDidBecomeActive(_ scene: UIScene) {
+    controller?.showNowPlayingIfNeeded()
+  }
 }
 
 private extension CarPlayDelegate {
   func updateController() {
-    Task {
-      guard let interfaceController else { return }
-
-      if controller == nil {
-        controller = try await CarPlayController(interfaceController: interfaceController)
-      }
-    }
+    guard let interfaceController, controller == nil else { return }
+    controller = CarPlayController(interfaceController: interfaceController)
   }
 }
