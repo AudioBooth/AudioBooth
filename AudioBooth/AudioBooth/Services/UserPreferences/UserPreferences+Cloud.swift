@@ -57,6 +57,8 @@ extension UserPreferences {
     "podcastEpisodeSortAscending",
     "openPlayerOnLaunch",
     "playbackSpeed",
+    "speedPresets",
+    "volumePresets",
     "equalizerSettings",
   ]
 

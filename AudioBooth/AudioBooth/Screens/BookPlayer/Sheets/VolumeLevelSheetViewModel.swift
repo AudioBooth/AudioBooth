@@ -1,17 +1,24 @@
 import SwiftUI
 
 final class VolumeLevelSheetViewModel: FloatPickerSheet.Model {
+  private static let defaultPresets: [Double] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+  private static let presetsKey = "volumePresets"
+
   private let player: AudioPlayer
   private let userPreferences = UserPreferences.shared
 
   init(player: AudioPlayer) {
     self.player = player
+
+    let savedPresets = UserDefaults.standard.array(forKey: Self.presetsKey) as? [Double]
+    let presets = savedPresets ?? Self.defaultPresets
+
     super.init(
       title: "Volume",
       value: userPreferences.volumeLevel,
       range: 0.1...3.0,
       step: 0.05,
-      presets: [0.5, 0.75, 1.0, 1.25, 1.5, 2.0],
+      presets: presets,
       defaultValue: 1.0
     )
   }
@@ -31,5 +38,10 @@ final class VolumeLevelSheetViewModel: FloatPickerSheet.Model {
     value = rounded
     userPreferences.volumeLevel = rounded
     player.volume = Float(rounded)
+  }
+
+  override func onPresetChanged(at index: Int, newValue: Double) {
+    super.onPresetChanged(at: index, newValue: newValue)
+    UserDefaults.standard.set(presets, forKey: Self.presetsKey)
   }
 }

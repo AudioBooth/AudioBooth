@@ -2,6 +2,9 @@ import Models
 import SwiftUI
 
 final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
+  private static let defaultPresets: [Double] = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
+  private static let presetsKey = "speedPresets"
+
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
   private let mediaProgress: MediaProgress?
 
@@ -21,13 +24,16 @@ final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
     sharedDefaults?.set(speed, forKey: "playbackSpeed")
     player.rate = speed
 
+    let savedPresets = UserDefaults.standard.array(forKey: Self.presetsKey) as? [Double]
+    let presets = savedPresets ?? Self.defaultPresets
+
     self.player = player
     super.init(
       title: "Speed",
       value: Double(speed),
       range: 0.5...3.5,
       step: 0.05,
-      presets: [0.7, 1.0, 1.2, 1.5, 1.7, 2.0],
+      presets: presets,
       defaultValue: 1.0
     )
   }
@@ -51,5 +57,10 @@ final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
     sharedDefaults?.set(floatValue, forKey: "playbackSpeed")
 
     player.rate = floatValue
+  }
+
+  override func onPresetChanged(at index: Int, newValue: Double) {
+    super.onPresetChanged(at: index, newValue: newValue)
+    UserDefaults.standard.set(presets, forKey: Self.presetsKey)
   }
 }

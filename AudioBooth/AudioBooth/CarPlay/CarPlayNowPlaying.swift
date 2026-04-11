@@ -132,14 +132,13 @@ final class CarPlayNowPlaying: NSObject {
   private func onPlaybackRateButtonTapped() {
     guard let current = PlayerManager.shared.current else { return }
 
-    let speeds: [Float] = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
-    let currentSpeed = Float(current.speed.value)
+    let presets = current.speed.presets
+    let currentSpeed = current.speed.value
 
-    if let currentIndex = speeds.firstIndex(of: currentSpeed) {
-      let nextIndex = (currentIndex + 1) % speeds.count
-      current.speed.onValueChanged(Double(speeds[nextIndex]))
+    if let next = presets.first(where: { $0 > currentSpeed }) {
+      current.speed.onValueChanged(next)
     } else {
-      current.speed.onValueChanged(1.0)
+      current.speed.onValueChanged(presets.first ?? 1.0)
     }
   }
 
