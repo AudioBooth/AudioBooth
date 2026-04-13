@@ -40,6 +40,9 @@ struct PlayerView: View {
     .sheet(isPresented: $model.options.isPresented) {
       PlayerOptionsSheet(model: model.options)
     }
+    .sheet(isPresented: $model.options.speedPicker.isPresented) {
+      SpeedPickerSheet(model: model.options.speedPicker)
+    }
     .sheet(
       isPresented: Binding(
         get: { model.chapters?.isPresented ?? false },

@@ -18,6 +18,16 @@ struct PlayerOptionsSheet: View {
       }
 
       Button(action: {
+        model.onSpeedTapped()
+        dismiss()
+      }) {
+        Label(
+          "Speed (\(model.speed.formatted(.number.precision(.fractionLength(0...2))))×)",
+          systemImage: "gauge.with.dots.needle.33percent"
+        )
+      }
+
+      Button(action: {
         model.onDownloadTapped()
         dismiss()
       }) {
@@ -45,19 +55,27 @@ extension PlayerOptionsSheet {
     var isHidden: Bool
     var hasChapters: Bool
     var downloadState: DownloadManager.DownloadState
+    var speed: Float
+    var speedPicker: SpeedPickerSheet.Model
 
     init(
       isHidden: Bool = false,
       hasChapters: Bool = false,
-      downloadState: DownloadManager.DownloadState = .notDownloaded
+      downloadState: DownloadManager.DownloadState = .notDownloaded,
+      speed: Float = 1.0
     ) {
       self.isHidden = isHidden
       self.hasChapters = hasChapters
       self.downloadState = downloadState
+      self.speed = speed
+      self.speedPicker = SpeedPickerSheet.Model(speed: speed)
     }
 
     func onChaptersTapped() {}
     func onDownloadTapped() {}
+    func onSpeedTapped() {
+      speedPicker.isPresented = true
+    }
   }
 }
 
@@ -66,7 +84,8 @@ extension PlayerOptionsSheet {
     PlayerOptionsSheet(
       model: PlayerOptionsSheet.Model(
         hasChapters: true,
-        downloadState: .notDownloaded
+        downloadState: .notDownloaded,
+        speed: 1.5
       )
     )
   }

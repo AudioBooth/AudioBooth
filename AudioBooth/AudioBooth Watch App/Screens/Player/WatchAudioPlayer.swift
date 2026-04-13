@@ -48,6 +48,16 @@ final class WatchAudioPlayer {
     player.timeControlStatus == .playing
   }
 
+  var rate: Float {
+    get { player.defaultRate }
+    set {
+      player.defaultRate = newValue
+      if player.timeControlStatus == .playing {
+        player.rate = newValue
+      }
+    }
+  }
+
   var hasContent: Bool {
     !trackURLs.isEmpty
   }
@@ -190,9 +200,11 @@ private extension WatchAudioPlayer {
       player.seek(to: CMTime(seconds: offset, preferredTimescale: 1000)) { [weak self] _ in
         guard let self, autoPlay else { return }
         self.player.play()
+        self.player.rate = self.player.defaultRate
       }
     } else if autoPlay {
       player.play()
+      player.rate = player.defaultRate
     }
   }
 
@@ -244,6 +256,7 @@ private extension WatchAudioPlayer {
           if self.wasPlayingBeforeInterruption, let options, options.contains(.shouldResume) {
             AppLogger.player.info("Interruption ended, resuming playback")
             self.player.play()
+            self.player.rate = self.player.defaultRate
           }
         @unknown default:
           break

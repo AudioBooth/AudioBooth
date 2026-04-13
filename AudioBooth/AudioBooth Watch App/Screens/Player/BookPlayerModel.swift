@@ -53,6 +53,8 @@ final class BookPlayerModel: PlayerView.Model {
       chapters: nil
     )
 
+    audioPlayer.rate = BookSpeedPickerModel.savedSpeed
+
     subscribeToPlayerEvents()
     setupProgressObserver()
     setupOptionsModel()
@@ -279,6 +281,10 @@ final class BookPlayerModel: PlayerView.Model {
     saveProgress(currentTime: current)
   }
 
+  func changeSpeed(_ speed: Float) {
+    audioPlayer.rate = speed
+  }
+
   override func onDownloadTapped() {
     guard let options = options as? BookPlayerOptionsModel else { return }
     options.onDownloadTapped()
@@ -460,7 +466,7 @@ final class BookPlayerModel: PlayerView.Model {
     nowPlayingInfo[MPMediaItemPropertyArtist] = author
     nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = totalDuration
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? Double(audioPlayer.rate) : 0.0
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }

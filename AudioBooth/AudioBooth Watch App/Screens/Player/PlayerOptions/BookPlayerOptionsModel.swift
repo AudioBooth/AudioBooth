@@ -24,7 +24,13 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
       initialState = .notDownloaded
     }
 
-    super.init(hasChapters: hasChapters, downloadState: initialState)
+    let savedSpeed = BookSpeedPickerModel.savedSpeed
+    super.init(hasChapters: hasChapters, downloadState: initialState, speed: savedSpeed)
+
+    let speedPickerModel = BookSpeedPickerModel(playerModel: playerModel)
+    speedPickerModel.optionsModel = self
+    self.speedPicker = speedPickerModel
+
     observeDownloadProgress()
   }
 
