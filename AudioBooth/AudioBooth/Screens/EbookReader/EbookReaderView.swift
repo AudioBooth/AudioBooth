@@ -101,6 +101,8 @@ struct EbookReaderView: View {
     }
     .onAppear(perform: model.onAppear)
     .onDisappear(perform: model.onDisappear)
+    .statusBarHidden(!showControls)
+    .preferredColorScheme(model.preferences.theme == .dark ? .dark : .light)
   }
 
   private var loadingView: some View {
