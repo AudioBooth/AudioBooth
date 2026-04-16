@@ -364,6 +364,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
     var updatedBooks = continueListeningBooks
 
     for (bookID, currentTime) in data {
+      let localTime = progress[bookID] ?? 0
+      guard currentTime > localTime else { continue }
+
       progress[bookID] = currentTime
 
       if let index = updatedBooks.firstIndex(where: { $0.id == bookID }) {
