@@ -1,12 +1,11 @@
-import MediaPlayer
+import Combine
 import SwiftUI
 
 struct RemotePlayerOptionsSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @State private var playbackSpeed: Float = 1.0
+  @ObservedObject private var connectivityManager = WatchConnectivityManager.shared
 
   private let speeds: [Float] = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
-  private let connectivityManager = WatchConnectivityManager.shared
 
   var body: some View {
     ScrollView {
@@ -14,7 +13,7 @@ struct RemotePlayerOptionsSheet: View {
         Text("Speed")
           .font(.headline)
 
-        Text(verbatim: "\(playbackSpeed.formatted(.number.precision(.fractionLength(0...2))))×")
+        Text(verbatim: "\(connectivityManager.playbackRate.formatted(.number.precision(.fractionLength(0...2))))×")
           .font(.title2)
           .fontWeight(.medium)
 
@@ -29,17 +28,14 @@ struct RemotePlayerOptionsSheet: View {
     }
     .navigationTitle("Options")
     .navigationBarTitleDisplayMode(.inline)
-    .onAppear {
-      loadCurrentSpeed()
-    }
   }
 
   @ViewBuilder
   func speedButton(for speed: Float) -> some View {
-    let isSelected = abs(playbackSpeed - speed) < 0.01
+    let isSelected = abs(connectivityManager.playbackRate - speed) < 0.01
 
     Button {
-      playbackSpeed = speed
+      connectivityManager.playbackRate = speed
       connectivityManager.changePlaybackRate(speed)
       dismiss()
     } label: {
@@ -65,9 +61,6 @@ struct RemotePlayerOptionsSheet: View {
     .buttonStyle(.plain)
   }
 
-  private func loadCurrentSpeed() {
-    playbackSpeed = connectivityManager.playbackRate
-  }
 }
 
 #Preview {
