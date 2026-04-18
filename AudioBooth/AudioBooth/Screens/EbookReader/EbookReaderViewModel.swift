@@ -325,22 +325,21 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     updateCurrentScrollView(in: vc.view)
     autoScrollTask = Task { [weak self] in
       guard let self else { return }
-      var lastTime: Date? = nil
       while !Task.isCancelled {
-        try? await Task.sleep(for: .milliseconds(16))
+        let speed = preferences.autoScrollSpeed
+        let targetDelta = CGFloat(speed * 20) * 0.016
+        let delta = max(targetDelta, 0.25)
+        let sleepMs = Int(delta / max(CGFloat(speed * 20), 0.001) * 1000)
+        try? await Task.sleep(for: .milliseconds(max(sleepMs, 16)))
         if Task.isCancelled { break }
-        let now = Date()
-        if let last = lastTime, let scrollView = currentScrollView {
-          let elapsed = min(now.timeIntervalSince(last), 0.032)
+        if let scrollView = currentScrollView {
           let maxOffset = scrollView.contentSize.height - scrollView.frame.size.height
           guard scrollView.contentOffset.y < maxOffset else { continue }
-          let delta = max(CGFloat(preferences.autoScrollSpeed * 20 * elapsed), 1)
           scrollView.contentOffset.y = min(
             scrollView.contentOffset.y + delta,
             maxOffset
           )
         }
-        lastTime = now
       }
     }
   }
