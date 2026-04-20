@@ -1,6 +1,7 @@
 import API
 import Foundation
 import Models
+import WidgetKit
 
 final class StatsPageViewModel: StatsPageView.Model {
   private let preferences = UserPreferences.shared
@@ -27,6 +28,23 @@ final class StatsPageViewModel: StatsPageView.Model {
   override func onGoalChanged(_ minutes: Int) {
     dailyGoalMinutes = minutes
     preferences.dailyGoalMinutes = minutes
+
+    if let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS"),
+      let data = sharedDefaults.data(forKey: "listeningStats"),
+      var stats = try? JSONDecoder().decode(WidgetStatsData.self, from: data)
+    {
+      stats = WidgetStatsData(
+        todayTime: stats.todayTime,
+        dailyGoalMinutes: minutes,
+        weekData: stats.weekData,
+        days: stats.days,
+        daysInARow: stats.daysInARow
+      )
+      if let encoded = try? JSONEncoder().encode(stats) {
+        sharedDefaults.set(encoded, forKey: "listeningStats")
+        WidgetCenter.shared.reloadTimelines(ofKind: "DailyGoalWidget")
+      }
+    }
   }
 
   private func processStats(_ stats: ListeningStats) async {

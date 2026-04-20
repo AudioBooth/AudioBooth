@@ -1,7 +1,9 @@
 import API
 import Combine
 import Foundation
+import Models
 import UIKit
+import WidgetKit
 
 final class ListeningStatsCardModel: ListeningStatsCard.Model {
   private var cancellables = Set<AnyCancellable>()
@@ -44,6 +46,31 @@ final class ListeningStatsCardModel: ListeningStatsCard.Model {
     daysInARow = calculateDaysInARow(stats.days)
 
     isLoading = false
+
+    syncWidgetStats(stats)
+  }
+
+  private func syncWidgetStats(_ stats: ListeningStats) {
+    let widgetWeekData = weekData.map {
+      WidgetStatsData.DayEntry(date: $0.id, label: $0.label, timeInSeconds: $0.timeInSeconds)
+    }
+
+    let data = WidgetStatsData(
+      todayTime: stats.today,
+      dailyGoalMinutes: UserPreferences.shared.dailyGoalMinutes,
+      weekData: widgetWeekData,
+      days: stats.days,
+      daysInARow: daysInARow
+    )
+
+    if let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS"),
+      let encoded = try? JSONEncoder().encode(data)
+    {
+      sharedDefaults.set(encoded, forKey: "listeningStats")
+      WidgetCenter.shared.reloadTimelines(ofKind: "DailyGoalWidget")
+      WidgetCenter.shared.reloadTimelines(ofKind: "WeeklyListeningWidget")
+      WidgetCenter.shared.reloadTimelines(ofKind: "ListeningActivityWidget")
+    }
   }
 
   private func calculateWeekData(_ days: [String: Double]) -> [DayData] {
