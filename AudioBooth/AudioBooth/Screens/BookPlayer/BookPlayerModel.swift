@@ -282,8 +282,9 @@ final class BookPlayerModel: BookPlayer.Model {
     applySmartRewind(reason: .afterPause)
 
     lastSyncedTime = mediaProgress.currentTime
-    player.resume()
+    configureAudioSession()
     try? audioSession.setActive(true)
+    player.resume()
 
     if let timerViewModel = timer as? TimerPickerSheetViewModel {
       timerViewModel.activateAutoTimerIfNeeded()
