@@ -233,9 +233,10 @@ extension EqualizerSheet {
     Preset(name: "Flat", gains: [0, 0, 0, 0, 0, 0]),
     Preset(name: "Bass Boost", gains: [8, 4, 0, 0, 0, 0]),
     Preset(name: "Treble Boost", gains: [0, 0, 0, 0, 4, 8]),
-    Preset(name: "Vocal", gains: [-2, 0, 2, 4, 3, -1]),
     Preset(name: "Spoken Word", gains: [-4, 0, 2, 6, 4, -2]),
     Preset(name: "Loudness", gains: [6, 2, -2, 0, 4, 6]),
+    Preset(name: "High Speed 1", gains: [4, 3, 2, 1, -2, -4]),
+    Preset(name: "High Speed 2", gains: [-2, 0, -1, 3, 2, -3]),
   ]
 }
 
