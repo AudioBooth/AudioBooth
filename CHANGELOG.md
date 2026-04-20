@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
  
 ### Added
+- Stats widgets - New widgets to display your listening statistics on your home screen
 - Series progress management - Reset all progress or mark as read directly from the series details page (thanks @octopotato)
 - Smart continue playback - Automatically play the next episode, book in series, or playlist/collection item when playback ends
 - Pinned playlist preferences - Auto-download uncompleted books and auto-remove completed books from your pinned playlist
@@ -18,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apple Watch complications - Add AudioBooth complications to your watch face for quick access to playback controls and information
  
 ### Changed
+- Watch playback speed control - Control playback speed directly from the local Apple Watch player
+- Speed and volume presets edition - Edit and customize your playback speed and volume presets
+- Ebook sub chapters - Navigate ebook chapters with sub chapter support for more precise navigation
 - CarPlay home for iOS 26 - Enhanced CarPlay home screen experience optimized for iOS 26
 - Download progress display - Downloading info now shows both percentage and size progress for better tracking
 - Metadata display - Book and episode metadata sections now include file size information
