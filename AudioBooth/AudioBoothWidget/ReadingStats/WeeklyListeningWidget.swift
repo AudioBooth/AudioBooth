@@ -66,7 +66,7 @@ struct WeeklyListeningWidgetView: View {
           x: .value("Day", day.label),
           y: .value("Minutes", day.timeInSeconds / 60)
         )
-        .foregroundStyle(Color.accentColor.gradient)
+        .foregroundStyle(Color.widgetAccent.gradient)
         .cornerRadius(4)
       }
       .chartYScale(domain: 0...yAxisMax)

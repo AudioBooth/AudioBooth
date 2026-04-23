@@ -219,10 +219,10 @@ private struct ActivityGridView: View {
 
     let ratio = minutes / goalMinutes
     switch ratio {
-    case 0..<0.25: return Color.accentColor.opacity(0.3)
-    case 0.25..<0.5: return Color.accentColor.opacity(0.5)
-    case 0.5..<0.75: return Color.accentColor.opacity(0.75)
-    default: return Color.accentColor
+    case 0..<0.25: return Color.widgetAccent.opacity(0.3)
+    case 0.25..<0.5: return Color.widgetAccent.opacity(0.5)
+    case 0.5..<0.75: return Color.widgetAccent.opacity(0.75)
+    default: return Color.widgetAccent
     }
   }
 }

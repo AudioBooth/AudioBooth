@@ -1,6 +1,7 @@
 import API
 import Logging
 import Models
+import PlayerIntents
 import SwiftUI
 import WidgetKit
 
@@ -20,6 +21,7 @@ struct AudioBoothApp: App {
         .preferredColorScheme(preferences.colorScheme.colorScheme)
         .onChange(of: preferences.accentColor, initial: true) {
           updateWindowTintColor(preferences.accentColor)
+          syncAccentColorToWidget(preferences.accentColor)
         }
         .task {
           if libraries.current != nil {
@@ -47,6 +49,12 @@ struct AudioBoothApp: App {
         }
       }
     }
+  }
+
+  private func syncAccentColorToWidget(_ color: Color?) {
+    let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
+    sharedDefaults?.set(color?.rawValue, forKey: "accentColor")
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   private func updateWindowTintColor(_ color: Color?) {

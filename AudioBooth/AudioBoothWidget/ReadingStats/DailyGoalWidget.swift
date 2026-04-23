@@ -43,7 +43,7 @@ struct DailyGoalWidgetView: View {
         Circle()
           .trim(from: 0, to: CGFloat(progress))
           .stroke(
-            progress >= 1.0 ? Color.green : Color.accentColor,
+            progress >= 1.0 ? Color.green : Color.widgetAccent,
             style: StrokeStyle(lineWidth: 10, lineCap: .round)
           )
           .rotationEffect(.degrees(-90))
