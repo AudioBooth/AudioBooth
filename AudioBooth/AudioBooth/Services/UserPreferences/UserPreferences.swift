@@ -154,6 +154,11 @@ final class UserPreferences: ObservableObject {
   @AppStorage("dailyGoalMinutes")
   var dailyGoalMinutes: Int = 0
 
+  #if targetEnvironment(macCatalyst)
+  @AppStorage("displayScale")
+  var displayScale: Double = 1.0
+  #endif
+
   #if CONTRIBUTOR_BUILD
   let cloud: NSUbiquitousKeyValueStore? = nil
   #else

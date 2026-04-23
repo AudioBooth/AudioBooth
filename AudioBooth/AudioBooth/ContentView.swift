@@ -50,6 +50,7 @@ struct ContentView: View {
       .adaptivePresentation(isPresented: $playerManager.isShowingFullPlayer) {
         if let currentPlayer = playerManager.current {
           BookPlayer(model: currentPlayer)
+            .displayScaled()
             .presentationDetents([.large])
             .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
         }
@@ -58,8 +59,9 @@ struct ContentView: View {
         NavigationStack {
           EbookReaderView(model: reader)
         }
+        .displayScaled()
       }
-      .sheet(
+      .adaptivePresentation(
         isPresented: Binding(
           get: {
             guard let current = playerManager.current else { return false }
@@ -71,6 +73,7 @@ struct ContentView: View {
         )
       ) {
         PlayerQueueView(model: PlayerQueueViewModel())
+          .displayScaled()
       }
       .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
         isKeyboardVisible = true

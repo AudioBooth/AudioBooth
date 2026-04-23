@@ -17,6 +17,7 @@ struct AudioBoothApp: App {
   var body: some Scene {
     WindowGroup {
       ContentView()
+        .displayScaled()
         .tint(preferences.accentColor)
         .preferredColorScheme(preferences.colorScheme.colorScheme)
         .onChange(of: preferences.accentColor, initial: true) {

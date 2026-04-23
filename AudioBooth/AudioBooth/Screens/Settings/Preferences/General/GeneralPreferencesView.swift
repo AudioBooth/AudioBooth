@@ -57,6 +57,20 @@ struct GeneralPreferencesView: View {
         }
         .font(.subheadline)
         .bold()
+
+        #if targetEnvironment(macCatalyst)
+        Stepper(value: $preferences.displayScale, in: 0.8...2.0, step: 0.05) {
+          HStack {
+            Text("Display Scale")
+              .font(.subheadline)
+              .bold()
+            Spacer()
+            Text("\(Int(preferences.displayScale * 100))%")
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+          }
+        }
+        #endif
       }
     }
     .navigationTitle("General")

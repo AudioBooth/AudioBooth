@@ -21,7 +21,7 @@ struct AdaptivePresentationModifier<Presented: View>: ViewModifier {
   let content: () -> Presented
 
   func body(content base: Content) -> some View {
-    if UIDevice.current.userInterfaceIdiom == .pad {
+    if UIDevice.current.userInterfaceIdiom != .phone {
       base.fullScreenCover(isPresented: $isPresented) {
         content()
       }
