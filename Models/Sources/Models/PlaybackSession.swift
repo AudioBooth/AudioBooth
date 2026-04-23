@@ -111,13 +111,13 @@ extension PlaybackSession {
     } else {
       context.insert(self)
     }
-    try context.save()
+    try? context.save()
   }
 
   public func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
-    try context.save()
+    try? context.save()
   }
 
   public static func cleanupOldSessions() throws {
@@ -131,6 +131,6 @@ extension PlaybackSession {
     for session in oldSessions {
       context.delete(session)
     }
-    try context.save()
+    try? context.save()
   }
 }

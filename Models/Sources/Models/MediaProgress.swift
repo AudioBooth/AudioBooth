@@ -126,6 +126,47 @@ extension MediaProgress {
     return results.first
   }
 
+  public func update(from apiProgress: User.MediaProgress) {
+    var remoteProgress = apiProgress.progress
+    var remoteCurrentTime = apiProgress.currentTime
+
+    if apiProgress.isFinished {
+      remoteProgress = 1.0
+      remoteCurrentTime = apiProgress.duration ?? 0
+    }
+
+    let remoteLastUpdate = Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
+    let remoteStartedAt = Date(timeIntervalSince1970: TimeInterval(apiProgress.startedAt / 1000))
+    let remoteFinishedAt = apiProgress.finishedAt.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) }
+
+    id = apiProgress.id
+    duration = apiProgress.duration ?? 0
+    startedAt = remoteStartedAt
+
+    if finishedAt == nil {
+      finishedAt = remoteFinishedAt
+    }
+
+    if remoteLastUpdate > lastUpdate {
+      if remoteCurrentTime != currentTime {
+        PlaybackHistory.record(
+          itemID: bookID,
+          action: .sync,
+          position: remoteCurrentTime
+        )
+      }
+
+      lastPlayedAt = remoteLastUpdate
+      currentTime = remoteCurrentTime
+      progress = remoteProgress
+      ebookProgress = apiProgress.ebookProgress
+      ebookLocation = apiProgress.ebookLocation
+      isFinished = apiProgress.isFinished
+      finishedAt = remoteFinishedAt
+      lastUpdate = remoteLastUpdate
+    }
+  }
+
   public func save() throws {
     let context = ModelContextProvider.shared.context
 
@@ -145,7 +186,7 @@ extension MediaProgress {
       context.insert(self)
     }
 
-    try context.save()
+    try? context.save()
 
     if progress > 0 {
       MediaProgress.cache[bookID] = progress
@@ -157,7 +198,7 @@ extension MediaProgress {
   public func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
-    try context.save()
+    try? context.save()
     MediaProgress.cache.removeValue(forKey: self.bookID)
   }
 
@@ -170,7 +211,7 @@ extension MediaProgress {
       context.delete(progress)
     }
 
-    try context.save()
+    try? context.save()
     cache.removeAll()
   }
 
@@ -278,54 +319,28 @@ extension MediaProgress {
 
     let allLocalProgress = try MediaProgress.fetchAll()
     let remoteBookIDs = Set(userData.mediaProgress.map { $0.episodeId ?? $0.libraryItemId })
-    let localProgressMap = Dictionary(
+    var progressMap = Dictionary(
       uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) }
     )
 
     for apiProgress in userData.mediaProgress {
-      let remote = MediaProgress(from: apiProgress)
+      let bookID = apiProgress.episodeId ?? apiProgress.libraryItemId
 
-      if let local = localProgressMap[apiProgress.episodeId ?? apiProgress.libraryItemId] {
-        local.id = remote.id
-        local.duration = remote.duration
-        local.startedAt = remote.startedAt
-
-        if local.finishedAt == nil {
-          local.finishedAt = remote.finishedAt
-        }
-
-        if remote.lastUpdate > local.lastUpdate {
-          if remote.currentTime != local.currentTime {
-            PlaybackHistory.record(
-              itemID: local.bookID,
-              action: .sync,
-              position: remote.currentTime
-            )
-          }
-
-          local.lastPlayedAt = remote.lastPlayedAt
-          local.currentTime = remote.currentTime
-          local.progress = remote.progress
-          local.ebookProgress = remote.ebookProgress
-          local.ebookLocation = remote.ebookLocation
-          local.isFinished = remote.isFinished
-          local.finishedAt = remote.finishedAt
-          local.lastUpdate = remote.lastUpdate
-        }
-
-        if local.progress > 0 {
-          cache[local.bookID] = local.progress
-        } else if let progress = local.ebookProgress {
-          cache[local.bookID] = progress
-        }
+      let item: MediaProgress
+      if let existing = progressMap[bookID] {
+        existing.update(from: apiProgress)
+        item = existing
       } else {
+        let remote = MediaProgress(from: apiProgress)
         context.insert(remote)
+        progressMap[bookID] = remote
+        item = remote
+      }
 
-        if remote.progress > 0 {
-          cache[remote.bookID] = remote.progress
-        } else if let progress = remote.ebookProgress {
-          cache[remote.bookID] = progress
-        }
+      if item.progress > 0 {
+        cache[bookID] = item.progress
+      } else if let progress = item.ebookProgress {
+        cache[bookID] = progress
       }
     }
 
@@ -340,6 +355,6 @@ extension MediaProgress {
       }
     }
 
-    try context.save()
+    try? context.save()
   }
 }

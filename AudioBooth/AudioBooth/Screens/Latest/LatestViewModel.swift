@@ -42,7 +42,7 @@ final class LatestViewModel: LatestView.Model {
   }
 
   private func fetchEpisodes() async {
-    guard Audiobookshelf.shared.libraries.current != nil else { return }
+    guard Audiobookshelf.shared.libraries.current?.mediaType == .podcast else { return }
 
     if episodes.isEmpty {
       isLoading = true

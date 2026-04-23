@@ -162,13 +162,13 @@ extension LocalBook {
       context.insert(self)
     }
 
-    try context.save()
+    try? context.save()
   }
 
   public func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
-    try context.save()
+    try? context.save()
   }
 
   public static func deleteAll() throws {
@@ -180,7 +180,7 @@ extension LocalBook {
       context.delete(item)
     }
 
-    try context.save()
+    try? context.save()
   }
 
   public static func updateDisplayOrders(_ bookIDsInOrder: [String]) throws {
@@ -190,7 +190,7 @@ extension LocalBook {
         book.displayOrder = index
       }
     }
-    try context.save()
+    try? context.save()
   }
 
   public func track(at time: TimeInterval) -> Track? {

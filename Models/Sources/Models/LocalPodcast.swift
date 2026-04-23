@@ -100,13 +100,13 @@ extension LocalPodcast {
       context.insert(self)
     }
 
-    try context.save()
+    try? context.save()
   }
 
   public func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
-    try context.save()
+    try? context.save()
   }
 
   public static func deleteAll() throws {
@@ -116,6 +116,6 @@ extension LocalPodcast {
     for item in allItems {
       context.delete(item)
     }
-    try context.save()
+    try? context.save()
   }
 }

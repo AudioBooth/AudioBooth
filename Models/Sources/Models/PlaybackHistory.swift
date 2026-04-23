@@ -78,7 +78,7 @@ extension PlaybackHistory {
   public func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
-    try context.save()
+    try? context.save()
   }
 
   public static func deleteAll(for itemID: String) throws {
@@ -87,7 +87,7 @@ extension PlaybackHistory {
     for entry in entries {
       context.delete(entry)
     }
-    try context.save()
+    try? context.save()
   }
 
   public static func cleanup(olderThan days: Int = 7) throws {
@@ -101,6 +101,6 @@ extension PlaybackHistory {
     for entry in oldEntries {
       context.delete(entry)
     }
-    try context.save()
+    try? context.save()
   }
 }
