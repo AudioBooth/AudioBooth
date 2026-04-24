@@ -213,6 +213,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       error = nil
       isLoading = false
 
+      if localBook != nil {
+        let updated = LocalBook(from: book)
+        try? updated.save()
+      }
+
       await loadSessions()
     } catch {
       if localBook == nil {
