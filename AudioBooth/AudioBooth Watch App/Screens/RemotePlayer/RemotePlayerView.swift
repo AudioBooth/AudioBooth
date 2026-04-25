@@ -5,6 +5,7 @@ struct RemotePlayerView: View {
   @Environment(\.dismiss) private var dismiss
 
   @State private var showOptions = false
+  @State private var speedPickerModel: SpeedPickerSheet.Model = RemoteSpeedPickerModel()
 
   var body: some View {
     NowPlayingView()
@@ -22,7 +23,7 @@ struct RemotePlayerView: View {
       }
       .sheet(isPresented: $showOptions) {
         NavigationStack {
-          RemotePlayerOptionsSheet()
+          SpeedPickerSheet(model: speedPickerModel)
         }
       }
   }

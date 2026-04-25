@@ -6,6 +6,9 @@ struct SpeedPickerSheet: View {
 
   @ObservedObject var model: Model
 
+  @State private var crownValue: Double = 0
+  @FocusState private var isFocused: Bool
+
   private let speeds: [Float] = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
 
   var body: some View {
@@ -14,6 +17,18 @@ struct SpeedPickerSheet: View {
         Text(verbatim: "\(model.speed.formatted(.number.precision(.fractionLength(0...2))))×")
           .font(.title2)
           .fontWeight(.medium)
+          .focused($isFocused)
+          .digitalCrownRotation(
+            $crownValue,
+            from: 0.5,
+            through: 3.5,
+            by: 0.05,
+            sensitivity: .low
+          )
+          .onChange(of: crownValue) { _, newValue in
+            let rounded = Float((newValue / 0.05).rounded() * 0.05)
+            model.onSpeedChanged(rounded)
+          }
 
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
           ForEach(speeds, id: \.self) { speed in
@@ -23,6 +38,10 @@ struct SpeedPickerSheet: View {
         .padding(.horizontal)
       }
       .padding(.top)
+    }
+    .onAppear {
+      crownValue = Double(model.speed)
+      isFocused = true
     }
     .navigationTitle("Speed")
     .navigationBarTitleDisplayMode(.inline)
