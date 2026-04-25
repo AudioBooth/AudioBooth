@@ -121,6 +121,7 @@ final class AudioPlayer {
       currentTrackIndex = trackIndex
       loadTrack(at: trackIndex, seekTo: offset, autoPlay: true)
     } else if player.currentItem != nil, player.currentItem?.status != .failed {
+      seek(to: mediaProgress.currentTime)
       player.play()
     } else {
       let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
