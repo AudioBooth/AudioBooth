@@ -7,13 +7,26 @@ struct SpeedPickerSheet: View {
   @ObservedObject var model: Model
 
   private let speeds: [Float] = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
+  private let step: Float = 0.05
+  private let minSpeed: Float = 0.5
+  private let maxSpeed: Float = 3.5
 
   var body: some View {
     ScrollView {
       VStack(spacing: 16) {
-        Text(verbatim: "\(model.speed.formatted(.number.precision(.fractionLength(0...2))))×")
-          .font(.title2)
-          .fontWeight(.medium)
+        Stepper(
+          value: Binding(
+            get: { model.speed },
+            set: { model.onSpeedChanged(($0 / step).rounded() * step) }
+          ),
+          in: minSpeed...maxSpeed,
+          step: step
+        ) {
+          Text(verbatim: "\(model.speed.formatted(.number.precision(.fractionLength(0...2))))×")
+            .font(.title3)
+            .fontWeight(.medium)
+        }
+        .padding(.horizontal)
 
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
           ForEach(speeds, id: \.self) { speed in
