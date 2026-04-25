@@ -156,6 +156,30 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
+  func syncHomeSections(sections: [Personalized.Section], enabledSections: [HomeSection]) {
+    let excludedIDs: Set<String> = ["continue-listening", "continue-reading"]
+
+    var bookCountByID: [String: Int] = [:]
+    for section in sections {
+      guard !excludedIDs.contains(section.id) else { continue }
+      guard case .books(let books) = section.entities, !books.isEmpty else { continue }
+      bookCountByID[section.id] = books.count
+    }
+
+    var sectionMetadata: [[String: Any]] = []
+    for sectionCase in enabledSections {
+      guard let count = bookCountByID[sectionCase.rawValue] else { continue }
+      sectionMetadata.append([
+        "id": sectionCase.rawValue,
+        "name": sectionCase.displayName,
+        "count": count,
+      ])
+    }
+
+    context["homeSections"] = sectionMetadata
+    updateContext()
+  }
+
   func sendPlaybackRate(_ rate: Float?) {
     if let rate {
       context["playbackRate"] = rate
@@ -225,6 +249,11 @@ extension WatchConnectivityManager: WCSessionDelegate {
         break
       }
     }
+
+    syncHomeSections(
+      sections: personalized.sections,
+      enabledSections: UserPreferences.shared.homeSections
+    )
   }
 
   func sessionDidBecomeInactive(_ session: WCSession) {
@@ -322,6 +351,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
           forDownload: forDownload,
           replyHandler: replyHandler
         )
+
+      case "fetchSectionBooks":
+        guard let sectionID = message["sectionID"] as? String else {
+          replyHandler(["error": "Missing sectionID"])
+          return
+        }
+        await handleFetchSectionBooks(sectionID: sectionID, replyHandler: replyHandler)
 
       default:
         replyHandler(["error": "Unknown command: \(command)"])
@@ -432,6 +468,42 @@ extension WatchConnectivityManager: WCSessionDelegate {
       ])
     } catch {
       AppLogger.watchConnectivity.error("Failed to start session: \(error)")
+      replyHandler(["error": error.localizedDescription])
+    }
+  }
+
+  private func handleFetchSectionBooks(
+    sectionID: String,
+    replyHandler: @escaping ([String: Any]) -> Void
+  ) async {
+    do {
+      let personalized: Personalized
+      if let cached = Audiobookshelf.shared.libraries.getCachedPersonalized() {
+        personalized = cached
+      } else {
+        personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
+      }
+
+      guard let section = personalized.sections.first(where: { $0.id == sectionID }),
+        case .books(let books) = section.entities
+      else {
+        replyHandler(["error": "Section not found"])
+        return
+      }
+
+      let bookDicts: [[String: Any]] = books.map { book in
+        [
+          "id": book.id,
+          "title": book.title,
+          "author": book.authorName as Any,
+          "coverURL": watchCompatibleCoverURL(from: book.coverURL()) as Any,
+          "duration": book.duration,
+        ]
+      }
+
+      replyHandler(["books": bookDicts])
+    } catch {
+      AppLogger.watchConnectivity.error("Failed to fetch section books: \(error)")
       replyHandler(["error": error.localizedDescription])
     }
   }
