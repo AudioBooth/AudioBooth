@@ -59,7 +59,7 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.fontWeight") var fontWeight: Double = 1.0
   @AppStorage("ebookReader.textNormalization") var textNormalization: Bool = false
   @AppStorage("ebookReader.fontFamily") var fontFamily: FontFamily = .system
-  @AppStorage("ebookReader.theme") var theme: Theme = .light
+  @AppStorage("ebookReader.theme") var theme: Theme = .auto
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
   @AppStorage("ebookReader.columnCount") var columnCount: ColumnCount = .auto
   @AppStorage("ebookReader.scroll") var scroll: Bool = false
@@ -112,6 +112,7 @@ class EbookReaderPreferences: ObservableObject {
   }
 
   enum Theme: String, CaseIterable, Identifiable {
+    case auto = "Auto"
     case light = "Light"
     case dark = "Dark"
     case sepia = "Sepia"
@@ -161,14 +162,14 @@ class EbookReaderPreferences: ObservableObject {
 }
 
 extension EbookReaderPreferences {
-  func toEPUBPreferences() -> EPUBPreferences {
+  func toEPUBPreferences(colorScheme: ColorScheme) -> EPUBPreferences {
     var prefs = EPUBPreferences()
 
     prefs.fontSize = max(0.1, fontSize)
     prefs.fontWeight = fontWeight
     prefs.textNormalization = textNormalization
     prefs.fontFamily = fontFamily.readiumFontFamily
-    prefs.theme = theme.toReadiumTheme()
+    prefs.theme = theme.toReadiumTheme(colorScheme: colorScheme)
     prefs.pageMargins = pageMargins.value
     prefs.scroll = scroll
     prefs.columnCount = columnCount.readiumColumnCount
@@ -187,8 +188,17 @@ extension EbookReaderPreferences {
 }
 
 extension EbookReaderPreferences.Theme {
-  func toReadiumTheme() -> ReadiumNavigator.Theme {
+  var colorScheme: ColorScheme? {
     switch self {
+    case .auto: return nil
+    case .light, .sepia: return .light
+    case .dark: return .dark
+    }
+  }
+
+  func toReadiumTheme(colorScheme: ColorScheme) -> ReadiumNavigator.Theme {
+    switch self {
+    case .auto: return colorScheme == .dark ? .dark : .light
     case .light: return .light
     case .dark: return .dark
     case .sepia: return .sepia

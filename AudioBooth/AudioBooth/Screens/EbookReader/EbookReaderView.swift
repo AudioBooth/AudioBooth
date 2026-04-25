@@ -5,10 +5,14 @@ import UIKit
 struct EbookReaderView: View {
   @ObservedObject var model: Model
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.colorScheme) private var colorScheme
+
   @State private var showControls = false
   @State private var showSettings = false
   @State private var showPlayerSheet = false
   @State private var showZoneEditor = false
+
+  @State var preferredColorScheme: ColorScheme?
 
   @ObservedObject private var playerManager = PlayerManager.shared
   private let userPreferences = UserPreferences.shared
@@ -81,6 +85,12 @@ struct EbookReaderView: View {
     .onChange(of: showControls) { _, value in
       model.onShowControlsChanged(value)
     }
+    .onChange(of: colorScheme) { _, _ in
+      if model.preferences.theme == .auto {
+        model.onPreferencesChanged(model.preferences)
+      }
+      preferredColorScheme = model.preferences.theme.colorScheme
+    }
     .sheet(
       isPresented: Binding(
         get: { model.chapters?.isPresented ?? false },
@@ -102,7 +112,7 @@ struct EbookReaderView: View {
     .onAppear(perform: model.onAppear)
     .onDisappear(perform: model.onDisappear)
     .statusBarHidden(!showControls)
-    .preferredColorScheme(model.preferences.theme == .dark ? .dark : .light)
+    .preferredColorScheme(preferredColorScheme)
   }
 
   private var loadingView: some View {

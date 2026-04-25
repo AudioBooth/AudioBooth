@@ -7,6 +7,7 @@ import ReadiumAdapterGCDWebServer
 import ReadiumNavigator
 import ReadiumShared
 import ReadiumStreamer
+import SwiftUI
 import UIKit
 import WebKit
 
@@ -170,7 +171,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         publication: publication,
         initialLocation: initialLocation,
         config: EPUBNavigatorViewController.Configuration(
-          preferences: preferences.toEPUBPreferences(),
+          preferences: preferences.toEPUBPreferences(colorScheme: systemColorScheme),
           contentInset: [
             .compact: (top: 0, bottom: 0),
             .regular: (top: 0, bottom: 0),
@@ -370,8 +371,12 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       return
     }
 
-    let epubPrefs = preferences.toEPUBPreferences()
+    let epubPrefs = preferences.toEPUBPreferences(colorScheme: systemColorScheme)
     epubNavigator.submitPreferences(epubPrefs)
+  }
+
+  private var systemColorScheme: ColorScheme {
+    UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
   }
 
   private func navigateToSearchResult(locator: Locator) {
