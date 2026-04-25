@@ -4,6 +4,12 @@ import OSLog
 import WatchConnectivity
 import WidgetKit
 
+struct WatchHomeSection: Identifiable, Hashable {
+  let id: String
+  let name: String
+  let count: Int
+}
+
 final class WatchConnectivityManager: NSObject, ObservableObject {
   static let shared = WatchConnectivityManager()
 
@@ -11,6 +17,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var progress: [String: Double] = [:]
   @Published var hasCurrentBook: Bool = false
   @Published var playbackRate: Float = 1.0
+  @Published var homeSections: [WatchHomeSection] = []
   private var chapterProgress: Double?
 
   private var session: WCSession?
@@ -146,6 +153,40 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         AppLogger.watchConnectivity.error("Failed to refresh continue listening: \(error)")
         continuation.resume()
       }
+    }
+  }
+
+  func fetchSectionBooks(sectionID: String) async -> [WatchBook]? {
+    guard let session = session, session.isReachable else {
+      AppLogger.watchConnectivity.warning("Cannot fetch section - session not reachable")
+      return nil
+    }
+
+    return await withCheckedContinuation { continuation in
+      let message: [String: Any] = [
+        "command": "fetchSectionBooks",
+        "sectionID": sectionID,
+      ]
+      session.sendMessage(
+        message,
+        replyHandler: { response in
+          if let error = response["error"] as? String {
+            AppLogger.watchConnectivity.error("Failed to fetch section books: \(error)")
+            continuation.resume(returning: nil)
+            return
+          }
+          guard let booksData = response["books"] as? [[String: Any]] else {
+            continuation.resume(returning: nil)
+            return
+          }
+          let books = booksData.compactMap { WatchBook(dictionary: $0) }
+          continuation.resume(returning: books)
+        },
+        errorHandler: { error in
+          AppLogger.watchConnectivity.error("fetchSectionBooks error: \(error)")
+          continuation.resume(returning: nil)
+        }
+      )
     }
   }
 
@@ -341,6 +382,15 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     let progressData = context["progress"] as? [String: Double] ?? [:]
     handleProgress(progressData)
+
+    let homeSectionsData = context["homeSections"] as? [[String: Any]] ?? []
+    homeSections = homeSectionsData.compactMap { dict in
+      guard let id = dict["id"] as? String,
+        let name = dict["name"] as? String,
+        let count = dict["count"] as? Int
+      else { return nil }
+      return WatchHomeSection(id: id, name: name, count: count)
+    }
   }
 
   private func handleMessage(_ message: [String: Any]) {

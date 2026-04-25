@@ -7,7 +7,7 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
   private var cancellables = Set<AnyCancellable>()
 
   init() {
-    super.init()
+    super.init(homeSections: connectivityManager.homeSections)
     setupObservers()
     updateAllRows()
   }
@@ -31,6 +31,13 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
         self?.updateAllRows()
+      }
+      .store(in: &cancellables)
+
+    connectivityManager.$homeSections
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] sections in
+        self?.homeSections = sections
       }
       .store(in: &cancellables)
   }
