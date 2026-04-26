@@ -42,6 +42,8 @@ public final class Server: @unchecked Sendable {
     }
   }
 
+  public let storage: UserDefaults
+
   public init(connection: Connection) {
     self.id = connection.id
     self.baseURL = connection.serverURL
@@ -50,5 +52,6 @@ public final class Server: @unchecked Sendable {
     self.alias = connection.alias
     self.alternativeURL = connection.alternativeURL
     self.urlMode = connection.isUsingAlternativeURL ? .alternative : .primary
+    self.storage = UserDefaults(suiteName: "connection.\(connection.id)") ?? .standard
   }
 }

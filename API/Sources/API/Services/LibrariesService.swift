@@ -5,7 +5,6 @@ import Nuke
 
 public final class LibrariesService: ObservableObject, @unchecked Sendable {
   private let audiobookshelf: Audiobookshelf
-  private let userDefaults = UserDefaults.standard
 
   enum Keys {
     static let library = "selected_library"
@@ -21,31 +20,49 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
 
   init(audiobookshelf: Audiobookshelf) {
     self.audiobookshelf = audiobookshelf
-    migrateUserDefaultsIfNeeded()
   }
 
-  private func migrateUserDefaultsIfNeeded() {
-    guard userDefaults.data(forKey: Keys.library) == nil else { return }
+  func migrateToConnectionStorage() {
+    guard let storage = audiobookshelf.authentication.server?.storage else { return }
 
-    if let libraryData = userDefaults.data(forKey: "audiobookshelf_selected_library") {
-      userDefaults.set(libraryData, forKey: Keys.library)
-      userDefaults.removeObject(forKey: "audiobookshelf_selected_library")
-      AppLogger.libraries.info("Migrated library selection to App Group UserDefaults")
+    let standard = UserDefaults.standard
+
+    if let data = standard.data(forKey: "audiobookshelf_selected_library") {
+      storage.set(data, forKey: Keys.library)
+      standard.removeObject(forKey: "audiobookshelf_selected_library")
+    }
+
+    if let data = standard.data(forKey: "selected_library") {
+      storage.set(data, forKey: Keys.library)
+      standard.removeObject(forKey: "selected_library")
+    }
+
+    if let data = standard.data(forKey: "libraries") {
+      storage.set(data, forKey: Keys.libraries)
+      standard.removeObject(forKey: "libraries")
+    }
+
+    let allKeys = standard.dictionaryRepresentation().keys
+    for key in allKeys {
+      if key.hasPrefix("personalized_") || key.hasPrefix("filterdata_") {
+        storage.set(standard.data(forKey: key), forKey: key)
+        standard.removeObject(forKey: key)
+      }
     }
   }
 
   public var current: Library? {
     get {
-      guard let data = userDefaults.data(forKey: Keys.library) else { return nil }
+      guard let data = audiobookshelf.authentication.server?.storage.data(forKey: Keys.library) else { return nil }
       return try? JSONDecoder().decode(Library.self, from: data)
     }
     set {
       objectWillChange.send()
       if let newValue {
         guard let data = try? JSONEncoder().encode(newValue) else { return }
-        userDefaults.set(data, forKey: Keys.library)
+        audiobookshelf.authentication.server?.storage.set(data, forKey: Keys.library)
       } else {
-        userDefaults.removeObject(forKey: Keys.library)
+        audiobookshelf.authentication.server?.storage.removeObject(forKey: Keys.library)
       }
       ImagePipeline.shared.cache.removeAll()
     }
@@ -62,20 +79,21 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
 
   public var libraries: [Library] {
     get {
-      guard let data = userDefaults.data(forKey: Keys.libraries) else { return [] }
+      guard let data = audiobookshelf.authentication.server?.storage.data(forKey: Keys.libraries) else { return [] }
       return (try? JSONDecoder().decode([Library].self, from: data)) ?? []
     }
     set {
       objectWillChange.send()
       guard let data = try? JSONEncoder().encode(newValue) else { return }
-      userDefaults.set(data, forKey: Keys.libraries)
+      audiobookshelf.authentication.server?.storage.set(data, forKey: Keys.libraries)
     }
   }
 
   public func clearAllCaches() {
-    let keys = userDefaults.dictionaryRepresentation().keys
+    guard let storage = audiobookshelf.authentication.server?.storage else { return }
+    let keys = storage.dictionaryRepresentation().keys
     for key in keys where key.hasPrefix("personalized_") || key.hasPrefix("filterdata_") {
-      userDefaults.removeObject(forKey: key)
+      storage.removeObject(forKey: key)
     }
   }
 
@@ -132,7 +150,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func getCachedPersonalized() -> Personalized? {
     guard let library = audiobookshelf.libraries.current else { return nil }
     let key = Keys.personalized(libraryID: library.id)
-    guard let data = userDefaults.data(forKey: key) else { return nil }
+    guard let data = audiobookshelf.authentication.server?.storage.data(forKey: key) else { return nil }
     return try? JSONDecoder().decode(Personalized.self, from: data)
   }
 
@@ -162,7 +180,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
       let encoder = JSONEncoder()
       if let data = try? encoder.encode(personalized) {
         let key = Keys.personalized(libraryID: personalized.libraryID)
-        userDefaults.set(data, forKey: key)
+        audiobookshelf.authentication.server?.storage.set(data, forKey: key)
       }
 
       return personalized
@@ -281,7 +299,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func getCachedFilterData() -> FilterData? {
     guard let library = audiobookshelf.libraries.current else { return nil }
     let key = Keys.filterData(libraryID: library.id)
-    guard let data = userDefaults.data(forKey: key) else { return nil }
+    guard let data = audiobookshelf.authentication.server?.storage.data(forKey: key) else { return nil }
     return try? JSONDecoder().decode(FilterData.self, from: data)
   }
 
@@ -314,7 +332,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
       let encoder = JSONEncoder()
       if let data = try? encoder.encode(response.value.filterdata) {
         let key = Keys.filterData(libraryID: library.id)
-        userDefaults.set(data, forKey: key)
+        audiobookshelf.authentication.server?.storage.set(data, forKey: key)
       }
 
       return response.value.filterdata
