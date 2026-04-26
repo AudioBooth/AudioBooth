@@ -52,6 +52,8 @@ public final class Audiobookshelf: @unchecked Sendable {
       return
     }
 
+    libraries.migrateToConnectionStorage()
+
     networkService = NetworkService(
       server: server
     ) { [weak self] in

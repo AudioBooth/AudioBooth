@@ -15,27 +15,31 @@ final class PinnedPlaylistManager: ObservableObject {
     var removeCompleted: Bool = false
   }
 
-  private static let cachedPlaylistKey = "cached_pinned_playlist"
-
-  private let userDefaults = UserDefaults.standard
   private let preferences = UserPreferences.shared
+
+  private var cachedPlaylistKey: String? {
+    guard let libraryID = Audiobookshelf.shared.libraries.current?.id else { return nil }
+    return "cached_pinned_playlist_\(libraryID)"
+  }
 
   private var cachedPlaylist: Playlist? {
     get {
-      guard let data = userDefaults.data(forKey: Self.cachedPlaylistKey) else { return nil }
+      guard let key = cachedPlaylistKey else { return nil }
+      guard let data = Audiobookshelf.shared.authentication.server?.storage.data(forKey: key) else { return nil }
       return try? JSONDecoder().decode(Playlist.self, from: data)
     }
     set {
+      guard let key = cachedPlaylistKey else { return }
       if let newValue, let data = try? JSONEncoder().encode(newValue) {
-        userDefaults.set(data, forKey: Self.cachedPlaylistKey)
+        Audiobookshelf.shared.authentication.server?.storage.set(data, forKey: key)
       } else {
-        userDefaults.removeObject(forKey: Self.cachedPlaylistKey)
+        Audiobookshelf.shared.authentication.server?.storage.removeObject(forKey: key)
       }
     }
   }
 
   private init() {
-    migrateIfNeeded()
+    migrateToConnectionStorage()
   }
 
   var pinnedPlaylistID: String? {
@@ -45,7 +49,7 @@ final class PinnedPlaylistManager: ObservableObject {
   var config: Config? {
     get {
       guard let key else { return nil }
-      guard let data = userDefaults.data(forKey: key) else { return nil }
+      guard let data = Audiobookshelf.shared.authentication.server?.storage.data(forKey: key) else { return nil }
       return try? JSONDecoder().decode(Config.self, from: data)
     }
     set {
@@ -53,9 +57,9 @@ final class PinnedPlaylistManager: ObservableObject {
       objectWillChange.send()
 
       if let newValue, let data = try? JSONEncoder().encode(newValue) {
-        userDefaults.set(data, forKey: key)
+        Audiobookshelf.shared.authentication.server?.storage.set(data, forKey: key)
       } else {
-        userDefaults.removeObject(forKey: key)
+        Audiobookshelf.shared.authentication.server?.storage.removeObject(forKey: key)
       }
     }
   }
@@ -153,29 +157,46 @@ final class PinnedPlaylistManager: ObservableObject {
     return "pinnedPlaylistConfig_\(libraryID)"
   }
 
-  private func migrateIfNeeded() {
-    let legacyKey = "pinnedPlaylistID"
-    let legacyPerLibraryPrefix = "pinnedPlaylistID_"
+  func migrateToConnectionStorage() {
+    guard let storage = Audiobookshelf.shared.authentication.server?.storage else { return }
 
-    if let legacyValue = userDefaults.string(forKey: legacyKey) {
+    let standard = UserDefaults.standard
+
+    let legacyKey = "pinnedPlaylistID"
+    if let legacyValue = standard.string(forKey: legacyKey) {
       guard let key else { return }
       let config = Config(playlistID: legacyValue)
       if let data = try? JSONEncoder().encode(config) {
-        userDefaults.set(data, forKey: key)
+        storage.set(data, forKey: key)
       }
-      userDefaults.removeObject(forKey: legacyKey)
+      standard.removeObject(forKey: legacyKey)
     }
 
-    if let libraryID = Audiobookshelf.shared.libraries.current?.id {
-      let perLibraryKey = "\(legacyPerLibraryPrefix)\(libraryID)"
-      if let legacyValue = userDefaults.string(forKey: perLibraryKey) {
-        guard let key else { return }
-        let config = Config(playlistID: legacyValue)
-        if let data = try? JSONEncoder().encode(config) {
-          userDefaults.set(data, forKey: key)
+    let allKeys = standard.dictionaryRepresentation().keys
+    for oldKey in allKeys {
+      if oldKey.hasPrefix("pinnedPlaylistID_") {
+        let libraryID = String(oldKey.dropFirst("pinnedPlaylistID_".count))
+        let newKey = "pinnedPlaylistConfig_\(libraryID)"
+        if let legacyValue = standard.string(forKey: oldKey) {
+          let config = Config(playlistID: legacyValue)
+          if let data = try? JSONEncoder().encode(config) {
+            storage.set(data, forKey: newKey)
+          }
         }
-        userDefaults.removeObject(forKey: perLibraryKey)
+        standard.removeObject(forKey: oldKey)
+      } else if oldKey.hasPrefix("pinnedPlaylistConfig_") {
+        if let data = standard.data(forKey: oldKey) {
+          storage.set(data, forKey: oldKey)
+        }
+        standard.removeObject(forKey: oldKey)
       }
+    }
+
+    if let data = standard.data(forKey: "cached_pinned_playlist") {
+      if let cachedPlaylistKey {
+        storage.set(data, forKey: cachedPlaylistKey)
+      }
+      standard.removeObject(forKey: "cached_pinned_playlist")
     }
   }
 }
