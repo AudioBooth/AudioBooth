@@ -53,6 +53,13 @@ final class CarPlayTabBar: NSObject {
       }
 
       templates.append(offline.template)
+
+      if Audiobookshelf.shared.libraries.libraries.count > 1 {
+        let librarySelector = CarPlayLibrarySelector()
+        tabs[librarySelector.template] = librarySelector
+        templates.append(librarySelector.template)
+      }
+
       newTemplate = CPTabBarTemplate(templates: templates)
     } else {
       tabs = [:]
