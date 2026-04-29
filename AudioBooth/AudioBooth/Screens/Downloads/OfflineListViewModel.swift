@@ -111,15 +111,19 @@ final class OfflineListViewModel: OfflineListView.Model {
     }
   }
 
+  override func onSearchChanged() {
+    updateDisplayedItems()
+  }
+
   override func onGroupSeriesToggled() {
     groupingEnabled.toggle()
     isGroupedBySeries = groupingEnabled
     UserPreferences.shared.groupSeriesInOffline = groupingEnabled
     updateDisplayedItems()
   }
+}
 
-  // MARK: - Observations
-
+extension OfflineListViewModel {
   private func setupBooksObservation() {
     booksObservation = Task { [weak self] in
       for await books in LocalBook.observeAll() {
@@ -149,9 +153,9 @@ final class OfflineListViewModel: OfflineListView.Model {
       }
     }
   }
+}
 
-  // MARK: - Display
-
+extension OfflineListViewModel {
   private func updateDisplayedItems() {
     let searchTerm = searchText.lowercased().trimmingCharacters(in: .whitespaces)
 
@@ -310,9 +314,9 @@ final class OfflineListViewModel: OfflineListView.Model {
     let episodeItems: [OfflineListItem] = filteredEpisodes.map { .episode(makeEpisodeCardModel($0)) }
     return bookItems + episodeItems
   }
+}
 
-  // MARK: - Display Order
-
+extension OfflineListViewModel {
   private func saveDisplayOrder() async {
     let bookIDs = filteredBooks.map(\.bookID)
 
@@ -322,9 +326,9 @@ final class OfflineListViewModel: OfflineListView.Model {
       print("Failed to save display order: \(error)")
     }
   }
+}
 
-  // MARK: - Batch Actions
-
+extension OfflineListViewModel {
   private func deleteSelected() async {
     isPerformingBatchAction = true
     await deleteItems(selectedIDs)

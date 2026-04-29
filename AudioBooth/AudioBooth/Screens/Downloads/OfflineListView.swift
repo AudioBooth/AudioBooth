@@ -105,6 +105,9 @@ struct OfflineListView: View {
     .onAppear {
       model.onAppear()
     }
+    .onChange(of: model.searchText) { _, _ in
+      model.onSearchChanged()
+    }
   }
 
   private var list: some View {
@@ -324,6 +327,7 @@ extension OfflineListView {
     func onReorder(from: IndexSet, to: Int) {}
     func onDelete(at: IndexSet) {}
     func onGroupSeriesToggled() {}
+    func onSearchChanged() {}
 
     init(
       items: [OfflineListItem] = [],
