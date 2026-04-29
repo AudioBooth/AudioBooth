@@ -4,7 +4,6 @@ import Models
 
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
-  private let downloadManager = DownloadManager.shared
 
   private var fetched: [LibraryView.Item] = []
 
@@ -164,18 +163,8 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func onDownloadAllTapped() {
-    Task {
-      for item in items {
-        guard case .book(let model) = item else { continue }
-        guard downloadManager.downloadStates[model.id] != .downloaded else { continue }
-
-        if let localBook = try? LocalBook.fetch(bookID: model.id) {
-          try? localBook.download()
-        } else {
-          let remoteBook = try? await audiobookshelf.books.fetch(id: model.id)
-          try? remoteBook?.download()
-        }
-      }
+    for case let .book(model) in items {
+      model.contextMenu?.onDownloadTapped()
     }
   }
 

@@ -191,6 +191,12 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
     pinnedPlaylistManager.config = config
   }
 
+  override func onDownloadAllTapped() {
+    for book in books {
+      book.contextMenu?.onDownloadTapped()
+    }
+  }
+
   override func onPlayItem(_ item: BookCard.Model) {
     if playerManager.current?.id == item.id {
       if let currentPlayer = playerManager.current as? BookPlayerModel {

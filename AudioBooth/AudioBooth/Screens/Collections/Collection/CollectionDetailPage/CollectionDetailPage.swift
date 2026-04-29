@@ -95,6 +95,12 @@ struct CollectionDetailPage: View {
             Label("List View", systemImage: "rectangle.grid.1x3")
           }
 
+          Divider()
+
+          Button(action: model.onDownloadAllTapped) {
+            Label("Download All", systemImage: "arrow.down.circle")
+          }
+
           if model.canEdit {
             Divider()
 
@@ -345,6 +351,7 @@ extension CollectionDetailPage {
     func onPlayItem(_ item: BookCard.Model) {}
     func onAutoDownloadChanged(_ mode: AutoDownloadMode) {}
     func onRemoveCompletedChanged(_ value: Bool) {}
+    func onDownloadAllTapped() {}
 
     init(
       isLoading: Bool = false,
