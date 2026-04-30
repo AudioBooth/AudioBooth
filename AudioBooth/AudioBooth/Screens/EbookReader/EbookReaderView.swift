@@ -142,24 +142,28 @@ struct EbookReaderView: View {
   }
 
   private func readerView(_ viewController: UIViewController) -> some View {
-    ReaderViewControllerWrapper(viewController: viewController)
-      .ignoresSafeArea(.all)
-      .simultaneousGesture(
-        SpatialTapGesture()
-          .onEnded { value in
-            handleTap(at: value.location)
-          }
-      )
-      .animation(.easeInOut(duration: 0.2), value: showControls)
-      .onAppear {
-        showControls = true
-        Task {
-          try? await Task.sleep(for: .seconds(2))
-          withAnimation {
-            showControls = false
-          }
+    ReaderViewControllerWrapper(
+      viewController: viewController,
+      onPencilDoubleTap: { model.onTapRight() },
+      onPencilSqueeze: { model.onTapLeft() }
+    )
+    .ignoresSafeArea(.all)
+    .simultaneousGesture(
+      SpatialTapGesture()
+        .onEnded { value in
+          handleTap(at: value.location)
+        }
+    )
+    .animation(.easeInOut(duration: 0.2), value: showControls)
+    .onAppear {
+      showControls = true
+      Task {
+        try? await Task.sleep(for: .seconds(2))
+        withAnimation {
+          showControls = false
         }
       }
+    }
   }
 
   private func handleTap(at point: CGPoint) {
@@ -267,12 +271,49 @@ struct EbookReaderView: View {
 
 struct ReaderViewControllerWrapper: UIViewControllerRepresentable {
   let viewController: UIViewController
+  var onPencilDoubleTap: (() -> Void)?
+  var onPencilSqueeze: (() -> Void)?
 
   func makeUIViewController(context: Context) -> UIViewController {
-    viewController
+    if #available(iOS 17.5, *) {
+      let interaction = UIPencilInteraction()
+      interaction.delegate = context.coordinator
+      viewController.view.addInteraction(interaction)
+    }
+    return viewController
   }
 
-  func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+  func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+    context.coordinator.onDoubleTap = onPencilDoubleTap
+    context.coordinator.onSqueeze = onPencilSqueeze
+  }
+
+  func makeCoordinator() -> Coordinator {
+    Coordinator(onDoubleTap: onPencilDoubleTap, onSqueeze: onPencilSqueeze)
+  }
+
+  final class Coordinator: NSObject, UIPencilInteractionDelegate {
+    var onDoubleTap: (() -> Void)?
+    var onSqueeze: (() -> Void)?
+
+    init(onDoubleTap: (() -> Void)?, onSqueeze: (() -> Void)?) {
+      self.onDoubleTap = onDoubleTap
+      self.onSqueeze = onSqueeze
+    }
+
+    @available(iOS 17.5, *)
+    func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+      guard UIPencilInteraction.preferredTapAction != .ignore else { return }
+      onDoubleTap?()
+    }
+
+    @available(iOS 17.5, *)
+    func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveSqueeze squeeze: UIPencilInteraction.Squeeze) {
+      guard squeeze.phase == .ended else { return }
+      guard UIPencilInteraction.preferredSqueezeAction != .ignore else { return }
+      onSqueeze?()
+    }
+  }
 }
 
 extension EbookReaderView {
