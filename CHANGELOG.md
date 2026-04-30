@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Ebook reader auto theme - Add auto mode to ebook reader theme that follows system appearance
+- Watch app sections - Add more sections on the watch app for quicker access to your library
+- CarPlay library selection - Choose which library to browse directly from CarPlay
+- Playlist and collection downloads - Download all support for playlists and collections in a single action
 
- 
+### Fixed
+- Offline page filter - Fixed filter behavior on the offline page
+
 ## [1.9.0]
  
 ### Added
