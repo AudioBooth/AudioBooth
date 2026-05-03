@@ -20,12 +20,22 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var homeSections: [WatchHomeSection] = []
   private var chapterProgress: Double?
 
+  var customHeaders: [String: String] {
+    get {
+      UserDefaults.standard.dictionary(forKey: Keys.customHeaders) as? [String: String] ?? [:]
+    }
+    set {
+      UserDefaults.standard.set(newValue, forKey: Keys.customHeaders)
+    }
+  }
+
   private var session: WCSession?
   private var cancellables = Set<AnyCancellable>()
 
   private enum Keys {
     static let continueListeningBooks = "continue_listening_books"
     static let progress = "progress"
+    static let customHeaders = "custom_headers"
   }
 
   var isReachable: Bool {
@@ -390,6 +400,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
         let count = dict["count"] as? Int
       else { return nil }
       return WatchHomeSection(id: id, name: name, count: count)
+    }
+
+    if let headers = context["customHeaders"] as? [String: String] {
+      customHeaders = headers
     }
   }
 

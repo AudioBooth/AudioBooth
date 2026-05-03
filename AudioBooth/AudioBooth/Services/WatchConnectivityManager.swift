@@ -147,6 +147,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     guard let session, session.activationState == .activated, session.isPaired, session.isWatchAppInstalled else {
       return
     }
+    context["customHeaders"] = Audiobookshelf.shared.authentication.server?.customHeaders ?? [:]
     do {
       try session.updateApplicationContext(context)
     } catch {

@@ -356,7 +356,11 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       let trackFile = bookDirectory.appendingPathComponent("\(track.index)\(fileExtension)")
 
       try await withCheckedThrowingContinuation { continuation in
-        let downloadTask = downloadSession.downloadTask(with: downloadURL)
+        var request = URLRequest(url: downloadURL)
+        for (key, value) in WatchConnectivityManager.shared.customHeaders {
+          request.setValue(value, forHTTPHeaderField: key)
+        }
+        let downloadTask = downloadSession.downloadTask(with: request)
         downloadTask.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
 
         self.currentTrack = downloadTask
