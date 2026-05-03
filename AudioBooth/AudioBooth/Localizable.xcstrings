@@ -269,7 +269,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "** Udgivet:** %@"
+            "value" : "**Udgivet:** %@"
           }
         },
         "de" : {
@@ -1193,7 +1193,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⚠️ Ved at fortsætte slettes alle appdata, såsom downloadet materiale, indstillinger og din lytte historik. Du skal logge ind igen. Appen kræver en genstart."
+            "value" : "⚠️ Ved at fortsætte slettes alle appdata, såsom downloadet materiale, indstillinger og din lyttehistorik. Du skal logge ind igen. Appen kræver en genstart."
           }
         },
         "de" : {
@@ -20021,7 +20021,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Varighed for smart tilbagespoling ved afbrydelse."
+            "value" : "Varighed for smart tilbagespoling ved afbrydelse"
           }
         },
         "de" : {
@@ -23367,7 +23367,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dit bibliotek ser ud til ikke at have nogen fortællere, eller er der ikke valgt noget bibliotek"
+            "value" : "Dit bibliotek ser ud til ikke at have nogen fortællere, eller der er ikke valgt noget bibliotek."
           }
         },
         "de" : {
