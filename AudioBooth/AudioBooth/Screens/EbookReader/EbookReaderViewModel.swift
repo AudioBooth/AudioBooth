@@ -25,6 +25,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private var lastProgressUpdate: Date?
   private let audiobookshelf = Audiobookshelf.shared
   private var temporaryFileURL: URL?
+  private var positions: [Locator] = []
 
   private var cancellables = Set<AnyCancellable>()
   private var autoScrollTask: Task<Void, Never>?
@@ -51,6 +52,12 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   func observeChanges() {
+    preferences.objectWillChange
+      .sink { [weak self] _ in
+        self?.objectWillChange.send()
+      }
+      .store(in: &cancellables)
+
     preferences.objectWillChange
       .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
       .sink { [weak self] _ in
@@ -117,6 +124,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       self.publication = publication
       self.supportsSettings = publication.conforms(to: .epub)
       self.supportsSearch = publication.isSearchable
+      self.positions = (try? await publication.positions().get()) ?? []
 
       let httpServer = GCDHTTPServer(assetRetriever: assetRetriever)
       self.httpServer = httpServer
@@ -208,6 +216,11 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     if let progression = navigator.currentLocation?.locations.totalProgression {
       progress = progression
     }
+    if let current = navigator.currentLocation?.locations.position, !positions.isEmpty {
+      page = (current: current, total: positions.count)
+    } else {
+      page = nil
+    }
   }
 
   private func setupChapters() async {
@@ -231,14 +244,21 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     level: Int = 0
   ) -> [EbookChapterPickerSheet.Model.Chapter] {
     links.flatMap { link in
+      let id = link.url().string
       let chapter = EbookChapterPickerSheet.Model.Chapter(
-        id: link.url().string,
+        id: id,
         title: link.title ?? "Untitled",
         link: link,
-        level: level
+        level: level,
+        pageNumber: pageNumber(forChapterID: id)
       )
       return [chapter] + flattenTOC(link.children, level: level + 1)
     }
+  }
+
+  private func pageNumber(forChapterID id: String) -> Int? {
+    guard !positions.isEmpty, !id.contains("#") else { return nil }
+    return positions.first(where: { $0.href.string == id })?.locations.position
   }
 
   private func updateCurrentChapterIndex() {
@@ -276,7 +296,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onProgressTapped() {
-    AppLogger.viewModel.info("Progress tapped - current: \(Int(progress * 100))%")
+    guard page != nil else { return }
+    preferences.progressDisplay = preferences.progressDisplay == .percent ? .page : .percent
   }
 
   override func onSearchTapped() {

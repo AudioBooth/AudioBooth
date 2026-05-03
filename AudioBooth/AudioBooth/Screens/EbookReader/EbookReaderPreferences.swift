@@ -49,6 +49,11 @@ struct EbookTapZone: Identifiable, Codable {
   }
 }
 
+enum EbookProgressDisplay: String, CaseIterable {
+  case percent
+  case page
+}
+
 private let defaultTapZones: [EbookTapZone] = [
   EbookTapZone(action: .previousPage, normalizedRect: CGRect(x: 0, y: 0, width: 0.25, height: 1)),
   EbookTapZone(action: .nextPage, normalizedRect: CGRect(x: 0.75, y: 0, width: 0.25, height: 1)),
@@ -65,6 +70,7 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.scroll") var scroll: Bool = false
   @AppStorage("ebookReader.tapToNavigate") var tapToNavigate: Bool = true
   @AppStorage("ebookReader.autoScrollSpeed") var autoScrollSpeed: Double = 0.0
+  @AppStorage("ebookReader.progressDisplay") var progressDisplay: EbookProgressDisplay = .percent
 
   @AppStorage("ebookReader.tapZonesData") private var tapZonesData: Data = Data()
 

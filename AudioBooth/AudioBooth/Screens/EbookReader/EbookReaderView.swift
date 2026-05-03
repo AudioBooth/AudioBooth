@@ -213,6 +213,13 @@ struct EbookReaderView: View {
     }
   }
 
+  private var progressLabel: String {
+    if model.preferences.progressDisplay == .page, let page = model.page {
+      return "\(page.current) of \(page.total)"
+    }
+    return model.progress.formatted(.percent.precision(.fractionLength(0)))
+  }
+
   @ViewBuilder
   private var bottomControlBar: some View {
     HStack(alignment: .bottom, spacing: 0) {
@@ -245,8 +252,9 @@ struct EbookReaderView: View {
 
       Button(action: { model.onProgressTapped() }) {
         VStack(spacing: 6) {
-          Text(model.progress.formatted(.percent.precision(.fractionLength(0))))
+          Text(progressLabel)
             .font(.system(size: 16, weight: .medium))
+            .monospacedDigit()
           Text("Progress")
             .font(.caption2)
         }
@@ -325,6 +333,7 @@ extension EbookReaderView {
     var error: String?
     var readerViewController: UIViewController?
     var progress: Double
+    var page: (current: Int, total: Int)?
     var chapters: EbookChapterPickerSheet.Model?
     var preferences: EbookReaderPreferences
     var supportsSettings: Bool
@@ -350,6 +359,7 @@ extension EbookReaderView {
       bookTitle: String = "",
       currentChapter: String? = nil,
       progress: Double = 0.0,
+      page: (current: Int, total: Int)? = nil,
       chapters: EbookChapterPickerSheet.Model? = nil,
       preferences: EbookReaderPreferences = EbookReaderPreferences(),
       supportsSettings: Bool = false,
@@ -360,6 +370,7 @@ extension EbookReaderView {
       self.error = error
       self.readerViewController = readerViewController
       self.progress = progress
+      self.page = page
       self.chapters = chapters
       self.preferences = preferences
       self.supportsSettings = supportsSettings

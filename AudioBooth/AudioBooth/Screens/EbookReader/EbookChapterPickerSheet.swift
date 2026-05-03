@@ -23,6 +23,13 @@ struct EbookChapterPickerSheet: View {
                   .lineLimit(2)
 
                 Spacer()
+
+                if let pageNumber = chapter.pageNumber {
+                  Text("\(pageNumber)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                }
               }
               .padding(.leading, CGFloat(chapter.level) * 16)
               .padding(.vertical, 4)
@@ -78,6 +85,7 @@ extension EbookChapterPickerSheet {
       let title: String
       let link: ReadiumShared.Link
       var level: Int = 0
+      var pageNumber: Int?
     }
 
     var chapters: [Chapter]

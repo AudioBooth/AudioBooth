@@ -51,6 +51,7 @@ extension UserPreferences {
     "ebookReader.paragraphSpacing",
     "ebookReader.wordSpacing",
     "ebookReader.letterSpacing",
+    "ebookReader.progressDisplay",
     "authorsPageSortOrder",
     "podcastEpisodeFilter",
     "podcastEpisodeSort",
