@@ -302,14 +302,6 @@ public final class AuthenticationService: ObservableObject {
 
     let request = NetworkRequest<Authorize>(path: "/api/authorize", method: .post, body: nil)
 
-    let primaryService = NetworkService(baseURL: server.baseURL, server: server) {
-      let freshToken = try? await server.freshToken
-      guard let credentials = freshToken else { return [:] }
-      var headers = server.customHeaders
-      headers["Authorization"] = credentials.bearer
-      return headers
-    }
-
     let altService = NetworkService(baseURL: url, server: server) {
       let freshToken = try? await server.freshToken
       guard let credentials = freshToken else { return [:] }
@@ -318,12 +310,7 @@ public final class AuthenticationService: ObservableObject {
       return headers
     }
 
-    let primaryID = try await primaryService.send(request).value.serverSettings.id
-    let altID = try await altService.send(request).value.serverSettings.id
-
-    guard altID == primaryID else {
-      throw Audiobookshelf.AudiobookshelfError.networkError("This URL points to a different server")
-    }
+    _ = try await altService.send(request)
   }
 
   public func updateAlternativeURL(_ serverID: String, url: URL?) {
