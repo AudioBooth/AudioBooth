@@ -215,7 +215,7 @@ struct EbookReaderView: View {
 
   private var progressLabel: String {
     if model.preferences.progressDisplay == .page, let page = model.page {
-      return "\(page.current) of \(page.total)"
+      return String(localized: "\(page.current) of \(page.total)")
     }
     return model.progress.formatted(.percent.precision(.fractionLength(0)))
   }

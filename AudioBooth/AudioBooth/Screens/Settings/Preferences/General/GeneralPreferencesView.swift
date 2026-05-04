@@ -71,7 +71,7 @@ struct GeneralPreferencesView: View {
               .font(.subheadline)
               .bold()
             Spacer()
-            Text("\(Int(preferences.displayScale * 100))%")
+            Text(preferences.displayScale, format: .percent.precision(.fractionLength(0)))
               .font(.subheadline)
               .foregroundStyle(.secondary)
           }
