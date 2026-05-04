@@ -151,6 +151,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("openPlayerOnLaunch")
   var openPlayerOnLaunch: Bool = false
 
+  @AppStorage("hapticsEnabled")
+  var hapticsEnabled: Bool = true
+
   @AppStorage("dailyGoalMinutes")
   var dailyGoalMinutes: Int = 0
 

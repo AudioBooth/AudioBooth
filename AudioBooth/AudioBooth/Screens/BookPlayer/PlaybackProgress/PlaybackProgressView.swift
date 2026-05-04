@@ -54,7 +54,11 @@ struct PlaybackProgressView: View {
         .gesture(
           DragGesture(minimumDistance: 0)
             .onChanged { value in
-              model.isDragging = true
+              if !model.isDragging {
+                model.isDragging = true
+                Haptics.selection()
+              }
+
               let progress = min(max(0, value.location.x / geometry.size.width), 1)
               let total = model.current + model.remaining
               model.progress = progress

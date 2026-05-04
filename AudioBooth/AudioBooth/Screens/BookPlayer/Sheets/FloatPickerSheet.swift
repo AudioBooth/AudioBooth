@@ -31,6 +31,7 @@ struct FloatPickerSheet: View {
 
         HStack(spacing: 12) {
           Button(action: {
+            Haptics.selection()
             if model.isEditing {
               onEditingDecrease()
             } else {
@@ -65,6 +66,7 @@ struct FloatPickerSheet: View {
           )
 
           Button(action: {
+            Haptics.selection()
             if model.isEditing {
               onEditingIncrease()
             } else {
@@ -126,6 +128,7 @@ struct FloatPickerSheet: View {
   private func presetButton(for preset: Double) -> some View {
     let isSelected = (model.value / model.step).rounded() == (preset / model.step).rounded()
     Button(action: {
+      Haptics.selection()
       model.onValueChanged(preset)
       model.isPresented = false
     }) {

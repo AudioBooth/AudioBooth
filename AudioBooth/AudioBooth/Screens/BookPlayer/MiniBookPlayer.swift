@@ -22,6 +22,7 @@ struct MiniBookPlayer: View, Equatable {
       .padding(.horizontal, 12)
       .contentShape(Rectangle())
       .onTapGesture {
+        Haptics.impact(.medium)
         playerManager.showFullPlayer()
       }
       .contextMenu {
@@ -64,7 +65,10 @@ struct MiniBookPlayer: View, Equatable {
   private var buttons: some View {
     if placement != .inline {
       HStack(spacing: 8) {
-        Button(action: player.onTogglePlaybackTapped) {
+        Button(action: {
+          Haptics.impact(.medium)
+          player.onTogglePlaybackTapped()
+        }) {
           ZStack {
             Circle()
               .fill(Color.accentColor)
@@ -113,6 +117,7 @@ struct LegacyMiniBookPlayer: View {
     .background(.regularMaterial)
     .contentShape(Rectangle())
     .onTapGesture {
+      Haptics.impact(.medium)
       playerManager.showFullPlayer()
     }
     .frame(maxHeight: 56)
@@ -139,7 +144,10 @@ struct LegacyMiniBookPlayer: View {
       Spacer()
 
       HStack(spacing: 12) {
-        Button(action: player.onTogglePlaybackTapped) {
+        Button(action: {
+          Haptics.impact(.medium)
+          player.onTogglePlaybackTapped()
+        }) {
           ZStack {
             Circle()
               .fill(Color.accentColor)

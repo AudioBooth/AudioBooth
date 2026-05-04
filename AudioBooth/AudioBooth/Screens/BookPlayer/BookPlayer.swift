@@ -287,7 +287,10 @@ struct BookPlayer: View {
   @ViewBuilder
   private var chaptersDisplay: some View {
     if let chapters = model.chapters, let chapter = chapters.current {
-      Button(action: { chapters.isPresented = true }) {
+      Button(action: {
+        Haptics.impact(.soft)
+        chapters.isPresented = true
+      }) {
         Marquee {
           HStack {
             if chapters.chapters.count > 1 {
@@ -327,7 +330,10 @@ struct BookPlayer: View {
   private func controlButton(for control: PlayerControl) -> some View {
     switch control {
     case .speed:
-      Button(action: { model.speed.isPresented = true }) {
+      Button(action: {
+        Haptics.impact(.soft)
+        model.speed.isPresented = true
+      }) {
         VStack(spacing: 6) {
           Text(verbatim: "\(model.speed.value.formatted(.number.precision(.fractionLength(0...2))))×")
             .font(.system(size: 16, weight: .medium))
@@ -339,7 +345,10 @@ struct BookPlayer: View {
       .frame(maxWidth: .infinity)
 
     case .timer:
-      Button(action: { model.timer.isPresented = true }) {
+      Button(action: {
+        Haptics.impact(.soft)
+        model.timer.isPresented = true
+      }) {
         VStack(spacing: 6) {
           Image(systemName: control.systemImage)
             .font(.system(size: 20))
@@ -352,7 +361,10 @@ struct BookPlayer: View {
 
     case .bookmarks:
       if model.bookmarks != nil {
-        Button(action: { model.onBookmarksTapped() }) {
+        Button(action: {
+          Haptics.impact(.soft)
+          model.onBookmarksTapped()
+        }) {
           VStack(spacing: 6) {
             Image(systemName: control.systemImage)
               .font(.system(size: 20))
@@ -366,7 +378,10 @@ struct BookPlayer: View {
 
     case .history:
       if model.history != nil {
-        Button(action: { model.onHistoryTapped() }) {
+        Button(action: {
+          Haptics.impact(.soft)
+          model.onHistoryTapped()
+        }) {
           VStack(spacing: 6) {
             Image(systemName: control.systemImage)
               .font(.system(size: 20))
@@ -379,7 +394,10 @@ struct BookPlayer: View {
       }
 
     case .volume:
-      Button(action: { model.volume.isPresented = true }) {
+      Button(action: {
+        Haptics.impact(.soft)
+        model.volume.isPresented = true
+      }) {
         VStack(spacing: 6) {
           Image(systemName: control.systemImage)
             .font(.system(size: 20))
@@ -391,7 +409,10 @@ struct BookPlayer: View {
       .frame(maxWidth: .infinity)
 
     case .equalizer:
-      Button(action: { model.equalizer.isPresented = true }) {
+      Button(action: {
+        Haptics.impact(.soft)
+        model.equalizer.isPresented = true
+      }) {
         VStack(spacing: 6) {
           Image(systemName: control.systemImage)
             .font(.system(size: 20))

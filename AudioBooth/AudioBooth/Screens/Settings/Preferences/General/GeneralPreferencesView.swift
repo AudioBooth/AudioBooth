@@ -12,6 +12,12 @@ struct GeneralPreferencesView: View {
             .font(.subheadline)
             .bold()
         }
+
+        Toggle(isOn: $preferences.hapticsEnabled) {
+          Text("Haptic Feedback")
+            .font(.subheadline)
+            .bold()
+        }
       }
 
       Section("Appearance") {
