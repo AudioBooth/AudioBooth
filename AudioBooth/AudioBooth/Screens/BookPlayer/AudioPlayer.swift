@@ -191,7 +191,20 @@ private extension AudioPlayer {
   func loadTrack(at index: Int, seekTo offset: TimeInterval, autoPlay: Bool) {
     guard index < trackURLs.count else { return }
 
-    let item = AVPlayerItem(url: trackURLs[index])
+    let url = trackURLs[index]
+    let headers = playbackHeaders()
+    let asset: AVURLAsset
+
+    if headers.isEmpty {
+      asset = AVURLAsset(url: url)
+    } else {
+      asset = AVURLAsset(
+        url: url,
+        options: ["AVURLAssetHTTPHeaderFieldsKey": headers]
+      )
+    }
+
+    let item = AVPlayerItem(asset: asset)
     observeItem(item)
     applyEQ(to: item)
     player.replaceCurrentItem(with: item)
@@ -233,6 +246,10 @@ private extension AudioPlayer {
     }
 
     return (0, 0)
+  }
+
+  func playbackHeaders() -> [String: String] {
+    Audiobookshelf.shared.authentication.server?.customHeaders ?? [:]
   }
 }
 
