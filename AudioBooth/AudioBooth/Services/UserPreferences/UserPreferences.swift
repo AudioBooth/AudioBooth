@@ -37,6 +37,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("smartRewindInterval")
   var smartRewindInterval: Double = 30.0
 
+  @AppStorage("smartRewindAfterPauseThreshold")
+  var smartRewindAfterPauseThreshold: Double = 600.0
+
   @AppStorage("smartRewindOnInterruptionInterval")
   var smartRewindOnInterruptionInterval: Double = 0.0
 
@@ -274,12 +277,9 @@ enum AutoDownloadDelay: Int, CaseIterable {
 
   var displayName: String {
     switch self {
-    case .none: "None"
-    case .oneMinute: "1 Minute"
-    case .fiveMinutes: "5 Minutes"
-    case .tenMinutes: "10 Minutes"
-    case .thirtyMinutes: "30 Minutes"
-    case .oneHour: "1 Hour"
+    case .none: String(localized: "None")
+    default:
+      Duration.seconds(rawValue).formatted(.units(allowed: [.hours, .minutes], width: .wide))
     }
   }
 }

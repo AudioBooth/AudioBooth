@@ -9,6 +9,7 @@ extension UserPreferences {
     "skipForwardInterval",
     "skipBackwardInterval",
     "smartRewindInterval",
+    "smartRewindAfterPauseThreshold",
     "smartRewindOnInterruptionInterval",
     "shakeSensitivity",
     "customTimerMinutes",

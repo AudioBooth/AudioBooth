@@ -464,7 +464,7 @@ extension BookPlayerModel {
     var minimumTimeSinceLastPlayed: TimeInterval? {
       switch self {
       case .afterPause:
-        return 10 * 60
+        return UserPreferences.shared.smartRewindAfterPauseThreshold
       case .onInterruption:
         return nil
       }

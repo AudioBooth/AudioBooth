@@ -90,11 +90,12 @@ struct PlayerPreferencesView: View {
     preferences.playerControls = allControls.filter { enabledControls.contains($0) }
   }
 
-  private var autoTimerModeAccessibilityValue: LocalizedStringResource {
+  private var autoTimerModeAccessibilityValue: String {
     switch preferences.autoTimerMode {
-    case .off: "Off"
-    case .duration(let seconds): "\(Int(seconds / 60)) minutes"
-    case .chapters(let count): "End of \(count) \(count == 1 ? "chapter" : "chapters")"
+    case .off: String(localized: "Off")
+    case .duration(let seconds):
+      Duration.seconds(seconds).formatted(.units(allowed: [.minutes], width: .wide))
+    case .chapters(let count): String(localized: "End of \(count) \(count == 1 ? "chapter" : "chapters")")
     }
   }
 
@@ -118,11 +119,10 @@ struct PlayerPreferencesView: View {
               Text("Back").bold()
 
               Picker("Back", selection: $preferences.skipBackwardInterval) {
-                Text("10s").tag(10.0)
-                Text("15s").tag(15.0)
-                Text("30s").tag(30.0)
-                Text("60s").tag(60.0)
-                Text("90s").tag(90.0)
+                ForEach([10.0, 15.0, 30.0, 60.0, 90.0], id: \.self) { seconds in
+                  Text(Duration.seconds(seconds).formatted(.units(allowed: [.seconds], width: .abbreviated)))
+                    .tag(seconds)
+                }
               }
             }
             .frame(maxWidth: .infinity, alignment: .center)
@@ -131,11 +131,10 @@ struct PlayerPreferencesView: View {
               Text("Forward").bold()
 
               Picker("Forward", selection: $preferences.skipForwardInterval) {
-                Text("10s").tag(10.0)
-                Text("15s").tag(15.0)
-                Text("30s").tag(30.0)
-                Text("60s").tag(60.0)
-                Text("90s").tag(90.0)
+                ForEach([10.0, 15.0, 30.0, 60.0, 90.0], id: \.self) { seconds in
+                  Text(Duration.seconds(seconds).formatted(.units(allowed: [.seconds], width: .abbreviated)))
+                    .tag(seconds)
+                }
               }
             }
             .frame(maxWidth: .infinity, alignment: .center)
@@ -162,38 +161,47 @@ struct PlayerPreferencesView: View {
           .bold()
           .accessibilityAddTraits(.isHeader)
 
-        Text("Rewind after being paused for 10 minutes or after audio interruptions.")
+        Text("Rewind after being paused for a configurable duration or after audio interruptions.")
       }
       .font(.caption)
 
-      Picker("After Pause", selection: $preferences.smartRewindInterval) {
-        Text("Off").tag(0.0)
-        Text("5s").tag(5.0)
-        Text("10s").tag(10.0)
-        Text("15s").tag(15.0)
-        Text("30s").tag(30.0)
-        Text("45s").tag(45.0)
-        Text("60s").tag(60.0)
-        Text("75s").tag(75.0)
-        Text("90s").tag(90.0)
+      VStack(alignment: .leading) {
+        Picker("Minimum Pause", selection: $preferences.smartRewindAfterPauseThreshold) {
+          Text("Any").tag(0.0)
+          ForEach([60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0], id: \.self) { seconds in
+            Text(Duration.seconds(seconds).formatted(.units(allowed: [.minutes], width: .abbreviated)))
+              .tag(seconds)
+          }
+        }
+        .accessibilityLabel("Smart Rewind Pause Threshold")
+        .accessibilityValue(
+          preferences.smartRewindAfterPauseThreshold == 0
+            ? "Any pause"
+            : Duration.seconds(preferences.smartRewindAfterPauseThreshold)
+              .formatted(.units(allowed: [.minutes], width: .wide))
+        )
+
+        Picker("Rewind By", selection: $preferences.smartRewindInterval) {
+          Text("Off").tag(0.0)
+          ForEach([5.0, 10.0, 15.0, 30.0, 45.0, 60.0, 75.0, 90.0], id: \.self) { seconds in
+            Text(Duration.seconds(seconds).formatted(.units(allowed: [.seconds], width: .abbreviated)))
+              .tag(seconds)
+          }
+        }
+        .accessibilityLabel("Smart Rewind After Pause Duration")
+        .accessibilityValue(
+          preferences.smartRewindInterval == 0 ? "Off" : "\(Int(preferences.smartRewindInterval)) seconds"
+        )
       }
       .font(.subheadline)
       .bold()
-      .accessibilityLabel("Smart Rewind After Pause Duration")
-      .accessibilityValue(
-        preferences.smartRewindInterval == 0 ? "Off" : "\(Int(preferences.smartRewindInterval)) seconds"
-      )
 
       Picker("On Interruption", selection: $preferences.smartRewindOnInterruptionInterval) {
         Text("Off").tag(0.0)
-        Text("5s").tag(5.0)
-        Text("10s").tag(10.0)
-        Text("15s").tag(15.0)
-        Text("30s").tag(30.0)
-        Text("45s").tag(45.0)
-        Text("60s").tag(60.0)
-        Text("75s").tag(75.0)
-        Text("90s").tag(90.0)
+        ForEach([5.0, 10.0, 15.0, 30.0, 45.0, 60.0, 75.0, 90.0], id: \.self) { seconds in
+          Text(Duration.seconds(seconds).formatted(.units(allowed: [.seconds], width: .abbreviated)))
+            .tag(seconds)
+        }
       }
       .font(.subheadline)
       .bold()
@@ -232,9 +240,10 @@ struct PlayerPreferencesView: View {
 
       Picker("Audio Fade Out", selection: $preferences.timerFadeOut) {
         Text("Off").tag(0.0)
-        Text("15s").tag(15.0)
-        Text("30s").tag(30.0)
-        Text("60s").tag(60.0)
+        ForEach([15.0, 30.0, 60.0], id: \.self) { seconds in
+          Text(Duration.seconds(seconds).formatted(.units(allowed: [.seconds], width: .abbreviated)))
+            .tag(seconds)
+        }
       }
       .font(.subheadline)
       .bold()
@@ -262,13 +271,10 @@ struct PlayerPreferencesView: View {
       Picker("Sleep Timer", selection: $preferences.autoTimerMode) {
         Text("Off").tag(AutoTimerMode.off)
         Divider()
-        Text("5 min").tag(AutoTimerMode.duration(300.0))
-        Text("10 min").tag(AutoTimerMode.duration(600.0))
-        Text("15 min").tag(AutoTimerMode.duration(900.0))
-        Text("20 min").tag(AutoTimerMode.duration(1200.0))
-        Text("30 min").tag(AutoTimerMode.duration(1800.0))
-        Text("45 min").tag(AutoTimerMode.duration(2700.0))
-        Text("60 min").tag(AutoTimerMode.duration(3600.0))
+        ForEach([300.0, 600.0, 900.0, 1200.0, 1800.0, 2700.0, 3600.0], id: \.self) { seconds in
+          Text(Duration.seconds(seconds).formatted(.units(allowed: [.minutes], width: .abbreviated)))
+            .tag(AutoTimerMode.duration(seconds))
+        }
         Divider()
         Text("End of chapter").tag(AutoTimerMode.chapters(1))
         Text("End of 2 chapters").tag(AutoTimerMode.chapters(2))
@@ -311,7 +317,7 @@ struct PlayerPreferencesView: View {
       }
       .font(.caption)
 
-      Picker("Skip by", selection: $preferences.lockScreenNextPreviousUsesChapters) {
+      Picker("Skip By", selection: $preferences.lockScreenNextPreviousUsesChapters) {
         Text("Seconds").tag(false)
         Text("Chapter").tag(true)
       }

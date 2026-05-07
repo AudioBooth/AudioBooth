@@ -49,7 +49,7 @@ struct TimerPickerSheet: View {
     }()
 
     Button(action: { model.onQuickTimerSelected(minutes) }) {
-      Text(minutes == 60 ? "1 hr" : "\(minutes) min")
+      Text(Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated)))
         .font(.system(size: 16, weight: .medium))
         .foregroundColor(.primary)
         .padding(8)
