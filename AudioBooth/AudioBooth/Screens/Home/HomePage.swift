@@ -4,6 +4,7 @@ import SwiftData
 import SwiftUI
 
 struct HomePage: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var authentication = Audiobookshelf.shared.authentication
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
   @ObservedObject private var preferences = UserPreferences.shared
@@ -79,7 +80,7 @@ struct HomePage: View {
       }
       .padding(.bottom)
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Home")
     .toolbar {
       serverMenuToolbarItem

@@ -2,6 +2,7 @@ import Models
 import SwiftUI
 
 struct TracksContent: View {
+  @Environment(\.appTheme) var theme
   let model: Model
 
   var body: some View {
@@ -41,7 +42,7 @@ struct TracksContent: View {
       }
     }
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .cornerRadius(8)
   }
 

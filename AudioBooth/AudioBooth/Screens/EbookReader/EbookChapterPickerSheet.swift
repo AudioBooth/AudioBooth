@@ -3,6 +3,7 @@ import ReadiumShared
 import SwiftUI
 
 struct EbookChapterPickerSheet: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -45,11 +46,11 @@ struct EbookChapterPickerSheet: View {
             }
             .buttonStyle(.plain)
             .id(chapter.id)
-            .listRowBackground(Color.Background.card)
+            .listRowBackground(theme.colors.background.card)
           }
         }
         .scrollContentBackground(.hidden)
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
         .onAppear {
           if let current = model.current {
             proxy.scrollTo(current.id, anchor: .center)

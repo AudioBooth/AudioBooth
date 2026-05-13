@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct CustomHeadersView: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.dismiss) private var dismiss
 
   @StateObject var model: Model
@@ -34,10 +35,10 @@ struct CustomHeadersView: View {
         Text("Custom headers will be sent with every request to your server.")
           .font(.caption)
       }
-      .listRowBackground(Color.Background.card)
+      .listRowBackground(theme.colors.background.card)
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Custom Headers")
     .navigationBarTitleDisplayMode(.inline)
     .sheet(isPresented: $model.showAddSheet) {
@@ -52,6 +53,7 @@ struct CustomHeadersView: View {
 }
 
 struct AddHeaderView: View {
+  @Environment(\.appTheme) var theme
   @Binding var headerKey: String
   @Binding var headerValue: String
   let onSave: () -> Void
@@ -74,10 +76,10 @@ struct AddHeaderView: View {
           Text("Example: X-API-Key, Authorization, etc.")
             .font(.caption)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       }
       .scrollContentBackground(.hidden)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Add Header")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

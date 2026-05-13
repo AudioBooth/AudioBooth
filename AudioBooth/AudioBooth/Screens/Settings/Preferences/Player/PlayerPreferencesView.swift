@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PlayerPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var preferences = UserPreferences.shared
 
   var body: some View {
@@ -8,7 +9,7 @@ struct PlayerPreferencesView: View {
       Section {
         NarrationSpeedCard(speed: $preferences.defaultPlaybackSpeed)
           .listRowInsets(EdgeInsets())
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
         Toggle(isOn: $preferences.timeRemainingAdjustsWithSpeed) {
           PreferenceRow(
@@ -18,7 +19,7 @@ struct PlayerPreferencesView: View {
             subtitle: "Time displays scale with speed"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Toggle(isOn: $preferences.chapterProgressionAdjustsWithSpeed) {
           PreferenceRow(
@@ -28,7 +29,7 @@ struct PlayerPreferencesView: View {
             subtitle: "Chapter time displays scale with speed"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Narration Speed")
       }
@@ -44,7 +45,7 @@ struct PlayerPreferencesView: View {
             subtitle: controlsLayoutSubtitle
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         NavigationLink {
           SkipRewindPreferencesView()
@@ -57,7 +58,7 @@ struct PlayerPreferencesView: View {
               "Back \(Int(preferences.skipBackwardInterval))s · Forward \(Int(preferences.skipForwardInterval))s"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         NavigationLink {
           SleepPreferencesView()
@@ -69,7 +70,7 @@ struct PlayerPreferencesView: View {
             subtitle: sleepShakeSubtitle
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         NavigationLink {
           LockScreenPreferencesView()
@@ -81,7 +82,7 @@ struct PlayerPreferencesView: View {
             subtitle: preferences.lockScreenNextPreviousUsesChapters ? "Skip by chapters" : "Skip by seconds"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         NavigationLink {
           PlaybackDisplayPreferencesView()
@@ -93,13 +94,13 @@ struct PlayerPreferencesView: View {
             subtitle: playbackDisplaySubtitle
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Configure")
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Player")
   }
 

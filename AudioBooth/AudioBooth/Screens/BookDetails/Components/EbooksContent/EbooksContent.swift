@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct EbooksContent: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -46,7 +47,7 @@ struct EbooksContent: View {
       }
     }
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .cornerRadius(8)
     .fullScreenCover(item: $model.ebookReader) { readerModel in
       NavigationStack {

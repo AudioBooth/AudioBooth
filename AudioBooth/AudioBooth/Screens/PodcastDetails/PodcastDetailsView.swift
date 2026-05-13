@@ -5,6 +5,7 @@ import RichText
 import SwiftUI
 
 struct PodcastDetailsView: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.verticalSizeClass) private var verticalSizeClass
 
   private let audiobookshelf = Audiobookshelf.shared
@@ -27,7 +28,7 @@ struct PodcastDetailsView: View {
         portraitLayout
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .fullScreenCover(isPresented: $isShowingFullScreenCover) {
       if let coverURL = model.coverURL {
         FullScreenCoverView(coverURL: coverURL)
@@ -37,7 +38,7 @@ struct PodcastDetailsView: View {
       if model.isLoading {
         ProgressView("Loading podcast details...")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color.Background.page)
+          .background(theme.colors.background.page)
       } else if let error = model.error {
         ContentUnavailableView {
           Label("Unable to Load Podcast", systemImage: "exclamationmark.triangle")
@@ -49,7 +50,7 @@ struct PodcastDetailsView: View {
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
       }
     }
     .sheet(
@@ -105,7 +106,7 @@ struct PodcastDetailsView: View {
 
             contentSections
               .padding(.vertical)
-              .background(Color.Background.page)
+              .background(theme.colors.background.page)
           }
           .padding(.vertical)
         }
@@ -128,7 +129,7 @@ struct PodcastDetailsView: View {
           contentSections
             .padding(.vertical)
         }
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
         .onChange(of: model.scrollToEpisodeID) { _, id in
           scrollToEpisode(id: id, proxy: scrollProxy)
         }
@@ -347,7 +348,7 @@ struct PodcastDetailsView: View {
 
         if !isDescriptionExpanded {
           LinearGradient(
-            colors: [.clear, Color.Background.page],
+            colors: [.clear, theme.colors.background.page],
             startPoint: .top,
             endPoint: .bottom
           )

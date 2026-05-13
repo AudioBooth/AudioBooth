@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ControlsLayoutPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
   @State private var enabledControls: [PlayerControl] = []
@@ -11,7 +12,7 @@ struct ControlsLayoutPreferencesView: View {
       Section {
         ForEach(enabledControls) { control in
           controlRow(control)
-            .listRowBackground(Color.Background.card)
+            .listRowBackground(theme.colors.background.card)
         }
         .onMove(perform: moveEnabled)
       } header: {
@@ -31,7 +32,7 @@ struct ControlsLayoutPreferencesView: View {
       Section {
         ForEach(disabledControls) { control in
           controlRow(control)
-            .listRowBackground(Color.Background.card)
+            .listRowBackground(theme.colors.background.card)
         }
         .onMove(perform: moveDisabled)
       } header: {
@@ -42,7 +43,7 @@ struct ControlsLayoutPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Controls & Layout")
     .environment(\.editMode, .constant(.active))
     .onAppear(perform: load)

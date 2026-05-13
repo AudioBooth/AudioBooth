@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SleepPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
   private let durationOptions: [TimeInterval] = [300, 600, 900, 1200, 1800, 2700, 3600]
@@ -36,7 +37,7 @@ struct SleepPreferencesView: View {
             subtitle: "Start a timer when playing within a window."
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         if preferences.autoTimerMode != .off {
           Picker(selection: durationSelection) {
@@ -51,7 +52,7 @@ struct SleepPreferencesView: View {
               .font(.subheadline)
               .fontWeight(.medium)
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           HStack {
             Text("Time Window")
@@ -63,7 +64,7 @@ struct SleepPreferencesView: View {
               .foregroundStyle(.secondary)
             TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowEnd)
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           Picker(selection: $preferences.timerFadeOut) {
             ForEach(fadeOptions, id: \.self) { value in
@@ -79,7 +80,7 @@ struct SleepPreferencesView: View {
                 .foregroundStyle(.secondary)
             }
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
       } header: {
         Text("Sleep Timer")
@@ -92,7 +93,7 @@ struct SleepPreferencesView: View {
             .fontWeight(.medium)
           ShakeSensitivityRow(selection: $preferences.shakeSensitivity)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Shake to Reset")
       } footer: {
@@ -101,7 +102,7 @@ struct SleepPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Sleep & Shake")
   }
 

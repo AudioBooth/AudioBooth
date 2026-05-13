@@ -4,6 +4,7 @@ import StoreKit
 import SwiftUI
 
 struct TipJarView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -72,7 +73,7 @@ struct TipJarView: View {
         }
         .padding(16)
         .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Sponsor")
       }

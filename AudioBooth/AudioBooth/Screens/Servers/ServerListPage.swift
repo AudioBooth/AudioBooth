@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct ServerListPage: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.dismiss) var dismiss
   @StateObject var model: Model
 
@@ -26,7 +27,7 @@ struct ServerListPage: View {
           if model.servers.isEmpty {
             Text("No servers connected")
               .foregroundColor(.secondary)
-              .listRowBackground(Color.Background.card)
+              .listRowBackground(theme.colors.background.card)
           } else {
             ForEach(model.servers, id: \.id) { server in
               Button {
@@ -59,7 +60,7 @@ struct ServerListPage: View {
                   }
                 }
               }
-              .listRowBackground(Color.Background.card)
+              .listRowBackground(theme.colors.background.card)
             }
           }
 
@@ -68,11 +69,11 @@ struct ServerListPage: View {
           } label: {
             Label("Add Server", systemImage: "plus.circle.fill")
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
       }
       .scrollContentBackground(.hidden)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Servers")
       .navigationDestination(item: $model.selected) { model in
         ServerView(model: model)

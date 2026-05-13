@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LockScreenPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
   var body: some View {
@@ -24,7 +25,7 @@ struct LockScreenPreferencesView: View {
             .fontWeight(.medium)
           SkipBySegmented(usesChapters: $preferences.lockScreenNextPreviousUsesChapters)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Skip Buttons")
       } footer: {
@@ -41,7 +42,7 @@ struct LockScreenPreferencesView: View {
             subtitle: "Drag the progress bar to jump to a position"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Behavior")
       } footer: {
@@ -50,7 +51,7 @@ struct LockScreenPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Lock Screen")
   }
 }

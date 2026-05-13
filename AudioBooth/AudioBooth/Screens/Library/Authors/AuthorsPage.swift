@@ -4,6 +4,7 @@ import NukeUI
 import SwiftUI
 
 struct AuthorsPage: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
   @ObservedObject var model: Model
 
@@ -11,7 +12,7 @@ struct AuthorsPage: View {
 
   var body: some View {
     content
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Authors")
       .refreshable {
         await model.refresh()
@@ -186,7 +187,7 @@ struct AuthorsPage: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.horizontal)
       .padding(.vertical, 8)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
   }
 }
 

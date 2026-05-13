@@ -139,6 +139,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("colorScheme")
   var colorScheme: ColorSchemeMode = .auto
 
+  @AppStorage("appTheme")
+  var appTheme: AppTheme = .sepia
+
   @AppStorage("continueSectionSize")
   var continueSectionSize: ContinueSectionSize = .default
 

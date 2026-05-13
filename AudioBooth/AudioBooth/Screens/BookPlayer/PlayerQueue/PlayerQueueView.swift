@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct PlayerQueueView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
   @ObservedObject private var preferences = UserPreferences.shared
   @Environment(\.dismiss) private var dismiss
@@ -20,7 +21,7 @@ struct PlayerQueueView: View {
               onClear: model.onClearCurrentTapped
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
 
         Section {
@@ -36,7 +37,7 @@ struct PlayerQueueView: View {
               QueueRow(item: item) {
                 model.onPlayTapped(item)
               }
-              .listRowBackground(Color.Background.card)
+              .listRowBackground(theme.colors.background.card)
             }
             .onDelete(perform: model.onDelete)
             .onMove(perform: model.onMove)
@@ -56,7 +57,7 @@ struct PlayerQueueView: View {
         }
       }
       .scrollContentBackground(.hidden)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Queue")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

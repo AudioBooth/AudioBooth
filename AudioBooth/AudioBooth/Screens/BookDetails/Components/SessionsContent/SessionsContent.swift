@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct SessionsContent: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -27,7 +28,7 @@ struct SessionsContent: View {
       }
     }
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .cornerRadius(8)
   }
 

@@ -69,6 +69,7 @@ extension AccentColorPickerView.Row {
   }
 
   struct Swatch: View {
+    @Environment(\.appTheme) var theme
     let color: Color
     let isSelected: Bool
     let action: () -> Void
@@ -83,7 +84,7 @@ extension AccentColorPickerView.Row {
 
           Circle()
             .fill(color)
-            .stroke(Color.Background.card, lineWidth: 2)
+            .stroke(theme.colors.background.card, lineWidth: 2)
             .frame(width: 20, height: 20)
         }
         .frame(width: 28, height: 28)
@@ -97,8 +98,8 @@ extension AccentColorPickerView.Row {
   ScrollView {
     AccentColorPickerView()
       .padding()
-      .background(Color.Background.card)
+      .background(Color.Sepia.Background.card)
       .padding()
-      .background(Color.Background.page)
+      .background(Color.Sepia.Background.page)
   }
 }

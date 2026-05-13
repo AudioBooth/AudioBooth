@@ -6,6 +6,7 @@ import SwiftUI
 import UIKit
 
 struct SettingsView: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.dismiss) var dismiss
 
   @ObservedObject var preferences = UserPreferences.shared
@@ -24,7 +25,7 @@ struct SettingsView: View {
               subtitle: "Launch, haptics, appearance"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           NavigationLink(value: "home") {
             PreferenceRow(
@@ -34,7 +35,7 @@ struct SettingsView: View {
               subtitle: "Sections & order"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           NavigationLink(value: "player") {
             PreferenceRow(
@@ -44,7 +45,7 @@ struct SettingsView: View {
               subtitle: "Controls, sleep, skip"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           NavigationLink(value: "storage") {
             PreferenceRow(
@@ -54,7 +55,7 @@ struct SettingsView: View {
               subtitle: storageSubtitle
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           NavigationLink(value: "advanced") {
             PreferenceRow(
@@ -64,7 +65,7 @@ struct SettingsView: View {
               subtitle: "System integrations & extras"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         } header: {
           Text("Preferences")
         }
@@ -127,7 +128,7 @@ struct SettingsView: View {
         }
       }
       .scrollContentBackground(.hidden)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Settings")
       .onAppear { model.storagePreferences?.onAppear() }
       .navigationDestination(for: String.self) { destination in
@@ -184,7 +185,7 @@ struct SettingsView: View {
       }
     }
     .tint(.primary)
-    .listRowBackground(Color.Background.card)
+    .listRowBackground(theme.colors.background.card)
   }
 
   @ViewBuilder
@@ -194,12 +195,12 @@ struct SettingsView: View {
         NavigationLink(destination: ConsoleView().navigationBarBackButtonHidden(true)) {
           PreferenceRow(systemImage: "ladybug", tint: .blue, title: "Console")
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         NavigationLink(value: "playbackSession") {
           PreferenceRow(systemImage: "chart.line.uptrend.xyaxis", tint: .green, title: "Playback Sessions")
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Debug")
       }

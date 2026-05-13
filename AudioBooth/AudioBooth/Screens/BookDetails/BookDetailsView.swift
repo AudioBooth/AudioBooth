@@ -6,6 +6,7 @@ import RichText
 import SwiftUI
 
 struct BookDetailsView: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.verticalSizeClass) private var verticalSizeClass
 
   @StateObject var model: Model
@@ -27,7 +28,7 @@ struct BookDetailsView: View {
         portraitLayout
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .fullScreenCover(item: $model.ebookReader) { model in
       NavigationStack {
         EbookReaderView(model: model)
@@ -42,7 +43,7 @@ struct BookDetailsView: View {
       if model.isLoading {
         ProgressView("Loading book details...")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color.Background.page)
+          .background(theme.colors.background.page)
       } else if let error = model.error {
         ContentUnavailableView {
           Label("Unable to Load Book", systemImage: "exclamationmark.triangle")
@@ -54,7 +55,7 @@ struct BookDetailsView: View {
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
       }
     }
     .toolbar {
@@ -175,7 +176,7 @@ struct BookDetailsView: View {
 
           contentSections
             .padding()
-            .background(Color.Background.page)
+            .background(theme.colors.background.page)
         }
         .padding(.vertical)
       }
@@ -193,7 +194,7 @@ struct BookDetailsView: View {
         contentSections
           .padding()
       }
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
     }
   }
 
@@ -563,7 +564,7 @@ struct BookDetailsView: View {
 
         if !isDescriptionExpanded {
           LinearGradient(
-            colors: [.clear, Color.Background.page],
+            colors: [.clear, theme.colors.background.page],
             startPoint: .top,
             endPoint: .bottom
           )

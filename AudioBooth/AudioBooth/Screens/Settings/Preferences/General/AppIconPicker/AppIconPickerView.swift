@@ -141,8 +141,8 @@ extension AppIconPickerView.Model {
   ScrollView {
     AppIconPickerView()
       .padding()
-      .background(Color.Background.card)
+      .background(Color.Sepia.Background.card)
       .padding()
-      .background(Color.Background.page)
+      .background(Color.Sepia.Background.page)
   }
 }

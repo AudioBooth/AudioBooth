@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct StoragePreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
   @ObservedObject private var preferences = UserPreferences.shared
 
@@ -22,7 +23,7 @@ struct StoragePreferencesView: View {
       Section {
         StorageBreakdownCard(model: model)
           .listRowInsets(EdgeInsets())
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
       }
 
       Section {
@@ -38,7 +39,7 @@ struct StoragePreferencesView: View {
             subtitle: "Pull new books over automatically"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         if preferences.autoDownloadBooks != .off {
           Picker(selection: $preferences.autoDownloadDelay) {
@@ -52,7 +53,7 @@ struct StoragePreferencesView: View {
               title: "Delay Before Download"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
 
         Toggle(isOn: $preferences.removeDownloadOnCompletion) {
@@ -63,7 +64,7 @@ struct StoragePreferencesView: View {
             subtitle: "Free up space when finished"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Downloads")
       }
@@ -93,7 +94,7 @@ struct StoragePreferencesView: View {
             ticks: storageOptions.map(Double.init)
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         VStack(alignment: .leading, spacing: 12) {
           HStack {
@@ -123,7 +124,7 @@ struct StoragePreferencesView: View {
             ticks: removeAfterOptions.map { Double($0.rawValue) }
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Limits")
       }
@@ -143,7 +144,7 @@ struct StoragePreferencesView: View {
               chip(text: model.downloadSize)
             }
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
 
         HStack {
@@ -155,7 +156,7 @@ struct StoragePreferencesView: View {
           Spacer()
           chip(text: model.cacheSize)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Button(action: model.onClearDownloadsTapped) {
           VStack(alignment: .leading, spacing: 2) {
@@ -169,7 +170,7 @@ struct StoragePreferencesView: View {
           }
           .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
         .disabled(model.serverDownloads.isEmpty || model.isLoading)
 
         Button(action: model.onClearCacheTapped) {
@@ -179,14 +180,14 @@ struct StoragePreferencesView: View {
             .foregroundStyle(.red)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
         .disabled(model.imageCacheBytes == 0 || model.isLoading)
       } header: {
         Text("Manage")
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Storage")
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)
@@ -438,6 +439,7 @@ extension StoragePreferencesView.Model {
 }
 
 private struct DownloadedBooksView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: StoragePreferencesView.Model
 
   var body: some View {
@@ -460,7 +462,7 @@ private struct DownloadedBooksView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
-            .listRowBackground(Color.Background.card)
+            .listRowBackground(theme.colors.background.card)
             .swipeActions(edge: .trailing) {
               Button(role: .destructive) {
                 model.onRemoveDownload(bookID: book.id, serverID: book.serverID)
@@ -473,7 +475,7 @@ private struct DownloadedBooksView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Downloaded Books")
     .navigationBarTitleDisplayMode(.inline)
   }

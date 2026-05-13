@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomePreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var preferences = UserPreferences.shared
 
   @State private var allSections: [HomeSection] = []
@@ -10,7 +11,7 @@ struct HomePreferencesView: View {
     Form {
       Section {
         CoverSizePickerView(selection: $preferences.continueSectionSize)
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Cover Size")
       } footer: {
@@ -22,7 +23,7 @@ struct HomePreferencesView: View {
         List {
           ForEach(allSections) { section in
             sectionRow(section)
-              .listRowBackground(Color.Background.card)
+              .listRowBackground(theme.colors.background.card)
           }
           .onMove(perform: move)
         }
@@ -38,7 +39,7 @@ struct HomePreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Home")
     .environment(\.editMode, .constant(.active))
     .onAppear {

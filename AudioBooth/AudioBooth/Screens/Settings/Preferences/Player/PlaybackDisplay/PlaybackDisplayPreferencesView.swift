@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PlaybackDisplayPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
   var body: some View {
@@ -14,7 +15,7 @@ struct PlaybackDisplayPreferencesView: View {
             subtitle: "Show whole-book time instead of chapter"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Toggle(isOn: $preferences.showBookProgressBar) {
           PreferenceRow(
@@ -24,7 +25,7 @@ struct PlaybackDisplayPreferencesView: View {
             subtitle: "Show book progress under chapter bar"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Toggle(isOn: $preferences.hideChapterSkipButtons) {
           PreferenceRow(
@@ -34,7 +35,7 @@ struct PlaybackDisplayPreferencesView: View {
             subtitle: "Cleaner player UI"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Time & Progress")
       }
@@ -46,13 +47,13 @@ struct PlaybackDisplayPreferencesView: View {
             .fontWeight(.medium)
           OrientationPicker(selection: $preferences.playerOrientation)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Orientation")
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Playback Display")
   }
 }

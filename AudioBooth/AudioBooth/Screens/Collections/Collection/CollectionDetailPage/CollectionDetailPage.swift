@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct CollectionDetailPage: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.dismiss) var dismiss
   @ObservedObject private var preferences = UserPreferences.shared
 
@@ -33,7 +34,7 @@ struct CollectionDetailPage: View {
         listView
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if model.mode == .playlists {

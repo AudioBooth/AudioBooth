@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct CollectionsRootPage: View {
+  @Environment(\.appTheme) var theme
   enum CollectionType: CaseIterable {
     case series
     case collections
@@ -22,7 +23,7 @@ struct CollectionsRootPage: View {
     NavigationStack(path: $model.path) {
       CollectionsRootContent(selected: $model.selected)
         .id(libraries.current?.id)
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .principal) {

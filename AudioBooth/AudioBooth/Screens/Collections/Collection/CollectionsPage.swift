@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct CollectionsPage: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -67,7 +68,7 @@ struct CollectionsPage: View {
         }
         .buttonStyle(.plain)
         .listRowSeparator(.hidden)
-        .listRowBackground(Color.Background.page)
+        .listRowBackground(theme.colors.background.page)
       }
       .onDelete { indexSet in
         model.onDelete(at: indexSet)
@@ -80,12 +81,12 @@ struct CollectionsPage: View {
           .onAppear {
             model.loadNextPageIfNeeded()
           }
-          .listRowBackground(Color.Background.page)
+          .listRowBackground(theme.colors.background.page)
       }
     }
     .listStyle(.plain)
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
   }
 }
 

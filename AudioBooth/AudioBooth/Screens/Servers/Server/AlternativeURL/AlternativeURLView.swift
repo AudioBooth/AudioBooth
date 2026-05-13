@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct AlternativeURLView: View {
+  @Environment(\.appTheme) var theme
   @StateObject var model: Model
 
   var body: some View {
@@ -31,7 +32,7 @@ struct AlternativeURLView: View {
       } footer: {
         Text("An alternative URL to use when connecting from a different network (e.g. when at home).")
       }
-      .listRowBackground(Color.Background.card)
+      .listRowBackground(theme.colors.background.card)
 
       if model.hasUnsavedChanges {
         Section {
@@ -46,11 +47,11 @@ struct AlternativeURLView: View {
           }
           .disabled(model.isValidating)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Alternative URL")
     .navigationBarTitleDisplayMode(.inline)
   }

@@ -17,6 +17,7 @@ struct CoverSizePickerView: View {
 
 extension CoverSizePickerView {
   struct Swatch: View {
+    @Environment(\.appTheme) var theme
     let size: ContinueSectionSize
     let isSelected: Bool
     let action: () -> Void
@@ -43,7 +44,7 @@ extension CoverSizePickerView {
         .padding(.vertical, 12)
         .background(
           RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.Background.card)
+            .fill(isSelected ? Color.accentColor.opacity(0.12) : theme.colors.background.card)
         )
         .overlay(
           RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -71,7 +72,7 @@ extension CoverSizePickerView {
       ScrollView {
         CoverSizePickerView(selection: $selection)
           .padding()
-          .background(Color.Background.page)
+          .background(Color.Sepia.Background.page)
       }
     }
   }

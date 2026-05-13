@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct EbookReaderPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var preferences: EbookReaderPreferences
   var onEditZones: (() -> Void)?
   @Environment(\.dismiss) private var dismiss
@@ -35,7 +36,7 @@ struct EbookReaderPreferencesView: View {
 
           Toggle("Text Normalization", isOn: $preferences.textNormalization)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Section("Layout") {
           Toggle("Scroll Mode", isOn: $preferences.scroll)
@@ -83,7 +84,7 @@ struct EbookReaderPreferencesView: View {
             }
           }
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Section("Appearance") {
           Picker("Theme", selection: $preferences.theme) {
@@ -92,7 +93,7 @@ struct EbookReaderPreferencesView: View {
             }
           }
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Section("Advanced Typography") {
           Toggle("Publisher Styles", isOn: $preferences.publisherStyles)
@@ -144,10 +145,10 @@ struct EbookReaderPreferencesView: View {
             }
           }
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       }
       .scrollContentBackground(.hidden)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Reader Settings")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

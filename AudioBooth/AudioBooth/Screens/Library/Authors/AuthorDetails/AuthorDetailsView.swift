@@ -4,6 +4,7 @@ import NukeUI
 import SwiftUI
 
 struct AuthorDetailsView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
   @ObservedObject var preferences = UserPreferences.shared
   @State private var isDescriptionExpanded: Bool = false
@@ -15,7 +16,7 @@ struct AuthorDetailsView: View {
       if model.isLoading {
         ProgressView("Loading author details...")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color.Background.page)
+          .background(theme.colors.background.page)
       } else if let error = model.error {
         ContentUnavailableView {
           Label("Unable to Load Author", systemImage: "exclamationmark.triangle")
@@ -27,7 +28,7 @@ struct AuthorDetailsView: View {
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
       } else {
         ScrollView {
           VStack(spacing: 24) {
@@ -51,7 +52,7 @@ struct AuthorDetailsView: View {
         }
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle(model.name)
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)

@@ -3,6 +3,7 @@ import Models
 import SwiftUI
 
 struct ProgressCard: View {
+  @Environment(\.appTheme) var theme
   let model: Model
 
   var body: some View {
@@ -16,7 +17,7 @@ struct ProgressCard: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .clipShape(RoundedRectangle(cornerRadius: 8))
   }
 

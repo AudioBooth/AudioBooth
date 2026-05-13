@@ -2,6 +2,7 @@ import CoreNFC
 import SwiftUI
 
 struct AdvancedPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var preferences = UserPreferences.shared
 
   var body: some View {
@@ -14,7 +15,7 @@ struct AdvancedPreferencesView: View {
             title: "iCloud Sync"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
         .onChange(of: preferences.iCloudSyncEnabled) { _, enabled in
           if enabled {
             preferences.syncToCloud()
@@ -38,7 +39,7 @@ struct AdvancedPreferencesView: View {
               title: "NFC Tag Writing"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         } header: {
           Text("NFC")
         } footer: {
@@ -48,7 +49,7 @@ struct AdvancedPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Advanced")
   }
 }

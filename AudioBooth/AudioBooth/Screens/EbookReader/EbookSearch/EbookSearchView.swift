@@ -3,6 +3,7 @@ import ReadiumShared
 import SwiftUI
 
 struct EbookSearchView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
   @FocusState private var searchFieldFocused: Bool
 
@@ -23,7 +24,7 @@ struct EbookSearchView: View {
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle("Search")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -76,7 +77,7 @@ struct EbookSearchView: View {
               model.onLoadNextPage()
             }
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
       }
 
       if model.isLoadingMore {
@@ -86,7 +87,7 @@ struct EbookSearchView: View {
           Spacer()
         }
         .listRowSeparator(.hidden)
-        .listRowBackground(Color.Background.page)
+        .listRowBackground(theme.colors.background.page)
       }
     }
     .listStyle(.plain)

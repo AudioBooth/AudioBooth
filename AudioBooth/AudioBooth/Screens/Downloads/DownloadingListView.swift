@@ -3,6 +3,7 @@ import Models
 import SwiftUI
 
 struct DownloadingListView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -15,7 +16,7 @@ struct DownloadingListView: View {
         }
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Downloading")
     .onAppear(perform: model.onAppear)
   }

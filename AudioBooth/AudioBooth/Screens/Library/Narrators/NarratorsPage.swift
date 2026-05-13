@@ -3,6 +3,7 @@ import NukeUI
 import SwiftUI
 
 struct NarratorsPage: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -30,7 +31,7 @@ struct NarratorsPage: View {
         }
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Narrators")
     .navigationBarTitleDisplayMode(.inline)
     .refreshable {
@@ -139,7 +140,7 @@ struct NarratorsPage: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.horizontal)
       .padding(.vertical, 8)
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
   }
 }
 

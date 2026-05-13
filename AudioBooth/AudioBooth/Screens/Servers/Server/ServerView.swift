@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct ServerView: View {
+  @Environment(\.appTheme) var theme
   enum FocusField: Hashable {
     case serverURL
     case username
@@ -69,7 +70,7 @@ struct ServerView: View {
           }
         customHeadersSection
       }
-      .listRowBackground(Color.Background.card)
+      .listRowBackground(theme.colors.background.card)
 
       if let authModel = model.authenticationModel {
         AuthenticationView(model: authModel)
@@ -78,7 +79,7 @@ struct ServerView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Server")
     .alert("Scan Local Network", isPresented: $model.showDiscoveryPortAlert) {
       TextField("Discovery Port", text: $model.discoveryPort)
@@ -132,7 +133,7 @@ struct ServerView: View {
         }
       }
     }
-    .listRowBackground(Color.Background.card)
+    .listRowBackground(theme.colors.background.card)
   }
 
   @ViewBuilder
@@ -185,7 +186,7 @@ struct ServerView: View {
           }
         }
       }
-      .listRowBackground(Color.Background.card)
+      .listRowBackground(theme.colors.background.card)
     }
 
     Section("Account") {
@@ -227,7 +228,7 @@ struct ServerView: View {
         }
       }
     }
-    .listRowBackground(Color.Background.card)
+    .listRowBackground(theme.colors.background.card)
 
     Section("Advanced") {
       NavigationLink(
@@ -247,7 +248,7 @@ struct ServerView: View {
         }
       }
     }
-    .listRowBackground(Color.Background.card)
+    .listRowBackground(theme.colors.background.card)
   }
 }
 

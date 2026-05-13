@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct PodcastsRootPage: View {
+  @Environment(\.appTheme) var theme
   enum SectionType: CaseIterable {
     case podcasts
     case playlists
@@ -21,7 +22,7 @@ struct PodcastsRootPage: View {
     NavigationStack(path: $model.path) {
       PodcastsRootContent(selected: $model.selected)
         .id(libraries.current?.id)
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .principal) {

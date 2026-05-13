@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct CollectionSelectorSheet: View {
+  @Environment(\.appTheme) var theme
   @Environment(\.dismiss) var dismiss
 
   @ObservedObject var model: Model
@@ -22,7 +23,7 @@ struct CollectionSelectorSheet: View {
           createFieldView
         }
       }
-      .background(Color.Background.page)
+      .background(theme.colors.background.page)
       .navigationTitle(navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -162,7 +163,7 @@ struct CollectionSelectorSheet: View {
           }
         }
         .contentShape(Rectangle())
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       }
     }
     .scrollContentBackground(.hidden)

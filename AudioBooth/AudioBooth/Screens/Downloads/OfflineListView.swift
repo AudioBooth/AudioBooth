@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct OfflineListView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
@@ -36,7 +37,7 @@ struct OfflineListView: View {
           }
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Downloaded")
     .searchable(text: $model.searchText, prompt: "Filter downloads")
     .toolbar {

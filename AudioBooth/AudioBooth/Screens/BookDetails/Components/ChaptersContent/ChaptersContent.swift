@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 struct ChaptersContent: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -31,7 +32,7 @@ struct ChaptersContent: View {
       }
     }
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .cornerRadius(8)
   }
 

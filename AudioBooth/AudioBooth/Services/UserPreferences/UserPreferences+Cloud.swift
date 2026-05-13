@@ -37,6 +37,7 @@ extension UserPreferences {
     "autoTimerWindowEnd",
     "playerOrientation",
     "colorScheme",
+    "appTheme",
     "continueSectionSize",
     "ebookReader.fontSize",
     "ebookReader.fontWeight",

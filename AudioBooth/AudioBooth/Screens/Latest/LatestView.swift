@@ -3,12 +3,13 @@ import Combine
 import SwiftUI
 
 struct LatestView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
     NavigationStack {
       content
-        .background(Color.Background.page)
+        .background(theme.colors.background.page)
         .navigationTitle("Latest")
         .navigationDestination(for: NavigationDestination.self) { destination in
           switch destination {

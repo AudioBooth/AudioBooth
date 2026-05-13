@@ -20,9 +20,13 @@ struct AudioBoothApp: App {
         .displayScaled()
         .tint(preferences.accentColor)
         .preferredColorScheme(preferences.colorScheme.colorScheme)
+        .environment(\.appTheme, preferences.appTheme)
         .onChange(of: preferences.accentColor, initial: true) {
           updateWindowTintColor(preferences.accentColor)
           syncAccentColorToWidget(preferences.accentColor)
+        }
+        .onChange(of: preferences.colorScheme, initial: true) {
+          updateWindowColorScheme(preferences.colorScheme)
         }
         .task {
           if libraries.current != nil {
@@ -64,6 +68,26 @@ struct AudioBoothApp: App {
       guard let windowScene = scene as? UIWindowScene else { continue }
       for window in windowScene.windows {
         window.tintColor = color
+      }
+    }
+  }
+
+  private func updateWindowColorScheme(_ mode: ColorSchemeMode) {
+    let style: UIUserInterfaceStyle =
+      switch mode {
+      case .auto: .unspecified
+      case .light: .light
+      case .dark: .dark
+      }
+    for scene in UIApplication.shared.connectedScenes {
+      guard let windowScene = scene as? UIWindowScene else { continue }
+      for window in windowScene.windows {
+        window.overrideUserInterfaceStyle = style
+        var vc: UIViewController? = window.rootViewController
+        while let current = vc {
+          current.overrideUserInterfaceStyle = style
+          vc = current.presentedViewController
+        }
       }
     }
   }

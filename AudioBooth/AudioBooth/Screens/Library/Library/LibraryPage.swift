@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct LibraryPage: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
   @ObservedObject var model: Model
@@ -47,7 +48,7 @@ struct LibraryPage: View {
         }
       }
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle(model.title)
     .sheet(isPresented: $model.showingFilterSelection) {
       if let filters = model.filters {

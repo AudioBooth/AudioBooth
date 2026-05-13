@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 
 struct StatsPageView: View {
+  @Environment(\.appTheme) var theme
   @StateObject var model: Model
   @State private var showGoalPicker = false
 
@@ -23,7 +24,7 @@ struct StatsPageView: View {
       }
       .padding()
     }
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Your Stats")
     .navigationBarTitleDisplayMode(.large)
     .onAppear(perform: model.onAppear)
@@ -96,7 +97,7 @@ struct StatsPageView: View {
       }
     }
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .clipShape(RoundedRectangle(cornerRadius: 16))
   }
 
@@ -194,7 +195,7 @@ struct StatsPageView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding()
-    .background(Color.Background.card)
+    .background(theme.colors.background.card)
     .clipShape(RoundedRectangle(cornerRadius: 12))
   }
 
@@ -230,7 +231,7 @@ struct StatsPageView: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal)
-        .background(Color.Background.card)
+        .background(theme.colors.background.card)
         .clipShape(RoundedRectangle(cornerRadius: 12))
       }
     }

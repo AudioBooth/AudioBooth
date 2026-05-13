@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct GeneralPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var preferences = UserPreferences.shared
   @ObservedObject private var iconModel = AppIconPickerViewModel.shared
 
@@ -15,7 +16,7 @@ struct GeneralPreferencesView: View {
             subtitle: "Skip the home screen on reopen"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         Toggle(isOn: $preferences.hapticsEnabled) {
           PreferenceRow(
@@ -25,18 +26,21 @@ struct GeneralPreferencesView: View {
             subtitle: "Subtle vibrations on controls"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       }
 
       Section("Appearance") {
         AppIconPickerView()
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
+
+        ThemePickerView()
+          .listRowBackground(theme.colors.background.card)
 
         AccentColorPickerView()
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
         ColorSchemePickerView()
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
         #if targetEnvironment(macCatalyst)
         Stepper(value: $preferences.displayScale, in: 0.8...2.0, step: 0.05) {
@@ -50,13 +54,16 @@ struct GeneralPreferencesView: View {
               .foregroundStyle(.secondary)
           }
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
         #endif
 
-        if preferences.accentColor != nil || preferences.colorScheme != .auto || iconModel.currentIcon != .default {
+        if preferences.accentColor != nil || preferences.colorScheme != .auto || iconModel.currentIcon != .default
+          || preferences.appTheme != .sepia
+        {
           Button {
             preferences.accentColor = nil
             preferences.colorScheme = .auto
+            preferences.appTheme = .sepia
             iconModel.setAlternateAppIcon(icon: .default)
           } label: {
             Text("Reset Appearance to Default")
@@ -66,12 +73,12 @@ struct GeneralPreferencesView: View {
               .frame(maxWidth: .infinity, alignment: .center)
           }
           .buttonStyle(.plain)
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("General")
   }
 

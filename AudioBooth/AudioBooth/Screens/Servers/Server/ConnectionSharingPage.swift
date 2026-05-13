@@ -3,6 +3,7 @@ import CoreImage
 import SwiftUI
 
 struct ConnectionSharingPage: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   var body: some View {
@@ -72,7 +73,7 @@ struct ConnectionSharingPage: View {
     }
     .padding()
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)
   }

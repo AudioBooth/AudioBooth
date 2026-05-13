@@ -4,6 +4,7 @@ import Models
 import SwiftUI
 
 struct PlaybackSessionListView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
 
   @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 80
@@ -107,11 +108,11 @@ struct PlaybackSessionListView: View {
             .foregroundColor(.secondary)
             .padding(.top, 10)
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Playback Sessions")
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)

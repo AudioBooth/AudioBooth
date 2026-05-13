@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SkipRewindPreferencesView: View {
+  @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
   private let skipPresets: [Double] = [10, 15, 30, 60, 90]
@@ -37,7 +38,7 @@ struct SkipRewindPreferencesView: View {
           presets: skipPresets
         )
         .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Skip Forward & Back")
       }
@@ -51,7 +52,7 @@ struct SkipRewindPreferencesView: View {
             subtitle: autoRewindSubtitle
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
 
         if autoRewindEnabled.wrappedValue {
           VStack(alignment: .leading, spacing: 12) {
@@ -71,7 +72,7 @@ struct SkipRewindPreferencesView: View {
               bounds: rewindBounds
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -89,7 +90,7 @@ struct SkipRewindPreferencesView: View {
               .font(.caption)
               .foregroundStyle(.secondary)
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           Toggle(isOn: $preferences.smartRewindChapterBarrier) {
             PreferenceRow(
@@ -99,7 +100,7 @@ struct SkipRewindPreferencesView: View {
               subtitle: "Don't rewind past the start of the current chapter"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           Toggle(isOn: $preferences.smartRewindOnSessionStart) {
             PreferenceRow(
@@ -109,7 +110,7 @@ struct SkipRewindPreferencesView: View {
               subtitle: "Rewind \(Int(rewindMax))s when starting a new session"
             )
           }
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
 
           RewindPreviewCard(
             minInterval: rewindMin,
@@ -117,7 +118,7 @@ struct SkipRewindPreferencesView: View {
             threshold: pauseThreshold
           )
           .listRowInsets(EdgeInsets())
-          .listRowBackground(Color.Background.card)
+          .listRowBackground(theme.colors.background.card)
         }
       } header: {
         Text("Smart Rewind")
@@ -141,13 +142,13 @@ struct SkipRewindPreferencesView: View {
             subtitle: "Calls, alarms, other audio"
           )
         }
-        .listRowBackground(Color.Background.card)
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Audio Interruptions")
       }
     }
     .scrollContentBackground(.hidden)
-    .background(Color.Background.page)
+    .background(theme.colors.background.page)
     .navigationTitle("Skip & Rewind")
     .onDisappear {
       preferences.smartRewindInterval = rewindMin
