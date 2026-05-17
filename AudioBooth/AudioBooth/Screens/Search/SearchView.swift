@@ -9,29 +9,7 @@ struct SearchPage: View {
     NavigationStack {
       SearchView(model: model)
         .searchable(text: $model.searchText)
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .author(let id, let name, _):
-            AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
-          case .series, .narrator, .genre, .tag, .offline, .authorLibrary:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          case .podcast(let id, let episodeID):
-            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
-          case .podcastFeed(let id, let podcastTitle, let coverURL, let feedURL):
-            PodcastFeedView(
-              model: PodcastFeedViewModel(
-                podcastID: id,
-                podcastTitle: podcastTitle,
-                coverURL: coverURL,
-                feedURL: feedURL
-              )
-            )
-          case .playlist, .collection, .stats:
-            EmptyView()
-          }
-        }
+        .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
     }
   }
 }

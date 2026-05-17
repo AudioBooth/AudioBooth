@@ -40,33 +40,7 @@ struct DownloadsRootPage: View {
           }
         }
       }
-      .navigationDestination(for: NavigationDestination.self) { destination in
-        switch destination {
-        case .book(let id):
-          BookDetailsView(model: BookDetailsViewModel(bookID: id))
-        case .author(let id, let name, let libraryID):
-          AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name, libraryID: libraryID))
-        case .series, .narrator, .genre, .tag, .authorLibrary:
-          LibraryPage(model: LibraryPageModel(destination: destination))
-        case .playlist(let id):
-          CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
-        case .collection(let id):
-          CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .collections))
-        case .podcast(let id, let episodeID):
-          PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
-        case .podcastFeed(let id, let podcastTitle, let coverURL, let feedURL):
-          PodcastFeedView(
-            model: PodcastFeedViewModel(
-              podcastID: id,
-              podcastTitle: podcastTitle,
-              coverURL: coverURL,
-              feedURL: feedURL
-            )
-          )
-        case .offline, .stats:
-          EmptyView()
-        }
-      }
+      .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
     }
     .onChange(of: hasDownloadingBooks) { _, hasDownloading in
       if !hasDownloading {

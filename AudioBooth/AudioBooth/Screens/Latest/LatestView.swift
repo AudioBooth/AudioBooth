@@ -11,23 +11,7 @@ struct LatestView: View {
       content
         .background(theme.colors.background.page)
         .navigationTitle("Latest")
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .podcast(let id, let episodeID):
-            PodcastDetailsView(model: PodcastDetailsViewModel(podcastID: id, episodeID: episodeID))
-          case .podcastFeed(let id, let podcastTitle, let coverURL, let feedURL):
-            PodcastFeedView(
-              model: PodcastFeedViewModel(
-                podcastID: id,
-                podcastTitle: podcastTitle,
-                coverURL: coverURL,
-                feedURL: feedURL
-              )
-            )
-          default:
-            EmptyView()
-          }
-        }
+        .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
         .refreshable {
           await model.refresh()
         }
