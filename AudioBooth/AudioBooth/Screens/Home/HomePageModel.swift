@@ -18,7 +18,8 @@ final class HomePageModel: HomePage.Model {
   private var continueListeningEpisodes: [Podcast] = []
   private var personalizedSections: [Personalized.Section] = []
   private var pinnedPlaylist: Playlist?
-  private var isFetchingRemoteContent = false
+  private var isFetching = false
+  private var discoverBooks: [Book] = []
 
   init() {
     super.init()
@@ -63,6 +64,7 @@ final class HomePageModel: HomePage.Model {
     if Audiobookshelf.shared.libraries.current != nil {
       _ = try? await Audiobookshelf.shared.libraries.fetchFilterData()
     }
+    discoverBooks = []
     await fetchContent()
   }
 
@@ -71,6 +73,7 @@ final class HomePageModel: HomePage.Model {
     continueListeningEpisodes = []
     personalizedSections = []
     pinnedPlaylist = nil
+    discoverBooks = []
     sections = []
     isLoading = false
 
@@ -164,6 +167,16 @@ extension HomePageModel {
           )
         } else if section.id == "continue-series" {
           let books = items.map({ BookCardModel($0, sortBy: .title, options: .showSequence) })
+          sectionsByID[section.id] = .init(
+            id: section.id,
+            title: title,
+            items: .books(books)
+          )
+        } else if section.id == "discover" {
+          if discoverBooks.isEmpty {
+            discoverBooks = items
+          }
+          let books = discoverBooks.map({ BookCardModel($0, sortBy: .title) })
           sectionsByID[section.id] = .init(
             id: section.id,
             title: title,
@@ -429,12 +442,12 @@ extension HomePageModel {
   }
 
   private func fetchRemoteContent() async {
-    guard Audiobookshelf.shared.libraries.current != nil, !isFetchingRemoteContent else { return }
+    guard Audiobookshelf.shared.libraries.current != nil, !isFetching else { return }
 
-    isFetchingRemoteContent = true
+    isFetching = true
 
     defer {
-      isFetchingRemoteContent = false
+      isFetching = false
       isLoading = false
     }
 
