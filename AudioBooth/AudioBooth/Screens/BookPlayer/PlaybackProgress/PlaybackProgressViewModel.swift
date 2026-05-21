@@ -61,6 +61,32 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     } else {
       updateChapterProgress()
     }
+
+    updateChapterSupplement()
+  }
+
+  private func updateChapterSupplement() {
+    guard let chapters, chapters.current != nil else {
+      chapter = nil
+      return
+    }
+
+    let currentTime = mediaProgress.currentTime
+    var elapsed = chapters.currentElapsedTime(currentTime: currentTime)
+    var remaining = chapters.currentRemainingTime(currentTime: currentTime)
+    let progress = chapters.currentProgress(currentTime: currentTime)
+
+    if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.value != 1.0 {
+      let adjustedTotal = (elapsed + remaining) / speed.value
+      elapsed = (elapsed / speed.value).rounded()
+      remaining = adjustedTotal - elapsed
+    }
+
+    chapter = PlaybackProgressView.Model.Chapter(
+      progress: progress,
+      elapsed: elapsed,
+      remaining: remaining
+    )
   }
 
   private func updateBookProgress() {

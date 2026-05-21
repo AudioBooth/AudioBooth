@@ -6,7 +6,7 @@ struct PlaybackProgressView: View {
 
   var body: some View {
     VStack(spacing: 8) {
-      if preferences.showBookProgressBar && !preferences.showFullBookDuration && model.totalProgress != model.progress {
+      if preferences.showBookProgressBar, let supplementary {
         VStack(spacing: 4) {
           GeometryReader { geometry in
             ZStack(alignment: .leading) {
@@ -16,18 +16,18 @@ struct PlaybackProgressView: View {
 
               RoundedRectangle(cornerRadius: 1.5)
                 .fill(Color.accentColor.opacity(0.7))
-                .frame(width: max(0, geometry.size.width * model.totalProgress), height: 3)
+                .frame(width: max(0, geometry.size.width * supplementary.progress), height: 3)
             }
           }
           .frame(height: 3)
 
           HStack {
-            Text(formatCurrentTime(model.total * model.totalProgress))
+            Text(formatCurrentTime(supplementary.elapsed))
               .foregroundColor(.white.opacity(0.7))
 
             Spacer()
 
-            Text(verbatim: "-\(formatCurrentTime(model.totalTimeRemaining))")
+            Text(verbatim: "-\(formatCurrentTime(supplementary.remaining))")
           }
           .font(.caption)
           .foregroundColor(.white.opacity(0.7))
@@ -106,16 +106,33 @@ struct PlaybackProgressView: View {
   private func formatCurrentTime(_ duration: TimeInterval) -> String {
     Duration.seconds(duration).formatted(.time(pattern: .hourMinuteSecond))
   }
+
+  private var supplementary: (progress: Double, elapsed: TimeInterval, remaining: TimeInterval)? {
+    if preferences.showFullBookDuration {
+      guard let chapter = model.chapter else { return nil }
+      return (chapter.progress, chapter.elapsed, chapter.remaining)
+    } else {
+      guard model.totalProgress != model.progress else { return nil }
+      return (model.totalProgress, model.total * model.totalProgress, model.totalTimeRemaining)
+    }
+  }
 }
 
 extension PlaybackProgressView {
   @Observable class Model {
+    struct Chapter: Equatable {
+      var progress: Double
+      var elapsed: TimeInterval
+      var remaining: TimeInterval
+    }
+
     var progress: Double
     var current: TimeInterval
     var remaining: TimeInterval
     var total: TimeInterval
     var totalProgress: Double
     var totalTimeRemaining: TimeInterval
+    var chapter: Chapter?
     var isDragging: Bool
     var title: String
 
@@ -126,6 +143,7 @@ extension PlaybackProgressView {
       total: TimeInterval,
       totalProgress: Double,
       totalTimeRemaining: TimeInterval,
+      chapter: Chapter? = nil,
       isDragging: Bool = false,
       title: String
     ) {
@@ -135,6 +153,7 @@ extension PlaybackProgressView {
       self.total = total
       self.totalProgress = totalProgress
       self.totalTimeRemaining = totalTimeRemaining
+      self.chapter = chapter
       self.isDragging = isDragging
       self.title = title
     }
