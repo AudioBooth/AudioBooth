@@ -5,12 +5,13 @@ import Models
 import PlayerIntents
 import RevenueCat
 import UIKit
+import UserNotifications
 
 #if !targetEnvironment(macCatalyst)
 import ActivityKit
 #endif
 
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
   static var orientationLock = UIInterfaceOrientationMask.all {
     didSet {
       for scene in UIApplication.shared.connectedScenes {
@@ -58,6 +59,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     _ = SessionManager.shared
     _ = UserPreferences.shared
 
+    UNUserNotificationCenter.current().delegate = self
+
     Purchases.logLevel = .error
     Purchases.configure(withAPIKey: "appl_AuBdFKRrOngbJsXGkkxDKGNbGRW")
 
@@ -90,6 +93,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     supportedInterfaceOrientationsFor window: UIWindow?
   ) -> UIInterfaceOrientationMask {
     return AppDelegate.orientationLock
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .list, .sound])
   }
 }
 

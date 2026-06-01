@@ -61,6 +61,12 @@ final class UserPreferences: ObservableObject {
   @AppStorage("timerFadeOut")
   var timerFadeOut: Double = 30.0
 
+  @AppStorage("customAlarmDurationMinutes")
+  var customAlarmDurationMinutes: Int = 15
+
+  @AppStorage("alarmFadeOut")
+  var alarmFadeOut: Double = 10.0
+
   @AppStorage("lockScreenNextPreviousUsesChapters")
   var lockScreenNextPreviousUsesChapters: Bool = false
 

@@ -101,6 +101,11 @@ struct BookPlayer: View {
                 Label(PlayerControl.timer.displayName, systemImage: PlayerControl.timer.systemImage)
               }
             }
+            if disabledControls.contains(.alarm) {
+              Button(action: { model.alarm.isPresented = true }) {
+                Label(PlayerControl.alarm.displayName, systemImage: PlayerControl.alarm.systemImage)
+              }
+            }
             if disabledControls.contains(.bookmarks), model.bookmarks != nil {
               Button(action: { model.onBookmarksTapped() }) {
                 Label(PlayerControl.bookmarks.displayName, systemImage: PlayerControl.bookmarks.systemImage)
@@ -162,6 +167,9 @@ struct BookPlayer: View {
     }
     .adaptiveSheet(isPresented: $model.timer.isPresented) {
       TimerPickerSheet(model: $model.timer)
+    }
+    .adaptiveSheet(isPresented: $model.alarm.isPresented) {
+      AlarmPickerSheet(model: $model.alarm)
     }
     .sheet(item: $model.timer.completedAlert) { model in
       TimerCompletedAlertView(model: model)
@@ -334,6 +342,10 @@ struct BookPlayer: View {
       .frame(maxWidth: .infinity)
 
     case .timer:
+      let isActive: Bool = {
+        if case .none = model.timer.current { return false }
+        return true
+      }()
       Button(action: {
         Haptics.impact(.soft)
         model.timer.isPresented = true
@@ -345,6 +357,24 @@ struct BookPlayer: View {
           Text(control.displayName)
             .font(.caption2)
         }
+        .foregroundStyle(isActive ? Color.accentColor : Color.white.opacity(0.7))
+      }
+      .frame(maxWidth: .infinity)
+
+    case .alarm:
+      let isActive = model.alarm.current != nil
+      Button(action: {
+        Haptics.impact(.soft)
+        model.alarm.isPresented = true
+      }) {
+        VStack(spacing: 6) {
+          Image(systemName: control.systemImage)
+            .font(.system(size: 20))
+            .frame(width: 20, height: 20)
+          Text(control.displayName)
+            .font(.caption2)
+        }
+        .foregroundStyle(isActive ? Color.accentColor : Color.white.opacity(0.7))
       }
       .frame(maxWidth: .infinity)
 
@@ -436,7 +466,10 @@ extension BookPlayer {
         badge(text: Text(progress), accessibilityLabel: progress)
       }
       .overlay(alignment: .topTrailing) {
-        timerOverlay
+        VStack(alignment: .trailing, spacing: 6) {
+          timerOverlay
+          alarmOverlay
+        }
       }
       .buttonStyle(.plain)
     }
@@ -459,6 +492,20 @@ extension BookPlayer {
         let accessibilityLabel = "Sleep timer: \(label)"
         badge(icon: "timer", text: Text(label), accessibilityLabel: accessibilityLabel)
       case .none:
+        EmptyView()
+      }
+    }
+
+    @ViewBuilder
+    private var alarmOverlay: some View {
+      if model.alarm.current != nil {
+        let countdown = model.alarm.countdownText
+        badge(
+          icon: "bell.fill",
+          text: Text(countdown),
+          accessibilityLabel: "Alarm set: \(countdown) remaining"
+        )
+      } else {
         EmptyView()
       }
     }
@@ -499,6 +546,7 @@ extension BookPlayer {
     var isLoading: Bool
     var speed: FloatPickerSheet.Model
     var timer: TimerPickerSheet.Model
+    var alarm: AlarmPickerSheet.Model
     var volume: FloatPickerSheet.Model
     var chapters: ChapterPickerSheet.Model?
     var bookmarks: BookmarkViewerSheet.Model?
@@ -533,6 +581,7 @@ extension BookPlayer {
       isLoading: Bool = false,
       speed: FloatPickerSheet.Model,
       timer: TimerPickerSheet.Model,
+      alarm: AlarmPickerSheet.Model = .init(),
       volume: FloatPickerSheet.Model = .init(),
       chapters: ChapterPickerSheet.Model? = nil,
       bookmarks: BookmarkViewerSheet.Model? = nil,
@@ -550,6 +599,7 @@ extension BookPlayer {
       self.isLoading = isLoading
       self.speed = speed
       self.timer = timer
+      self.alarm = alarm
       self.volume = volume
       self.chapters = chapters
       self.bookmarks = bookmarks
@@ -569,6 +619,7 @@ extension BookPlayer.Model {
       coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
       speed: .mock,
       timer: .mock,
+      alarm: .mock,
       chapters: .mock,
       playbackProgress: .mock
     )

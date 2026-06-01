@@ -100,7 +100,7 @@ struct PlayerPreferencesView: View {
           PreferenceRow(
             systemImage: "moon",
             tint: .purple,
-            title: "Sleep Timer",
+            title: "Sleep Timer & Alarm",
             subtitle: sleepShakeSubtitle
           )
         }

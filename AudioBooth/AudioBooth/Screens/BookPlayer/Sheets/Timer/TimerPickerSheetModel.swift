@@ -248,7 +248,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     switch current {
     case .preset(let seconds):
       if seconds > 1 {
-        fadeOut(seconds)
+        applyFadeOut(secondsRemaining: seconds)
         current = .preset(seconds - 1)
       } else {
         pauseFromTimer()
@@ -256,7 +256,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     case .custom(let seconds):
       if seconds > 1 {
-        fadeOut(seconds)
+        applyFadeOut(secondsRemaining: seconds)
         current = .custom(seconds - 1)
       } else {
         pauseFromTimer()
@@ -267,10 +267,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
   }
 
-  private func fadeOut(_ seconds: TimeInterval) {
-    let fadeOut = preferences.timerFadeOut
-    if fadeOut > 0, seconds < fadeOut {
-      player.volume = Float(seconds / fadeOut) * Float(preferences.volumeLevel)
+  func applyFadeOut(secondsRemaining: TimeInterval, fadeDuration: TimeInterval? = nil) {
+    let totalFadeDuration = fadeDuration ?? preferences.timerFadeOut
+    if totalFadeDuration > 0, secondsRemaining < totalFadeDuration {
+      player.volume = Float(secondsRemaining / totalFadeDuration) * Float(preferences.volumeLevel)
     }
   }
 
