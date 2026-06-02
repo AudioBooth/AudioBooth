@@ -1,15 +1,12 @@
 import Foundation
 import UserNotifications
 
-@MainActor
 final class AlarmNotificationService {
-  static let shared = AlarmNotificationService()
-
   private let center = UNUserNotificationCenter.current()
   private let identifier = "playerAlarm"
   let soundFileName = "alarm_tone.wav"
 
-  private init() {}
+  init() {}
 
   func requestAuthorizationIfNeeded() async -> Bool {
     let settings = await center.notificationSettings()
@@ -28,8 +25,8 @@ final class AlarmNotificationService {
     }
   }
 
-  func schedule(itemID: String, triggerDate: Date) async {
-    cancel(itemID: itemID)
+  func schedule(triggerDate: Date) async {
+    cancel()
 
     let interval = max(1, triggerDate.timeIntervalSinceNow)
     let content = UNMutableNotificationContent()
@@ -40,7 +37,7 @@ final class AlarmNotificationService {
     )
 
     let request = UNNotificationRequest(
-      identifier: identifier(for: itemID),
+      identifier: identifier,
       content: content,
       trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
     )
@@ -48,13 +45,8 @@ final class AlarmNotificationService {
     try? await center.add(request)
   }
 
-  func cancel(itemID: String) {
-    let id = identifier(for: itemID)
-    center.removePendingNotificationRequests(withIdentifiers: [id])
-    center.removeDeliveredNotifications(withIdentifiers: [id])
-  }
-
-  private func identifier(for itemID: String) -> String {
-    "\(identifier).\(itemID)"
+  func cancel() {
+    center.removePendingNotificationRequests(withIdentifiers: [identifier])
+    center.removeDeliveredNotifications(withIdentifiers: [identifier])
   }
 }

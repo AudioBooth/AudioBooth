@@ -1,4 +1,5 @@
 import Combine
+import AVFoundation
 import Foundation
 import Logging
 import Models
@@ -15,8 +16,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   let player: AudioPlayer
   private let chapters: ChapterPickerSheet.Model?
   private let speed: FloatPickerSheet.Model
+  private let alarmNotificationService = AlarmNotificationService()
 
   private var sleepTimer: Timer?
+  private var alarmTimer: Timer?
+  private var alarmSoundPlayer: AVAudioPlayer?
   private var timerStartTime: Date?
   private var originalTimerDuration: TimeInterval = 0
   private var lastObservedChapterIndex: Int = 0
@@ -39,6 +43,15 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     let totalMinutes = preferences.customTimerMinutes
     customHours = totalMinutes / 60
     customMinutes = totalMinutes % 60
+
+    let calendar = Calendar.current
+    alarmSelectedTime =
+      calendar.date(
+        bySettingHour: 7,
+        minute: 0,
+        second: 0,
+        of: .now
+      ) ?? .now
 
     if let chapters {
       maxRemainingChapters = chapters.chapters.count - chapters.currentIndex - 1
@@ -248,7 +261,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     switch current {
     case .preset(let seconds):
       if seconds > 1 {
-        applyFadeOut(secondsRemaining: seconds)
+        fadeOut(seconds)
         current = .preset(seconds - 1)
       } else {
         pauseFromTimer()
@@ -256,7 +269,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     case .custom(let seconds):
       if seconds > 1 {
-        applyFadeOut(secondsRemaining: seconds)
+        fadeOut(seconds)
         current = .custom(seconds - 1)
       } else {
         pauseFromTimer()
@@ -267,10 +280,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
   }
 
-  func applyFadeOut(secondsRemaining: TimeInterval, fadeDuration: TimeInterval? = nil) {
-    let totalFadeDuration = fadeDuration ?? preferences.timerFadeOut
-    if totalFadeDuration > 0, secondsRemaining < totalFadeDuration {
-      player.volume = Float(secondsRemaining / totalFadeDuration) * Float(preferences.volumeLevel)
+  private func fadeOut(_ seconds: TimeInterval) {
+    let fadeOut = preferences.timerFadeOut
+    if fadeOut > 0, seconds < fadeOut {
+      player.volume = Float(seconds / fadeOut) * Float(preferences.volumeLevel)
     }
   }
 
@@ -454,6 +467,149 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     case .none:
       break
     }
+  }
+
+  override func onAlarmStartTapped() {
+    alarmSoundPlayer?.stop()
+    alarmSoundPlayer = nil
+    isAlarmRinging = false
+
+    let triggerDate = makeAlarmTriggerDate()
+    alarmCurrent = .init(nextTrigger: triggerDate)
+    alarmCountdownText = formatAlarmCountdown(triggerDate.timeIntervalSinceNow)
+
+    startAlarmTimer()
+    scheduleAlarmNotification(triggerDate: triggerDate)
+    isPresented = false
+  }
+
+  override func onAlarmOffTapped() {
+    stopAlarmTimer()
+    alarmCurrent = nil
+    alarmSoundPlayer?.stop()
+    alarmSoundPlayer = nil
+    player.volume = Float(preferences.volumeLevel)
+    alarmCountdownText = "00:00:00"
+    isAlarmRinging = false
+    alarmNotificationService.cancel()
+    isPresented = false
+  }
+
+  override func onAlarmAddTimeTapped() {
+    addAlarmTime(minutes: alarmAddTimeMinutes)
+  }
+
+  override func onAlarmAddTimeMinutesChanged(_ value: Int) {
+    alarmAddTimeMinutes = max(1, min(30, value))
+  }
+
+  private func startAlarmTimer() {
+    stopAlarmTimer()
+    alarmTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+      self?.updateAlarm()
+    }
+    if let alarmTimer {
+      RunLoop.current.add(alarmTimer, forMode: .common)
+    }
+  }
+
+  private func stopAlarmTimer() {
+    alarmTimer?.invalidate()
+    alarmTimer = nil
+  }
+
+  private func updateAlarm() {
+    guard let alarm = alarmCurrent else {
+      stopAlarmTimer()
+      return
+    }
+
+    let remaining = alarm.nextTrigger.timeIntervalSinceNow
+
+    if remaining <= 0 {
+      alarmCountdownText = "00:00:00"
+      isAlarmRinging = true
+      player.pause()
+      playAlarmTone()
+      stopAlarmTimer()
+      return
+    }
+
+    alarmCountdownText = formatAlarmCountdown(remaining)
+    isAlarmRinging = false
+
+    let fadeDuration = preferences.alarmFadeOut
+    if player.isPlaying, fadeDuration > 0, remaining <= fadeDuration {
+      player.volume = Float(max(remaining, 1) / fadeDuration) * Float(preferences.volumeLevel)
+    }
+  }
+
+  private func addAlarmTime(minutes: Int) {
+    guard var alarm = alarmCurrent else { return }
+
+    alarmSoundPlayer?.stop()
+    alarmSoundPlayer = nil
+
+    let baseTime = max(alarm.nextTrigger, Date())
+    alarm.nextTrigger = baseTime.addingTimeInterval(TimeInterval(minutes * 60))
+    alarmCurrent = alarm
+    alarmCountdownText = formatAlarmCountdown(alarm.nextTrigger.timeIntervalSinceNow)
+    player.volume = Float(preferences.volumeLevel)
+    isAlarmRinging = false
+
+    startAlarmTimer()
+    scheduleAlarmNotification(triggerDate: alarm.nextTrigger)
+  }
+
+  private func playAlarmTone() {
+    guard let url = Bundle.main.url(forResource: "alarm_tone", withExtension: "wav") else {
+      return
+    }
+
+    do {
+      let alarmPlayer = try AVAudioPlayer(contentsOf: url)
+      alarmPlayer.numberOfLoops = -1
+      alarmPlayer.prepareToPlay()
+      alarmPlayer.play()
+      alarmSoundPlayer = alarmPlayer
+    } catch {
+      alarmSoundPlayer = nil
+    }
+  }
+
+  private func makeAlarmTriggerDate() -> Date {
+    switch alarmMode {
+    case .atTime:
+      let calendar = Calendar.current
+      let components = calendar.dateComponents([.hour, .minute], from: alarmSelectedTime)
+      let next = calendar.nextDate(
+        after: .now,
+        matching: DateComponents(hour: components.hour, minute: components.minute),
+        matchingPolicy: .nextTime
+      )
+      return next ?? Date().addingTimeInterval(60)
+
+    case .duration:
+      let totalMinutes = max(1, alarmDurationHours * 60 + alarmDurationMinutes)
+      return Date().addingTimeInterval(TimeInterval(totalMinutes * 60))
+    }
+  }
+
+  private func scheduleAlarmNotification(triggerDate: Date) {
+    Task { [weak self] in
+      guard let self else { return }
+      let hasPermission = await alarmNotificationService.requestAuthorizationIfNeeded()
+      guard hasPermission else { return }
+      await alarmNotificationService.schedule(triggerDate: triggerDate)
+    }
+  }
+
+  private func formatAlarmCountdown(_ remaining: TimeInterval) -> String {
+    let seconds = max(0, Int(remaining.rounded(.down)))
+    let hours = seconds / 3600
+    let minutes = (seconds % 3600) / 60
+    let secs = seconds % 60
+    return String(format: "%02d:%02d:%02d", hours, minutes, secs)
   }
 }
 

@@ -101,11 +101,6 @@ struct BookPlayer: View {
                 Label(PlayerControl.timer.displayName, systemImage: PlayerControl.timer.systemImage)
               }
             }
-            if disabledControls.contains(.alarm) {
-              Button(action: { model.alarm.isPresented = true }) {
-                Label(PlayerControl.alarm.displayName, systemImage: PlayerControl.alarm.systemImage)
-              }
-            }
             if disabledControls.contains(.bookmarks), model.bookmarks != nil {
               Button(action: { model.onBookmarksTapped() }) {
                 Label(PlayerControl.bookmarks.displayName, systemImage: PlayerControl.bookmarks.systemImage)
@@ -167,9 +162,6 @@ struct BookPlayer: View {
     }
     .adaptiveSheet(isPresented: $model.timer.isPresented) {
       TimerPickerSheet(model: $model.timer)
-    }
-    .adaptiveSheet(isPresented: $model.alarm.isPresented) {
-      AlarmPickerSheet(model: $model.alarm)
     }
     .sheet(item: $model.timer.completedAlert) { model in
       TimerCompletedAlertView(model: model)
@@ -343,29 +335,15 @@ struct BookPlayer: View {
 
     case .timer:
       let isActive: Bool = {
-        if case .none = model.timer.current { return false }
-        return true
+        let isSleepTimerActive: Bool = {
+          if case .none = model.timer.current { return false }
+          return true
+        }()
+        return isSleepTimerActive || model.timer.isAlarmActive
       }()
       Button(action: {
         Haptics.impact(.soft)
         model.timer.isPresented = true
-      }) {
-        VStack(spacing: 6) {
-          Image(systemName: control.systemImage)
-            .font(.system(size: 20))
-            .frame(width: 20, height: 20)
-          Text(control.displayName)
-            .font(.caption2)
-        }
-        .foregroundStyle(isActive ? Color.accentColor : Color.white.opacity(0.7))
-      }
-      .frame(maxWidth: .infinity)
-
-    case .alarm:
-      let isActive = model.alarm.current != nil
-      Button(action: {
-        Haptics.impact(.soft)
-        model.alarm.isPresented = true
       }) {
         VStack(spacing: 6) {
           Image(systemName: control.systemImage)
@@ -498,8 +476,8 @@ extension BookPlayer {
 
     @ViewBuilder
     private var alarmOverlay: some View {
-      if model.alarm.current != nil {
-        let countdown = model.alarm.countdownText
+      if model.timer.isAlarmActive {
+        let countdown = model.timer.alarmCountdownText
         badge(
           icon: "bell.fill",
           text: Text(countdown),
@@ -546,7 +524,6 @@ extension BookPlayer {
     var isLoading: Bool
     var speed: FloatPickerSheet.Model
     var timer: TimerPickerSheet.Model
-    var alarm: AlarmPickerSheet.Model
     var volume: FloatPickerSheet.Model
     var chapters: ChapterPickerSheet.Model?
     var bookmarks: BookmarkViewerSheet.Model?
@@ -581,7 +558,6 @@ extension BookPlayer {
       isLoading: Bool = false,
       speed: FloatPickerSheet.Model,
       timer: TimerPickerSheet.Model,
-      alarm: AlarmPickerSheet.Model = .init(),
       volume: FloatPickerSheet.Model = .init(),
       chapters: ChapterPickerSheet.Model? = nil,
       bookmarks: BookmarkViewerSheet.Model? = nil,
@@ -599,7 +575,6 @@ extension BookPlayer {
       self.isLoading = isLoading
       self.speed = speed
       self.timer = timer
-      self.alarm = alarm
       self.volume = volume
       self.chapters = chapters
       self.bookmarks = bookmarks
@@ -619,7 +594,6 @@ extension BookPlayer.Model {
       coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
       speed: .mock,
       timer: .mock,
-      alarm: .mock,
       chapters: .mock,
       playbackProgress: .mock
     )

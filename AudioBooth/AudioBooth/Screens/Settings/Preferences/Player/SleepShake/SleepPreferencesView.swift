@@ -141,15 +141,10 @@ struct SleepPreferencesView: View {
   }
 
   private func alarmFadeLabel(_ value: Double) -> String {
-    switch value {
-    case 0: return "No Fade"
-    case 5: return "5 Seconds"
-    case 10: return "10 Seconds"
-    case 15: return "15 Seconds"
-    case 30: return "30 Seconds"
-    case 60: return "1 Minute"
-    default: return Duration.seconds(value).formatted(.units(allowed: [.seconds], width: .wide))
+    if value == 0 {
+      return String(localized: "No Fade")
     }
+    return Duration.seconds(value).formatted()
   }
 }
 

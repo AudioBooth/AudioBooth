@@ -71,7 +71,6 @@ final class BookPlayerModel: BookPlayer.Model {
       coverURL: book.coverURL(raw: true),
       speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
-      alarm: AlarmPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
       playbackProgress: PlaybackProgressViewModel(itemID: book.id, mediaProgress: mediaProgress, title: book.title)
@@ -114,7 +113,6 @@ final class BookPlayerModel: BookPlayer.Model {
       coverURL: item.coverURL(raw: true),
       speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
-      alarm: AlarmPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
       playbackProgress: PlaybackProgressViewModel(itemID: item.bookID, mediaProgress: mediaProgress, title: item.title)
@@ -160,7 +158,6 @@ final class BookPlayerModel: BookPlayer.Model {
       coverURL: episode.coverURL,
       speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
-      alarm: AlarmPickerSheet.Model(),
       bookmarks: nil,
       history: PlaybackHistorySheet.Model(),
       playbackProgress: PlaybackProgressViewModel(
@@ -219,7 +216,6 @@ final class BookPlayerModel: BookPlayer.Model {
       coverURL: coverURL,
       speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
-      alarm: AlarmPickerSheet.Model(),
       bookmarks: nil,
       history: PlaybackHistorySheet.Model(),
       playbackProgress: PlaybackProgressViewModel(
@@ -711,11 +707,6 @@ extension BookPlayerModel {
     )
 
     timer = TimerPickerSheetViewModel(itemID: id, player: player, chapters: chapters, speed: speed)
-    alarm = AlarmPickerSheetViewModel(
-      itemID: id,
-      player: player,
-      timerViewModel: timer as? TimerPickerSheetViewModel
-    )
 
     if let playbackProgress = playbackProgress as? PlaybackProgressViewModel {
       playbackProgress.configure(

@@ -115,7 +115,6 @@ extension PlayerControl {
     switch self {
     case .speed: .orange
     case .timer: .orange
-    case .alarm: .red
     case .bookmarks: .purple
     case .history: .blue
     case .volume: .green
