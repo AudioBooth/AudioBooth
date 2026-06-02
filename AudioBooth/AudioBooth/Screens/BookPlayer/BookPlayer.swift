@@ -285,10 +285,8 @@ struct BookPlayer: View {
       }) {
         Marquee {
           HStack {
-            if chapters.chapters.count > 1 {
-              Image(systemName: "list.bullet")
-                .foregroundColor(.white.opacity(0.7))
-            }
+            Image(systemName: "list.bullet")
+              .foregroundColor(.white.opacity(0.7))
             Text(chapter.title)
               .foregroundColor(.white)
               .font(.headline)
@@ -296,7 +294,6 @@ struct BookPlayer: View {
         }
         .buttonStyle(.plain)
       }
-      .allowsHitTesting(chapters.chapters.count > 1)
       .padding(.horizontal, 8)
     } else {
       Marquee {

@@ -47,11 +47,21 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       guard let self else { return }
       RunLoop.main.perform {
         let time = self.mediaProgress.currentTime
-        if self.isShuffled {
-          self.currentIndex = self.chapters.unsortedIndex(for: time)
+        let newIndex =
+          self.isShuffled
+          ? self.chapters.unsortedIndex(for: time)
+          : self.chapters.index(for: time)
+
+        if self.repeatMode == .one,
+          newIndex != self.currentIndex,
+          self.currentIndex < self.chapters.count
+        {
+          let seekTime = self.chapters[self.currentIndex].start + 0.1
+          self.player.seek(to: seekTime)
         } else {
-          self.currentIndex = self.chapters.index(for: time)
+          self.currentIndex = newIndex
         }
+
         self.updateNavigation()
         self.observeMediaProgress()
       }
@@ -62,6 +72,14 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     canGoPreviousChapter = currentIndex > 0
     let isLastChapter = currentIndex == chapters.count - 1
     canGoNextChapter = !isLastChapter || (!playerManager.queue.isEmpty && userPreferences.autoPlayNextInQueue)
+  }
+
+  override func onRepeatTapped() {
+    switch repeatMode {
+    case .off: repeatMode = .all
+    case .all: repeatMode = .one
+    case .one: repeatMode = .off
+    }
   }
 
   override func onShuffleTapped() {

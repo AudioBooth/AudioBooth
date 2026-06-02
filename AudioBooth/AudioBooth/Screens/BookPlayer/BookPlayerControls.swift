@@ -6,7 +6,7 @@ struct BookPlayerControls: View {
 
   var body: some View {
     HStack(spacing: 0) {
-      if let chapters = model.chapters, !preferences.hideChapterSkipButtons {
+      if let chapters = model.chapters, chapters.chapters.count > 1, !preferences.hideChapterSkipButtons {
         Button(action: {
           Haptics.impact(.light)
           chapters.onPreviousChapterTapped()
@@ -86,7 +86,7 @@ struct BookPlayerControls: View {
 
       Spacer(minLength: 8)
 
-      if let chapters = model.chapters, !preferences.hideChapterSkipButtons {
+      if let chapters = model.chapters, chapters.chapters.count > 1, !preferences.hideChapterSkipButtons {
         Button(action: {
           Haptics.impact(.light)
           chapters.onNextChapterTapped()

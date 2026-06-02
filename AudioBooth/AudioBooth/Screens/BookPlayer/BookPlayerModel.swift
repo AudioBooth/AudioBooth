@@ -680,20 +680,31 @@ extension BookPlayerModel {
       bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook), initialTime: 0)
     }
 
-    if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
-      chapters = ChapterPickerSheetViewModel(
-        itemID: id,
-        chapters: sessionChapters,
-        mediaProgress: mediaProgress,
-        player: player
-      )
+    let sessionChapters = item?.orderedChapters ?? []
+    let resolvedChapters: [Models.Chapter]
+    if sessionChapters.isEmpty {
+      resolvedChapters = [
+        Models.Chapter(
+          id: 0,
+          start: 0,
+          end: mediaProgress.duration,
+          title: item?.title ?? ""
+        )
+      ]
+      AppLogger.player.debug("No chapters in session info — using synthetic full-book chapter")
+    } else {
+      resolvedChapters = sessionChapters
       AppLogger.player.debug(
         "Loaded \(sessionChapters.count) chapters from play session info"
       )
-    } else {
-      chapters = nil
-      AppLogger.player.debug("No chapters available in play session info")
     }
+
+    chapters = ChapterPickerSheetViewModel(
+      itemID: id,
+      chapters: resolvedChapters,
+      mediaProgress: mediaProgress,
+      player: player
+    )
 
     timer = TimerPickerSheetViewModel(itemID: id, player: player, chapters: chapters, speed: speed)
 
@@ -1118,6 +1129,11 @@ extension BookPlayerModel {
       mediaProgress.remaining <= 60
     else { return }
 
+    if chapters?.repeatMode != .off {
+      repeatItem()
+      return
+    }
+
     if let localBook = item as? LocalBook {
       Task {
         try? await localBook.markAsFinished()
@@ -1132,6 +1148,18 @@ extension BookPlayerModel {
 
     ReviewRequestManager.shared.recordBookCompletion()
     playerManager.playNext(autoPlay: autoPlayNext)
+  }
+
+  private func repeatItem() {
+    guard let player else { return }
+    AppLogger.player.debug("🔁 Repeat enabled — restarting book from start")
+    mediaProgress.currentTime = 0
+    mediaProgress.progress = 0
+    chapters?.currentIndex = 0
+    Task { @MainActor in
+      player.seek(to: 0)
+      player.resume()
+    }
   }
 }
 

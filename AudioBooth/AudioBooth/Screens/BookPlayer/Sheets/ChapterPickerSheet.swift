@@ -51,13 +51,6 @@ struct ChapterPickerSheet: View {
       .navigationTitle("Chapters")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button(action: model.onShuffleTapped) {
-            Image(systemName: "shuffle")
-          }
-          .tint(model.isShuffled ? .accentColor : .primary)
-        }
-
         ToolbarItem(placement: .topBarTrailing) {
           Button(
             action: { model.isPresented = false },
@@ -66,6 +59,21 @@ struct ChapterPickerSheet: View {
             }
           )
           .tint(.primary)
+        }
+
+        ToolbarItemGroup(placement: .bottomBar) {
+          Button(action: model.onShuffleTapped) {
+            Label("Shuffle", systemImage: "shuffle")
+          }
+          .tint(model.isShuffled ? .accentColor : .primary)
+          .disabled(model.chapters.count <= 1)
+
+          Spacer()
+
+          Button(action: model.onRepeatTapped) {
+            Label(model.repeatMode.label, systemImage: model.repeatMode.iconName)
+          }
+          .tint(model.repeatMode == .off ? .primary : .accentColor)
         }
       }
     }
@@ -94,10 +102,32 @@ extension ChapterPickerSheet {
       let start: TimeInterval
       let end: TimeInterval
     }
+    nonisolated enum RepeatMode {
+      case off
+      case all
+      case one
+
+      var iconName: String {
+        switch self {
+        case .off, .all: "repeat"
+        case .one: "repeat.1"
+        }
+      }
+
+      var label: LocalizedStringResource {
+        switch self {
+        case .off: "Repeat"
+        case .all: "Repeat All"
+        case .one: "Repeat Chapter"
+        }
+      }
+    }
+
     var chapters: [Chapter]
     var currentIndex: Int
     var isPresented: Bool = false
     var isShuffled: Bool = false
+    var repeatMode: RepeatMode = .off
     var canGoPreviousChapter: Bool = false
     var canGoNextChapter: Bool = false
 
@@ -110,6 +140,7 @@ extension ChapterPickerSheet {
     func onPreviousChapterTapped() {}
     func onNextChapterTapped() {}
     func onShuffleTapped() {}
+    func onRepeatTapped() {}
   }
 }
 
