@@ -184,7 +184,9 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     PlaybackHistory.record(itemID: itemID, action: .timerStarted, position: player.time)
     isPresented = false
 
-    player.resume()
+    if !player.isPlaying {
+      player.resume()
+    }
   }
 
   private func calculateChapterDuration(for chapterCount: Int) -> TimeInterval? {
