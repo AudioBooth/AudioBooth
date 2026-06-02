@@ -476,12 +476,22 @@ extension BookPlayer {
 
     @ViewBuilder
     private var alarmOverlay: some View {
-      if model.timer.isAlarmActive {
-        let countdown = model.timer.alarmCountdownText
+      if let alarm = model.timer.alarmCurrent, !model.timer.isAlarmRinging {
         badge(
           icon: "bell.fill",
-          text: Text(countdown),
-          accessibilityLabel: "Alarm set: \(countdown) remaining"
+          text: Text(
+            timerInterval: Date()...alarm.nextTrigger,
+            pauseTime: nil,
+            countsDown: true,
+            showsHours: true
+          ),
+          accessibilityLabel: "Alarm set"
+        )
+      } else if model.timer.isAlarmActive {
+        badge(
+          icon: "bell.fill",
+          text: Text("00:00:00"),
+          accessibilityLabel: "Alarm ringing"
         )
       } else {
         EmptyView()

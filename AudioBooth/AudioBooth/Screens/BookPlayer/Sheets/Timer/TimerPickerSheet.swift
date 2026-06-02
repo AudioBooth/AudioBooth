@@ -337,10 +337,22 @@ struct TimerPickerSheet: View {
 
       if model.alarmCurrent != nil {
         VStack(spacing: 14) {
-          Text(model.alarmCountdownText)
+          if let alarm = model.alarmCurrent, !model.isAlarmRinging {
+            Text(
+              timerInterval: Date()...alarm.nextTrigger,
+              pauseTime: nil,
+              countsDown: true,
+              showsHours: true
+            )
             .font(.system(size: 34, weight: .bold, design: .monospaced))
             .monospacedDigit()
             .frame(maxWidth: .infinity, alignment: .center)
+          } else {
+            Text("00:00:00")
+              .font(.system(size: 34, weight: .bold, design: .monospaced))
+              .monospacedDigit()
+              .frame(maxWidth: .infinity, alignment: .center)
+          }
 
           VStack(spacing: 6) {
             HStack {
