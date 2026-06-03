@@ -1050,7 +1050,7 @@
 			repositoryURL = "https://github.com/readium/swift-toolkit.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.6.0;
+				minimumVersion = 3.9.0;
 			};
 		};
 		3F3AF2672E91DA350052C80D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {

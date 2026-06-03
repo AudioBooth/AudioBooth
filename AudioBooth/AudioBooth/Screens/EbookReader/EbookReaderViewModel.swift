@@ -3,7 +3,6 @@ import Combine
 import Foundation
 import Logging
 import Models
-import ReadiumAdapterGCDWebServer
 import ReadiumNavigator
 import ReadiumShared
 import ReadiumStreamer
@@ -20,7 +19,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private let source: Source
   private let bookID: String?
   private var publication: Publication?
-  private var httpServer: HTTPServer?
   private var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
   private let audiobookshelf = Audiobookshelf.shared
@@ -126,9 +124,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       self.supportsSearch = publication.isSearchable
       self.positions = (try? await publication.positions().get()) ?? []
 
-      let httpServer = GCDHTTPServer(assetRetriever: assetRetriever)
-      self.httpServer = httpServer
-
       let initialLocation: Locator?
       if let bookID {
         let mediaProgress = try? MediaProgress.fetch(bookID: bookID)
@@ -149,7 +144,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       let navigator = try createNavigator(
         for: publication,
-        httpServer: httpServer,
         initialLocation: initialLocation
       )
       self.navigator = navigator
@@ -171,10 +165,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   private func createNavigator(
     for publication: Publication,
-    httpServer: HTTPServer,
     initialLocation: Locator?
   ) throws -> any Navigator {
-    if publication.conforms(to: .epub) {
+    if publication.conforms(to: .epub) || publication.conforms(to: .divina) {
       let navigator = try EPUBNavigatorViewController(
         publication: publication,
         initialLocation: initialLocation,
@@ -184,8 +177,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
             .compact: (top: 0, bottom: 0),
             .regular: (top: 0, bottom: 0),
           ]
-        ),
-        httpServer: httpServer
+        )
       )
       navigator.delegate = self
       return navigator
@@ -193,16 +185,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       let navigator = try PDFNavigatorViewController(
         publication: publication,
         initialLocation: initialLocation,
-        config: .init(),
-        httpServer: httpServer
-      )
-      navigator.delegate = self
-      return navigator
-    } else if publication.conforms(to: .divina) {
-      let navigator = try CBZNavigatorViewController(
-        publication: publication,
-        initialLocation: initialLocation,
-        httpServer: httpServer
+        config: .init()
       )
       navigator.delegate = self
       return navigator
@@ -439,7 +422,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     var location = navigator?.currentLocation
     location?.locations.totalProgression = nil
 
-    let ebookLocation = location?.jsonString
+    let ebookLocation = try? location?.jsonString()
 
     try? MediaProgress.updateEbookProgress(
       for: bookID,
@@ -522,7 +505,7 @@ extension EbookReaderViewModel {
   }
 }
 
-extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate, CBZNavigatorDelegate {
+extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
   func navigator(_ navigator: Navigator, locationDidChange locator: Locator) {
     updateProgress()
     updateCurrentChapterIndex()
