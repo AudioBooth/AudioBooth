@@ -335,11 +335,8 @@ struct BookPlayer: View {
 
     case .timer:
       let isActive: Bool = {
-        let isSleepTimerActive: Bool = {
-          if case .none = model.timer.current { return false }
-          return true
-        }()
-        return isSleepTimerActive || model.timer.isAlarmActive
+        if case .none = model.timer.current { return false }
+        return true
       }()
       Button(action: {
         Haptics.impact(.soft)
@@ -469,32 +466,24 @@ extension BookPlayer {
         let label = count > 1 ? "End of \(count) chapters" : "End of chapter"
         let accessibilityLabel = "Sleep timer: \(label)"
         badge(icon: "timer", text: Text(label), accessibilityLabel: accessibilityLabel)
-      case .none:
+      case .atTime, .duration, .none:
         EmptyView()
       }
     }
 
     @ViewBuilder
     private var alarmOverlay: some View {
-      if let alarm = model.timer.alarmCurrent, !model.timer.isAlarmRinging {
+      if case .atTime(let trigger) = model.timer.current {
         badge(
           icon: "bell.fill",
           text: Text(
-            timerInterval: Date()...alarm.nextTrigger,
+            timerInterval: Date()...trigger,
             pauseTime: nil,
             countsDown: true,
             showsHours: true
           ),
           accessibilityLabel: "Alarm set"
         )
-      } else if model.timer.isAlarmActive {
-        badge(
-          icon: "bell.fill",
-          text: Text("00:00:00"),
-          accessibilityLabel: "Alarm ringing"
-        )
-      } else {
-        EmptyView()
       }
     }
 

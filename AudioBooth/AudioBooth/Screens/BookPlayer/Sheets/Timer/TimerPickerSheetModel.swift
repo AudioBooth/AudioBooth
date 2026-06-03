@@ -44,15 +44,6 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     customHours = totalMinutes / 60
     customMinutes = totalMinutes % 60
 
-    let calendar = Calendar.current
-    alarmSelectedTime =
-      calendar.date(
-        bySettingHour: 7,
-        minute: 0,
-        second: 0,
-        of: .now
-      ) ?? .now
-
     if let chapters {
       maxRemainingChapters = chapters.chapters.count - chapters.currentIndex - 1
       lastObservedChapterIndex = chapters.currentIndex
@@ -191,7 +182,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       if let duration = calculateChapterDuration(for: count) {
         startLiveActivity(duration: duration)
       }
-    case .none:
+    case .atTime, .duration, .none:
       break
     }
     PlaybackHistory.record(itemID: itemID, action: .timerStarted, position: player.time)
@@ -275,7 +266,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
         pauseFromTimer()
       }
 
-    case .none, .chapters:
+    case .none, .chapters, .atTime, .duration:
       stopSleepTimer()
     }
   }
@@ -464,7 +455,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     case .chapters:
       AppLogger.player.debug("Shake detected during chapter timer - no reset action")
 
-    case .none:
+    case .atTime, .duration, .none:
       break
     }
   }
@@ -472,11 +463,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   override func onAlarmStartTapped() {
     alarmSoundPlayer?.stop()
     alarmSoundPlayer = nil
-    isAlarmRinging = false
+    completedAlert = nil
 
     let triggerDate = makeAlarmTriggerDate()
-    alarmCurrent = .init(nextTrigger: triggerDate)
-    alarmCountdownText = formatAlarmCountdown(triggerDate.timeIntervalSinceNow)
+    current = .atTime(triggerDate)
 
     startAlarmTimer()
     scheduleAlarmNotification(triggerDate: triggerDate)
@@ -485,22 +475,13 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
   override func onAlarmOffTapped() {
     stopAlarmTimer()
-    alarmCurrent = nil
+    current = .none
     alarmSoundPlayer?.stop()
     alarmSoundPlayer = nil
     player.volume = Float(preferences.volumeLevel)
-    alarmCountdownText = "00:00:00"
-    isAlarmRinging = false
+    completedAlert = nil
     alarmNotificationService.cancel()
     isPresented = false
-  }
-
-  override func onAlarmAddTimeTapped() {
-    addAlarmTime(minutes: alarmAddTimeMinutes)
-  }
-
-  override func onAlarmAddTimeMinutesChanged(_ value: Int) {
-    alarmAddTimeMinutes = max(1, min(30, value))
   }
 
   private func startAlarmTimer() {
@@ -519,46 +500,51 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func updateAlarm() {
-    guard let alarm = alarmCurrent else {
+    guard case .atTime(let trigger) = current else {
       stopAlarmTimer()
       return
     }
 
-    let remaining = alarm.nextTrigger.timeIntervalSinceNow
+    let remaining = trigger.timeIntervalSinceNow
 
     if remaining <= 0 {
-      alarmCountdownText = "00:00:00"
-      isAlarmRinging = true
       player.pause()
       playAlarmTone()
       stopAlarmTimer()
+      presentAlarmRingingAlert()
       return
     }
 
-    alarmCountdownText = formatAlarmCountdown(remaining)
-    isAlarmRinging = false
-
     let fadeDuration = preferences.alarmFadeOut
     if player.isPlaying, fadeDuration > 0, remaining <= fadeDuration {
-      player.volume = Float(max(remaining, 1) / fadeDuration) * Float(preferences.volumeLevel)
+      player.volume = Float(max(remaining, 0) / fadeDuration) * Float(preferences.volumeLevel)
     }
   }
 
-  private func addAlarmTime(minutes: Int) {
-    guard var alarm = alarmCurrent else { return }
+  private func presentAlarmRingingAlert() {
+    completedAlert = TimerCompletedAlertViewModel(
+      extendAction: String(localized: "Snooze 5 min"),
+      style: .alarm,
+      onExtend: { [weak self] in
+        self?.snoozeAlarm(minutes: 5)
+      },
+      onReset: { [weak self] in
+        self?.onAlarmOffTapped()
+      }
+    )
+  }
 
+  private func snoozeAlarm(minutes: Int) {
     alarmSoundPlayer?.stop()
     alarmSoundPlayer = nil
+    completedAlert = nil
 
-    let baseTime = max(alarm.nextTrigger, Date())
-    alarm.nextTrigger = baseTime.addingTimeInterval(TimeInterval(minutes * 60))
-    alarmCurrent = alarm
-    alarmCountdownText = formatAlarmCountdown(alarm.nextTrigger.timeIntervalSinceNow)
+    let triggerDate = Date().addingTimeInterval(TimeInterval(minutes * 60))
+    current = .atTime(triggerDate)
     player.volume = Float(preferences.volumeLevel)
-    isAlarmRinging = false
 
     startAlarmTimer()
-    scheduleAlarmNotification(triggerDate: alarm.nextTrigger)
+    scheduleAlarmNotification(triggerDate: triggerDate)
   }
 
   private func playAlarmTone() {
@@ -578,10 +564,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func makeAlarmTriggerDate() -> Date {
-    switch alarmMode {
-    case .atTime:
+    switch selected {
+    case .atTime(let date):
       let calendar = Calendar.current
-      let components = calendar.dateComponents([.hour, .minute], from: alarmSelectedTime)
+      let components = calendar.dateComponents([.hour, .minute], from: date)
       let next = calendar.nextDate(
         after: .now,
         matching: DateComponents(hour: components.hour, minute: components.minute),
@@ -589,9 +575,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       )
       return next ?? Date().addingTimeInterval(60)
 
-    case .duration:
-      let totalMinutes = max(1, alarmDurationHours * 60 + alarmDurationMinutes)
-      return Date().addingTimeInterval(TimeInterval(totalMinutes * 60))
+    case .duration(let seconds):
+      return Date().addingTimeInterval(max(60, seconds))
+
+    case .preset, .custom, .chapters, .none:
+      return Date().addingTimeInterval(60)
     }
   }
 
@@ -604,13 +592,6 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
   }
 
-  private func formatAlarmCountdown(_ remaining: TimeInterval) -> String {
-    let seconds = max(0, Int(remaining.rounded(.down)))
-    let hours = seconds / 3600
-    let minutes = (seconds % 3600) / 60
-    let secs = seconds % 60
-    return String(format: "%02d:%02d:%02d", hours, minutes, secs)
-  }
 }
 
 extension TimerPickerSheetViewModel {
@@ -709,7 +690,7 @@ extension TimerPickerSheetViewModel {
       duration = remaining
     case .chapters(let count):
       duration = calculateChapterDuration(for: count) ?? 0
-    case .none:
+    case .atTime, .duration, .none:
       return
     }
 

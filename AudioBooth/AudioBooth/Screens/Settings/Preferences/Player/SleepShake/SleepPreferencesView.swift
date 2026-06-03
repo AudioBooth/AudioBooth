@@ -109,10 +109,10 @@ struct SleepPreferencesView: View {
           }
         } label: {
           VStack(alignment: .leading, spacing: 2) {
-            Text("Alarm Fade")
+            Text("Audio Fade Out")
               .font(.subheadline)
               .fontWeight(.medium)
-            Text("Fade duration prior to alarm")
+            Text("Gentle fade before alerting")
               .font(.caption)
               .foregroundStyle(.secondary)
           }

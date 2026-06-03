@@ -21,16 +21,16 @@ struct TimerCompletedAlertView: View {
       }
       .padding(.top, 24)
 
-      Image(systemName: "timer")
+      Image(systemName: model.style.icon)
         .font(.system(size: 60))
         .foregroundStyle(.secondary)
 
       VStack(spacing: 8) {
-        Text("Time's up")
+        Text(model.style.title)
           .font(.title2)
           .bold()
 
-        Text("Extend the timer or shake your phone to keep listening.")
+        Text(model.style.message)
           .font(.body)
           .foregroundStyle(.secondary)
           .multilineTextAlignment(.center)
@@ -52,7 +52,7 @@ struct TimerCompletedAlertView: View {
         Button(
           action: model.onResetTapped,
           label: {
-            Text("Reset timer")
+            Text(model.style.resetAction)
               .frame(maxWidth: .infinity)
           }
         )
@@ -68,11 +68,45 @@ struct TimerCompletedAlertView: View {
 }
 
 extension TimerCompletedAlertView {
+  enum Style {
+    case timer
+    case alarm
+
+    var icon: String {
+      switch self {
+      case .timer: "timer"
+      case .alarm: "bell.fill"
+      }
+    }
+
+    var title: LocalizedStringKey {
+      switch self {
+      case .timer: "Time's up"
+      case .alarm: "Alarm"
+      }
+    }
+
+    var message: LocalizedStringKey {
+      switch self {
+      case .timer: "Extend the timer or shake your phone to keep listening."
+      case .alarm: "Snooze or stop the alarm."
+      }
+    }
+
+    var resetAction: LocalizedStringKey {
+      switch self {
+      case .timer: "Reset timer"
+      case .alarm: "Stop alarm"
+      }
+    }
+  }
+
   @Observable
   class Model: ObservableObject, Identifiable {
     let id = UUID()
     let createdAt = Date()
     var extendAction: String
+    var style: Style
 
     var isExpired: Bool {
       Date().timeIntervalSince(createdAt) > 5 * 60
@@ -81,8 +115,9 @@ extension TimerCompletedAlertView {
     func onExtendTapped() {}
     func onResetTapped() {}
 
-    init(extendAction: String) {
+    init(extendAction: String, style: Style = .timer) {
       self.extendAction = extendAction
+      self.style = style
     }
   }
 }

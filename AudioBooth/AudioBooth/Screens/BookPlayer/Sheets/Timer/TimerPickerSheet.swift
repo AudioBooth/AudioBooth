@@ -2,55 +2,145 @@ import SwiftUI
 
 struct TimerPickerSheet: View {
   @Binding var model: Model
-  @State private var isCustomExpended: Bool = false
 
   var body: some View {
-    VStack(spacing: 0) {
-      VStack(spacing: 24) {
-        Text(model.selectedTab == .timer ? "Timer" : "Alarm")
-          .font(.title2)
-          .fontWeight(.semibold)
-          .foregroundColor(.primary)
-          .padding(.top, 50)
+    Group {
+      if case .none = model.current {
+        pickerContent
+      } else {
+        runningContent
+      }
+    }
+    .safeAreaInset(edge: .bottom) {
+      if case .none = model.current {
+        pickerFooter
+      } else {
+        runningFooter
+      }
+    }
+  }
 
-        Picker("Mode", selection: $model.selectedTab) {
-          ForEach(Model.Tab.allCases) { tab in
-            Text(tab.displayName).tag(tab)
+  @ViewBuilder
+  private var pickerContent: some View {
+    VStack(spacing: 24) {
+      Picker("Mode", selection: selectedTab) {
+        ForEach(Model.Tab.allCases) { tab in
+          Text(tab.displayName).tag(tab)
+        }
+      }
+      .pickerStyle(.segmented)
+      .controlSize(.extraLarge)
+      .padding(.horizontal, 20)
+      .padding(.top, 30)
+
+      if selectedTab.wrappedValue == .timer {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+          ForEach([15, 30, 45, 60], id: \.self) { minutes in
+            quickTimerButton(for: minutes)
           }
         }
-        .pickerStyle(.segmented)
         .padding(.horizontal, 20)
 
-        if model.selectedTab == .timer {
-          LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-            ForEach([15, 30, 45, 60], id: \.self) { minutes in
-              quickTimerButton(for: minutes)
-            }
-          }
-          .padding(.horizontal, 20)
+        customTimeSection()
 
-          customTimeSection()
-
-          endOfChapterSection()
-
-          offButton()
-        } else {
-          alarmSection()
-        }
-      }
-      .padding(.bottom, 40)
-    }
-    .overlay(alignment: .topTrailing) {
-      if model.selectedTab == .timer {
-        Button("Start") {
-          model.onStartTimerTapped()
-        }
-        .buttonStyle(.bordered)
-        .disabled(model.selected == .none)
-        .tint(.primary)
-        .padding()
+        endOfChapterSection()
+      } else {
+        alarmSection()
       }
     }
+    .padding(.bottom, 24)
+  }
+
+  @ViewBuilder
+  private var pickerFooter: some View {
+    Button {
+      if selectedTab.wrappedValue == .timer {
+        model.onStartTimerTapped()
+      } else {
+        model.onAlarmStartTapped()
+      }
+    } label: {
+      Text("Set").frame(maxWidth: .infinity)
+    }
+    .buttonStyle(.borderedProminent)
+    .controlSize(.large)
+    .disabled(startDisabled)
+    .padding(.horizontal, 20)
+    .padding(.bottom, 20)
+  }
+
+  private var startDisabled: Bool {
+    if selectedTab.wrappedValue == .timer {
+      return model.selected == .none
+    }
+    if case .duration(0) = model.selected { return true }
+    return false
+  }
+
+  @ViewBuilder
+  private var runningContent: some View {
+    VStack(spacing: 16) {
+      Image(systemName: runningIcon)
+        .font(.system(size: 44))
+        .foregroundStyle(.secondary)
+
+      Text(runningTitle)
+        .font(.title2)
+        .fontWeight(.semibold)
+
+      runningCountdown
+        .font(.system(size: 40, weight: .bold, design: .monospaced))
+        .monospacedDigit()
+    }
+    .padding(.top, 60)
+    .frame(maxWidth: .infinity)
+  }
+
+  private var runningIcon: String {
+    if case .atTime = model.current { return "bell.fill" }
+    return "timer"
+  }
+
+  private var runningTitle: LocalizedStringKey {
+    if case .atTime = model.current { return "Alarm" }
+    return "Sleep timer"
+  }
+
+  @ViewBuilder
+  private var runningCountdown: some View {
+    switch model.current {
+    case .preset(let seconds), .custom(let seconds), .duration(let seconds):
+      Text(Duration.seconds(seconds).formatted(.time(pattern: .hourMinuteSecond)))
+    case .chapters(let count):
+      Text(count == 1 ? "End of chapter" : "End of \(count) chapters")
+    case .atTime(let trigger):
+      Text(
+        timerInterval: Date()...trigger,
+        pauseTime: nil,
+        countsDown: true,
+        showsHours: true
+      )
+    case .none:
+      EmptyView()
+    }
+  }
+
+  @ViewBuilder
+  private var runningFooter: some View {
+    Button {
+      if case .atTime = model.current {
+        model.onAlarmOffTapped()
+      } else {
+        model.onOffSelected()
+      }
+    } label: {
+      Text("Cancel").frame(maxWidth: .infinity)
+    }
+    .buttonStyle(.borderedProminent)
+    .controlSize(.large)
+    .tint(.red)
+    .padding(.horizontal, 20)
+    .padding(.bottom, 20)
   }
 
   @ViewBuilder
@@ -88,7 +178,6 @@ struct TimerPickerSheet: View {
 
     VStack(spacing: 0) {
       Button(action: {
-        isCustomExpended = true
         model.selected = .custom(TimeInterval(model.customHours * 3600 + model.customMinutes * 60))
       }) {
         HStack {
@@ -107,7 +196,7 @@ struct TimerPickerSheet: View {
       }
       .buttonStyle(.plain)
 
-      if isCustomExpended {
+      if case .custom = model.selected {
         VStack(spacing: 16) {
           HStack {
             HStack {
@@ -242,36 +331,6 @@ struct TimerPickerSheet: View {
     .padding(.horizontal, 20)
   }
 
-  @ViewBuilder
-  func offButton() -> some View {
-    Button(action: model.onOffSelected) {
-      RoundedRectangle(cornerRadius: 8)
-        .stroke(
-          {
-            if case .none = model.selected {
-              return Color.accentColor
-            }
-            return .primary.opacity(0.3)
-          }(),
-          lineWidth: {
-            if case .none = model.selected {
-              return 2
-            }
-            return 1
-          }()
-        )
-        .frame(height: 44)
-        .overlay {
-          Text("Off")
-            .font(.system(size: 16, weight: .medium))
-            .foregroundColor(.primary)
-        }
-        .interactiveTarget()
-    }
-    .buttonStyle(.plain)
-    .padding(.horizontal, 20)
-  }
-
   private func formatCustomTime(hours: Int, minutes: Int) -> String {
     if hours > 0 {
       "\(hours)hr \(minutes)min"
@@ -280,22 +339,57 @@ struct TimerPickerSheet: View {
     }
   }
 
+  private var selectedTab: Binding<Model.Tab> {
+    Binding(
+      get: { model.selected.isAlarm ? .alarm : .timer },
+      set: { newValue in
+        switch newValue {
+        case .timer: model.selected = .none
+        case .alarm: model.selected = .atTime(.now.advanced(by: 600))
+        }
+      }
+    )
+  }
+
+  private var isDurationMode: Binding<Bool> {
+    Binding(
+      get: { if case .duration = model.selected { true } else { false } },
+      set: { newValue in
+        if newValue {
+          let seconds = TimeInterval(model.customHours * 3600 + model.customMinutes * 60)
+          model.selected = .duration(seconds)
+        } else {
+          model.selected = .atTime(.now.advanced(by: 600))
+        }
+      }
+    )
+  }
+
+  private var alarmSelectedTime: Binding<Date> {
+    Binding(
+      get: {
+        if case .atTime(let date) = model.selected { return date }
+        return .now.advanced(by: 600)
+      },
+      set: { model.selected = .atTime($0) }
+    )
+  }
+
   @ViewBuilder
   private func alarmSection() -> some View {
     VStack(spacing: 20) {
-      Picker("Alarm Type", selection: $model.alarmMode) {
-        ForEach(Model.AlarmMode.allCases) { mode in
-          Text(mode.displayName).tag(mode)
-        }
+      Picker("Alarm Type", selection: isDurationMode) {
+        Text("At Time").tag(false)
+        Text("In Duration").tag(true)
       }
       .pickerStyle(.segmented)
       .padding(.horizontal, 20)
 
       ZStack {
-        if model.alarmMode == .atTime {
+        if !isDurationMode.wrappedValue {
           DatePicker(
             "Alarm time",
-            selection: $model.alarmSelectedTime,
+            selection: alarmSelectedTime,
             displayedComponents: .hourAndMinute
           )
           .datePickerStyle(.wheel)
@@ -303,7 +397,7 @@ struct TimerPickerSheet: View {
         } else {
           HStack(spacing: 20) {
             VStack(spacing: 8) {
-              Picker("Hours", selection: $model.alarmDurationHours) {
+              Picker("Hours", selection: $model.customHours) {
                 ForEach(0..<24, id: \.self) { value in
                   Text("\(value)").tag(value)
                 }
@@ -317,7 +411,7 @@ struct TimerPickerSheet: View {
             }
 
             VStack(spacing: 8) {
-              Picker("Minutes", selection: $model.alarmDurationMinutes) {
+              Picker("Minutes", selection: $model.customMinutes) {
                 ForEach(0..<60, id: \.self) { value in
                   Text("\(value)").tag(value)
                 }
@@ -331,76 +425,12 @@ struct TimerPickerSheet: View {
             }
           }
           .padding(.horizontal, 20)
+          .onChange(of: [model.customHours, model.customMinutes]) { _, new in
+            model.selected = .duration(TimeInterval(new[0] * 3600 + new[1] * 60))
+          }
         }
       }
       .frame(height: 210)
-
-      if model.alarmCurrent != nil {
-        VStack(spacing: 14) {
-          if let alarm = model.alarmCurrent, !model.isAlarmRinging {
-            Text(
-              timerInterval: Date()...alarm.nextTrigger,
-              pauseTime: nil,
-              countsDown: true,
-              showsHours: true
-            )
-            .font(.system(size: 34, weight: .bold, design: .monospaced))
-            .monospacedDigit()
-            .frame(maxWidth: .infinity, alignment: .center)
-          } else {
-            Text("00:00:00")
-              .font(.system(size: 34, weight: .bold, design: .monospaced))
-              .monospacedDigit()
-              .frame(maxWidth: .infinity, alignment: .center)
-          }
-
-          VStack(spacing: 6) {
-            HStack {
-              Text("Add Time")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-              Spacer()
-              Text("\(model.alarmAddTimeMinutes) min")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            }
-
-            Slider(
-              value: Binding(
-                get: { Double(model.alarmAddTimeMinutes) },
-                set: { model.onAlarmAddTimeMinutesChanged(Int($0.rounded())) }
-              ),
-              in: 1...30,
-              step: 1
-            )
-          }
-
-          HStack(alignment: .center, spacing: 10) {
-            let alarmStopTitle = model.isAlarmRinging ? "Stop" : "Cancel"
-
-            Button("Add Time") {
-              model.onAlarmAddTimeTapped()
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.gray)
-
-            Button(alarmStopTitle) {
-              model.onAlarmOffTapped()
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.red)
-          }
-          .frame(maxWidth: .infinity)
-        }
-        .padding(.horizontal, 20)
-      } else {
-        Button("Set Alarm") {
-          model.onAlarmStartTapped()
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(.blue)
-        .padding(.horizontal, 20)
-      }
     }
   }
 }
@@ -425,29 +455,19 @@ extension TimerPickerSheet {
       case preset(TimeInterval)
       case custom(TimeInterval)
       case chapters(Int)
+      case atTime(Date)
+      case duration(TimeInterval)
       case none
-    }
 
-    enum AlarmMode: String, CaseIterable, Identifiable {
-      case atTime
-      case duration
-
-      var id: String { rawValue }
-
-      var displayName: String {
+      var isAlarm: Bool {
         switch self {
-        case .atTime: "At Time"
-        case .duration: "In Duration"
+        case .atTime, .duration: true
+        default: false
         }
       }
     }
 
-    struct AlarmState: Equatable {
-      var nextTrigger: Date
-    }
-
     var isPresented: Bool = false
-    var selectedTab: Tab = .timer
     var selected: Selection = .none
     var current: Selection = .none
     var customHours: Int = 0
@@ -455,15 +475,6 @@ extension TimerPickerSheet {
     var maxRemainingChapters: Int = 0
     var completedAlert: TimerCompletedAlertView.Model?
     var estimatedEndTime: String?
-    var alarmMode: AlarmMode = .atTime
-    var alarmSelectedTime: Date = .now
-    var alarmDurationHours: Int = 0
-    var alarmDurationMinutes: Int = 15
-    var alarmAddTimeMinutes: Int = 5
-    var alarmCountdownText: String = "00:00:00"
-    var alarmCurrent: AlarmState?
-    var isAlarmRinging: Bool = false
-    var isAlarmActive: Bool { alarmCurrent != nil }
 
     init() {}
 
@@ -473,8 +484,6 @@ extension TimerPickerSheet {
     func onStartTimerTapped() {}
     func onAlarmStartTapped() {}
     func onAlarmOffTapped() {}
-    func onAlarmAddTimeTapped() {}
-    func onAlarmAddTimeMinutesChanged(_ value: Int) {}
   }
 }
 
