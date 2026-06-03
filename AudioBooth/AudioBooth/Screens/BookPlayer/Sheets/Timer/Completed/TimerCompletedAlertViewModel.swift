@@ -7,13 +7,20 @@ final class TimerCompletedAlertViewModel: TimerCompletedAlertView.Model {
   private let onReset: () -> Void
   private var cancellables = Set<AnyCancellable>()
 
-  init(extendAction: String, onExtend: @escaping () -> Void, onReset: @escaping () -> Void) {
+  init(
+    extendAction: String,
+    style: TimerCompletedAlertView.Style = .timer,
+    onExtend: @escaping () -> Void,
+    onReset: @escaping () -> Void
+  ) {
     self.onExtend = onExtend
     self.onReset = onReset
 
-    super.init(extendAction: extendAction)
+    super.init(extendAction: extendAction, style: style)
 
-    setupShakeObserver()
+    if style == .timer {
+      setupShakeObserver()
+    }
     setupForegroundObserver()
   }
 

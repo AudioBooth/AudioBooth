@@ -7,6 +7,7 @@ struct SleepPreferencesView: View {
   private let durationOptions: [TimeInterval] = [300, 600, 900, 1200, 1800, 2700, 3600]
   private let chapterOptions: [Int] = [1, 2, 3]
   private let fadeOptions: [Double] = [0, 15, 30, 60]
+  private let alarmFadeOptions: [Double] = [0, 5, 10, 15, 30, 60]
 
   private var autoSleepEnabled: Binding<Bool> {
     Binding(
@@ -100,10 +101,30 @@ struct SleepPreferencesView: View {
         Text("Shake your phone during playback to reset the timer.")
           .font(.caption)
       }
+
+      Section {
+        Picker(selection: $preferences.alarmFadeOut) {
+          ForEach(alarmFadeOptions, id: \.self) { value in
+            Text(alarmFadeLabel(value)).tag(value)
+          }
+        } label: {
+          VStack(alignment: .leading, spacing: 2) {
+            Text("Audio Fade Out")
+              .font(.subheadline)
+              .fontWeight(.medium)
+            Text("Gentle fade before alerting")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
+        .listRowBackground(theme.colors.background.card)
+      } header: {
+        Text("Alarm")
+      }
     }
     .scrollContentBackground(.hidden)
     .background(theme.colors.background.page)
-    .navigationTitle("Sleep & Shake")
+    .navigationTitle("Sleep Timer and Alarm")
   }
 
   private func durationLabel(_ seconds: TimeInterval) -> String {
@@ -117,6 +138,13 @@ struct SleepPreferencesView: View {
   private func fadeLabel(_ value: Double) -> String {
     if value == 0 { return String(localized: "Off") }
     return Duration.seconds(value).formatted(.units(allowed: [.seconds], width: .abbreviated))
+  }
+
+  private func alarmFadeLabel(_ value: Double) -> String {
+    if value == 0 {
+      return String(localized: "No Fade")
+    }
+    return Duration.seconds(value).formatted()
   }
 }
 

@@ -334,6 +334,10 @@ struct BookPlayer: View {
       .frame(maxWidth: .infinity)
 
     case .timer:
+      let isActive: Bool = {
+        if case .none = model.timer.current { return false }
+        return true
+      }()
       Button(action: {
         Haptics.impact(.soft)
         model.timer.isPresented = true
@@ -345,6 +349,7 @@ struct BookPlayer: View {
           Text(control.displayName)
             .font(.caption2)
         }
+        .foregroundStyle(isActive ? Color.accentColor : Color.white.opacity(0.7))
       }
       .frame(maxWidth: .infinity)
 
@@ -436,7 +441,10 @@ extension BookPlayer {
         badge(text: Text(progress), accessibilityLabel: progress)
       }
       .overlay(alignment: .topTrailing) {
-        timerOverlay
+        VStack(alignment: .trailing, spacing: 6) {
+          timerOverlay
+          alarmOverlay
+        }
       }
       .buttonStyle(.plain)
     }
@@ -458,8 +466,24 @@ extension BookPlayer {
         let label = count > 1 ? "End of \(count) chapters" : "End of chapter"
         let accessibilityLabel = "Sleep timer: \(label)"
         badge(icon: "timer", text: Text(label), accessibilityLabel: accessibilityLabel)
-      case .none:
+      case .atTime, .duration, .none:
         EmptyView()
+      }
+    }
+
+    @ViewBuilder
+    private var alarmOverlay: some View {
+      if case .atTime(let trigger) = model.timer.current {
+        badge(
+          icon: "bell.fill",
+          text: Text(
+            timerInterval: Date()...trigger,
+            pauseTime: nil,
+            countsDown: true,
+            showsHours: true
+          ),
+          accessibilityLabel: "Alarm set"
+        )
       }
     }
 

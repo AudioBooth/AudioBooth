@@ -1,4 +1,5 @@
 import Combine
+import AVFoundation
 import Foundation
 import Logging
 import Models
@@ -15,8 +16,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   let player: AudioPlayer
   private let chapters: ChapterPickerSheet.Model?
   private let speed: FloatPickerSheet.Model
+  private let alarmNotificationService = AlarmNotificationService()
 
   private var sleepTimer: Timer?
+  private var alarmTimer: Timer?
+  private var alarmSoundPlayer: AVAudioPlayer?
   private var timerStartTime: Date?
   private var originalTimerDuration: TimeInterval = 0
   private var lastObservedChapterIndex: Int = 0
@@ -178,7 +182,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       if let duration = calculateChapterDuration(for: count) {
         startLiveActivity(duration: duration)
       }
-    case .none:
+    case .atTime, .duration, .none:
       break
     }
     PlaybackHistory.record(itemID: itemID, action: .timerStarted, position: player.time)
@@ -262,7 +266,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
         pauseFromTimer()
       }
 
-    case .none, .chapters:
+    case .none, .chapters, .atTime, .duration:
       stopSleepTimer()
     }
   }
@@ -451,10 +455,143 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     case .chapters:
       AppLogger.player.debug("Shake detected during chapter timer - no reset action")
 
-    case .none:
+    case .atTime, .duration, .none:
       break
     }
   }
+
+  override func onAlarmStartTapped() {
+    alarmSoundPlayer?.stop()
+    alarmSoundPlayer = nil
+    completedAlert = nil
+
+    let triggerDate = makeAlarmTriggerDate()
+    current = .atTime(triggerDate)
+
+    startAlarmTimer()
+    scheduleAlarmNotification(triggerDate: triggerDate)
+    isPresented = false
+  }
+
+  override func onAlarmOffTapped() {
+    stopAlarmTimer()
+    current = .none
+    alarmSoundPlayer?.stop()
+    alarmSoundPlayer = nil
+    player.volume = Float(preferences.volumeLevel)
+    completedAlert = nil
+    alarmNotificationService.cancel()
+    isPresented = false
+  }
+
+  private func startAlarmTimer() {
+    stopAlarmTimer()
+    alarmTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+      self?.updateAlarm()
+    }
+    if let alarmTimer {
+      RunLoop.current.add(alarmTimer, forMode: .common)
+    }
+  }
+
+  private func stopAlarmTimer() {
+    alarmTimer?.invalidate()
+    alarmTimer = nil
+  }
+
+  private func updateAlarm() {
+    guard case .atTime(let trigger) = current else {
+      stopAlarmTimer()
+      return
+    }
+
+    let remaining = trigger.timeIntervalSinceNow
+
+    if remaining <= 0 {
+      player.pause()
+      playAlarmTone()
+      stopAlarmTimer()
+      presentAlarmRingingAlert()
+      return
+    }
+
+    let fadeDuration = preferences.alarmFadeOut
+    if player.isPlaying, fadeDuration > 0, remaining <= fadeDuration {
+      player.volume = Float(max(remaining, 0) / fadeDuration) * Float(preferences.volumeLevel)
+    }
+  }
+
+  private func presentAlarmRingingAlert() {
+    completedAlert = TimerCompletedAlertViewModel(
+      extendAction: String(localized: "Snooze 5 min"),
+      style: .alarm,
+      onExtend: { [weak self] in
+        self?.snoozeAlarm(minutes: 5)
+      },
+      onReset: { [weak self] in
+        self?.onAlarmOffTapped()
+      }
+    )
+  }
+
+  private func snoozeAlarm(minutes: Int) {
+    alarmSoundPlayer?.stop()
+    alarmSoundPlayer = nil
+    completedAlert = nil
+
+    let triggerDate = Date().addingTimeInterval(TimeInterval(minutes * 60))
+    current = .atTime(triggerDate)
+    player.volume = Float(preferences.volumeLevel)
+
+    startAlarmTimer()
+    scheduleAlarmNotification(triggerDate: triggerDate)
+  }
+
+  private func playAlarmTone() {
+    guard let url = Bundle.main.url(forResource: "alarm_tone", withExtension: "wav") else {
+      return
+    }
+
+    do {
+      let alarmPlayer = try AVAudioPlayer(contentsOf: url)
+      alarmPlayer.numberOfLoops = -1
+      alarmPlayer.prepareToPlay()
+      alarmPlayer.play()
+      alarmSoundPlayer = alarmPlayer
+    } catch {
+      alarmSoundPlayer = nil
+    }
+  }
+
+  private func makeAlarmTriggerDate() -> Date {
+    switch selected {
+    case .atTime(let date):
+      let calendar = Calendar.current
+      let components = calendar.dateComponents([.hour, .minute], from: date)
+      let next = calendar.nextDate(
+        after: .now,
+        matching: DateComponents(hour: components.hour, minute: components.minute),
+        matchingPolicy: .nextTime
+      )
+      return next ?? Date().addingTimeInterval(60)
+
+    case .duration(let seconds):
+      return Date().addingTimeInterval(max(60, seconds))
+
+    case .preset, .custom, .chapters, .none:
+      return Date().addingTimeInterval(60)
+    }
+  }
+
+  private func scheduleAlarmNotification(triggerDate: Date) {
+    Task { [weak self] in
+      guard let self else { return }
+      let hasPermission = await alarmNotificationService.requestAuthorizationIfNeeded()
+      guard hasPermission else { return }
+      await alarmNotificationService.schedule(triggerDate: triggerDate)
+    }
+  }
+
 }
 
 extension TimerPickerSheetViewModel {
@@ -553,7 +690,7 @@ extension TimerPickerSheetViewModel {
       duration = remaining
     case .chapters(let count):
       duration = calculateChapterDuration(for: count) ?? 0
-    case .none:
+    case .atTime, .duration, .none:
       return
     }
 
