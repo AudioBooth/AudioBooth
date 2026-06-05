@@ -379,6 +379,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       .sink { [weak self] states in
         guard let self else { return }
         self.downloadState = states[bookID] ?? .notDownloaded
+        self.updateActions()
       }
       .store(in: &cancellables)
   }
@@ -388,6 +389,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     itemObservation = Task { [weak self] in
       for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
         self?.localBook = updatedItem
+        self?.updateActions()
       }
     }
   }
@@ -453,6 +455,15 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       updatedActions.insert(.openOnWeb)
       if !ereaderDevices.isEmpty {
         updatedActions.insert(.sendToEbook)
+      }
+    }
+
+    if downloadState == .downloaded {
+      if localBook?.ebookLocalPath != nil {
+        updatedActions.insert(.shareEbook)
+      }
+      if localBook?.orderedTracks.contains(where: { $0.localPath != nil }) == true {
+        updatedActions.insert(.shareAudio)
       }
     }
 
@@ -552,6 +563,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       downloadState = .downloading(progress: 0)
       try? book.download()
     }
+
+    updateActions()
   }
 
   override func onMarkFinishedTapped() {
@@ -606,6 +619,39 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
   }
 
+  override func onShareEbookTapped() {
+    guard let ebookURL = localBook?.ebookLocalPath else {
+      Toast(error: "Download the ebook before sharing it").show()
+      return
+    }
+    presentShareSheet(for: preparedEbookFile(from: ebookURL))
+  }
+
+  override func onShareAudioTapped() {
+    let trackURLs = localBook?.orderedTracks.compactMap(\.localPath) ?? []
+    guard !trackURLs.isEmpty else {
+      Toast(error: "Download the audiobook before sharing it").show()
+      return
+    }
+
+    let preparedTitle = Self.sanitizedShareName(from: title)
+
+    isPreparingShare = true
+    Task { [weak self] in
+      let item = await Task.detached(priority: .userInitiated) {
+        Self.prepareAudioShareItem(trackURLs: trackURLs, title: preparedTitle)
+      }.value
+
+      guard let self else { return }
+      self.isPreparingShare = false
+      guard let item else {
+        Toast(error: "Couldn't prepare the audiobook for sharing").show()
+        return
+      }
+      self.presentShareSheet(for: item)
+    }
+  }
+
   override func onAddToQueueTapped() {
     if let book {
       playerManager.addToQueue(book)
@@ -637,6 +683,122 @@ extension BookDetailsViewModel {
     {
       rootViewController.present(safariViewController, animated: true)
     }
+  }
+
+  private func presentShareSheet(for fileURL: URL) {
+    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+      let window = windowScene.windows.first,
+      var topController = window.rootViewController
+    else {
+      AppLogger.viewModel.error("Could not find root view controller to present share sheet")
+      return
+    }
+
+    while let presentedController = topController.presentedViewController {
+      topController = presentedController
+    }
+
+    let activityVC = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
+
+    activityVC.completionWithItemsHandler = { activityType, completed, _, error in
+      if let error {
+        AppLogger.viewModel.error("Share failed: \(error.localizedDescription)")
+        Toast(error: "Couldn't share: \(error.localizedDescription)").show()
+      } else {
+        AppLogger.viewModel.info(
+          "Share: activity=\(activityType?.rawValue ?? "none") completed=\(completed)"
+        )
+      }
+    }
+
+    if let popover = activityVC.popoverPresentationController {
+      popover.sourceView = topController.view
+      popover.sourceRect = CGRect(
+        x: topController.view?.bounds.midX ?? 0,
+        y: topController.view?.bounds.midY ?? 0,
+        width: 0,
+        height: 0
+      )
+      popover.permittedArrowDirections = []
+    }
+
+    topController.present(activityVC, animated: true)
+  }
+
+  private func preparedEbookFile(from ebookURL: URL) -> URL {
+    let ext = ebookURL.pathExtension
+    let name = Self.sanitizedShareName(from: title)
+    guard !name.isEmpty else { return ebookURL }
+
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("ShareEbook", isDirectory: true)
+    try? FileManager.default.removeItem(at: directory)
+    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+    let filename = ext.isEmpty ? name : "\(name).\(ext)"
+    let destination = directory.appendingPathComponent(filename)
+
+    do {
+      try FileManager.default.copyItem(at: ebookURL, to: destination)
+      return destination
+    } catch {
+      AppLogger.viewModel.error(
+        "Failed to prepare ebook for sharing: \(error.localizedDescription)"
+      )
+      return ebookURL
+    }
+  }
+
+  nonisolated private static func prepareAudioShareItem(trackURLs: [URL], title: String) -> URL? {
+    let name = sanitizedShareName(from: title)
+    guard !name.isEmpty, !trackURLs.isEmpty else { return nil }
+
+    let fm = FileManager.default
+    let directory = fm.temporaryDirectory.appendingPathComponent("ShareAudio", isDirectory: true)
+    try? fm.removeItem(at: directory)
+    try? fm.createDirectory(at: directory, withIntermediateDirectories: true)
+
+    if trackURLs.count == 1, let source = trackURLs.first {
+      let ext = source.pathExtension
+      let destination = directory.appendingPathComponent(ext.isEmpty ? name : "\(name).\(ext)")
+      return (try? fm.copyItem(at: source, to: destination)) != nil ? destination : nil
+    }
+
+    let folder = directory.appendingPathComponent(name, isDirectory: true)
+    do {
+      try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+      for (index, source) in trackURLs.enumerated() {
+        let ext = source.pathExtension.isEmpty ? "mp3" : source.pathExtension
+        let trackName = String(format: "%03d.%@", index + 1, ext)
+        try fm.copyItem(at: source, to: folder.appendingPathComponent(trackName))
+      }
+    } catch {
+      return nil
+    }
+
+    let zipDestination = directory.appendingPathComponent("\(name).zip")
+    guard zip(directory: folder, to: zipDestination) else { return nil }
+    return zipDestination
+  }
+
+  nonisolated private static func zip(directory: URL, to destination: URL) -> Bool {
+    let coordinator = NSFileCoordinator()
+    var coordinationError: NSError?
+    var didSucceed = false
+
+    coordinator.coordinate(readingItemAt: directory, options: [.forUploading], error: &coordinationError) { zippedURL in
+      try? FileManager.default.removeItem(at: destination)
+      didSucceed = (try? FileManager.default.copyItem(at: zippedURL, to: destination)) != nil
+    }
+
+    return didSucceed && coordinationError == nil
+  }
+
+  nonisolated private static func sanitizedShareName(from title: String) -> String {
+    title
+      .components(separatedBy: CharacterSet(charactersIn: "/\\:*?\"<>|"))
+      .joined(separator: "-")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }
 
