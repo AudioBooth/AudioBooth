@@ -26,6 +26,10 @@ struct WatchComplicationState: Codable {
   let currentTime: Double
   let duration: Double
   let isPlaying: Bool
+  var savedAt: Date? = nil
+  var playbackRate: Double? = nil
+  var chapterStart: Double? = nil
+  var chapterEnd: Double? = nil
 
   var timeRemaining: TimeInterval {
     max(0, duration - currentTime)

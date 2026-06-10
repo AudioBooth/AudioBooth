@@ -21,9 +21,32 @@ struct WatchComplicationProvider: TimelineProvider {
     in context: Context,
     completion: @escaping (Timeline<WatchComplicationEntry>) -> Void
   ) {
-    let entry = currentEntry()
-    let timeline = Timeline(entries: [entry], policy: .never)
-    completion(timeline)
+    guard let state = WatchComplicationStorage.load() else {
+      completion(Timeline(entries: [.empty], policy: .never))
+      return
+    }
+
+    guard state.isPlaying, let savedAt = state.savedAt else {
+      completion(Timeline(entries: [currentEntry()], policy: .never))
+      return
+    }
+
+    let now = Date()
+    let rate = state.playbackRate ?? 1
+
+    var entries: [WatchComplicationEntry] = []
+    for minute in 0...60 {
+      let entryDate = now.addingTimeInterval(Double(minute) * 60)
+      let projectedTime = state.currentTime + entryDate.timeIntervalSince(savedAt) * rate
+
+      entries.append(entry(for: state, currentTime: min(projectedTime, state.duration), date: entryDate))
+
+      if projectedTime >= state.duration {
+        break
+      }
+    }
+
+    completion(Timeline(entries: entries, policy: .atEnd))
   }
 
   private func currentEntry() -> WatchComplicationEntry {
@@ -31,12 +54,27 @@ struct WatchComplicationProvider: TimelineProvider {
       return .empty
     }
 
+    return entry(for: state, currentTime: state.currentTime, date: Date())
+  }
+
+  private func entry(
+    for state: WatchComplicationState,
+    currentTime: Double,
+    date: Date
+  ) -> WatchComplicationEntry {
+    let chapterProgress: Double?
+    if let start = state.chapterStart, let end = state.chapterEnd, end > start {
+      chapterProgress = min(1, max(0, (currentTime - start) / (end - start)))
+    } else {
+      chapterProgress = state.chapterProgress
+    }
+
     return WatchComplicationEntry(
-      date: Date(),
+      date: date,
       bookTitle: state.bookTitle,
-      progress: state.progress,
-      chapterProgress: state.chapterProgress,
-      timeRemaining: state.timeRemaining,
+      progress: state.duration > 0 ? min(1, currentTime / state.duration) : 0,
+      chapterProgress: chapterProgress,
+      timeRemaining: max(0, state.duration - currentTime),
       isPlaying: state.isPlaying
     )
   }

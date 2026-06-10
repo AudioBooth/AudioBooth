@@ -20,8 +20,11 @@ public struct SessionSync: Codable, Sendable {
     public let clientVersion: String?
     public let clientName: String
 
-    public init() {
-      self.deviceId = SessionService.deviceID
+    public init(
+      deviceID: String,
+      clientName: String
+    ) {
+      self.deviceId = deviceID
 
       if let infoDictionary = Bundle.main.infoDictionary,
         let version = infoDictionary["CFBundleShortVersionString"] as? String,
@@ -31,7 +34,7 @@ public struct SessionSync: Codable, Sendable {
       } else {
         self.clientVersion = nil
       }
-      self.clientName = "AudioBooth iOS"
+      self.clientName = clientName
     }
   }
 
@@ -46,6 +49,7 @@ public struct SessionSync: Codable, Sendable {
     timeListening: TimeInterval,
     startedAt: Int,
     updatedAt: Int,
+    deviceInfo: DeviceInfo
   ) {
     self.id = id
     self.libraryItemId = libraryItemId
@@ -57,7 +61,7 @@ public struct SessionSync: Codable, Sendable {
     self.timeListening = timeListening
     self.playMethod = 3
     self.mediaPlayer = "ios"
-    self.deviceInfo = DeviceInfo()
+    self.deviceInfo = deviceInfo
     self.startedAt = startedAt
     self.updatedAt = updatedAt
   }

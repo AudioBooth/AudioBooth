@@ -40,7 +40,11 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     var progress = context["progress"] as? [String: Double] ?? [:]
     progress[bookID] = current.currentTime
 
+    var progressUpdatedAt = context["progressUpdatedAt"] as? [String: Double] ?? [:]
+    progressUpdatedAt[bookID] = current.lastUpdate.timeIntervalSince1970
+
     context["progress"] = progress
+    context["progressUpdatedAt"] = progressUpdatedAt
 
     if let chapterProgress {
       context["chapterProgress"] = chapterProgress
@@ -54,11 +58,12 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   func syncContinueListening(books: [Book]) {
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
-      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) }
+      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0) }
     )
 
     var continueListening: [[String: Any]] = []
     var progress: [String: Double] = [:]
+    var progressUpdatedAt: [String: Double] = [:]
 
     for book in books {
       continueListening.append([
@@ -69,21 +74,24 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         "duration": book.duration,
       ])
 
-      if let currentTime = progressByBookID[book.id] {
-        progress[book.id] = currentTime
+      if let mediaProgress = progressByBookID[book.id] {
+        progress[book.id] = mediaProgress.currentTime
+        progressUpdatedAt[book.id] = mediaProgress.lastUpdate.timeIntervalSince1970
       }
 
       if continueListening.count >= 5 { break }
     }
 
     for bookID in watchDownloadedBookIDs {
-      if let currentTime = progressByBookID[bookID] {
-        progress[bookID] = currentTime
+      if let mediaProgress = progressByBookID[bookID] {
+        progress[bookID] = mediaProgress.currentTime
+        progressUpdatedAt[bookID] = mediaProgress.lastUpdate.timeIntervalSince1970
       }
     }
 
     context["continueListening"] = continueListening
     context["progress"] = progress
+    context["progressUpdatedAt"] = progressUpdatedAt
     updateContext()
 
     AppLogger.watchConnectivity.info(
@@ -114,32 +122,27 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   private func refreshProgress() {
     let continueListening = context["continueListening"] as? [[String: Any]] ?? []
     var progress: [String: Double] = [:]
+    var progressUpdatedAt: [String: Double] = [:]
 
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
-      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) }
+      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0) }
     )
 
-    for dict in continueListening {
-      guard let bookID = dict["id"] as? String,
-        let currentTime = progressByBookID[bookID]
-      else { continue }
-      progress[bookID] = currentTime
+    var bookIDs = continueListening.compactMap { $0["id"] as? String }
+    bookIDs.append(contentsOf: watchDownloadedBookIDs)
+    if let currentID = PlayerManager.shared.current?.id {
+      bookIDs.append(currentID)
     }
 
-    for bookID in watchDownloadedBookIDs {
-      if let currentTime = progressByBookID[bookID] {
-        progress[bookID] = currentTime
-      }
-    }
-
-    if let currentID = PlayerManager.shared.current?.id,
-      let currentTime = progressByBookID[currentID]
-    {
-      progress[currentID] = currentTime
+    for bookID in bookIDs {
+      guard let mediaProgress = progressByBookID[bookID] else { continue }
+      progress[bookID] = mediaProgress.currentTime
+      progressUpdatedAt[bookID] = mediaProgress.lastUpdate.timeIntervalSince1970
     }
 
     context["progress"] = progress
+    context["progressUpdatedAt"] = progressUpdatedAt
     updateContext()
   }
 
@@ -360,6 +363,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
         }
         await handleFetchSectionBooks(sectionID: sectionID, replyHandler: replyHandler)
 
+      case "syncLocalSessions":
+        guard let sessionsData = message["sessions"] as? [[String: Any]] else {
+          replyHandler(["error": "Missing sessions"])
+          return
+        }
+        await handleSyncLocalSessions(sessionsData, replyHandler: replyHandler)
+
       default:
         replyHandler(["error": "Unknown command: \(command)"])
       }
@@ -505,6 +515,69 @@ extension WatchConnectivityManager: WCSessionDelegate {
       replyHandler(["books": bookDicts])
     } catch {
       AppLogger.watchConnectivity.error("Failed to fetch section books: \(error)")
+      replyHandler(["error": error.localizedDescription])
+    }
+  }
+
+  private func handleSyncLocalSessions(
+    _ sessionsData: [[String: Any]],
+    replyHandler: @escaping ([String: Any]) -> Void
+  ) async {
+    var sessionSyncs: [SessionSync] = []
+
+    for dict in sessionsData {
+      guard let id = dict["id"] as? String,
+        let bookID = dict["bookID"] as? String,
+        let duration = dict["duration"] as? Double,
+        let startTime = dict["startTime"] as? Double,
+        let currentTime = dict["currentTime"] as? Double,
+        let timeListening = dict["timeListening"] as? Double,
+        let startedAt = dict["startedAt"] as? Double,
+        let updatedAt = dict["updatedAt"] as? Double
+      else { continue }
+
+      let watchUpdatedAt = Date(timeIntervalSince1970: updatedAt)
+      let existingUpdatedAt = (try? MediaProgress.fetch(bookID: bookID))?.lastUpdate ?? .distantPast
+      if watchUpdatedAt > existingUpdatedAt {
+        let safeDuration = max(duration, 1)
+        try? MediaProgress.updateProgress(
+          for: bookID,
+          currentTime: currentTime,
+          duration: safeDuration,
+          progress: min(1, max(0, currentTime / safeDuration))
+        )
+      }
+
+      sessionSyncs.append(
+        SessionSync(
+          id: id,
+          libraryItemId: bookID,
+          duration: duration,
+          startTime: startTime,
+          currentTime: currentTime,
+          timeListening: timeListening,
+          startedAt: Int(startedAt * 1000),
+          updatedAt: Int(updatedAt * 1000),
+          deviceInfo: SessionSync.DeviceInfo(
+            deviceID: Self.watchDeviceID,
+            clientName: "AudioBooth Watch"
+          )
+        )
+      )
+    }
+
+    guard !sessionSyncs.isEmpty else {
+      replyHandler(["success": true])
+      return
+    }
+
+    do {
+      try await Audiobookshelf.shared.sessions.syncLocalSessions(sessionSyncs)
+      AppLogger.watchConnectivity.info("Synced \(sessionSyncs.count) watch local sessions")
+      refreshProgress()
+      replyHandler(["success": true])
+    } catch {
+      AppLogger.watchConnectivity.error("Failed to sync watch local sessions: \(error)")
       replyHandler(["error": error.localizedDescription])
     }
   }

@@ -9,6 +9,12 @@ struct RemotePlayerView: View {
 
   var body: some View {
     NowPlayingView()
+      .overlay {
+        VolumeControl(origin: .companion)
+          .opacity(0.0)
+          .allowsHitTesting(false)
+          .focusable(true)
+      }
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button(

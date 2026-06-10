@@ -59,9 +59,7 @@ struct PlayerView: View {
       playerManager.isShowingFullPlayer = false
     }
     .overlay {
-      if model.isLocal {
-        VolumeView()
-      }
+      VolumeView()
     }
     .alert(
       "Playback Error",

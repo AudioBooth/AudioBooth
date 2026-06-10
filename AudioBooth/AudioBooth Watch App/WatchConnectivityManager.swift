@@ -15,6 +15,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
   @Published var continueListeningBooks: [WatchBook] = []
   @Published var progress: [String: Double] = [:]
+  private(set) var progressUpdatedAt: [String: Double] = [:]
   @Published var hasCurrentBook: Bool = false
   @Published var playbackRate: Float = 1.0
   @Published var homeSections: [WatchHomeSection] = []
@@ -35,6 +36,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   private enum Keys {
     static let continueListeningBooks = "continue_listening_books"
     static let progress = "progress"
+    static let progressUpdatedAt = "progress_updated_at"
     static let customHeaders = "custom_headers"
   }
 
@@ -80,55 +82,29 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     {
       progress = progressData
     }
+
+    if let updatedAtData = UserDefaults.standard.dictionary(forKey: Keys.progressUpdatedAt)
+      as? [String: Double]
+    {
+      progressUpdatedAt = updatedAtData
+    }
   }
 
   private func persistBooks(_ books: [WatchBook]) {
     guard let data = try? JSONEncoder().encode(books) else { return }
     UserDefaults.standard.set(data, forKey: Keys.continueListeningBooks)
+    persistProgress()
+  }
+
+  private func persistProgress() {
     UserDefaults.standard.set(progress, forKey: Keys.progress)
+    UserDefaults.standard.set(progressUpdatedAt, forKey: Keys.progressUpdatedAt)
   }
 
-  func sendCommand(_ command: String) {
-    guard let session = session, session.isReachable else {
-      AppLogger.watchConnectivity.warning("Cannot send command - session not reachable")
-      return
-    }
-
-    let message = ["command": command]
-    session.sendMessage(message, replyHandler: nil) { error in
-      AppLogger.watchConnectivity.error("Failed to send command to iOS: \(error)")
-    }
-  }
-
-  func play() {
-    sendCommand("play")
-  }
-
-  func pause() {
-    sendCommand("pause")
-  }
-
-  func skipForward() {
-    sendCommand("skipForward")
-  }
-
-  func skipBackward() {
-    sendCommand("skipBackward")
-  }
-
-  func playOnIPhone(bookID: String) {
-    guard let session = session, session.isReachable else {
-      AppLogger.watchConnectivity.warning("Cannot play on iPhone - session not reachable")
-      return
-    }
-
-    let message: [String: Any] = [
-      "command": "play",
-      "bookID": bookID,
-    ]
-    session.sendMessage(message, replyHandler: nil) { error in
-      AppLogger.watchConnectivity.error("Failed to send play command to iOS: \(error)")
-    }
+  func recordLocalProgress(bookID: String, currentTime: Double) {
+    progress[bookID] = currentTime
+    progressUpdatedAt[bookID] = Date().timeIntervalSince1970
+    persistProgress()
   }
 
   func changePlaybackRate(_ rate: Float) {
@@ -217,8 +193,18 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     AppLogger.watchConnectivity.info("Sent \(ids.count) downloaded book IDs to iPhone")
   }
 
-  func reportProgress(bookID: String, sessionID: String, currentTime: Double, timeListened: Double, duration: Double) {
-    guard let session = session, session.isReachable else { return }
+  func reportProgress(bookID: String, sessionID: String?, currentTime: Double, timeListened: Double, duration: Double) {
+    recordLocalProgress(bookID: bookID, currentTime: currentTime)
+
+    guard let session, session.isReachable, let sessionID, !sessionID.isEmpty else {
+      WatchLocalSessionStore.shared.record(
+        bookID: bookID,
+        currentTime: currentTime,
+        timeListened: timeListened,
+        duration: duration
+      )
+      return
+    }
 
     let message: [String: Any] = [
       "command": "reportProgress",
@@ -229,7 +215,59 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       "duration": duration,
     ]
 
-    session.sendMessage(message, replyHandler: nil, errorHandler: nil)
+    session.sendMessage(message, replyHandler: nil) { _ in
+      Task { @MainActor in
+        WatchLocalSessionStore.shared.record(
+          bookID: bookID,
+          currentTime: currentTime,
+          timeListened: timeListened,
+          duration: duration
+        )
+      }
+    }
+  }
+
+  func flushLocalSessions() {
+    guard let session, session.isReachable else { return }
+
+    let localSessions = WatchLocalSessionStore.shared.sessions
+    guard !localSessions.isEmpty else { return }
+
+    let payload: [[String: Any]] = localSessions.map { localSession in
+      [
+        "id": localSession.id,
+        "bookID": localSession.bookID,
+        "duration": localSession.duration,
+        "startTime": localSession.startTime,
+        "currentTime": localSession.currentTime,
+        "timeListening": localSession.timeListening,
+        "startedAt": localSession.startedAt.timeIntervalSince1970,
+        "updatedAt": localSession.updatedAt.timeIntervalSince1970,
+      ]
+    }
+
+    let message: [String: Any] = [
+      "command": "syncLocalSessions",
+      "sessions": payload,
+    ]
+
+    AppLogger.watchConnectivity.info("Flushing \(localSessions.count) local sessions to iPhone")
+
+    session.sendMessage(
+      message,
+      replyHandler: { response in
+        if let error = response["error"] as? String {
+          AppLogger.watchConnectivity.error("Failed to sync local sessions: \(error)")
+          return
+        }
+        Task { @MainActor in
+          WatchLocalSessionStore.shared.remove(ids: localSessions.map(\.id))
+        }
+      },
+      errorHandler: { error in
+        AppLogger.watchConnectivity.error("Failed to send local sessions: \(error)")
+      }
+    )
   }
 
   func startSession(bookID: String, forDownload: Bool = false) async -> WatchBook? {
@@ -365,8 +403,16 @@ extension WatchConnectivityManager: WCSessionDelegate {
             .filter { $0.isDownloaded }
             .map { $0.id }
           sendDownloadedBookIDs(downloadedBookIDs)
+          flushLocalSessions()
         }
       }
+    }
+  }
+
+  func sessionReachabilityDidChange(_ session: WCSession) {
+    guard session.isReachable else { return }
+    Task { @MainActor in
+      flushLocalSessions()
     }
   }
 
@@ -391,7 +437,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
     handleContinueListening(continueListeningData)
 
     let progressData = context["progress"] as? [String: Double] ?? [:]
-    handleProgress(progressData)
+    let updatedAtData = context["progressUpdatedAt"] as? [String: Double] ?? [:]
+    handleProgress(progressData, updatedAt: updatedAtData)
 
     let homeSectionsData = context["homeSections"] as? [[String: Any]] ?? []
     homeSections = homeSectionsData.compactMap { dict in
@@ -424,12 +471,18 @@ extension WatchConnectivityManager: WCSessionDelegate {
     updateComplication()
   }
 
-  private func handleProgress(_ data: [String: Double]) {
+  private func handleProgress(_ data: [String: Double], updatedAt: [String: Double] = [:]) {
     var updatedBooks = continueListeningBooks
 
     for (bookID, currentTime) in data {
-      let localTime = progress[bookID] ?? 0
-      guard currentTime > localTime else { continue }
+      if let remoteUpdatedAt = updatedAt[bookID] {
+        let localUpdatedAt = progressUpdatedAt[bookID] ?? 0
+        guard remoteUpdatedAt > localUpdatedAt else { continue }
+        progressUpdatedAt[bookID] = remoteUpdatedAt
+      } else {
+        let localTime = progress[bookID] ?? 0
+        guard currentTime > localTime else { continue }
+      }
 
       progress[bookID] = currentTime
 
@@ -446,6 +499,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
   }
 
   func updateComplication() {
+    if WatchComplicationStorage.load()?.isPlaying == true {
+      return
+    }
+
     if let book = continueListeningBooks.first {
       let state = WatchComplicationState(
         bookTitle: book.title,

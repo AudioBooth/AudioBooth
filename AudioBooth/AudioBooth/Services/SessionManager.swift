@@ -615,7 +615,11 @@ extension SessionSync {
       currentTime: session.currentTime,
       timeListening: session.timeListening + session.pendingListeningTime,
       startedAt: Int(session.startedAt.timeIntervalSince1970 * 1000),
-      updatedAt: Int(session.updatedAt.timeIntervalSince1970 * 1000)
+      updatedAt: Int(session.updatedAt.timeIntervalSince1970 * 1000),
+      deviceInfo: SessionSync.DeviceInfo(
+        deviceID: SessionService.deviceID,
+        clientName: "AudioBooth iOS"
+      )
     )
   }
 }

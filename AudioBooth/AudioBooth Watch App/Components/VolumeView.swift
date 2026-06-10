@@ -4,7 +4,11 @@ import SwiftUI
 import WatchKit
 
 struct VolumeControl: WKInterfaceObjectRepresentable {
-  let control: WKInterfaceVolumeControl = WKInterfaceVolumeControl(origin: .local)
+  let control: WKInterfaceVolumeControl
+
+  init(origin: WKInterfaceVolumeControl.Origin = .local) {
+    control = WKInterfaceVolumeControl(origin: origin)
+  }
 
   func makeWKInterfaceObject(context: Self.Context) -> WKInterfaceVolumeControl {
     control.focus()
@@ -93,16 +97,18 @@ extension VolumeView {
       }
     }
 
+    @MainActor
+    deinit {
+      controlsTimer?.invalidate()
+      observer?.invalidate()
+    }
+
     func handleVolumeSliderAppearance() {
       controlsTimer?.invalidate()
 
       isHidden = false
-      controlsTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) {
-        [weak self] timer in
-        if self?.isHidden == false {
-          self?.controlsTimer?.invalidate()
-          self?.isHidden = true
-        }
+      controlsTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { [weak self] _ in
+        self?.isHidden = true
       }
     }
   }

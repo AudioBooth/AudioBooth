@@ -43,6 +43,12 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
         guard let self else { return }
         if let progress = progressMap[bookID] {
           self.downloadState = .downloading(progress: progress)
+        } else if case .downloading = self.downloadState,
+          !self.downloadManager.isDownloading(for: bookID)
+        {
+          let isDownloaded =
+            self.localStorage.books.first(where: { $0.id == bookID })?.isDownloaded ?? false
+          self.downloadState = isDownloaded ? .downloaded : .notDownloaded
         }
       }
       .store(in: &cancellables)

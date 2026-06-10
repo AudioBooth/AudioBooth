@@ -89,16 +89,16 @@ final class BookPlayerModel: PlayerView.Model {
         saveProgress(currentTime: globalTime)
       }
 
-      if progressSaveCounter % 20 == 0 {
-        updateComplicationState()
-      }
-
     case .stateChanged(let state):
       switch state {
       case .playing:
         isPlaying = true
+        lastProgressReportTime = Date()
         updateComplicationState()
       case .paused:
+        if isPlaying {
+          reportProgressNow(currentTime: current)
+        }
         isPlaying = false
         updateComplicationState()
       case .ready:
@@ -112,9 +112,10 @@ final class BookPlayerModel: PlayerView.Model {
       }
 
     case .seek:
-      break
+      updateComplicationState()
 
     case .finished:
+      reportProgressNow(currentTime: current)
       isPlaying = false
       saveProgress(currentTime: current)
       updateComplicationState()
@@ -157,13 +158,18 @@ final class BookPlayerModel: PlayerView.Model {
   private func setupChapters() {
     guard !book.chapters.isEmpty else { return }
 
+    currentChapterIndex = chapterIndex(at: book.currentTime)
     let chapterModels = BookChapterPickerModel(
       chapters: book.chapters,
       playerModel: self,
-      currentIndex: 0
+      currentIndex: currentChapterIndex
     )
     chapters = chapterModels
     options.hasChapters = true
+  }
+
+  private func chapterIndex(at time: Double) -> Int {
+    book.chapters.firstIndex { time >= $0.start && time < $0.end } ?? 0
   }
 
   private func load() {
@@ -215,10 +221,11 @@ final class BookPlayerModel: PlayerView.Model {
     self.book = info
 
     if !info.chapters.isEmpty && chapters == nil {
+      currentChapterIndex = chapterIndex(at: book.currentTime)
       let chapterModels = BookChapterPickerModel(
         chapters: info.chapters,
         playerModel: self,
-        currentIndex: 0
+        currentIndex: currentChapterIndex
       )
       chapters = chapterModels
       options.hasChapters = true
@@ -277,12 +284,16 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   override func stop() {
+    if isPlaying {
+      reportProgressNow(currentTime: current)
+    }
     audioPlayer.stop()
     saveProgress(currentTime: current)
   }
 
   func changeSpeed(_ speed: Float) {
     audioPlayer.rate = speed
+    updateComplicationState()
   }
 
   override func onDownloadTapped() {
@@ -359,13 +370,20 @@ final class BookPlayerModel: PlayerView.Model {
   private func setupRemoteCommandCenter() {
     let commandCenter = MPRemoteCommandCenter.shared()
 
+    commandCenter.playCommand.removeTarget(nil)
+    commandCenter.pauseCommand.removeTarget(nil)
+    commandCenter.skipForwardCommand.removeTarget(nil)
+    commandCenter.skipBackwardCommand.removeTarget(nil)
+
     commandCenter.playCommand.addTarget { [weak self] _ in
-      self?.togglePlayback()
+      guard let self else { return .commandFailed }
+      syncToLatestKnownProgressIfNeeded()
+      audioPlayer.resume()
       return .success
     }
 
     commandCenter.pauseCommand.addTarget { [weak self] _ in
-      self?.togglePlayback()
+      self?.audioPlayer.pause()
       return .success
     }
 
@@ -395,6 +413,7 @@ final class BookPlayerModel: PlayerView.Model {
         if currentChapterIndex != index {
           currentChapterIndex = index
           self.chapters?.currentIndex = index
+          updateComplicationState()
         }
 
         chapterTitle = chapter.title
@@ -414,11 +433,10 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func reportProgressIfNeeded(currentTime: Double) {
-    guard let sessionID else { return }
     let now = Date()
     if let lastReport = lastProgressReportTime {
       let timeSinceLastReport = now.timeIntervalSince(lastReport)
-      if timeSinceLastReport >= 30 || currentTime < 1.0 {
+      if timeSinceLastReport >= 30 {
         connectivityManager.reportProgress(
           bookID: book.id,
           sessionID: sessionID,
@@ -434,7 +452,6 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func reportProgressNow(currentTime: Double) {
-    guard let sessionID = sessionID else { return }
     let now = Date()
     let timeListened = lastProgressReportTime.map { now.timeIntervalSince($0) } ?? 0
     connectivityManager.reportProgress(
@@ -448,13 +465,22 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func updateComplicationState() {
+    let chapter =
+      chapterTitle != nil && book.chapters.indices.contains(currentChapterIndex)
+      ? book.chapters[currentChapterIndex]
+      : nil
+
     let state = WatchComplicationState(
       bookTitle: book.title,
       progress: totalDuration > 0 ? current / totalDuration : 0,
       chapterProgress: chapterProgress > 0 ? chapterProgress : nil,
       currentTime: current,
       duration: totalDuration,
-      isPlaying: isPlaying
+      isPlaying: isPlaying,
+      savedAt: Date(),
+      playbackRate: Double(audioPlayer.rate),
+      chapterStart: chapter?.start,
+      chapterEnd: chapter?.end
     )
     WatchComplicationStorage.save(state)
     WidgetCenter.shared.reloadAllTimelines()
@@ -486,7 +512,7 @@ final class BookPlayerModel: PlayerView.Model {
     guard
       !isPlaying,
       let latest = connectivityManager.progress[bookID],
-      latest - current > 0.5
+      abs(latest - current) > 0.5
     else { return }
 
     current = latest
@@ -501,6 +527,9 @@ final class BookPlayerModel: PlayerView.Model {
 
   @MainActor
   deinit {
+    if isPlaying {
+      reportProgressNow(currentTime: current)
+    }
     audioPlayer.stop()
     saveProgress(currentTime: current)
   }

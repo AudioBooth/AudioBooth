@@ -62,8 +62,9 @@ final class AppDelegate: NSObject, WKApplicationDelegate {
       case let urlSessionTask as WKURLSessionRefreshBackgroundTask:
         DownloadManager.shared.reconnectBackgroundSession(
           withIdentifier: urlSessionTask.sessionIdentifier
-        )
-        urlSessionTask.setTaskCompletedWithSnapshot(false)
+        ) {
+          urlSessionTask.setTaskCompletedWithSnapshot(false)
+        }
 
       default:
         task.setTaskCompletedWithSnapshot(false)

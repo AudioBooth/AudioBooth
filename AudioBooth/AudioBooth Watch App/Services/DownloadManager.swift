@@ -47,25 +47,23 @@ final class DownloadManager: NSObject, ObservableObject {
       }
       localStorage.saveBook(bookToSave)
 
-      var downloadURLs: [Int: URL] = [:]
-      for track in localBook.tracks {
-        if let url = track.url {
-          downloadURLs[track.index] = url
-        }
-      }
-
       await MainActor.run {
-        startDownloadOperation(for: bookToSave, downloadURLs: downloadURLs)
+        startDownloadOperation(for: bookToSave)
       }
     }
   }
 
-  private func startDownloadOperation(for book: WatchBook, downloadURLs: [Int: URL]) {
+  private func startDownloadOperation(
+    for book: WatchBook,
+    reconnecting: Bool = false,
+    onBackgroundEventsDelivered: (() -> Void)? = nil
+  ) {
     let operation = DownloadOperation(
       book: book,
-      downloadURLs: downloadURLs,
-      localStorage: localStorage
+      localStorage: localStorage,
+      reconnecting: reconnecting
     )
+    operation.onBackgroundEventsDelivered = onBackgroundEventsDelivered
     activeOperations[book.id] = operation
     currentProgress.removeValue(forKey: book.id)
 
@@ -92,12 +90,16 @@ final class DownloadManager: NSObject, ObservableObject {
     currentProgress.removeValue(forKey: bookID)
   }
 
-  func reconnectBackgroundSession(withIdentifier identifier: String) {
-    guard identifier.hasPrefix("me.jgrenier.AudioBS.watch.download.") else { return }
+  func reconnectBackgroundSession(withIdentifier identifier: String, completion: @escaping () -> Void) {
+    guard identifier.hasPrefix("me.jgrenier.AudioBS.watch.download.") else {
+      completion()
+      return
+    }
     let bookID = String(identifier.dropFirst("me.jgrenier.AudioBS.watch.download.".count))
 
     guard activeOperations[bookID] == nil else {
       AppLogger.download.debug("Session already active for book: \(bookID)")
+      completion()
       return
     }
 
@@ -106,35 +108,12 @@ final class DownloadManager: NSObject, ObservableObject {
       let config = URLSessionConfiguration.background(withIdentifier: identifier)
       let session = URLSession(configuration: config)
       session.invalidateAndCancel()
+      completion()
       return
     }
 
     AppLogger.download.info("Reconnecting background session for book: \(bookID)")
-
-    let operation = DownloadOperation(
-      book: book,
-      downloadURLs: [:],
-      localStorage: localStorage,
-      reconnecting: true
-    )
-    activeOperations[book.id] = operation
-
-    let progressTask = Task { @MainActor [weak self] in
-      for await progress in operation.progress {
-        guard !Task.isCancelled else { break }
-        self?.currentProgress[book.id] = progress
-      }
-    }
-    progressTasks[book.id] = progressTask
-
-    operation.completionBlock = { @MainActor [weak self] in
-      self?.progressTasks[book.id]?.cancel()
-      self?.progressTasks.removeValue(forKey: book.id)
-      self?.activeOperations.removeValue(forKey: book.id)
-      self?.currentProgress.removeValue(forKey: book.id)
-    }
-
-    operationQueue.addOperation(operation)
+    startDownloadOperation(for: book, reconnecting: true, onBackgroundEventsDelivered: completion)
   }
 }
 
@@ -209,9 +188,10 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   let bookID: String
   let progress: AsyncStream<Double>
 
+  var onBackgroundEventsDelivered: (() -> Void)?
+
   private let progressContinuation: AsyncStream<Double>.Continuation
   private let localStorage: LocalBookStorage
-  private let downloadURLs: [Int: URL]
 
   private var book: WatchBook
   private var totalBytes: Int64 = 0
@@ -219,7 +199,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
   private var currentTrack: URLSessionDownloadTask?
   private var continuation: CheckedContinuation<Void, Error>?
-  private var trackDestination: URL?
 
   private lazy var downloadSession: URLSession = {
     let config = URLSessionConfiguration.background(
@@ -251,16 +230,15 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   override var isFinished: Bool { _finished }
 
   private let isReconnecting: Bool
+  private var hasResumedDownload = false
 
   init(
     book: WatchBook,
-    downloadURLs: [Int: URL],
     localStorage: LocalBookStorage,
     reconnecting: Bool = false
   ) {
     self.book = book
     self.bookID = book.id
-    self.downloadURLs = downloadURLs
     self.localStorage = localStorage
     self.isReconnecting = reconnecting
 
@@ -320,6 +298,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
       try await downloadTracks()
 
+      if let stored = localStorage.books.first(where: { $0.id == bookID }) {
+        book.currentTime = stored.currentTime
+      }
       localStorage.saveBook(book)
       finish(success: true, error: nil)
     } catch {
@@ -344,7 +325,18 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     for track in tracks {
       guard !isCancelled else { throw CancellationError() }
 
-      guard let downloadURL = downloadURLs[track.index] else {
+      if let relativePath = book.tracks.first(where: { $0.index == track.index })?.relativePath,
+        FileManager.default.fileExists(
+          atPath: documentsPath.appendingPathComponent(relativePath).path
+        )
+      {
+        if let size = track.size {
+          bytesDownloadedSoFar += size
+        }
+        continue
+      }
+
+      guard let downloadURL = track.url else {
         AppLogger.download.error("Track \(track.index) missing download URL")
         throw URLError(.badURL)
       }
@@ -353,7 +345,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         AppLogger.download.error("Track \(track.index) missing file extension, cannot download")
         throw URLError(.cannotDecodeContentData)
       }
-      let trackFile = bookDirectory.appendingPathComponent("\(track.index)\(fileExtension)")
 
       try await withCheckedThrowingContinuation { continuation in
         var request = URLRequest(url: downloadURL)
@@ -361,18 +352,13 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
           request.setValue(value, forHTTPHeaderField: key)
         }
         let downloadTask = downloadSession.downloadTask(with: request)
+        downloadTask.taskDescription = "\(track.index)|\(fileExtension)"
         downloadTask.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
 
         self.currentTrack = downloadTask
         self.continuation = continuation
-        self.trackDestination = trackFile
 
         downloadTask.resume()
-      }
-
-      if let trackArrayIndex = book.tracks.firstIndex(where: { $0.index == track.index }) {
-        book.tracks[trackArrayIndex].relativePath =
-          "audiobooks/\(bookID)/\(track.index)\(fileExtension)"
       }
 
       if let size = track.size {
@@ -405,17 +391,33 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     progressContinuation.yield(newProgress)
   }
 
-  private func trackDownloadCompleted(location: URL) throws {
-    guard let destination = trackDestination else {
+  private func saveCompletedDownload(_ downloadTask: URLSessionDownloadTask, location: URL) throws {
+    guard
+      let description = downloadTask.taskDescription,
+      let separatorIndex = description.firstIndex(of: "|"),
+      let trackIndex = Int(description[..<separatorIndex]),
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first
+    else {
       throw URLError(.cannotCreateFile)
     }
 
+    let fileExtension = String(description[description.index(after: separatorIndex)...])
+    let relativePath = "audiobooks/\(bookID)/\(trackIndex)\(fileExtension)"
+    let destination = documentsPath.appendingPathComponent(relativePath)
+
+    try FileManager.default.createDirectory(
+      at: destination.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
     if FileManager.default.fileExists(atPath: destination.path) {
       try FileManager.default.removeItem(at: destination)
     }
-
     try FileManager.default.moveItem(at: location, to: destination)
-    continuation?.resume()
+
+    if let trackArrayIndex = book.tracks.firstIndex(where: { $0.index == trackIndex }) {
+      book.tracks[trackArrayIndex].relativePath = relativePath
+    }
   }
 }
 
@@ -432,15 +434,9 @@ extension DownloadOperation: URLSessionDownloadDelegate {
   }
 
   func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-    guard
-      let downloadTask = task as? URLSessionDownloadTask,
-      currentTrack == downloadTask,
-      continuation != nil
-    else { return }
-
-    if let error {
-      continuation?.resume(throwing: error)
-    }
+    guard let error else { return }
+    continuation?.resume(throwing: error)
+    continuation = nil
   }
 
   func urlSession(
@@ -448,26 +444,43 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     downloadTask: URLSessionDownloadTask,
     didFinishDownloadingTo location: URL
   ) {
-    guard currentTrack == downloadTask, continuation != nil else { return }
-
-    if let httpResponse = downloadTask.response as? HTTPURLResponse {
-      guard (200...299).contains(httpResponse.statusCode) else {
-        let statusDescription = HTTPURLResponse.localizedString(
-          forStatusCode: httpResponse.statusCode
-        ).capitalized
-        let error = URLError(
-          .badServerResponse,
-          userInfo: [NSLocalizedDescriptionKey: statusDescription]
-        )
-        continuation?.resume(throwing: error)
-        return
-      }
+    if let httpResponse = downloadTask.response as? HTTPURLResponse,
+      !(200...299).contains(httpResponse.statusCode)
+    {
+      let statusDescription = HTTPURLResponse.localizedString(
+        forStatusCode: httpResponse.statusCode
+      ).capitalized
+      let error = URLError(
+        .badServerResponse,
+        userInfo: [NSLocalizedDescriptionKey: statusDescription]
+      )
+      continuation?.resume(throwing: error)
+      continuation = nil
+      return
     }
 
     do {
-      try trackDownloadCompleted(location: location)
+      try saveCompletedDownload(downloadTask, location: location)
+      continuation?.resume()
     } catch {
       continuation?.resume(throwing: error)
+    }
+    continuation = nil
+  }
+
+  func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+    if let onBackgroundEventsDelivered {
+      self.onBackgroundEventsDelivered = nil
+      Task { @MainActor in
+        onBackgroundEventsDelivered()
+      }
+    }
+
+    guard isReconnecting, !hasResumedDownload else { return }
+    hasResumedDownload = true
+    AppLogger.download.info("Background events delivered, resuming download for \(self.bookID)")
+    Task {
+      await executeDownload()
     }
   }
 }
