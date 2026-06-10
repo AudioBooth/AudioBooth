@@ -848,8 +848,8 @@ extension BookPlayerModel {
           case .buffering:
             self.isLoading = true
           case .ready:
+            self.isLoading = false
             if self.pendingPlay {
-              self.isLoading = false
               self.onPlayTapped()
             }
           case .error:
