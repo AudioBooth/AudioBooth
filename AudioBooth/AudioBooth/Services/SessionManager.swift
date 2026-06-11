@@ -59,10 +59,17 @@ extension SessionManager {
     }
 
     if let item, let current, current.libraryItemID == itemID {
-      AppLogger.session.debug(
-        "Session already exists for this book, reusing: \(current.id)"
-      )
-      return item
+      if item.isDownloaded, current.isRemote {
+        AppLogger.session.info(
+          "Item is now downloaded, closing remote session to switch to local session"
+        )
+        try? await closeSession(isDownloaded: true)
+      } else {
+        AppLogger.session.debug(
+          "Session already exists for this book, reusing: \(current.id)"
+        )
+        return item
+      }
     }
 
     if let item, item.isDownloaded {
@@ -182,6 +189,8 @@ extension SessionManager {
       displayTitle: updatedItem.title,
       displayAuthor: updatedItem.details
     )
+    playbackSession.tracks =
+      audiobookshelfSession.audioTracks?.map(Track.init) ?? updatedItem.orderedTracks
     try playbackSession.save()
     current = playbackSession
 
@@ -207,6 +216,7 @@ extension SessionManager {
       displayTitle: item.title,
       displayAuthor: item.details
     )
+    session.tracks = item.orderedTracks
     try? session.save()
     current = session
     AppLogger.session.info("Started local session: \(session.id)")
@@ -373,6 +383,7 @@ extension SessionManager {
         displayTitle: session.displayTitle,
         displayAuthor: session.displayAuthor
       )
+      newSession.tracks = session.tracks
       try? newSession.save()
       current = newSession
       AppLogger.session.info("Day changed, started new local session: \(newSession.id)")

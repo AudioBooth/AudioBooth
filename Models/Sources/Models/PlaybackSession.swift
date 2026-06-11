@@ -19,6 +19,8 @@ public final class PlaybackSession {
   public var displayTitle: String?
   public var displayAuthor: String?
 
+  @Transient public var tracks: [Track] = []
+
   public init(
     id: String = UUID().uuidString,
     libraryItemID: String,

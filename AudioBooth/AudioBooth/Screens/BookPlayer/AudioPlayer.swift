@@ -78,10 +78,10 @@ final class AudioPlayer {
     removeTimeObserver()
   }
 
-  func setQueue(_ tracks: [Track], for session: PlaybackSession) {
+  func setQueue(for session: PlaybackSession) {
     let wasPlaying = isPlaying
     self.session = session
-    self.tracks = tracks.filter { url(for: $0) != nil }
+    self.tracks = session.tracks.filter { url(for: $0) != nil }
 
     guard !self.tracks.isEmpty else {
       player.removeAllItems()
@@ -123,8 +123,14 @@ final class AudioPlayer {
   }
 
   func seek(to time: TimeInterval) {
+    mediaProgress.currentTime = time
+
     guard !tracks.isEmpty else {
-      player.seek(to: CMTime(seconds: time, preferredTimescale: 1000)) { [weak self] _ in
+      player.seek(
+        to: CMTime(seconds: time, preferredTimescale: 1000),
+        toleranceBefore: .zero,
+        toleranceAfter: .zero
+      ) { [weak self] _ in
         self?.events.send(.seek(time))
       }
       return
@@ -133,7 +139,11 @@ final class AudioPlayer {
     let (targetIndex, offset) = trackAndOffset(for: time)
 
     if targetIndex == currentTrackIndex {
-      player.seek(to: CMTime(seconds: offset, preferredTimescale: 1000)) { [weak self] _ in
+      player.seek(
+        to: CMTime(seconds: offset, preferredTimescale: 1000),
+        toleranceBefore: .zero,
+        toleranceAfter: .zero
+      ) { [weak self] _ in
         self?.events.send(.seek(time))
       }
       return
@@ -160,7 +170,11 @@ final class AudioPlayer {
     applyEQToUpcoming()
 
     currentTrackIndex = targetIndex
-    player.seek(to: CMTime(seconds: offset, preferredTimescale: 1000)) { [weak self] _ in
+    player.seek(
+      to: CMTime(seconds: offset, preferredTimescale: 1000),
+      toleranceBefore: .zero,
+      toleranceAfter: .zero
+    ) { [weak self] _ in
       self?.events.send(.seek(time))
     }
     if isPlaying {
@@ -178,17 +192,19 @@ private extension AudioPlayer {
     player.removeAllItems()
     for i in index..<tracks.count {
       guard let item = makeItem(at: i) else { continue }
+      if i == index, offset > 0 {
+        item.seek(
+          to: CMTime(seconds: offset, preferredTimescale: 1000),
+          toleranceBefore: .zero,
+          toleranceAfter: .zero,
+          completionHandler: nil
+        )
+      }
       player.insert(item, after: nil)
     }
     applyEQToUpcoming()
 
-    if offset > 0 {
-      player.seek(to: CMTime(seconds: offset, preferredTimescale: 1000)) { [weak self] _ in
-        guard let self, autoPlay else { return }
-        self.player.play()
-        self.player.rate = self.player.defaultRate
-      }
-    } else if autoPlay {
+    if autoPlay {
       player.play()
       player.rate = player.defaultRate
     }

@@ -648,12 +648,12 @@ extension BookPlayerModel {
   }
 
   private func setupAudioPlayer() throws {
-    guard let item, !item.orderedTracks.isEmpty else {
-      throw Audiobookshelf.AudiobookshelfError.networkError("No playable audio files available")
-    }
-
     guard let session = sessionManager.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError("No active session")
+    }
+
+    guard !session.tracks.isEmpty else {
+      throw Audiobookshelf.AudiobookshelfError.networkError("No playable audio files available")
     }
 
     let player = AudioPlayer(mediaProgress: mediaProgress, session: session)
@@ -661,7 +661,7 @@ extension BookPlayerModel {
 
     lastSyncedTime = mediaProgress.currentTime
 
-    player.setQueue(item.orderedTracks, for: session)
+    player.setQueue(for: session)
     player.volume = Float(userPreferences.volumeLevel)
 
     configurePlayerComponents(player: player)
@@ -777,7 +777,7 @@ extension BookPlayerModel {
     let currentTimeSeconds = max(player.time, mediaProgress.currentTime)
     AppLogger.player.info("Reloading player at position: \(currentTimeSeconds)s")
 
-    player.setQueue(item?.orderedTracks ?? [], for: session)
+    player.setQueue(for: session)
     player.volume = Float(userPreferences.volumeLevel)
 
     if pendingPlay {
@@ -842,6 +842,7 @@ extension BookPlayerModel {
           case .playing:
             self.handlePlaybackStateChange(true)
             self.isLoading = false
+            self.recoveryAttempts = 0
             (self.timer as? TimerPickerSheetViewModel)?.resumeLiveActivityIfNeeded()
           case .paused, .stopped:
             self.handlePlaybackStateChange(false)
@@ -947,6 +948,7 @@ extension BookPlayerModel {
 
         if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
           AppLogger.player.info("Download completed, refreshing player to use local files")
+          try? await self.setupSession(forceTranscode: false)
           self.reloadPlayer()
         }
       }
@@ -972,6 +974,7 @@ extension BookPlayerModel {
 
         if updatedEpisode.isDownloaded, self.isPlayerUsingRemoteURL() {
           AppLogger.player.info("Episode download completed, refreshing player to use local file")
+          try? await self.setupSession(forceTranscode: false)
           self.reloadPlayer()
         }
       }
@@ -1265,7 +1268,10 @@ extension BookPlayerModel {
     }
 
     do {
-      try await setupSession(forceTranscode: recoveryAttempts > 1)
+      if !isDownloaded, recoveryAttempts > 1 {
+        sessionManager.clearSession()
+      }
+      try await setupSession(forceTranscode: recoveryAttempts > 2)
 
       if !isDownloaded {
         reloadPlayer()
