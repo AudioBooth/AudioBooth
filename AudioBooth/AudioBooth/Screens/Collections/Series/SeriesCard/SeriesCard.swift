@@ -1,8 +1,8 @@
 import API
+import Combine
 import SwiftUI
 
 struct SeriesCard: View {
-  @Bindable var model: Model
   @Environment(\.itemDisplayMode) private var displayMode
   @Environment(\.coverSize) private var coverSize
   @ObservedObject private var preferences = UserPreferences.shared
@@ -10,12 +10,9 @@ struct SeriesCard: View {
   @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
   @State private var coverWidth: CGFloat = .infinity
 
-  let titleFont: Font
+  @ObservedObject var model: Model
 
-  init(model: Model, titleFont: Font = .headline) {
-    self._model = .init(model)
-    self.titleFont = titleFont
-  }
+  let titleFont: Font
 
   var body: some View {
     NavigationLink(value: NavigationDestination.series(id: model.id, name: model.title)) {
@@ -91,40 +88,45 @@ struct SeriesCard: View {
   }
 
   var stackedCovers: some View {
-    GeometryReader { geometry in
-      let size = geometry.size.width
-      let covers = Array(model.bookCovers.prefix(3))
-      let backCount = max(covers.count - 1, 0)
-      let stackPadding: CGFloat = CGFloat(backCount) * 4
-      let coverSize = size - stackPadding
+    let covers = Array(model.bookCovers.prefix(3))
+    let backCount = max(covers.count - 1, 0)
+    let stackPadding = CGFloat(backCount) * 4
 
-      ZStack(alignment: .topLeading) {
-        ForEach(Array(covers.enumerated().reversed()), id: \.offset) { index, cover in
-          if index == 0 {
-            Cover(model: cover, style: .standard)
-              .frame(width: coverSize, height: coverSize)
-              .overlay(alignment: .bottom) {
-                ProgressOverlay(progress: model.progress)
-                  .padding(4)
+    return ZStack(alignment: .topLeading) {
+      ForEach(Array(covers.enumerated().reversed()), id: \.offset) { index, cover in
+        if index == 0 {
+          coverImage(cover)
+            .overlay(alignment: .bottom) {
+              ProgressOverlay(progress: model.progress)
+                .padding(4)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(alignment: .topTrailing) {
+              bookCountBadge
+            }
+        } else {
+          coverImage(cover)
+            .overlay {
+              if model.progress == 1.0 {
+                Color.black.opacity(0.5)
               }
-              .shadow(radius: 2)
-              .overlay(alignment: .topTrailing) {
-                bookCountBadge
-              }
-          } else {
-            Cover(model: cover, style: .standard)
-              .frame(width: coverSize, height: coverSize)
-              .shadow(radius: 1)
-              .offset(
-                x: CGFloat(index) * 4,
-                y: CGFloat(index) * 4
-              )
-          }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .offset(
+              x: CGFloat(index) * 4,
+              y: CGFloat(index) * 4
+            )
         }
       }
-      .frame(width: size, height: size, alignment: .topLeading)
     }
+    .padding(.trailing, stackPadding)
+    .padding(.bottom, stackPadding)
     .aspectRatio(1.0, contentMode: .fit)
+  }
+
+  private func coverImage(_ cover: Cover.Model) -> some View {
+    Cover(model: cover, style: .plain)
+      .aspectRatio(1.0, contentMode: .fit)
   }
 
   @ViewBuilder
@@ -148,7 +150,7 @@ struct SeriesCard: View {
 
 extension SeriesCard {
   @Observable
-  class Model: Identifiable {
+  class Model: ObservableObject, Identifiable {
     var id: String
     var title: String
     var bookCount: Int
@@ -197,12 +199,12 @@ extension SeriesCard.Model {
 }
 
 #Preview("SeriesCard - Row") {
-  SeriesCard(model: .mock)
+  SeriesCard(model: .mock, titleFont: .headline)
     .padding()
 }
 
 #Preview("SeriesCard - Card") {
-  SeriesCard(model: .mock)
+  SeriesCard(model: .mock, titleFont: .headline)
     .frame(width: 150)
     .padding()
     .environment(\.itemDisplayMode, .card)

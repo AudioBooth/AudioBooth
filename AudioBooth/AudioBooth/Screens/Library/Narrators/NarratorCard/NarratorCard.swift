@@ -1,8 +1,9 @@
 import API
+import Combine
 import SwiftUI
 
 struct NarratorCard: View {
-  @Bindable var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     NavigationLink(value: NavigationDestination.narrator(name: model.name)) {
@@ -14,10 +15,8 @@ struct NarratorCard: View {
   var content: some View {
     VStack(alignment: .leading, spacing: 8) {
       ZStack(alignment: .topTrailing) {
-        GeometryReader { geometry in
-          let size = geometry.size.width
-
-          ZStack {
+        Color.clear
+          .overlay {
             if let imageURL = model.imageURL {
               LazyImage(url: imageURL) { state in
                 if let image = state.image {
@@ -25,30 +24,15 @@ struct NarratorCard: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                 } else {
-                  Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                      Image(systemName: "person.circle")
-                        .font(.largeTitle)
-                        .foregroundColor(.gray)
-                    )
+                  placeholder
                 }
               }
-              .frame(width: size, height: size)
-              .clipShape(Circle())
             } else {
-              Circle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(width: size, height: size)
-                .overlay(
-                  Image(systemName: "person.circle")
-                    .font(.largeTitle)
-                    .foregroundColor(.gray)
-                )
+              placeholder
             }
           }
-        }
-        .aspectRatio(1.0, contentMode: .fit)
+          .aspectRatio(1.0, contentMode: .fit)
+          .clipShape(Circle())
 
         if model.bookCount > 0 {
           Text("\(model.bookCount)")
@@ -72,10 +56,20 @@ struct NarratorCard: View {
         .frame(maxWidth: .infinity, alignment: .center)
     }
   }
+
+  private var placeholder: some View {
+    Circle()
+      .fill(Color.gray.opacity(0.3))
+      .overlay(
+        Image(systemName: "person.circle")
+          .font(.largeTitle)
+          .foregroundColor(.gray)
+      )
+  }
 }
 
 extension NarratorCard {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var id: String
     var name: String
     var bookCount: Int

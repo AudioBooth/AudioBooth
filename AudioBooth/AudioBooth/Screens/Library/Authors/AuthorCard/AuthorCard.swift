@@ -1,8 +1,9 @@
 import API
+import Combine
 import SwiftUI
 
 struct AuthorCard: View {
-  @Bindable var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     NavigationLink(value: NavigationDestination.author(id: model.id, name: model.name)) {
@@ -13,10 +14,8 @@ struct AuthorCard: View {
 
   var content: some View {
     VStack(alignment: .leading, spacing: 8) {
-      GeometryReader { geometry in
-        let size = geometry.size.width
-
-        ZStack {
+      Color.clear
+        .overlay {
           if let imageURL = model.imageURL {
             LazyImage(url: imageURL) { state in
               if let image = state.image {
@@ -24,45 +23,30 @@ struct AuthorCard: View {
                   .resizable()
                   .aspectRatio(contentMode: .fill)
               } else {
-                Circle()
-                  .fill(Color.gray.opacity(0.3))
-                  .overlay(
-                    Image(systemName: "person.circle")
-                      .font(.largeTitle)
-                      .foregroundColor(.gray)
-                  )
+                placeholder
               }
             }
-            .frame(width: size, height: size)
-            .clipShape(Circle())
           } else {
-            Circle()
-              .fill(Color.gray.opacity(0.3))
-              .frame(width: size, height: size)
-              .overlay(
-                Image(systemName: "person.circle")
-                  .font(.largeTitle)
-                  .foregroundColor(.gray)
-              )
+            placeholder
           }
         }
-      }
-      .aspectRatio(1.0, contentMode: .fit)
-      .overlay(alignment: .bottomTrailing) {
-        if model.bookCount > 0 {
-          HStack(spacing: 2) {
-            Image(systemName: "book")
-            Text("\(model.bookCount)")
+        .aspectRatio(1.0, contentMode: .fit)
+        .clipShape(Circle())
+        .overlay(alignment: .bottomTrailing) {
+          if model.bookCount > 0 {
+            HStack(spacing: 2) {
+              Image(systemName: "book")
+              Text("\(model.bookCount)")
+            }
+            .font(.caption2)
+            .fontWeight(.medium)
+            .foregroundStyle(Color.white)
+            .padding(.vertical, 2)
+            .padding(.horizontal, 4)
+            .background(Color.black.opacity(0.6))
+            .clipShape(.capsule)
           }
-          .font(.caption2)
-          .fontWeight(.medium)
-          .foregroundStyle(Color.white)
-          .padding(.vertical, 2)
-          .padding(.horizontal, 4)
-          .background(Color.black.opacity(0.6))
-          .clipShape(.capsule)
         }
-      }
 
       Text(model.name)
         .font(.caption)
@@ -72,10 +56,20 @@ struct AuthorCard: View {
         .frame(maxWidth: .infinity, alignment: .center)
     }
   }
+
+  private var placeholder: some View {
+    Circle()
+      .fill(Color.gray.opacity(0.3))
+      .overlay(
+        Image(systemName: "person.circle")
+          .font(.largeTitle)
+          .foregroundColor(.gray)
+      )
+  }
 }
 
 extension AuthorCard {
-  @Observable class Model {
+  @Observable class Model: ObservableObject {
     var id: String
     var name: String
     var lastFirst: String

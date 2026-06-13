@@ -29,7 +29,7 @@ struct SeriesView: View {
   @ViewBuilder
   private var seriesItems: some View {
     ForEach(series, id: \.id) { series in
-      SeriesCard(model: series)
+      SeriesCard(model: series, titleFont: .headline)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
