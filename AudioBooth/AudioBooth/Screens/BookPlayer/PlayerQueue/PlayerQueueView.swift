@@ -79,10 +79,6 @@ struct PlayerQueueView: View {
           Toggle("Auto-play next", isOn: $preferences.autoPlayNextInQueue)
             .padding(.horizontal)
             .padding(.vertical, 10)
-          Divider()
-          Toggle("Smart continue", isOn: $preferences.smartContinuePlayback)
-            .padding(.horizontal)
-            .padding(.vertical, 10)
         }
         .font(.subheadline)
         .bold()

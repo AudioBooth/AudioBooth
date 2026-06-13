@@ -69,6 +69,20 @@ struct PlayerPreferencesView: View {
       }
 
       Section {
+        Toggle(isOn: $preferences.smartContinuePlayback) {
+          PreferenceRow(
+            systemImage: "wand.and.stars",
+            tint: .indigo,
+            title: "Smart Continue",
+            subtitle: "Automatically play the next book in the series, downloaded book, or podcast episode"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
+      } header: {
+        Text("Up Next")
+      }
+
+      Section {
         NavigationLink {
           ControlsLayoutPreferencesView()
         } label: {
