@@ -198,8 +198,7 @@ public final class AuthenticationService: ObservableObject {
     let request = NetworkRequest<Authorize>(path: "/api/authorize", method: .post, body: nil)
 
     let altService = NetworkService(baseURL: url, server: server) {
-      let freshToken = try? await server.freshToken
-      guard let credentials = freshToken else { return [:] }
+      let credentials = (try? await server.freshToken) ?? server.token
       var headers = server.customHeaders
       headers["Authorization"] = credentials.bearer
       return headers

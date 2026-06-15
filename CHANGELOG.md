@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Automatic reconnection - the app now silently refreshes the access token using the stored refresh token and reconnects after the server has been unreachable, instead of requiring a full username and password re-login when the server comes back online
+
 ## [1.10.0]
 
 ### Added

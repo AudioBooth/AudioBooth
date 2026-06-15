@@ -174,7 +174,10 @@ final class NetworkService {
     }
   }
 
-  private func performRequest<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
+  private func performRequest<T: Decodable>(
+    _ request: NetworkRequest<T>,
+    allowAuthRetry: Bool = true
+  ) async throws -> NetworkResponse<T> {
     let urlRequest = try await buildURLRequest(from: request)
 
     AppLogger.network.info(
@@ -197,6 +200,27 @@ final class NetworkService {
         AppLogger.network.error(
           "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
         )
+
+        if httpResponse.statusCode == 401, allowAuthRetry, let server, server.canAttemptRefresh {
+          AppLogger.network.info("Received 401, refreshing access token and retrying once")
+          do {
+            try await server.forceTokenRefresh()
+          } catch {
+            // The refresh itself failed. Only a definitive rejection of the
+            // refresh token (401/403) means re-authentication is required; any
+            // other failure is a connection problem, so we keep the session and
+            // avoid forcing the user to log in again over a transient error.
+            if case NetworkError.httpError(let refreshStatus, _) = error,
+              refreshStatus == 401 || refreshStatus == 403
+            {
+              server.status = .authenticationError
+            } else {
+              server.status = .connectionError
+            }
+            throw NetworkError.httpError(statusCode: httpResponse.statusCode, message: responseBody)
+          }
+          return try await performRequest(request, allowAuthRetry: false)
+        }
 
         if httpResponse.statusCode == 401 {
           server?.status = .authenticationError

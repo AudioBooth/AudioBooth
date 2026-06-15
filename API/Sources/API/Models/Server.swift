@@ -42,6 +42,23 @@ public final class Server: @unchecked Sendable {
     }
   }
 
+  /// Whether a 401 response can potentially be recovered by refreshing the
+  /// access token. Only bearer tokens with a non-empty refresh token are
+  /// refreshable; API keys and legacy tokens are not.
+  public var canAttemptRefresh: Bool {
+    if case .bearer(_, let refreshToken, _) = token {
+      return !refreshToken.isEmpty
+    }
+    return false
+  }
+
+  /// Forces a refresh of the access token using the stored refresh token,
+  /// bypassing the normal expiry check and connection backoff. Used to recover
+  /// from a 401 on a request that should have been authenticated.
+  public func forceTokenRefresh() async throws {
+    _ = try await credentialsActor.forceRefresh()
+  }
+
   public let storage: UserDefaults
 
   @ObservationIgnored @Stored("username") public var username: String? = nil

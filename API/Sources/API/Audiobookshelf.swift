@@ -61,8 +61,13 @@ public final class Audiobookshelf: @unchecked Sendable {
         let server = self.authentication.server
       else { return [:] }
 
-      let freshToken = try? await server.freshToken
-      guard let credentials = freshToken else { return [:] }
+      // Prefer a freshly refreshed token. If a proactive refresh can't run (e.g.
+      // the server is unreachable), fall back to the stored token so the request
+      // is still authenticated. A recovered server then answers 401, which
+      // NetworkService recovers from by refreshing and retrying — instead of
+      // receiving an unauthenticated request and reporting an authentication
+      // error for what is really a connection issue.
+      let credentials = (try? await server.freshToken) ?? server.token
 
       var headers = server.customHeaders
       headers["Authorization"] = credentials.bearer

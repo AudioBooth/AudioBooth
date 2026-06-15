@@ -43,6 +43,15 @@ struct AudioBoothApp: App {
       case .active:
         guard Audiobookshelf.shared.authentication.isAuthenticated else { return }
         SessionManager.shared.syncUnsyncedSessions()
+        // Re-probe the server when returning to the foreground if we aren't
+        // currently connected, so a server that recovered while the app was
+        // backgrounded reconnects on its own (using the refresh token) instead
+        // of waiting for the user to trigger a request manually.
+        if let server = Audiobookshelf.shared.authentication.server,
+          server.status != .connected
+        {
+          Task { await Audiobookshelf.shared.authentication.checkServersHealth() }
+        }
       default:
         break
       }

@@ -44,23 +44,51 @@ actor CredentialsActor {
         )
       }
 
-      let task = Task<Credentials, Error> { @MainActor [server] in
-        try await Audiobookshelf.shared.authentication.refreshToken(for: server)
-      }
+      return try await performRefresh(for: server)
+    }
+  }
 
-      refreshTask = task
+  /// Forces a refresh of the access token using the stored refresh token,
+  /// ignoring both the expiry check and the connection-error backoff.
+  ///
+  /// This is the recovery path for a 401 on a request we believed was
+  /// authenticated: the rejection proves the server is reachable, so the
+  /// backoff that was set while it was unreachable no longer applies.
+  /// Concurrent callers coalesce onto a single in-flight refresh so the
+  /// rotating refresh token is only exchanged once.
+  func forceRefresh() async throws -> Credentials {
+    if let refreshTask {
+      return try await refreshTask.value
+    }
 
-      do {
-        let credentials = try await task.value
-        refreshTask = nil
-        consecutiveFailures = 0
-        nextRetryAt = nil
-        return credentials
-      } catch {
-        refreshTask = nil
-        await handleError(error)
-        throw error
-      }
+    guard let server, case .bearer(_, let refreshToken, _) = server.token,
+      !refreshToken.isEmpty
+    else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Refresh token is no longer valid, re-authentication required"
+      )
+    }
+
+    return try await performRefresh(for: server)
+  }
+
+  private func performRefresh(for server: Server) async throws -> Credentials {
+    let task = Task<Credentials, Error> { @MainActor [server] in
+      try await Audiobookshelf.shared.authentication.refreshToken(for: server)
+    }
+
+    refreshTask = task
+
+    do {
+      let credentials = try await task.value
+      refreshTask = nil
+      consecutiveFailures = 0
+      nextRetryAt = nil
+      return credentials
+    } catch {
+      refreshTask = nil
+      await handleError(error)
+      throw error
     }
   }
 
