@@ -4,7 +4,6 @@ import Foundation
 import Logging
 import Models
 import Nuke
-import SafariServices
 import UIKit
 
 final class BookDetailsViewModel: BookDetailsView.Model {
@@ -451,11 +450,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       updatedActions.insert(.writeNFCTag)
     }
 
-    if metadata.isEbook {
-      updatedActions.insert(.openOnWeb)
-      if !ereaderDevices.isEmpty {
-        updatedActions.insert(.sendToEbook)
-      }
+    if metadata.isEbook, !ereaderDevices.isEmpty {
+      updatedActions.insert(.sendToEbook)
     }
 
     if downloadState == .downloaded {
@@ -530,14 +526,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       ebookReader = EbookReaderViewModel(source: .remote(ebookURL), bookID: bookID)
     } else {
       Toast(error: "Ebook URL not available").show()
-    }
-  }
-
-  override func onOpenTapped() {
-    if let url = book?.ebookURL {
-      openEbookInSafari(url)
-    } else {
-      Toast(error: "Unable to open ebook").show()
     }
   }
 
@@ -673,18 +661,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 }
 
 extension BookDetailsViewModel {
-  private func openEbookInSafari(_ url: URL) {
-    let safariViewController = SFSafariViewController(url: url)
-    safariViewController.modalPresentationStyle = .overFullScreen
-
-    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first,
-      let rootViewController = window.rootViewController
-    {
-      rootViewController.present(safariViewController, animated: true)
-    }
-  }
-
   private func presentShareSheet(for fileURL: URL) {
     guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
       let window = windowScene.windows.first,

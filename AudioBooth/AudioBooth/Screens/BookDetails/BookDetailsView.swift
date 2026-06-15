@@ -81,40 +81,6 @@ struct BookDetailsView: View {
         }
       }
 
-      if model.actions.contains(.shareEbook) || model.actions.contains(.shareAudio) {
-        ToolbarItem(placement: .topBarTrailing) {
-          if model.isPreparingShare {
-            ProgressView()
-          } else if model.actions.contains(.shareEbook) && model.actions.contains(.shareAudio) {
-            Menu {
-              Button(action: model.onShareEbookTapped) {
-                Label("Share Ebook", systemImage: "book.closed")
-              }
-              Button(action: model.onShareAudioTapped) {
-                Label("Share Audiobook", systemImage: "headphones")
-              }
-            } label: {
-              Label("Share", systemImage: "square.and.arrow.up")
-            }
-            .tint(.primary)
-          } else if model.actions.contains(.shareEbook) {
-            Button(action: model.onShareEbookTapped) {
-              Label("Share", systemImage: "square.and.arrow.up")
-            }
-            .tint(.primary)
-          } else {
-            Button(action: model.onShareAudioTapped) {
-              Label("Share", systemImage: "square.and.arrow.up")
-            }
-            .tint(.primary)
-          }
-        }
-
-        if #available(iOS 26.0, *) {
-          ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        }
-      }
-
       ToolbarItem(placement: .topBarTrailing) {
         Menu {
           if model.actions.contains(.addToCollection) {
@@ -167,6 +133,8 @@ struct BookDetailsView: View {
               Label("Reset Progress", systemImage: "arrow.counterclockwise")
             }
           }
+
+          shareActions
 
           ereaderDevices
 
@@ -619,27 +587,39 @@ struct BookDetailsView: View {
 
 extension BookDetailsView {
   @ViewBuilder
-  private var ereaderDevices: some View {
-    if model.actions.contains(.openOnWeb) {
+  private var shareActions: some View {
+    if model.actions.contains(.shareEbook) || model.actions.contains(.shareAudio) {
       Divider()
 
-      Button(
-        action: { model.onOpenTapped() },
-        label: {
-          Label("Open on Web", systemImage: "globe")
+      if model.actions.contains(.shareEbook) {
+        Button(action: model.onShareEbookTapped) {
+          Label("Share Ebook", systemImage: "book.closed")
         }
-      )
+        .disabled(model.isPreparingShare)
+      }
 
-      if model.actions.contains(.sendToEbook) {
-        Menu {
-          ForEach(model.ereaderDevices, id: \.self) { device in
-            Button(device) {
-              model.onSendToEbookTapped(device)
-            }
-          }
-        } label: {
-          Label("Send Ebook to", systemImage: "paperplane")
+      if model.actions.contains(.shareAudio) {
+        Button(action: model.onShareAudioTapped) {
+          Label("Share Audiobook", systemImage: "headphones")
         }
+        .disabled(model.isPreparingShare)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var ereaderDevices: some View {
+    if model.actions.contains(.sendToEbook) {
+      Divider()
+
+      Menu {
+        ForEach(model.ereaderDevices, id: \.self) { device in
+          Button(device) {
+            model.onSendToEbookTapped(device)
+          }
+        }
+      } label: {
+        Label("Send Ebook to", systemImage: "paperplane")
       }
     }
   }
@@ -665,7 +645,6 @@ extension BookDetailsView {
       static let markAsFinished = Actions(rawValue: 1 << 4)
       static let resetProgress = Actions(rawValue: 1 << 5)
       static let writeNFCTag = Actions(rawValue: 1 << 6)
-      static let openOnWeb = Actions(rawValue: 1 << 7)
       static let sendToEbook = Actions(rawValue: 1 << 8)
       static let shareEbook = Actions(rawValue: 1 << 9)
       static let shareAudio = Actions(rawValue: 1 << 10)
@@ -701,7 +680,6 @@ extension BookDetailsView {
     func onAppear() {}
     func onPlayTapped() {}
     func onReadTapped() {}
-    func onOpenTapped() {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped() {}
     func onResetProgressTapped() {}
