@@ -662,7 +662,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 1.11;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.watchkitapp.AudioBoothWatchWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS.watchkitapp.AudioBoothWatchWidget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -695,7 +695,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 1.11;
-				PRODUCT_BUNDLE_IDENTIFIER = me.jgrenier.AudioBS.watchkitapp.AudioBoothWatchWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).AudioBS.watchkitapp.AudioBoothWatchWidget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
