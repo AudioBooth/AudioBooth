@@ -33,6 +33,13 @@ public final class Server: @unchecked Sendable {
 
   public var status: Status = .connected
 
+  public var canAttemptRefresh: Bool {
+    if case .bearer(_, let refreshToken, _) = token {
+      return !refreshToken.isEmpty
+    }
+    return false
+  }
+
   @ObservationIgnored
   private lazy var credentialsActor = CredentialsActor(server: self)
 

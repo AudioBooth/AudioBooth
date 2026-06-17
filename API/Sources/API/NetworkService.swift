@@ -198,7 +198,7 @@ final class NetworkService {
           "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
         )
 
-        if httpResponse.statusCode == 401 {
+        if httpResponse.statusCode == 401, server?.canAttemptRefresh != true {
           server?.status = .authenticationError
         } else {
           server?.status = .connectionError

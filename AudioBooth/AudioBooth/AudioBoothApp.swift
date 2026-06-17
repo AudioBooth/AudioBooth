@@ -43,6 +43,11 @@ struct AudioBoothApp: App {
         guard Audiobookshelf.shared.authentication.isAuthenticated else { return }
         SessionManager.shared.syncUnsyncedSessions()
         PodcastAutoQueueManager.shared.refresh()
+
+        if let server = Audiobookshelf.shared.authentication.server, server.status != .connected {
+          Task { _ = try? await Audiobookshelf.shared.libraries.fetch() }
+        }
+
       default:
         break
       }
