@@ -77,7 +77,7 @@ struct TipJarView: View {
       } header: {
         Text("Sponsor")
       }
-      .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
       .animation(.easeInOut(duration: 0.3), value: model.lastPurchaseSuccess)
     }
   }

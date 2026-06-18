@@ -179,7 +179,9 @@ struct PlayerPreferencesView: View {
 private struct NarrationSpeedCard: View {
   @Binding var speed: Double
 
-  private let presets: [Double] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
+  private var presets: [Double] {
+    UserDefaults.standard.array(forKey: "speedPresets") as? [Double] ?? [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
@@ -214,6 +216,7 @@ private struct NarrationSpeedCard: View {
           presetChip(value)
         }
       }
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
     .padding(16)
   }

@@ -51,7 +51,7 @@ struct ListeningStatsCard: View {
         )
       }
     }
-    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     .onAppear(perform: model.onAppear)
   }
 
