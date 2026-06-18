@@ -292,6 +292,7 @@ struct BookPlayer: View {
               .font(.headline)
           }
         }
+        .id(chapter.title)
         .buttonStyle(.plain)
       }
       .padding(.horizontal, 8)
@@ -301,6 +302,7 @@ struct BookPlayer: View {
           .foregroundColor(.white)
           .font(.headline)
       }
+      .id(model.title)
     }
   }
 
