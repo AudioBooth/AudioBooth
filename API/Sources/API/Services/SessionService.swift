@@ -129,7 +129,7 @@ public final class SessionService {
     }
 
     struct SyncRequest: Codable {
-      let timeListened: Int
+      let timeListened: TimeInterval
       let currentTime: Double
     }
 
@@ -143,7 +143,7 @@ public final class SessionService {
     let request = NetworkRequest<Data>(
       path: "/api/session/\(id)/sync",
       method: .post,
-      body: SyncRequest(timeListened: Int(timeListened), currentTime: currentTime),
+      body: SyncRequest(timeListened: timeListened, currentTime: currentTime),
       timeout: timeout,
       discretionary: true
     )

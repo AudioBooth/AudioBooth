@@ -234,14 +234,15 @@ extension SessionManager {
 
     if session.isRemote {
       if session.pendingListeningTime > 0 {
+        let timeListening = session.pendingListeningTime
         do {
           try await audiobookshelf.sessions.sync(
             session.id,
-            timeListened: session.pendingListeningTime,
+            timeListened: timeListening,
             currentTime: session.currentTime
           )
-          session.timeListening += session.pendingListeningTime
-          session.pendingListeningTime = 0
+          session.timeListening += timeListening
+          session.pendingListeningTime -= timeListening
           try session.save()
           AppLogger.session.debug("Synced final progress before closing remote session")
         } catch {
@@ -343,14 +344,15 @@ extension SessionManager {
   }
 
   private func syncRemoteSession(_ session: PlaybackSession) async throws {
+    let timeListening = session.pendingListeningTime
     do {
       try await audiobookshelf.sessions.sync(
         session.id,
-        timeListened: session.pendingListeningTime,
+        timeListened: timeListening,
         currentTime: session.currentTime
       )
-      session.timeListening += session.pendingListeningTime
-      session.pendingListeningTime = 0
+      session.timeListening += timeListening
+      session.pendingListeningTime -= timeListening
       try session.save()
       scheduleSessionClose()
       AppLogger.session.info("Successfully synced remote session: \(session.id)")
