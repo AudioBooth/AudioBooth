@@ -285,6 +285,9 @@ final class BookPlayerModel: BookPlayer.Model {
           }
         } catch {
           AppLogger.player.error("Failed to recreate session: \(error)")
+          isLoading = false
+          pendingPlay = false
+          Toast(error: "Couldn't reconnect. Please try again.").show()
         }
       }
     }
