@@ -1,6 +1,5 @@
 import API
-import SafariServices
-import UIKit
+import Foundation
 
 final class EbooksContentModel: EbooksContent.Model {
   private let bookID: String
@@ -20,27 +19,6 @@ final class EbooksContentModel: EbooksContent.Model {
     }
 
     ebookReader = EbookReaderViewModel(source: .remote(url), bookID: nil)
-  }
-
-  override func onOpenOnWebTapped(_ ebook: EbooksContent.SupplementaryEbook) {
-    guard let url = ebook.url(for: bookID) else {
-      Toast(error: "Unable to open ebook").show()
-      return
-    }
-
-    openInSafari(url)
-  }
-
-  private func openInSafari(_ url: URL) {
-    let safariViewController = SFSafariViewController(url: url)
-    safariViewController.modalPresentationStyle = .overFullScreen
-
-    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first,
-      let rootViewController = window.rootViewController
-    {
-      rootViewController.present(safariViewController, animated: true)
-    }
   }
 }
 

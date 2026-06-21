@@ -40,8 +40,10 @@ struct EbooksContent: View {
           .padding(.vertical, 8)
         }
         .contextMenu {
-          Button(action: { model.onOpenOnWebTapped(ebook) }) {
-            Label("Open on Web", systemImage: "globe")
+          if let shareItem = ebook.shareItem {
+            ShareLink(item: shareItem, preview: SharePreview(ebook.filename)) {
+              Label("Share", systemImage: "square.and.arrow.up")
+            }
           }
         }
       }
@@ -64,7 +66,6 @@ extension EbooksContent {
     var ebookReader: EbookReaderView.Model?
 
     func onEbookTapped(_ ebook: SupplementaryEbook) {}
-    func onOpenOnWebTapped(_ ebook: SupplementaryEbook) {}
 
     init(ebooks: [SupplementaryEbook]) {
       self.ebooks = ebooks
@@ -75,5 +76,6 @@ extension EbooksContent {
     let filename: String
     let size: Int64
     let ino: String
+    var shareItem: BookShareItem? = nil
   }
 }

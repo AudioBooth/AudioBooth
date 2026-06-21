@@ -586,23 +586,29 @@ struct BookDetailsView: View {
 }
 
 extension BookDetailsView {
+  private var sharePreview: SharePreview<Image, Never> {
+    SharePreview(model.title, image: model.shareCoverImage ?? Image(systemName: "book.closed"))
+  }
+
   @ViewBuilder
   private var shareActions: some View {
-    if model.actions.contains(.shareEbook) || model.actions.contains(.shareAudio) {
+    if model.shareItems.count == 1, let item = model.shareItems.first {
       Divider()
 
-      if model.actions.contains(.shareEbook) {
-        Button(action: model.onShareEbookTapped) {
-          Label("Share Ebook", systemImage: "book.closed")
-        }
-        .disabled(model.isPreparingShare)
+      ShareLink(item: item, preview: sharePreview) {
+        Label("Share Book", systemImage: "square.and.arrow.up")
       }
+    } else if !model.shareItems.isEmpty {
+      Divider()
 
-      if model.actions.contains(.shareAudio) {
-        Button(action: model.onShareAudioTapped) {
-          Label("Share Audiobook", systemImage: "headphones")
+      Menu {
+        ForEach(model.shareItems) { item in
+          ShareLink(item: item, preview: sharePreview) {
+            Label(item.label, systemImage: item.icon)
+          }
         }
-        .disabled(model.isPreparingShare)
+      } label: {
+        Label("Share Book", systemImage: "square.and.arrow.up")
       }
     }
   }
@@ -646,8 +652,6 @@ extension BookDetailsView {
       static let resetProgress = Actions(rawValue: 1 << 5)
       static let writeNFCTag = Actions(rawValue: 1 << 6)
       static let sendToEbook = Actions(rawValue: 1 << 8)
-      static let shareEbook = Actions(rawValue: 1 << 9)
-      static let shareAudio = Actions(rawValue: 1 << 10)
     }
 
     let bookID: String
@@ -662,7 +666,8 @@ extension BookDetailsView {
     var downloadState: DownloadManager.DownloadState
     var isLoading: Bool
     var isPlaying: Bool
-    var isPreparingShare: Bool = false
+    var shareItems: [BookShareItem] = []
+    var shareCoverImage: Image? = nil
     var flags: Flags
     var error: String?
     var genres: [String]?
@@ -685,8 +690,6 @@ extension BookDetailsView {
     func onResetProgressTapped() {}
     func onWriteTagTapped() {}
     func onSendToEbookTapped(_ device: String) {}
-    func onShareEbookTapped() {}
-    func onShareAudioTapped() {}
     func onAddToQueueTapped() {}
     func onRemoveFromQueueTapped() {}
 
