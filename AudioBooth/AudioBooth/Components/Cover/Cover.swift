@@ -71,24 +71,24 @@ struct Cover: View {
       }
       .overlay {
         if let title = model.title, !title.isEmpty {
-          VStack(spacing: 2) {
-            Text(title)
-              .font(.caption2)
-              .fontWeight(.medium)
-              .lineLimit(2)
-            if let author = model.author, !author.isEmpty {
-              Text(author)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
-            }
-          }
-          .multilineTextAlignment(.center)
-          .padding()
+          Text(title)
+            .font(.system(size: 9, weight: .medium))
+            .lineLimit(3)
+            .multilineTextAlignment(.center)
+            .padding()
         } else {
           Image(systemName: "book.closed")
             .foregroundColor(.gray)
             .font(.title2)
+        }
+      }
+      .overlay(alignment: .bottom) {
+        if let author = model.author, !author.isEmpty {
+          Text(author)
+            .font(.system(size: 8))
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+            .padding()
         }
       }
   }
