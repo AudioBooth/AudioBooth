@@ -199,10 +199,10 @@ extension PlayerManager: PlayerManagerProtocol {
       if current?.id == bookID {
         play()
       } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-        if !localBook.tracks.isEmpty {
+        if localBook.mediaType.contains(.audiobook) {
           setCurrent(localBook)
           play()
-        } else if localBook.ebookFile != nil {
+        } else if localBook.mediaType.contains(.ebook) {
           openLocalBookAsEbook(localBook)
         }
       } else {
@@ -253,9 +253,9 @@ extension PlayerManager: PlayerManagerProtocol {
       if current?.id == bookID {
         showFullPlayer()
       } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-        if localBook.ebookFile != nil {
+        if localBook.mediaType.contains(.ebook) {
           openLocalBookAsEbook(localBook)
-        } else if !localBook.tracks.isEmpty {
+        } else if localBook.mediaType.contains(.audiobook) {
           setCurrent(localBook)
           showFullPlayer()
         }

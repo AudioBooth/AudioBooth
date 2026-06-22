@@ -31,6 +31,17 @@ public final class LocalBook {
     authors.map(\.name).joined(separator: ", ")
   }
 
+  public var mediaType: Book.MediaType {
+    var types: Book.MediaType = []
+    if !tracks.isEmpty {
+      types.insert(.audiobook)
+    }
+    if ebookFile != nil {
+      types.insert(.ebook)
+    }
+    return types
+  }
+
   public var ebookLocalPath: URL? {
     guard let ebookFile else { return nil }
 

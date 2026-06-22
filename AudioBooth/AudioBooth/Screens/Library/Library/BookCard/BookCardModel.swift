@@ -19,8 +19,10 @@ final class BookCardModel: BookCard.Model {
   init(_ item: LocalBook, options: Options = []) {
     let id = item.bookID
 
-    let hasLocalAudio = !item.tracks.isEmpty && item.tracks.allSatisfy { $0.relativePath != nil }
-    let hasLocalEbook = item.ebookFile != nil
+    let hasLocalAudio =
+      item.mediaType.contains(.audiobook)
+      && item.tracks.allSatisfy { $0.relativePath != nil }
+    let hasLocalEbook = item.mediaType.contains(.ebook)
 
     var details: String
     if !hasLocalAudio && hasLocalEbook {
@@ -61,7 +63,7 @@ final class BookCardModel: BookCard.Model {
       sequence: options.contains(.showSequence) ? item.series.first?.sequence : nil,
       author: item.authorNames,
       publishedYear: item.publishedYear,
-      hasEbook: item.ebookFile != nil,
+      hasEbook: hasLocalEbook,
       isExplicit: item.isExplicit
     )
 

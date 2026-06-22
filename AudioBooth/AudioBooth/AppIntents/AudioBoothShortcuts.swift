@@ -3,6 +3,25 @@ import PlayerIntents
 
 struct AudioBoothShortcuts: AppShortcutsProvider {
   static var appShortcuts: [AppShortcut] {
+    if #available(iOS 18.0, *) {
+      return shortcuts + [
+        AppShortcut(
+          intent: PlayAudiobookIntent(),
+          phrases: [
+            "Play \(\.$target) with \(.applicationName)",
+            "Play \(\.$target) in \(.applicationName)",
+            "Play \(\.$target) on \(.applicationName)",
+          ],
+          shortTitle: "Play audiobook",
+          systemImageName: "play.fill"
+        )
+      ]
+    }
+    return shortcuts
+  }
+
+  @AppShortcutsBuilder
+  private static var shortcuts: [AppShortcut] {
     AppShortcut(
       intent: PausePlaybackIntent(),
       phrases: [
@@ -19,6 +38,12 @@ struct AudioBoothShortcuts: AppShortcutsProvider {
         "Resume playback in \(.applicationName)",
         "Resume \(.applicationName)",
         "Play \(.applicationName)",
+        "Play my audiobook with \(.applicationName)",
+        "Play my audiobook in \(.applicationName)",
+        "Play my book with \(.applicationName)",
+        "Play my book in \(.applicationName)",
+        "Continue my audiobook with \(.applicationName)",
+        "Continue my book with \(.applicationName)",
       ],
       shortTitle: "Resume playback",
       systemImageName: "play.fill"

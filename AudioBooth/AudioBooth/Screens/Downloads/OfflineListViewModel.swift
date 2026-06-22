@@ -130,7 +130,7 @@ extension OfflineListViewModel {
         guard !Task.isCancelled, let self else { break }
 
         if !self.isReordering {
-          self.allBooks = books.filter { $0.isDownloaded || $0.ebookFile != nil }.sorted()
+          self.allBooks = books.filter { $0.isDownloaded || $0.mediaType.contains(.ebook) }.sorted()
           self.filteredBooks = self.allBooks
           self.updateDisplayedItems()
         }

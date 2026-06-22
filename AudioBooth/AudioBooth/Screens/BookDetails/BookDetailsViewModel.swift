@@ -71,13 +71,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           Series(id: series.id, name: series.name, sequence: series.sequence)
         }
 
-        var mediaType: Book.MediaType = []
-        if !localBook.tracks.isEmpty {
-          mediaType.insert(.audiobook)
-        }
-        if localBook.ebookFile != nil {
-          mediaType.insert(.ebook)
-        }
+        let mediaType = localBook.mediaType
 
         let currentTime = MediaProgress.progress(for: bookID) * localBook.duration
         let chapters: [ChaptersContent.Chapter]?
