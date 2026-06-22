@@ -40,6 +40,11 @@ public final class Server: @unchecked Sendable {
     return false
   }
 
+  func expireAccessToken() {
+    guard case .bearer(let accessToken, let refreshToken, _) = token else { return }
+    token = .bearer(accessToken: accessToken, refreshToken: refreshToken, expiresAt: 0)
+  }
+
   @ObservationIgnored
   private lazy var credentialsActor = CredentialsActor(server: self)
 

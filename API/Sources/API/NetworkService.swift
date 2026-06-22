@@ -198,7 +198,10 @@ final class NetworkService {
           "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
         )
 
-        if httpResponse.statusCode == 401, server?.canAttemptRefresh != true {
+        if httpResponse.statusCode == 401, let server, server.canAttemptRefresh {
+          server.expireAccessToken()
+          server.status = .connectionError
+        } else if httpResponse.statusCode == 401 {
           server?.status = .authenticationError
         } else {
           server?.status = .connectionError
