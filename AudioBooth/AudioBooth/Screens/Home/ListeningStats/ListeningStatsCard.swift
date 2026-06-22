@@ -115,6 +115,14 @@ struct ListeningStatsCard: View {
 
       let maxMinutes = model.weekData.map { $0.timeInSeconds / 60 }.max() ?? 0
       let yAxisMax = maxMinutes * 1.3
+      let yAxisStep: Double =
+        switch yAxisMax {
+        case 960...: 240
+        case 480...: 120
+        case 60...: 60
+        case 30...: 15
+        default: 5
+        }
 
       Chart(model.weekData) { dayData in
         AreaMark(
@@ -141,7 +149,10 @@ struct ListeningStatsCard: View {
       }
       .chartYScale(domain: 0...yAxisMax)
       .chartYAxis {
-        AxisMarks(position: .leading)
+        AxisMarks(
+          position: .leading,
+          values: Array(stride(from: 0.0, through: yAxisMax, by: yAxisStep))
+        )
       }
       .chartXSelection(value: $selectedDay)
       .chartXAxis {
