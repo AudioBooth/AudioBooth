@@ -62,6 +62,7 @@ public final class Server: @unchecked Sendable {
   @ObservationIgnored @Stored("defaultLibraryID") public var defaultLibraryID: String? = nil
   @ObservationIgnored @Stored("ereaderDevices") public var ereaderDevices: [EreaderDevice] = []
   @ObservationIgnored @Stored("sortingIgnorePrefix") public var sortingIgnorePrefix: Bool = false
+  @ObservationIgnored @Stored("serverVersion") public var serverVersion: String? = nil
 
   public func clearStorage() {
     storage.removePersistentDomain(forName: "connection.\(id)")
@@ -75,6 +76,7 @@ public final class Server: @unchecked Sendable {
     defaultLibraryID = authorize.userDefaultLibraryId
     ereaderDevices = authorize.ereaderDevices
     sortingIgnorePrefix = authorize.serverSettings.sortingIgnorePrefix
+    serverVersion = authorize.serverSettings.version
   }
 
   public init(connection: Connection) {
