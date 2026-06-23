@@ -69,10 +69,7 @@ extension SmartContinueResolver {
   }
 
   private func sortedEpisodes(_ episodes: [PodcastEpisode]) -> [PodcastEpisode] {
-    episodes.sorted { a, b in
-      guard let aDate = a.publishedAt, let bDate = b.publishedAt else { return false }
-      return aDate < bDate
-    }
+    episodes.sorted { ($0.publishedAt ?? .min) < ($1.publishedAt ?? .min) }
   }
 
   private func resolveNextOfflineEpisode(currentEpisodeID: String) -> ResolvedItem? {

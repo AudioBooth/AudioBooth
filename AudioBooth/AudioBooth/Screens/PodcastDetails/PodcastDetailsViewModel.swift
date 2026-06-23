@@ -281,10 +281,11 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       isExplicit = podcast.media.metadata.explicit ?? false
       language = podcast.language
       podcastType = podcast.podcastType
-      episodeCount = podcast.numEpisodes
       feedURL = podcast.feedURL
 
       apiEpisodes = podcast.media.episodes ?? []
+
+      episodeCount = apiEpisodes.count
 
       let totalDuration = apiEpisodes.reduce(0.0) { $0 + ($1.duration ?? 0) }
       if totalDuration > 0 {
@@ -357,6 +358,8 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       if localPodcast == nil {
         isLoading = false
         self.error = "Failed to load podcast details. Please check your connection and try again."
+      } else {
+        Toast(error: "Couldn't refresh episodes. Showing downloaded episodes only.").show()
       }
       AppLogger.viewModel.error("Failed to load podcast: \(error)")
     }
