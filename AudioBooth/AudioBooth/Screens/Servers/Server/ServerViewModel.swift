@@ -146,6 +146,7 @@ final class ServerViewModel: ServerView.Model {
       reauthenticationModel: reauthModel,
       status: server?.status,
       username: username,
+      serverVersion: server?.serverVersion,
       canExportConnection: canExportConnection,
       connectionSharingModel: connectionSharingModel
     )
