@@ -12,6 +12,7 @@ struct SmartContinueResolver {
   }
 
   private let audiobookshelf = Audiobookshelf.shared
+  private let preferences = UserPreferences.shared
 
   func resolve(
     currentItemID: String,
@@ -54,10 +55,9 @@ extension SmartContinueResolver {
     }
 
     let remaining = sorted.suffix(from: sorted.index(after: currentIndex))
-    let next =
-      remaining.first(where: { MediaProgress.progress(for: $0.id) < 1.0 })
-      ?? sorted.first(where: { $0.id != currentEpisodeID && MediaProgress.progress(for: $0.id) < 1.0 })
-    guard let next else { return nil }
+    guard let next = remaining.first(where: { MediaProgress.progress(for: $0.id) < 1.0 }) else {
+      return nil
+    }
 
     return ResolvedItem(
       bookID: next.id,
@@ -69,7 +69,23 @@ extension SmartContinueResolver {
   }
 
   private func sortedEpisodes(_ episodes: [PodcastEpisode]) -> [PodcastEpisode] {
-    episodes.sorted { ($0.publishedAt ?? .min) < ($1.publishedAt ?? .min) }
+    let ascending = preferences.podcastEpisodeSortAscending
+    let sort = preferences.podcastEpisodeSort
+
+    return episodes.sorted { a, b in
+      let result: Bool
+      switch sort {
+      case .pubDate:
+        result = (a.publishedAt ?? .min) < (b.publishedAt ?? .min)
+      case .title:
+        result = a.title.localizedStandardCompare(b.title) == .orderedAscending
+      case .season:
+        result = (a.season ?? "") < (b.season ?? "")
+      case .episode:
+        result = (a.episode ?? "") < (b.episode ?? "")
+      }
+      return ascending ? result : !result
+    }
   }
 
   private func resolveNextOfflineEpisode(currentEpisodeID: String) -> ResolvedItem? {
