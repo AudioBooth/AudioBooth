@@ -315,7 +315,33 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   override func onTapRight() {
     Task {
-      await navigator?.goForward()
+      if isAtEndOfBook {
+        await finishBook()
+      } else {
+        await navigator?.goForward()
+      }
+    }
+  }
+
+  private var isAtEndOfBook: Bool {
+    guard
+      let position = navigator?.currentLocation?.locations.position,
+      !positions.isEmpty
+    else {
+      return false
+    }
+
+    return position >= positions.count
+  }
+
+  private func finishBook() async {
+    guard let bookID else { return }
+
+    do {
+      try MediaProgress.markAsFinished(for: bookID)
+      try await audiobookshelf.libraries.markAsFinished(bookID: bookID)
+    } catch {
+      AppLogger.viewModel.error("Failed to mark ebook as finished: \(error)")
     }
   }
 
