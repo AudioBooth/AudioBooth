@@ -248,49 +248,49 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
     }
 
     episodes = localEpisodes.map { localEpisode in
-        let progress = MediaProgress.progress(for: localEpisode.episodeID)
-        let downloadState = downloadManager.downloadStates[localEpisode.episodeID] ?? .notDownloaded
+      let progress = MediaProgress.progress(for: localEpisode.episodeID)
+      let downloadState = downloadManager.downloadStates[localEpisode.episodeID] ?? .notDownloaded
 
-        let chapters = localEpisode.orderedChapters.map { chapter in
-          Chapter(
-            id: chapter.id,
-            start: chapter.start,
-            end: chapter.end,
-            title: chapter.title
-          )
-        }
-
-        let contextMenu = PodcastEpisodeContextMenuModel(
-          episodeID: localEpisode.episodeID,
-          podcastID: podcastID,
-          podcastTitle: title,
-          podcastAuthor: author,
-          coverURL: coverURL,
-          episodeTitle: localEpisode.title,
-          episodeDuration: localEpisode.duration,
-          episodeSize: nil,
-          isCompleted: progress >= 1.0,
-          progress: progress
-        )
-
-        return Episode(
-          id: localEpisode.episodeID,
-          title: localEpisode.title,
-          season: localEpisode.season,
-          episode: localEpisode.episode,
-          publishedAt: localEpisode.publishedAt,
-          duration: localEpisode.duration,
-          size: nil,
-          description: localEpisode.episodeDescription,
-          isCompleted: progress >= 1.0,
-          progress: progress,
-          chapters: chapters,
-          downloadState: downloadState,
-          contextMenu: contextMenu
+      let chapters = localEpisode.orderedChapters.map { chapter in
+        Chapter(
+          id: chapter.id,
+          start: chapter.start,
+          end: chapter.end,
+          title: chapter.title
         )
       }
 
-      episodesLoading = false
+      let contextMenu = PodcastEpisodeContextMenuModel(
+        episodeID: localEpisode.episodeID,
+        podcastID: podcastID,
+        podcastTitle: title,
+        podcastAuthor: author,
+        coverURL: coverURL,
+        episodeTitle: localEpisode.title,
+        episodeDuration: localEpisode.duration,
+        episodeSize: nil,
+        isCompleted: progress >= 1.0,
+        progress: progress
+      )
+
+      return Episode(
+        id: localEpisode.episodeID,
+        title: localEpisode.title,
+        season: localEpisode.season,
+        episode: localEpisode.episode,
+        publishedAt: localEpisode.publishedAt,
+        duration: localEpisode.duration,
+        size: nil,
+        description: localEpisode.episodeDescription,
+        isCompleted: progress >= 1.0,
+        progress: progress,
+        chapters: chapters,
+        downloadState: downloadState,
+        contextMenu: contextMenu
+      )
+    }
+
+    episodesLoading = false
   }
 
   private func loadPodcast() async {
