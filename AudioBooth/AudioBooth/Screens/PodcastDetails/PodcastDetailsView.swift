@@ -854,8 +854,8 @@ extension PodcastDetailsView.Model {
     let duration: Double?
     let size: Int64?
     let description: String?
-    let isCompleted: Bool
-    let progress: Double
+    var isCompleted: Bool
+    var progress: Double
     let chapters: [Chapter]
     var downloadState: DownloadManager.DownloadState
     var contextMenu: PodcastEpisodeContextMenu.Model?

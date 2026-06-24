@@ -185,11 +185,27 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
   private func updatePlayingState() {
     let current = playerManager.current
     if current?.podcastID == podcastID {
+      let previousID = currentlyPlayingEpisodeID
       currentlyPlayingEpisodeID = current?.id
       isPlaying = current?.isPlaying ?? false
+
+      if previousID != currentlyPlayingEpisodeID {
+        refreshEpisodeProgress()
+      }
     } else {
       currentlyPlayingEpisodeID = nil
       isPlaying = false
+    }
+  }
+
+  private func refreshEpisodeProgress() {
+    for index in episodes.indices {
+      let progress = MediaProgress.progress(for: episodes[index].id)
+      let isCompleted = progress >= 1.0
+      if episodes[index].progress != progress || episodes[index].isCompleted != isCompleted {
+        episodes[index].progress = progress
+        episodes[index].isCompleted = isCompleted
+      }
     }
   }
 
