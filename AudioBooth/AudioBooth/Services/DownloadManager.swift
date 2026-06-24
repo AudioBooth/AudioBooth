@@ -68,7 +68,7 @@ final class DownloadManager: NSObject, ObservableObject {
   }()
 
   private var activeOperations: [String: DownloadOperation] = [:]
-  private var progressTasks: [String: Task<Void, Never>] = [:]
+  private var progressCancellables: [String: AnyCancellable] = [:]
   @Published var downloadStates: [String: DownloadState] = [:]
   @Published var downloadInfos: [String: DownloadInfo] = [:]
 
@@ -123,18 +123,17 @@ final class DownloadManager: NSObject, ObservableObject {
       }
     }
 
-    let progressTask = Task { @MainActor [weak self] in
-      for await progress in operation.progress {
-        guard !Task.isCancelled else { break }
+    let progressCancellable = operation.progressSubject
+      .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
+      .sink { [weak self] progress in
         self?.downloadStates[bookID] = .downloading(progress: progress)
       }
-    }
-    progressTasks[bookID] = progressTask
+    progressCancellables[bookID] = progressCancellable
 
     operation.completionBlock = { [weak self] in
       Task { @MainActor in
-        self?.progressTasks[bookID]?.cancel()
-        self?.progressTasks.removeValue(forKey: bookID)
+        self?.progressCancellables[bookID]?.cancel()
+        self?.progressCancellables.removeValue(forKey: bookID)
         self?.activeOperations.removeValue(forKey: bookID)
         self?.downloadInfos.removeValue(forKey: bookID)
 
@@ -291,9 +290,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   private(set) var resultIsFullyDownloaded: Bool = false
   private var ebookStepCompleted = false
   private var audioStepCompleted = false
-  let progress: AsyncStream<Double>
-
-  private let progressContinuation: AsyncStream<Double>.Continuation
+  let progressSubject = PassthroughSubject<Double, Never>()
 
   private var totalBytes: Int64 = 0
   private var bytesDownloadedSoFar: Int64 = 0
@@ -343,13 +340,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     self.bookID = bookID
     self.type = type
 
-    let (stream, continuation) = AsyncStream.makeStream(
-      of: Double.self,
-      bufferingPolicy: .bufferingNewest(1)
-    )
-    self.progress = stream
-    self.progressContinuation = continuation
-
     super.init()
   }
 
@@ -370,7 +360,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     AppLogger.download.info("Cancelling download for book: \(bookID)")
     super.cancel()
     currentTrack?.cancel()
-    progressContinuation.finish()
+    progressSubject.send(completion: .finished)
 
     Task {
       await cleanupPartialDownload()
@@ -456,7 +446,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     }
 
     if resultIsFullyDownloaded {
-      progressContinuation.yield(1.0)
+      progressSubject.send(1.0)
     }
   }
 
@@ -582,7 +572,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     try? localEpisode.save()
 
     resultIsFullyDownloaded = true
-    progressContinuation.yield(1.0)
+    progressSubject.send(1.0)
   }
 
   private func downloadTracks(book: Book) async throws -> [Track] {
@@ -744,7 +734,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     _executing = false
     _finished = true
 
-    progressContinuation.finish()
+    progressSubject.send(completion: .finished)
 
     if success {
       downloadSession.finishTasksAndInvalidate()
@@ -766,7 +756,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     guard totalBytes > 0 else { return }
     let totalBytesDownloaded = bytesDownloadedSoFar + totalBytesWritten
     let newProgress = Double(totalBytesDownloaded) / Double(totalBytes)
-    progressContinuation.yield(min(newProgress, 1.0))
+    progressSubject.send(min(newProgress, 1.0))
   }
 
   private func trackDownloadCompleted(location: URL) throws {
