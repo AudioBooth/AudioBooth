@@ -201,6 +201,7 @@ struct PlayerView: View {
         }
       }
     }
+    .id(model.title)
   }
 }
 

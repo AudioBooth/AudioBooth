@@ -885,6 +885,8 @@ extension BookPlayerModel {
           self.handleStreamFailure(error: error)
 
         case .finished:
+          player.pause()
+          self.isLoading = false
           self.recordBookCompletionIfNeeded(autoPlayNext: true)
 
         case .seek, .rateChanged:
@@ -910,6 +912,13 @@ extension BookPlayerModel {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
         self?.handleMediaServicesReset()
+      }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] notification in
+        self?.handleRouteChange(notification)
       }
       .store(in: &cancellables)
 
@@ -1039,6 +1048,31 @@ extension BookPlayerModel {
       }
 
     @unknown default:
+      break
+    }
+  }
+
+  private func handleRouteChange(_ notification: Notification) {
+    guard let userInfo = notification.userInfo,
+      let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+      let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+    else {
+      return
+    }
+
+    switch reason {
+    case .oldDeviceUnavailable:
+      AppLogger.player.info("Audio route changed (old device unavailable) - pausing")
+      player?.pause()
+
+    case .newDeviceAvailable, .override, .routeConfigurationChange, .categoryChange:
+      guard isPlaying else { return }
+      AppLogger.player.info("Audio route changed (\(reason.rawValue)) - re-activating session")
+      configureAudioSession()
+      try? audioSession.setActive(true)
+      player?.resume()
+
+    default:
       break
     }
   }
