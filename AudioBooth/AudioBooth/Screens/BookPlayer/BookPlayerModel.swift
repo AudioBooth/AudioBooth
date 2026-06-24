@@ -524,6 +524,17 @@ extension BookPlayerModel {
     }
 
     let newTime = max(0, rewindTarget)
+
+    // A rewind that lands on (or within a hair of) the current position — e.g. the
+    // chapter barrier clamping back to the start of the chapter the listener paused
+    // at — moves the playhead nowhere, yet still mutates currentTime and issues a
+    // seek that races the resume immediately following it, which can leave playback
+    // stopped. There's nothing to rewind, so skip it.
+    guard currentTime - newTime > 0.5 else {
+      AppLogger.player.debug("Smart rewind skipped - negligible adjustment")
+      return
+    }
+
     mediaProgress.currentTime = newTime
     mediaProgress.lastPlayedAt = Date()
 
