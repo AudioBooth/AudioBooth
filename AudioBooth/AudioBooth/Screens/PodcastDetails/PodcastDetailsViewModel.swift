@@ -206,18 +206,32 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       language = podcast.language
       podcastType = podcast.podcastType
 
-      let localEpisodes = podcast.episodes
+      isLoading = false
+      scrollToEpisodeID = episodeID
 
-      episodeCount = localEpisodes.count
-
-      let totalDuration = localEpisodes.reduce(0.0) { $0 + $1.duration }
-      if totalDuration > 0 {
-        durationText = Duration.seconds(totalDuration).formatted(
-          .units(allowed: [.hours, .minutes], width: .narrow)
-        )
+      if NetworkMonitor.shared.isConnected {
+        episodesLoading = true
+      } else {
+        showCachedEpisodes(podcast)
       }
+    } catch {
+      AppLogger.viewModel.error("Failed to load local podcast: \(error)")
+    }
+  }
 
-      episodes = localEpisodes.map { localEpisode in
+  private func showCachedEpisodes(_ podcast: LocalPodcast) {
+    let localEpisodes = podcast.episodes
+
+    episodeCount = localEpisodes.count
+
+    let totalDuration = localEpisodes.reduce(0.0) { $0 + $1.duration }
+    if totalDuration > 0 {
+      durationText = Duration.seconds(totalDuration).formatted(
+        .units(allowed: [.hours, .minutes], width: .narrow)
+      )
+    }
+
+    episodes = localEpisodes.map { localEpisode in
         let progress = MediaProgress.progress(for: localEpisode.episodeID)
         let downloadState = downloadManager.downloadStates[localEpisode.episodeID] ?? .notDownloaded
 
@@ -260,14 +274,14 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
         )
       }
 
-      isLoading = false
-      scrollToEpisodeID = episodeID
-    } catch {
-      AppLogger.viewModel.error("Failed to load local podcast: \(error)")
-    }
+      episodesLoading = false
   }
 
   private func loadPodcast() async {
+    if episodes.isEmpty {
+      episodesLoading = true
+    }
+
     do {
       let podcast = try await podcastsService.fetch(id: podcastID)
 
@@ -353,13 +367,16 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
 
       error = nil
       isLoading = false
+      episodesLoading = false
       scrollToEpisodeID = episodeID
     } catch {
-      if localPodcast == nil {
-        isLoading = false
-        self.error = "Failed to load podcast details. Please check your connection and try again."
-      } else {
+      if let localPodcast {
+        showCachedEpisodes(localPodcast)
         Toast(error: "Couldn't refresh episodes. Showing downloaded episodes only.").show()
+      } else {
+        isLoading = false
+        episodesLoading = false
+        self.error = "Failed to load podcast details. Please check your connection and try again."
       }
       AppLogger.viewModel.error("Failed to load podcast: \(error)")
     }

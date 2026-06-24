@@ -283,12 +283,14 @@ struct PodcastDetailsView: View {
           .font(.subheadline)
         }
 
-        HStack {
-          Image(systemName: "mic")
-            .accessibilityHidden(true)
-          Text("**Episodes:** \(model.episodeCount)")
+        if !model.episodesLoading {
+          HStack {
+            Image(systemName: "mic")
+              .accessibilityHidden(true)
+            Text("**Episodes:** \(model.episodeCount)")
+          }
+          .font(.subheadline)
         }
-        .font(.subheadline)
 
         if let podcastType = model.podcastType {
           HStack {
@@ -453,6 +455,21 @@ struct PodcastDetailsView: View {
   // MARK: - Episodes
 
   private var episodesSection: some View {
+    Group {
+      if model.episodesLoading {
+        HStack {
+          Spacer()
+          ProgressView("Loading episodes...")
+            .padding(.vertical, 40)
+          Spacer()
+        }
+      } else {
+        episodesContent
+      }
+    }
+  }
+
+  private var episodesContent: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         Text(model.episodesTitle)
@@ -672,6 +689,7 @@ extension PodcastDetailsView {
     var genres: [String]?
     var tags: [String]?
     var isLoading: Bool
+    var episodesLoading: Bool = false
     var error: String?
     var isExplicit: Bool
     var language: String?
