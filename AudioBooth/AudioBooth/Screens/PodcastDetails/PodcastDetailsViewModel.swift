@@ -185,11 +185,27 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
   private func updatePlayingState() {
     let current = playerManager.current
     if current?.podcastID == podcastID {
+      let previousID = currentlyPlayingEpisodeID
       currentlyPlayingEpisodeID = current?.id
       isPlaying = current?.isPlaying ?? false
+
+      if previousID != currentlyPlayingEpisodeID {
+        refreshEpisodeProgress()
+      }
     } else {
       currentlyPlayingEpisodeID = nil
       isPlaying = false
+    }
+  }
+
+  private func refreshEpisodeProgress() {
+    for index in episodes.indices {
+      let progress = MediaProgress.progress(for: episodes[index].id)
+      let isCompleted = progress >= 1.0
+      if episodes[index].progress != progress || episodes[index].isCompleted != isCompleted {
+        episodes[index].progress = progress
+        episodes[index].isCompleted = isCompleted
+      }
     }
   }
 
@@ -206,68 +222,82 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       language = podcast.language
       podcastType = podcast.podcastType
 
-      let localEpisodes = podcast.episodes
-
-      episodeCount = localEpisodes.count
-
-      let totalDuration = localEpisodes.reduce(0.0) { $0 + $1.duration }
-      if totalDuration > 0 {
-        durationText = Duration.seconds(totalDuration).formatted(
-          .units(allowed: [.hours, .minutes], width: .narrow)
-        )
-      }
-
-      episodes = localEpisodes.map { localEpisode in
-        let progress = MediaProgress.progress(for: localEpisode.episodeID)
-        let downloadState = downloadManager.downloadStates[localEpisode.episodeID] ?? .notDownloaded
-
-        let chapters = localEpisode.orderedChapters.map { chapter in
-          Chapter(
-            id: chapter.id,
-            start: chapter.start,
-            end: chapter.end,
-            title: chapter.title
-          )
-        }
-
-        let contextMenu = PodcastEpisodeContextMenuModel(
-          episodeID: localEpisode.episodeID,
-          podcastID: podcastID,
-          podcastTitle: title,
-          podcastAuthor: author,
-          coverURL: coverURL,
-          episodeTitle: localEpisode.title,
-          episodeDuration: localEpisode.duration,
-          episodeSize: nil,
-          isCompleted: progress >= 1.0,
-          progress: progress
-        )
-
-        return Episode(
-          id: localEpisode.episodeID,
-          title: localEpisode.title,
-          season: localEpisode.season,
-          episode: localEpisode.episode,
-          publishedAt: localEpisode.publishedAt,
-          duration: localEpisode.duration,
-          size: nil,
-          description: localEpisode.episodeDescription,
-          isCompleted: progress >= 1.0,
-          progress: progress,
-          chapters: chapters,
-          downloadState: downloadState,
-          contextMenu: contextMenu
-        )
-      }
-
       isLoading = false
       scrollToEpisodeID = episodeID
+
+      if NetworkMonitor.shared.isConnected {
+        episodesLoading = true
+      } else {
+        showCachedEpisodes(podcast)
+      }
     } catch {
       AppLogger.viewModel.error("Failed to load local podcast: \(error)")
     }
   }
 
+  private func showCachedEpisodes(_ podcast: LocalPodcast) {
+    let localEpisodes = podcast.episodes
+
+    episodeCount = localEpisodes.count
+
+    let totalDuration = localEpisodes.reduce(0.0) { $0 + $1.duration }
+    if totalDuration > 0 {
+      durationText = Duration.seconds(totalDuration).formatted(
+        .units(allowed: [.hours, .minutes], width: .narrow)
+      )
+    }
+
+    episodes = localEpisodes.map { localEpisode in
+      let progress = MediaProgress.progress(for: localEpisode.episodeID)
+      let downloadState = downloadManager.downloadStates[localEpisode.episodeID] ?? .notDownloaded
+
+      let chapters = localEpisode.orderedChapters.map { chapter in
+        Chapter(
+          id: chapter.id,
+          start: chapter.start,
+          end: chapter.end,
+          title: chapter.title
+        )
+      }
+
+      let contextMenu = PodcastEpisodeContextMenuModel(
+        episodeID: localEpisode.episodeID,
+        podcastID: podcastID,
+        podcastTitle: title,
+        podcastAuthor: author,
+        coverURL: coverURL,
+        episodeTitle: localEpisode.title,
+        episodeDuration: localEpisode.duration,
+        episodeSize: nil,
+        isCompleted: progress >= 1.0,
+        progress: progress
+      )
+
+      return Episode(
+        id: localEpisode.episodeID,
+        title: localEpisode.title,
+        season: localEpisode.season,
+        episode: localEpisode.episode,
+        publishedAt: localEpisode.publishedAt,
+        duration: localEpisode.duration,
+        size: nil,
+        description: localEpisode.episodeDescription,
+        isCompleted: progress >= 1.0,
+        progress: progress,
+        chapters: chapters,
+        downloadState: downloadState,
+        contextMenu: contextMenu
+      )
+    }
+
+    episodesLoading = false
+  }
+
   private func loadPodcast() async {
+    if episodes.isEmpty {
+      episodesLoading = true
+    }
+
     do {
       let podcast = try await podcastsService.fetch(id: podcastID)
 
@@ -281,10 +311,11 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
       isExplicit = podcast.media.metadata.explicit ?? false
       language = podcast.language
       podcastType = podcast.podcastType
-      episodeCount = podcast.numEpisodes
       feedURL = podcast.feedURL
 
       apiEpisodes = podcast.media.episodes ?? []
+
+      episodeCount = apiEpisodes.count
 
       let totalDuration = apiEpisodes.reduce(0.0) { $0 + ($1.duration ?? 0) }
       if totalDuration > 0 {
@@ -352,10 +383,15 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
 
       error = nil
       isLoading = false
+      episodesLoading = false
       scrollToEpisodeID = episodeID
     } catch {
-      if localPodcast == nil {
+      if let localPodcast {
+        showCachedEpisodes(localPodcast)
+        Toast(error: "Couldn't refresh episodes. Showing downloaded episodes only.").show()
+      } else {
         isLoading = false
+        episodesLoading = false
         self.error = "Failed to load podcast details. Please check your connection and try again."
       }
       AppLogger.viewModel.error("Failed to load podcast: \(error)")

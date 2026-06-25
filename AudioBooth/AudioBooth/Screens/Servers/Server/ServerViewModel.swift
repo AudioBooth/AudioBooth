@@ -348,6 +348,7 @@ final class ServerViewModel: ServerView.Model {
       Task {
         do {
           try await audiobookshelf.switchToServer(connectionID)
+          audiobookshelf.libraries.libraries = libraryData
           audiobookshelf.libraries.current = value
           selectedLibrary = library
           pendingConnectionID = nil
