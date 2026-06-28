@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Share downloaded books - Share a downloaded ebook or audiobook from the book details menu (thanks @antdon)
 - Podcast auto-queue - New per-podcast setting to automatically add newly published episodes to the queue, with an optional storage preference to download them automatically
 
+### Fixed
+- Podcast library search - Fixed search failing in podcast libraries, now showing matching podcasts and episodes
+
 ## [1.10.0]
 
 ### Added
