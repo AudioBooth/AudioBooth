@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Volume leveling - New equalizer option that evens out loud and quiet passages, with low, medium, and high strength
 - Siri support - Use Siri to play a downloaded book or resume your current book
 - Multi-select batch actions - Select multiple library books to add them to playlists and collections in a single action
 - Share downloaded books - Share a downloaded ebook or audiobook from the book details menu (thanks @antdon)
