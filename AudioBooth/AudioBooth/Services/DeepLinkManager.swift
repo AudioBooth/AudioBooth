@@ -52,10 +52,48 @@ class DeepLinkManager: ObservableObject {
       return
     }
 
+    Toast(message: "Testing shared connection...").show()
+    Task {
+      await validateAndImportConnection(exportConnection)
+    }
+  }
+
+  @MainActor
+  private func validateAndImportConnection(_ exportConnection: ExportConnection) async {
+    do {
+      _ = try await Audiobookshelf.shared.networkDiscovery.fetchServerStatus(
+        serverURL: exportConnection.url,
+        headers: exportConnection.headers
+      )
+    } catch {
+      Toast(error: "Could not reach server with the shared URL and headers: \(error.localizedDescription)").show()
+      return
+    }
+
     if let token = exportConnection.token {
       let credentials: Credentials
       if JWT(token)?.type == .api {
-        credentials = .apiKey(key: token)
+        do {
+          let response = try await Audiobookshelf.shared.authentication.validateAPIKeyConnection(
+            serverURL: exportConnection.url.absoluteString,
+            apiKey: token,
+            customHeaders: exportConnection.headers
+          )
+          let connection = Connection(
+            serverURL: response.serverURL,
+            token: .apiKey(key: token),
+            customHeaders: exportConnection.headers,
+            alias: exportConnection.alias,
+            alternativeURL: exportConnection.alternativeURL,
+            isUsingAlternativeURL: exportConnection.isUsingAlternativeURL ?? false
+          )
+          Audiobookshelf.shared.authentication.restoreConnection(connection)
+          Audiobookshelf.shared.authentication.server?.update(with: response.authorize)
+          Toast(success: "Connection imported successfully").show()
+        } catch {
+          Toast(error: "Server reachable, but Audiobookshelf credentials failed: \(error.localizedDescription)").show()
+        }
+        return
       } else {
         credentials = .bearer(accessToken: "", refreshToken: token, expiresAt: 0)
       }
@@ -63,12 +101,15 @@ class DeepLinkManager: ObservableObject {
         serverURL: exportConnection.url,
         token: credentials,
         customHeaders: exportConnection.headers,
-        alias: exportConnection.alias
+        alias: exportConnection.alias,
+        alternativeURL: exportConnection.alternativeURL,
+        isUsingAlternativeURL: exportConnection.isUsingAlternativeURL ?? false
       )
       Audiobookshelf.shared.authentication.restoreConnection(connection)
-      Toast(success: "Connection imported successfully").show()
+      Toast(success: "Connection imported. Audiobookshelf credentials will be verified on first use.").show()
     } else {
       pendingExportConnection = exportConnection
+      Toast(success: "Server reachable. Sign in to finish importing this connection.").show()
     }
   }
 
@@ -105,11 +146,18 @@ extension DeepLinkManager {
     public let token: String?
     public let headers: [String: String]
     public let alias: String?
+    public let alternativeURL: URL?
+    public let isUsingAlternativeURL: Bool?
 
     init?(_ connection: Connection, includeToken: Bool = false) {
-      url = connection.serverURL
+      url =
+        connection.isUsingAlternativeURL
+        ? connection.alternativeURL ?? connection.serverURL
+        : connection.serverURL
       headers = connection.customHeaders
       alias = connection.alias
+      alternativeURL = connection.alternativeURL
+      isUsingAlternativeURL = connection.isUsingAlternativeURL
 
       if includeToken {
         switch connection.token {

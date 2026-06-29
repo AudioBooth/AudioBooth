@@ -421,6 +421,30 @@ public final class AuthenticationService: ObservableObject {
     customHeaders: [String: String] = [:],
     existingServerID: String? = nil
   ) async throws -> String {
+    let response = try await validateAPIKeyConnection(
+      serverURL: serverURL,
+      apiKey: apiKey,
+      customHeaders: customHeaders
+    )
+
+    let baseURL = response.serverURL
+    let token = Credentials.apiKey(key: apiKey)
+
+    let connectionID = try upsertConnection(
+      serverURL: baseURL,
+      token: token,
+      customHeaders: customHeaders,
+      existingServerID: existingServerID
+    )
+    servers[connectionID]?.update(with: response.authorize)
+    return connectionID
+  }
+
+  public func validateAPIKeyConnection(
+    serverURL: String,
+    apiKey: String,
+    customHeaders: [String: String] = [:]
+  ) async throws -> (serverURL: URL, authorize: Authorize) {
     guard let baseURL = URL(string: serverURL) else {
       throw Audiobookshelf.AudiobookshelfError.invalidURL
     }
@@ -438,14 +462,7 @@ public final class AuthenticationService: ObservableObject {
 
     let response = try await validateService.send(request)
 
-    let connectionID = try upsertConnection(
-      serverURL: baseURL,
-      token: token,
-      customHeaders: customHeaders,
-      existingServerID: existingServerID
-    )
-    servers[connectionID]?.update(with: response.value)
-    return connectionID
+    return (baseURL, response.value)
   }
 
   func refreshToken(for server: Server) async throws -> Credentials {
