@@ -91,6 +91,7 @@ struct SkipRewindPreferencesView: View {
                 .foregroundStyle(Color.accentColor)
             }
             TickSlider(value: $pauseThreshold, ticks: pauseTicks)
+              .accessibilityValue(thresholdLabel(pauseThreshold))
             Text("Only rewinds if paused for \(thresholdLabel(pauseThreshold))+")
               .font(.caption)
               .foregroundStyle(.secondary)
@@ -231,6 +232,7 @@ private struct SkipPresetCard: View {
         .foregroundStyle(.secondary)
     }
     .frame(maxWidth: .infinity)
+    .accessibilityHidden(true)
   }
 
   @ViewBuilder
@@ -244,13 +246,13 @@ private struct SkipPresetCard: View {
 
       HStack(spacing: 6) {
         ForEach(presets, id: \.self) { value in
-          presetChip(value, selection: selection)
+          presetChip(value, context: label, selection: selection)
         }
       }
     }
   }
 
-  private func presetChip(_ value: Double, selection: Binding<Double>) -> some View {
+  private func presetChip(_ value: Double, context: LocalizedStringKey, selection: Binding<Double>) -> some View {
     let isSelected = abs(selection.wrappedValue - value) < 0.1
     return Button {
       selection.wrappedValue = value
@@ -267,6 +269,11 @@ private struct SkipPresetCard: View {
         )
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(
+      Text(context) + Text(verbatim: ", ")
+        + Text(Duration.seconds(value).formatted(.units(allowed: [.seconds], width: .wide)))
+    )
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
   }
 }
 
@@ -298,10 +305,30 @@ private struct RangeSlider: View {
         thumb
           .offset(x: lowX)
           .gesture(dragGesture(for: .low, usable: usable))
+          .accessibilityElement()
+          .accessibilityLabel("Minimum rewind")
+          .accessibilityValue(Duration.seconds(low).formatted(.units(allowed: [.seconds], width: .wide)))
+          .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: low = min(low + 1, high - 1)
+            case .decrement: low = max(low - 1, bounds.lowerBound)
+            @unknown default: break
+            }
+          }
 
         thumb
           .offset(x: highX)
           .gesture(dragGesture(for: .high, usable: usable))
+          .accessibilityElement()
+          .accessibilityLabel("Maximum rewind")
+          .accessibilityValue(Duration.seconds(high).formatted(.units(allowed: [.seconds], width: .wide)))
+          .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: high = min(high + 1, bounds.upperBound)
+            case .decrement: high = max(high - 1, low + 1)
+            @unknown default: break
+            }
+          }
       }
       .frame(height: thumbSize)
     }
@@ -381,6 +408,7 @@ private struct RewindPreviewCard: View {
       }
     }
     .padding(16)
+    .accessibilityElement(children: .combine)
   }
 
   private func rewind(for pauseSeconds: Double) -> Double {
