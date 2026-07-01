@@ -267,6 +267,17 @@ struct ServerView: View {
       }
     }
     .listRowBackground(theme.colors.background.card)
+
+    if let serverVersion = model.serverVersion {
+      Section {
+        Text("Server Version \(serverVersion)")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, alignment: .center)
+          .textSelection(.enabled)
+          .listRowBackground(Color.clear)
+      }
+    }
   }
 }
 

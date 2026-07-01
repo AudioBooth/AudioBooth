@@ -48,6 +48,9 @@ struct Marquee<Content: View>: View {
                   width = geo.size.width
                   animate = true
                 }
+                .onChange(of: geo.size.width) { _, newWidth in
+                  width = newWidth
+                }
             }
           )
 

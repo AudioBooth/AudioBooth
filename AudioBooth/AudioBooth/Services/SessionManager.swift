@@ -49,15 +49,17 @@ extension SessionManager {
     mediaProgress: MediaProgress,
     forceTranscode: Bool
   ) async throws -> any PlayableItem {
-    if let current, current.libraryItemID != itemID {
+    let isSameItem = current?.libraryItemID == itemID && current?.episodeID == episodeID
+
+    if let current, !isSameItem {
       AppLogger.session.info(
-        "Session exists for different book, server will close old session when starting new one"
+        "Session exists for different item/episode, server will close old session when starting new one"
       )
       self.current = nil
       cancelScheduledSessionClose()
     }
 
-    if let item, let current, current.libraryItemID == itemID {
+    if let item, let current, isSameItem {
       if item.isDownloaded, current.isRemote {
         AppLogger.session.info(
           "Item is now downloaded, closing remote session to switch to local session"

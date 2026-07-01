@@ -169,6 +169,7 @@ final class ServerViewModel: ServerView.Model {
     if let reauthViewModel = reauthModel as? AuthenticationViewModel {
       reauthViewModel.onAuthenticationSuccess = { [weak self] in
         self?.reauthenticationModel = nil
+        self?.status = self?.server?.status
         Task {
           await self?.fetchLibraries()
         }
@@ -177,11 +178,14 @@ final class ServerViewModel: ServerView.Model {
   }
 
   override func onAppear() {
+    status = server?.status
+
     if let server {
       if server.status == .authenticationError {
         let reauthViewModel = AuthenticationViewModel(server: server)
         reauthViewModel.onAuthenticationSuccess = { [weak self] in
           self?.reauthenticationModel = nil
+          self?.status = self?.server?.status
           Task {
             await self?.fetchLibraries()
           }
@@ -348,6 +352,7 @@ final class ServerViewModel: ServerView.Model {
       Task {
         do {
           try await audiobookshelf.switchToServer(connectionID)
+          audiobookshelf.libraries.libraries = libraryData
           audiobookshelf.libraries.current = value
           selectedLibrary = library
           pendingConnectionID = nil
@@ -508,11 +513,13 @@ final class ServerViewModel: ServerView.Model {
         let reauthViewModel = AuthenticationViewModel(server: server)
         reauthViewModel.onAuthenticationSuccess = { [weak self] in
           self?.reauthenticationModel = nil
+          self?.status = self?.server?.status
           Task {
             await self?.fetchLibraries()
           }
         }
         self.reauthenticationModel = reauthViewModel
+        self.status = server.status
       }
     }
 
