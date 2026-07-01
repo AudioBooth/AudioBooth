@@ -272,6 +272,9 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
         isCompleted: progress >= 1.0,
         progress: progress
       )
+      contextMenu.onProgressChanged = { [weak self] in
+        self?.refreshEpisodeProgress()
+      }
 
       return Episode(
         id: localEpisode.episodeID,
@@ -362,6 +365,9 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
           progress: progress,
           apiEpisode: apiEpisode
         )
+        contextMenu.onProgressChanged = { [weak self] in
+          self?.refreshEpisodeProgress()
+        }
 
         return Episode(
           id: apiEpisode.id,
