@@ -185,6 +185,16 @@ final class LibraryPageModel: LibraryPage.Model {
     exitSelection()
   }
 
+  override func onSelectAllTapped() {
+    if selectedIDs.count == selectableCount {
+      selectedIDs = []
+    } else {
+      selectedIDs = items.compactMap { item in
+        if case .book(let model) = item { model.id } else { nil }
+      }
+    }
+  }
+
   override func onToggleSelection(_ id: String) {
     if let index = selectedIDs.firstIndex(of: id) {
       selectedIDs.remove(at: index)

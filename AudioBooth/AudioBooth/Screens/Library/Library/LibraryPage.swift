@@ -132,6 +132,16 @@ struct LibraryPage: View {
           }
 
           if model.isSelecting {
+            Divider()
+
+            Button(action: model.onSelectAllTapped) {
+              Label(
+                model.selectedIDs.count == model.selectableCount ? "Unselect All" : "Select All",
+                systemImage: model.selectedIDs.count == model.selectableCount
+                  ? "circle" : "checkmark.circle"
+              )
+            }
+
             if !model.selectedIDs.isEmpty {
               Divider()
 
@@ -318,6 +328,10 @@ extension LibraryPage {
     var selectedIDs: [String] = []
     var collectionSelector: CollectionSelectorSheet.Model?
 
+    var selectableCount: Int {
+      items.count { if case .book = $0 { true } else { false } }
+    }
+
     func onAppear() {}
     func refresh() async {}
     func onSortOptionTapped(_ sortBy: SortBy) {}
@@ -332,6 +346,7 @@ extension LibraryPage {
     func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
     func onSelectTapped() {}
     func onCancelSelectTapped() {}
+    func onSelectAllTapped() {}
     func onToggleSelection(_ id: String) {}
     func onAddSelectionTapped(mode: CollectionMode) {}
 
