@@ -887,6 +887,9 @@ extension BookPlayerModel {
         case .finished:
           player.pause()
           self.isLoading = false
+          if self.mediaProgress.duration > 0 {
+            self.mediaProgress.currentTime = self.mediaProgress.duration
+          }
           self.recordBookCompletionIfNeeded(autoPlayNext: true)
 
         case .seek, .rateChanged:
