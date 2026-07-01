@@ -8,10 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Volume leveling - New equalizer option that evens out loud and quiet passages, with low, medium, and high strength
 - Siri support - Use Siri to play a downloaded book or resume your current book
 - Multi-select batch actions - Select multiple library books to add them to playlists and collections in a single action
 - Share downloaded books - Share a downloaded ebook or audiobook from the book details menu (thanks @antdon)
 - Podcast auto-queue - New per-podcast setting to automatically add newly published episodes to the queue, with an optional storage preference to download them automatically
+
+### Fixed
+- Podcast library search - Fixed search failing in podcast libraries, now showing matching podcasts and episodes
 
 ## [1.10.0]
 

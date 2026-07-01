@@ -40,6 +40,7 @@ struct PreferenceRow: View {
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(tint)
         )
+        .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: 2) {
         title

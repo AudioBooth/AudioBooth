@@ -200,12 +200,32 @@ private struct NarrationSpeedCard: View {
               .foregroundStyle(Color.accentColor)
           }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Default narration speed")
+        .accessibilityValue(Text(verbatim: "\(speed.formatted(.number.precision(.fractionLength(2))))×"))
+        .accessibilityAdjustableAction { direction in
+          switch direction {
+          case .increment: speed = min(3.5, (speed + 0.05).rounded(toPlaces: 2))
+          case .decrement: speed = max(0.5, (speed - 0.05).rounded(toPlaces: 2))
+          @unknown default: break
+          }
+        }
         Spacer()
         VStack(spacing: 8) {
-          stepperButton(systemImage: "plus", tint: Color.accentColor, foreground: .white) {
+          stepperButton(
+            systemImage: "plus",
+            tint: Color.accentColor,
+            foreground: .white,
+            accessibilityLabel: "Increase speed"
+          ) {
             speed = min(3.5, (speed + 0.05).rounded(toPlaces: 2))
           }
-          stepperButton(systemImage: "minus", tint: Color.gray.opacity(0.15), foreground: .primary) {
+          stepperButton(
+            systemImage: "minus",
+            tint: Color.gray.opacity(0.15),
+            foreground: .primary,
+            accessibilityLabel: "Decrease speed"
+          ) {
             speed = max(0.5, (speed - 0.05).rounded(toPlaces: 2))
           }
         }
@@ -239,12 +259,15 @@ private struct NarrationSpeedCard: View {
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(Text(verbatim: "\(value.formatted(.number.precision(.fractionLength(2))))×"))
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
   }
 
   private func stepperButton(
     systemImage: String,
     tint: Color,
     foreground: Color,
+    accessibilityLabel: LocalizedStringKey,
     action: @escaping () -> Void
   ) -> some View {
     Button(action: action) {
@@ -259,6 +282,7 @@ private struct NarrationSpeedCard: View {
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(accessibilityLabel)
   }
 }
 

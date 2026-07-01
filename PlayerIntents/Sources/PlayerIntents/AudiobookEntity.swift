@@ -4,42 +4,51 @@ import Models
 
 @available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 @AppEntity(schema: .books.audiobook)
-public struct AudiobookEntity: AppEntity {
-  public struct Query: EntityStringQuery {
+public struct AudiobookEntity: AppEntity, IndexedEntity, PersistentlyIdentifiable {
+  public struct Query: EntityStringQuery, EnumerableEntityQuery {
     public init() {}
 
+    public func allEntities() async throws -> [AudiobookEntity] {
+      await Self.localAudiobooks(matching: nil)
+    }
+
     public func entities(for identifiers: [String]) async throws -> [AudiobookEntity] {
-      try await MainActor.run {
-        try identifiers.compactMap { identifier in
-          guard let book = try LocalBook.fetch(bookID: identifier),
-            book.mediaType.contains(.audiobook)
-          else {
-            return nil
-          }
-          return AudiobookEntity(book)
+      var entities: [AudiobookEntity] = []
+      for identifier in identifiers {
+        if let local = await Self.localAudiobook(id: identifier) {
+          entities.append(local)
         }
       }
+      return entities
     }
 
     public func entities(matching string: String) async throws -> [AudiobookEntity] {
-      try await MainActor.run {
-        let query = string.lowercased()
-        return try LocalBook.fetchAll()
-          .filter { book in
-            book.mediaType.contains(.audiobook)
-              && (book.title.lowercased().contains(query)
-                || book.authorNames.lowercased().contains(query))
-          }
-          .map(AudiobookEntity.init(_:))
-      }
+      await Self.localAudiobooks(matching: string)
     }
 
     public func suggestedEntities() async throws -> [AudiobookEntity] {
-      try await MainActor.run {
-        try LocalBook.fetchAll()
-          .filter { $0.mediaType.contains(.audiobook) }
-          .map(AudiobookEntity.init)
+      await Self.localAudiobooks(matching: nil)
+    }
+
+    @MainActor
+    private static func localAudiobook(id: String) -> AudiobookEntity? {
+      guard let book = try? LocalBook.fetch(bookID: id), book.mediaType.contains(.audiobook) else {
+        return nil
       }
+      return AudiobookEntity(book)
+    }
+
+    @MainActor
+    private static func localAudiobooks(matching query: String?) -> [AudiobookEntity] {
+      let query = query?.lowercased()
+      return ((try? LocalBook.fetchAll()) ?? [])
+        .filter { book in
+          guard book.mediaType.contains(.audiobook) else { return false }
+          guard let query, !query.isEmpty else { return true }
+          return book.title.lowercased().contains(query)
+            || book.authorNames.lowercased().contains(query)
+        }
+        .map(AudiobookEntity.init)
     }
   }
 
@@ -99,5 +108,14 @@ public struct AudiobookEntity: AppEntity {
       genre: book.genres?.first,
       purchaseDate: book.createdAt
     )
+  }
+}
+
+@available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+public struct AudiobookEntityOptionsProvider: DynamicOptionsProvider {
+  public init() {}
+
+  public func results() async throws -> [AudiobookEntity] {
+    try await AudiobookEntity.Query().suggestedEntities()
   }
 }

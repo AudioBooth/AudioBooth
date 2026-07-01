@@ -14,16 +14,27 @@ struct EqualizerSheet: View {
 
       preampView
         .padding(.horizontal, 24)
-        .padding(.top, 20)
+        .padding(.top, 24)
         .disabled(!model.isEnabled)
 
       bandsView
         .padding(.top, 24)
+        .disabled(!model.isEnabled)
 
       presetsView
         .padding(.top, 20)
         .padding(.horizontal, 16)
+        .disabled(!model.isEnabled)
+
+      Divider()
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
+
+      levelingView
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
         .padding(.bottom, 40)
+        .disabled(!model.isEnabled)
     }
     .opacity(model.isEnabled ? 1 : 0.5)
     .overlay(alignment: .topTrailing) {
@@ -36,6 +47,37 @@ struct EqualizerSheet: View {
       )
       .labelsHidden()
       .padding()
+    }
+  }
+
+  private var levelingView: some View {
+    HStack {
+      VStack(alignment: .leading, spacing: 2) {
+        Text("Volume Leveling")
+          .font(.subheadline)
+          .fontWeight(.semibold)
+          .foregroundColor(.primary)
+
+        Text("Evens out loud and quiet passages")
+          .font(.caption)
+          .foregroundColor(.secondary)
+      }
+
+      Spacer()
+
+      Picker(
+        "",
+        selection: Binding(
+          get: { model.levelingStrength },
+          set: { model.onLevelingStrengthChanged($0) }
+        )
+      ) {
+        ForEach(LevelingStrength.allCases) { strength in
+          Text(strength.displayName).tag(strength)
+        }
+      }
+      .labelsHidden()
+      .pickerStyle(.menu)
     }
   }
 
@@ -91,7 +133,6 @@ struct EqualizerSheet: View {
       }
     }
     .padding(.horizontal, 8)
-    .disabled(!model.isEnabled)
   }
 
   private var presetsView: some View {
@@ -124,7 +165,6 @@ struct EqualizerSheet: View {
         }
       }
     }
-    .disabled(!model.isEnabled)
   }
 
   private func formattedGain(_ gain: Float) -> String {
@@ -187,6 +227,7 @@ extension EqualizerSheet {
   class Model: ObservableObject {
     var isPresented: Bool
     var isEnabled: Bool
+    var levelingStrength: LevelingStrength
     var preamp: Float
     var bandGains: [Float]
     var bandLabels: [String]
@@ -197,6 +238,7 @@ extension EqualizerSheet {
     }
 
     func onToggleEnabled(_ enabled: Bool) {}
+    func onLevelingStrengthChanged(_ strength: LevelingStrength) {}
     func onPreampChanged(_ value: Float) {}
     func onBandChanged(_ index: Int, gain: Float) {}
     func onPresetSelected(_ preset: Preset) {}
@@ -204,6 +246,7 @@ extension EqualizerSheet {
     init(
       isPresented: Bool = false,
       isEnabled: Bool = false,
+      levelingStrength: LevelingStrength = .off,
       preamp: Float = 0,
       bandGains: [Float] = [Float](repeating: 0, count: 6),
       bandLabels: [String] = ["60", "150", "400", "1K", "2.4K", "15K"],
@@ -211,6 +254,7 @@ extension EqualizerSheet {
     ) {
       self.isPresented = isPresented
       self.isEnabled = isEnabled
+      self.levelingStrength = levelingStrength
       self.preamp = preamp
       self.bandGains = bandGains
       self.bandLabels = bandLabels
@@ -223,6 +267,7 @@ extension EqualizerSheet.Model {
   static var mock: EqualizerSheet.Model {
     .init(
       isEnabled: true,
+      levelingStrength: .medium,
       presets: EqualizerSheet.defaultPresets
     )
   }

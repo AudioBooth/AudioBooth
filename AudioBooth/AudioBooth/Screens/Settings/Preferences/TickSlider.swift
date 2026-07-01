@@ -11,6 +11,11 @@ struct TickSlider: View {
     ticks.indices.min(by: { abs(ticks[$0] - value) < abs(ticks[$1] - value) }) ?? 0
   }
 
+  private func setIndex(_ index: Int) {
+    let clamped = min(max(index, 0), ticks.count - 1)
+    value = ticks[clamped]
+  }
+
   var body: some View {
     GeometryReader { geo in
       let usable = max(geo.size.width - thumbSize, 1)
@@ -50,6 +55,14 @@ struct TickSlider: View {
       .frame(height: thumbSize)
     }
     .frame(height: thumbSize)
+    .accessibilityElement()
+    .accessibilityAdjustableAction { direction in
+      switch direction {
+      case .increment: setIndex(currentIndex + 1)
+      case .decrement: setIndex(currentIndex - 1)
+      @unknown default: break
+      }
+    }
   }
 
   private func position(for index: Int, in usable: CGFloat) -> CGFloat {

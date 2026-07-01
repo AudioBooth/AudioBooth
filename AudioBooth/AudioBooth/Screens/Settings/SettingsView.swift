@@ -182,6 +182,7 @@ struct SettingsView: View {
         Image(systemName: "arrow.up.forward")
           .font(.caption)
           .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
       }
     }
     .tint(.primary)

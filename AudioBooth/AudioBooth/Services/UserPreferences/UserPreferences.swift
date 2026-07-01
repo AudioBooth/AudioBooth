@@ -105,6 +105,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("equalizerSettings")
   var equalizerSettings: EqualizerSettings = .init()
 
+  @AppStorage("levelingStrength")
+  var levelingStrength: LevelingStrength = .off
+
   @AppStorage("libraryDisplayMode")
   var libraryDisplayMode: BookCard.DisplayMode = .card
 
@@ -505,6 +508,24 @@ struct EqualizerSettings: Equatable, RawRepresentable {
     let enabled = isEnabled ? "1" : "0"
     let gains = bandGains.map { String($0) }.joined(separator: ",")
     return "\(enabled)|\(preamp)|\(gains)"
+  }
+}
+
+enum LevelingStrength: Int, CaseIterable, Identifiable {
+  case off
+  case low
+  case medium
+  case high
+
+  var id: Int { rawValue }
+
+  var displayName: LocalizedStringResource {
+    switch self {
+    case .off: "None"
+    case .low: "Low"
+    case .medium: "Medium"
+    case .high: "High"
+    }
   }
 }
 

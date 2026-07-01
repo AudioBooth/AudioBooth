@@ -37,7 +37,8 @@ struct SearchView: View {
     } else if model.isLoading {
       loadingState
         .containerRelativeFrame(.vertical)
-    } else if model.books.isEmpty, model.series.isEmpty, model.authors.isEmpty,
+    } else if model.books.isEmpty, model.podcasts.isEmpty, model.episodes.isEmpty,
+      model.series.isEmpty, model.authors.isEmpty,
       model.narrators.isEmpty, model.tags.isEmpty, model.genres.isEmpty
     {
       noResultsState
@@ -53,10 +54,14 @@ struct SearchView: View {
         .font(.system(size: 48))
         .foregroundColor(.secondary)
 
-      Text("Search for books, series, authors, narrators, tags, or genres")
-        .font(.headline)
-        .foregroundColor(.secondary)
-        .multilineTextAlignment(.center)
+      Text(
+        model.mediaType == .podcast
+          ? "Search for podcasts or episodes"
+          : "Search for books, series, authors, narrators, tags, or genres"
+      )
+      .font(.headline)
+      .foregroundColor(.secondary)
+      .multilineTextAlignment(.center)
     }
     .padding()
   }
@@ -92,6 +97,14 @@ struct SearchView: View {
     LazyVStack(spacing: 24) {
       if !model.books.isEmpty {
         booksSection
+      }
+
+      if !model.podcasts.isEmpty {
+        podcastsSection
+      }
+
+      if !model.episodes.isEmpty {
+        episodesSection
       }
 
       if !model.series.isEmpty {
@@ -133,6 +146,42 @@ struct SearchView: View {
       }
 
       LibraryView(items: model.books.map { .book($0) }, displayMode: .grid)
+    }
+  }
+
+  var podcastsSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Text("Podcasts")
+          .font(.title2)
+          .fontWeight(.bold)
+
+        Spacer()
+
+        Text("\(model.podcasts.count)")
+          .font(.caption)
+          .foregroundColor(.secondary)
+      }
+
+      LibraryView(items: model.podcasts.map { .book($0) }, displayMode: .grid)
+    }
+  }
+
+  var episodesSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Text("Episodes")
+          .font(.title2)
+          .fontWeight(.bold)
+
+        Spacer()
+
+        Text("\(model.episodes.count)")
+          .font(.caption)
+          .foregroundColor(.secondary)
+      }
+
+      LibraryView(items: model.episodes.map { .book($0) }, displayMode: .grid)
     }
   }
 
@@ -265,7 +314,10 @@ extension SearchView {
   @Observable class Model: ObservableObject {
     var searchText: String = ""
     var isLoading: Bool = false
+    var mediaType: Library.MediaType = .book
     var books: [BookCard.Model] = []
+    var podcasts: [BookCard.Model] = []
+    var episodes: [BookCard.Model] = []
     var series: [SeriesCard.Model] = []
     var authors: [AuthorCard.Model] = []
     var narrators: [String] = []

@@ -30,6 +30,26 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
+  var skipForwardInterval: Double {
+    get {
+      let value = UserDefaults.standard.double(forKey: Keys.skipForwardInterval)
+      return value > 0 ? value : 30
+    }
+    set {
+      UserDefaults.standard.set(newValue, forKey: Keys.skipForwardInterval)
+    }
+  }
+
+  var skipBackwardInterval: Double {
+    get {
+      let value = UserDefaults.standard.double(forKey: Keys.skipBackwardInterval)
+      return value > 0 ? value : 30
+    }
+    set {
+      UserDefaults.standard.set(newValue, forKey: Keys.skipBackwardInterval)
+    }
+  }
+
   private var session: WCSession?
   private var cancellables = Set<AnyCancellable>()
 
@@ -38,6 +58,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     static let progress = "progress"
     static let progressUpdatedAt = "progress_updated_at"
     static let customHeaders = "custom_headers"
+    static let skipForwardInterval = "skip_forward_interval"
+    static let skipBackwardInterval = "skip_backward_interval"
   }
 
   var isReachable: Bool {
@@ -451,6 +473,14 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     if let headers = context["customHeaders"] as? [String: String] {
       customHeaders = headers
+    }
+
+    if let forward = context["skipForwardInterval"] as? Double {
+      skipForwardInterval = forward
+    }
+
+    if let backward = context["skipBackwardInterval"] as? Double {
+      skipBackwardInterval = backward
     }
   }
 

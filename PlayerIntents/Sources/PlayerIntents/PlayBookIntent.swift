@@ -5,6 +5,7 @@ public struct PlayBookIntent: AudioPlaybackIntent {
   public static let title: LocalizedStringResource = "Play audiobook"
   public static let description = IntentDescription("Plays a specific audiobook.")
   public static let openAppWhenRun = false
+  public static let isDiscoverable = false
 
   @Dependency
   private var playerManager: PlayerManagerProtocol

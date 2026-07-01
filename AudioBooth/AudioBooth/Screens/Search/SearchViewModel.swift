@@ -10,6 +10,8 @@ final class SearchViewModel: SearchView.Model {
   private var lastSearch = ""
 
   override func onSearchChanged(_ searchText: String) {
+    mediaType = audiobookshelf.libraries.current?.mediaType ?? .book
+
     guard searchText != lastSearch else { return }
     lastSearch = searchText
 
@@ -27,6 +29,8 @@ final class SearchViewModel: SearchView.Model {
 
   private func clearResults() {
     books = []
+    podcasts = []
+    episodes = []
     series = []
     authors = []
     narrators = []
@@ -54,6 +58,14 @@ final class SearchViewModel: SearchView.Model {
 
       books = searchResult.book.map { searchBook in
         BookCardModel(searchBook.libraryItem, sortBy: .title)
+      }
+
+      podcasts = searchResult.podcast.map { searchPodcast in
+        PodcastCardModel(searchPodcast.libraryItem, sortBy: nil)
+      }
+
+      episodes = searchResult.episodes.map { searchEpisode in
+        PodcastCardModel(searchEpisode.libraryItem, sortBy: nil)
       }
 
       series = searchResult.series.map { searchSeries in

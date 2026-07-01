@@ -7,7 +7,7 @@ public struct PlayAudiobookIntent: AudioPlaybackIntent {
   @Dependency
   private var playerManager: PlayerManagerProtocol
 
-  @Parameter
+  @Parameter(optionsProvider: AudiobookEntityOptionsProvider())
   public var target: AudiobookEntity
 
   public init() {}

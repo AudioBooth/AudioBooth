@@ -274,12 +274,12 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   override func skipForward() {
-    let newTime = min(current + 30, totalDuration)
+    let newTime = min(current + connectivityManager.skipForwardInterval, totalDuration)
     audioPlayer.seek(to: newTime)
   }
 
   override func skipBackward() {
-    let newTime = max(current - 30, 0)
+    let newTime = max(current - connectivityManager.skipBackwardInterval, 0)
     audioPlayer.seek(to: newTime)
   }
 
@@ -387,8 +387,12 @@ final class BookPlayerModel: PlayerView.Model {
       return .success
     }
 
-    commandCenter.skipForwardCommand.preferredIntervals = [NSNumber(value: 30)]
-    commandCenter.skipBackwardCommand.preferredIntervals = [NSNumber(value: 30)]
+    commandCenter.skipForwardCommand.preferredIntervals = [
+      NSNumber(value: connectivityManager.skipForwardInterval)
+    ]
+    commandCenter.skipBackwardCommand.preferredIntervals = [
+      NSNumber(value: connectivityManager.skipBackwardInterval)
+    ]
 
     commandCenter.skipForwardCommand.addTarget { [weak self] _ in
       self?.skipForward()

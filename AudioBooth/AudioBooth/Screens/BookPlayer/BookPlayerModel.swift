@@ -534,6 +534,12 @@ extension BookPlayerModel {
     }
 
     let newTime = max(0, rewindTarget)
+
+    guard newTime < currentTime else {
+      AppLogger.player.debug("Smart rewind not applied - playhead would not move")
+      return
+    }
+
     mediaProgress.currentTime = newTime
     mediaProgress.lastPlayedAt = Date()
 
@@ -1042,12 +1048,16 @@ extension BookPlayerModel {
         AppLogger.player.info("Audio interruption ended - resuming playback")
         try? audioSession.setActive(true)
         player?.resume()
-      } else if let beganAt = interruptionBeganAt, Date().timeIntervalSince(beganAt) < 60 * 5 {
+      } else if let beganAt = interruptionBeganAt,
+        Date().timeIntervalSince(beganAt) < 60 * 5,
+        !audioSession.secondaryAudioShouldBeSilencedHint
+      {
         AppLogger.player.info("Audio interruption ended - resuming playback (within 5 minutes)")
         try? audioSession.setActive(true)
         player?.resume()
       } else {
         AppLogger.player.info("Audio interruption ended - not resuming")
+        interruptionBeganAt = nil
       }
 
     @unknown default:

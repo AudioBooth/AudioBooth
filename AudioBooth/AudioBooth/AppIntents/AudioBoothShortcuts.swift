@@ -1,27 +1,20 @@
 import AppIntents
 import PlayerIntents
 
+@available(iOS 18.0, *)
 struct AudioBoothShortcuts: AppShortcutsProvider {
   static var appShortcuts: [AppShortcut] {
-    if #available(iOS 18.0, *) {
-      return shortcuts + [
-        AppShortcut(
-          intent: PlayAudiobookIntent(),
-          phrases: [
-            "Play \(\.$target) with \(.applicationName)",
-            "Play \(\.$target) in \(.applicationName)",
-            "Play \(\.$target) on \(.applicationName)",
-          ],
-          shortTitle: "Play audiobook",
-          systemImageName: "play.fill"
-        )
-      ]
-    }
-    return shortcuts
-  }
+    AppShortcut(
+      intent: PlayAudiobookIntent(),
+      phrases: [
+        "Play \(\.$target) with \(.applicationName)",
+        "Play \(\.$target) in \(.applicationName)",
+        "Play \(\.$target) on \(.applicationName)",
+      ],
+      shortTitle: "Play audiobook",
+      systemImageName: "play.fill"
+    )
 
-  @AppShortcutsBuilder
-  private static var shortcuts: [AppShortcut] {
     AppShortcut(
       intent: PausePlaybackIntent(),
       phrases: [
@@ -96,16 +89,6 @@ struct AudioBoothShortcuts: AppShortcutsProvider {
         "Set timer in \(.applicationName)",
       ],
       shortTitle: "Set sleep timer",
-      systemImageName: "timer"
-    )
-
-    AppShortcut(
-      intent: SetSleepTimerToEndOfChapterIntent(),
-      phrases: [
-        "Set sleep timer to end of chapter in \(.applicationName)",
-        "Sleep at end of chapter in \(.applicationName)",
-      ],
-      shortTitle: "Sleep timer to chapter end",
       systemImageName: "timer"
     )
 

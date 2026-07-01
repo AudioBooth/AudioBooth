@@ -71,6 +71,7 @@ extension UserPreferences {
     "speedPresets",
     "volumePresets",
     "equalizerSettings",
+    "levelingStrength",
   ]
 
   func setupCloudSync() {

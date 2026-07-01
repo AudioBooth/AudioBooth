@@ -103,6 +103,7 @@ struct StoragePreferencesView: View {
             ),
             ticks: storageOptions.map(Double.init)
           )
+          .accessibilityValue(maxStorageLabel)
         }
         .listRowBackground(theme.colors.background.card)
 
@@ -133,6 +134,7 @@ struct StoragePreferencesView: View {
             ),
             ticks: removeAfterOptions.map { Double($0.rawValue) }
           )
+          .accessibilityValue(removeAfter.displayName)
         }
         .listRowBackground(theme.colors.background.card)
       } header: {

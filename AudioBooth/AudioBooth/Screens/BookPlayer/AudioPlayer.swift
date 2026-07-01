@@ -1,5 +1,6 @@
 import API
 import AVFoundation
+import AudioToolbox
 import Combine
 import CoreAudio
 import Logging
@@ -28,6 +29,7 @@ final class AudioPlayer {
 
   private let player = AVQueuePlayer()
   private let eqContext = EQContext()
+  private var eqEnabled = false
   private let mediaProgress: MediaProgress
   private var session: PlaybackSession
   private var tracks: [Track] = []
@@ -210,8 +212,13 @@ private extension AudioPlayer {
   }
 
   func applyEQToUpcoming() {
+    guard eqEnabled else { return }
+    Task { [weak self] in await self?.attachEQ() }
+  }
+
+  private func attachEQ() async {
     for item in player.items().prefix(2) where item.audioMix == nil {
-      applyEQ(to: item)
+      await applyEQ(to: item)
     }
   }
 
@@ -350,9 +357,28 @@ extension AudioPlayer {
     eqContext.setBandGain(index, gain: gain)
   }
 
-  var isEQEnabled: Bool {
-    get { eqContext.isEnabled }
-    set { eqContext.isEnabled = newValue }
+  func setLevelingStrength(_ strength: LevelingStrength) {
+    eqContext.setLevelingStrength(strength)
+  }
+
+  func setEQEnabled(_ enabled: Bool) {
+    guard eqEnabled != enabled else { return }
+    eqEnabled = enabled
+
+    guard player.currentItem != nil else { return }
+
+    let time = mediaProgress.currentTime
+    Task { [weak self] in
+      guard let self else { return }
+      if enabled {
+        await attachEQ()
+      } else {
+        for item in player.items() {
+          item.audioMix = nil
+        }
+      }
+      seek(to: time)
+    }
   }
 
   final class EQContext {
@@ -360,12 +386,17 @@ extension AudioPlayer {
 
     private(set) var engine: AVAudioEngine?
     private(set) var eq: AVAudioUnitEQ?
+    private(set) var compressor: AVAudioUnitEffect?
     private var sourceNode: AVAudioSourceNode?
     private var outputBuffer: AVAudioPCMBuffer?
     private var inputBufferList: UnsafeMutablePointer<AudioBufferList>?
-    var isEnabled = false
+    var levelingStrength: LevelingStrength = .off {
+      didSet { compressor?.bypass = levelingStrength == .off }
+    }
     var preamp: Float = 0
     var bandGains: [Float]
+
+    var eqHasEffect: Bool { preamp != 0 || bandGains.contains { $0 != 0 } }
 
     init() {
       bandGains = [Float](repeating: 0, count: Self.bandFrequencies.count)
@@ -378,6 +409,7 @@ extension AudioPlayer {
       let newEQ = AVAudioUnitEQ(numberOfBands: Self.bandFrequencies.count)
 
       newEQ.globalGain = preamp
+      newEQ.bypass = !eqHasEffect
       for (i, freq) in Self.bandFrequencies.enumerated() {
         let band = newEQ.bands[i]
         band.filterType = .parametric
@@ -386,6 +418,17 @@ extension AudioPlayer {
         band.gain = bandGains[i]
         band.bypass = false
       }
+
+      let newCompressor = AVAudioUnitEffect(
+        audioComponentDescription: AudioComponentDescription(
+          componentType: kAudioUnitType_Effect,
+          componentSubType: kAudioUnitSubType_DynamicsProcessor,
+          componentManufacturer: kAudioUnitManufacturer_Apple,
+          componentFlags: 0,
+          componentFlagsMask: 0
+        )
+      )
+      newCompressor.bypass = levelingStrength == .off
 
       let srcNode = AVAudioSourceNode(format: format) { [weak self] _, _, _, audioBufferList in
         guard let self, let input = self.inputBufferList else { return noErr }
@@ -401,8 +444,10 @@ extension AudioPlayer {
 
       newEngine.attach(srcNode)
       newEngine.attach(newEQ)
+      newEngine.attach(newCompressor)
       newEngine.connect(srcNode, to: newEQ, format: format)
-      newEngine.connect(newEQ, to: newEngine.mainMixerNode, format: format)
+      newEngine.connect(newEQ, to: newCompressor, format: format)
+      newEngine.connect(newCompressor, to: newEngine.mainMixerNode, format: format)
 
       do {
         try newEngine.enableManualRenderingMode(.realtime, format: format, maximumFrameCount: maxFrames)
@@ -410,14 +455,16 @@ extension AudioPlayer {
         outputBuffer = AVAudioPCMBuffer(pcmFormat: newEngine.manualRenderingFormat, frameCapacity: maxFrames)
         self.engine = newEngine
         self.eq = newEQ
+        self.compressor = newCompressor
         self.sourceNode = srcNode
+        applyLevelingParameters()
       } catch {
         AppLogger.player.error("EQ engine setup failed: \(error)")
       }
     }
 
     func process(numberFrames: CMItemCount, bufferListInOut: UnsafeMutablePointer<AudioBufferList>) {
-      guard isEnabled, let outputBuffer else { return }
+      guard let outputBuffer else { return }
 
       inputBufferList = bufferListInOut
 
@@ -442,6 +489,7 @@ extension AudioPlayer {
       engine?.stop()
       engine = nil
       eq = nil
+      compressor = nil
       sourceNode = nil
       outputBuffer = nil
       inputBufferList = nil
@@ -450,66 +498,90 @@ extension AudioPlayer {
     func setPreamp(_ value: Float) {
       preamp = value
       eq?.globalGain = value
+      eq?.bypass = !eqHasEffect
     }
 
     func setBandGain(_ index: Int, gain: Float) {
       guard index < bandGains.count else { return }
       bandGains[index] = gain
       eq?.bands[index].gain = gain
+      eq?.bypass = !eqHasEffect
+    }
+
+    func setLevelingStrength(_ strength: LevelingStrength) {
+      levelingStrength = strength
+      applyLevelingParameters()
+    }
+
+    private func applyLevelingParameters() {
+      guard let unit = compressor?.audioUnit, let params = levelingStrength.parameters else { return }
+      AudioUnitSetParameter(unit, kDynamicsProcessorParam_Threshold, kAudioUnitScope_Global, 0, params.threshold, 0)
+      AudioUnitSetParameter(unit, kDynamicsProcessorParam_HeadRoom, kAudioUnitScope_Global, 0, params.headroom, 0)
+      AudioUnitSetParameter(unit, kDynamicsProcessorParam_AttackTime, kAudioUnitScope_Global, 0, params.attack, 0)
+      AudioUnitSetParameter(unit, kDynamicsProcessorParam_ReleaseTime, kAudioUnitScope_Global, 0, params.release, 0)
+      AudioUnitSetParameter(unit, kDynamicsProcessorParam_OverallGain, kAudioUnitScope_Global, 0, params.makeupGain, 0)
     }
   }
 
-  func applyEQ(to item: AVPlayerItem) {
-    Task { [weak self] in
-      guard let self else { return }
-      guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first else { return }
+  func applyEQ(to item: AVPlayerItem) async {
+    guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first else { return }
 
-      let context = eqContext
-      let clientInfo = Unmanaged.passRetained(context).toOpaque()
+    let context = eqContext
+    let clientInfo = Unmanaged.passRetained(context).toOpaque()
 
-      var callbacks = MTAudioProcessingTapCallbacks(
-        version: kMTAudioProcessingTapCallbacksVersion_0,
-        clientInfo: UnsafeMutableRawPointer(clientInfo)
-      ) { _, clientInfo, tapStorageOut in
-        tapStorageOut.pointee = clientInfo
-      } finalize: { tap in
-        let storage = MTAudioProcessingTapGetStorage(tap)
-        Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).release()
-      } prepare: { tap, maxFrames, processingFormat in
-        let storage = MTAudioProcessingTapGetStorage(tap)
-        let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
-        guard let format = AVAudioFormat(streamDescription: processingFormat) else { return }
-        ctx.prepare(format: format, maxFrames: AVAudioFrameCount(maxFrames))
-      } unprepare: { tap in
-        let storage = MTAudioProcessingTapGetStorage(tap)
-        let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
-        ctx.unprepare()
-      } process: { tap, numberFrames, _, bufferListInOut, numberFramesOut, flagsOut in
-        guard
-          MTAudioProcessingTapGetSourceAudio(tap, numberFrames, bufferListInOut, flagsOut, nil, numberFramesOut)
-            == noErr
-        else {
-          return
-        }
-        let storage = MTAudioProcessingTapGetStorage(tap)
-        let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
-        ctx.process(numberFrames: numberFrames, bufferListInOut: bufferListInOut)
-      }
-
-      var tap: MTAudioProcessingTap?
+    var callbacks = MTAudioProcessingTapCallbacks(
+      version: kMTAudioProcessingTapCallbacksVersion_0,
+      clientInfo: UnsafeMutableRawPointer(clientInfo)
+    ) { _, clientInfo, tapStorageOut in
+      tapStorageOut.pointee = clientInfo
+    } finalize: { tap in
+      let storage = MTAudioProcessingTapGetStorage(tap)
+      Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).release()
+    } prepare: { tap, maxFrames, processingFormat in
+      let storage = MTAudioProcessingTapGetStorage(tap)
+      let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
+      guard let format = AVAudioFormat(streamDescription: processingFormat) else { return }
+      ctx.prepare(format: format, maxFrames: AVAudioFrameCount(maxFrames))
+    } unprepare: { tap in
+      let storage = MTAudioProcessingTapGetStorage(tap)
+      let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
+      ctx.unprepare()
+    } process: { tap, numberFrames, _, bufferListInOut, numberFramesOut, flagsOut in
       guard
-        MTAudioProcessingTapCreate(kCFAllocatorDefault, &callbacks, kMTAudioProcessingTapCreationFlag_PreEffects, &tap)
+        MTAudioProcessingTapGetSourceAudio(tap, numberFrames, bufferListInOut, flagsOut, nil, numberFramesOut)
           == noErr
       else {
         return
       }
+      let storage = MTAudioProcessingTapGetStorage(tap)
+      let ctx = Unmanaged<AudioPlayer.EQContext>.fromOpaque(storage).takeUnretainedValue()
+      ctx.process(numberFrames: numberFrames, bufferListInOut: bufferListInOut)
+    }
 
-      let params = AVMutableAudioMixInputParameters(track: track)
-      params.audioTapProcessor = tap
+    var tap: MTAudioProcessingTap?
+    guard
+      MTAudioProcessingTapCreate(kCFAllocatorDefault, &callbacks, kMTAudioProcessingTapCreationFlag_PreEffects, &tap)
+        == noErr
+    else {
+      return
+    }
 
-      let audioMix = AVMutableAudioMix()
-      audioMix.inputParameters = [params]
-      item.audioMix = audioMix
+    let params = AVMutableAudioMixInputParameters(track: track)
+    params.audioTapProcessor = tap
+
+    let audioMix = AVMutableAudioMix()
+    audioMix.inputParameters = [params]
+    item.audioMix = audioMix
+  }
+}
+
+extension LevelingStrength {
+  var parameters: (threshold: Float, headroom: Float, attack: Float, release: Float, makeupGain: Float)? {
+    switch self {
+    case .off: nil
+    case .low: (-18, 8, 0.001, 0.2, 4)
+    case .medium: (-24, 6, 0.001, 0.2, 7)
+    case .high: (-30, 5, 0.001, 0.2, 10)
     }
   }
 }

@@ -67,6 +67,16 @@ struct ServerView: View {
             }
           }
         customHeadersSection
+
+        if let serverVersion = model.serverVersion {
+          HStack {
+            Text("Server Version")
+            Spacer()
+            Text(serverVersion)
+              .foregroundStyle(.secondary)
+              .textSelection(.enabled)
+          }
+        }
       }
       .listRowBackground(theme.colors.background.card)
 

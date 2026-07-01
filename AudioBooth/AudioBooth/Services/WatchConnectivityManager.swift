@@ -151,6 +151,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       return
     }
     context["customHeaders"] = Audiobookshelf.shared.authentication.server?.customHeaders ?? [:]
+    context["skipForwardInterval"] = UserPreferences.shared.skipForwardInterval
+    context["skipBackwardInterval"] = UserPreferences.shared.skipBackwardInterval
     do {
       try session.updateApplicationContext(context)
     } catch {

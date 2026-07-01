@@ -9,14 +9,18 @@ final class EqualizerSheetViewModel: EqualizerSheet.Model {
     self.player = player
 
     let settings = UserPreferences.shared.equalizerSettings
-    player.isEQEnabled = settings.isEnabled
     player.setEQPreamp(settings.preamp)
     for (i, gain) in settings.bandGains.enumerated() {
       player.setEQBand(i, gain: gain)
     }
 
+    let leveling = UserPreferences.shared.levelingStrength
+    player.setLevelingStrength(leveling)
+    player.setEQEnabled(settings.isEnabled)
+
     super.init(
       isEnabled: settings.isEnabled,
+      levelingStrength: leveling,
       preamp: settings.preamp,
       bandGains: settings.bandGains,
       presets: EqualizerSheet.defaultPresets
@@ -25,8 +29,14 @@ final class EqualizerSheetViewModel: EqualizerSheet.Model {
 
   override func onToggleEnabled(_ enabled: Bool) {
     isEnabled = enabled
-    player.isEQEnabled = enabled
+    player.setEQEnabled(enabled)
     saveSettings()
+  }
+
+  override func onLevelingStrengthChanged(_ strength: LevelingStrength) {
+    levelingStrength = strength
+    player.setLevelingStrength(strength)
+    preferences.levelingStrength = strength
   }
 
   override func onPreampChanged(_ value: Float) {

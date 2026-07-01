@@ -39,6 +39,7 @@ struct AudioBoothApp: App {
       switch phase {
       case .background:
         WidgetCenter.shared.reloadAllTimelines()
+        AudiobookIndexer.populate()
       case .active:
         guard Audiobookshelf.shared.authentication.isAuthenticated else { return }
         SessionManager.shared.syncUnsyncedSessions()
