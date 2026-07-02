@@ -448,6 +448,42 @@ public final class AuthenticationService: ObservableObject {
     return connectionID
   }
 
+  public func loginWithJWT(
+    serverURL: URL,
+    token: String,
+    customHeaders: [String: String] = [:],
+    alias: String? = nil
+  ) async throws -> String {
+    switch JWT(token)?.type {
+    case .api:
+      let connectionID = try await loginWithAPIKey(
+        serverURL: serverURL.absoluteString,
+        apiKey: token,
+        customHeaders: customHeaders
+      )
+      updateAlias(connectionID, alias: alias)
+      try switchToServer(connectionID)
+      return connectionID
+
+    case .refresh:
+      let connection = Connection(
+        serverURL: serverURL,
+        token: .bearer(accessToken: "", refreshToken: token, expiresAt: 0),
+        customHeaders: customHeaders,
+        alias: alias
+      )
+      let server = Server(connection: connection)
+
+      _ = try await refreshToken(for: server)
+
+      restoreConnection(Connection(server))
+      return connection.id
+
+    case .access, .unknown, nil:
+      throw Audiobookshelf.AudiobookshelfError.loginFailed("Unsupported token type")
+    }
+  }
+
   func refreshToken(for server: Server) async throws -> Credentials {
     if case .apiKey = server.token {
       return server.token
