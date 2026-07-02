@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Podcast auto-queue - New per-podcast setting to automatically add newly published episodes to the queue, with an optional storage preference to download them automatically
 
 ### Fixed
+- Podcast playback - Various improvements and fixes around podcast playback and episode management (thanks @Creationsss)
 - Podcast library search - Fixed search failing in podcast libraries, now showing matching podcasts and episodes
 
 ## [1.10.0]
