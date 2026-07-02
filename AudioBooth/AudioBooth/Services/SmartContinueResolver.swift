@@ -12,16 +12,17 @@ struct SmartContinueResolver {
   }
 
   private let audiobookshelf = Audiobookshelf.shared
+  private let preferences = UserPreferences.shared
 
   func resolve(
     currentItemID: String,
     currentPodcastID: String?
   ) async -> ResolvedItem? {
     if let currentPodcastID {
-      if let next = await resolveNextEpisode(currentEpisodeID: currentItemID, podcastID: currentPodcastID) {
-        return next
+      guard let podcast = try? await audiobookshelf.podcasts.fetch(id: currentPodcastID) else {
+        return resolveNextOfflineEpisode(currentEpisodeID: currentItemID)
       }
-      return resolveNextOfflineEpisode(currentEpisodeID: currentItemID)
+      return nextEpisode(after: currentItemID, in: podcast)
     } else {
       if let next = await resolveNextBookInSeries(currentBookID: currentItemID) {
         return next
@@ -32,16 +33,6 @@ struct SmartContinueResolver {
 }
 
 extension SmartContinueResolver {
-  private func resolveNextEpisode(
-    currentEpisodeID: String,
-    podcastID: String
-  ) async -> ResolvedItem? {
-    guard let podcast = try? await audiobookshelf.podcasts.fetch(id: podcastID) else {
-      return nil
-    }
-    return nextEpisode(after: currentEpisodeID, in: podcast)
-  }
-
   private func nextEpisode(
     after currentEpisodeID: String,
     in podcast: Podcast
@@ -54,10 +45,9 @@ extension SmartContinueResolver {
     }
 
     let remaining = sorted.suffix(from: sorted.index(after: currentIndex))
-    let next =
-      remaining.first(where: { MediaProgress.progress(for: $0.id) < 1.0 })
-      ?? sorted.first(where: { $0.id != currentEpisodeID && MediaProgress.progress(for: $0.id) < 1.0 })
-    guard let next else { return nil }
+    guard let next = remaining.first(where: { MediaProgress.progress(for: $0.id) < 1.0 }) else {
+      return nil
+    }
 
     return ResolvedItem(
       bookID: next.id,
@@ -69,10 +59,9 @@ extension SmartContinueResolver {
   }
 
   private func sortedEpisodes(_ episodes: [PodcastEpisode]) -> [PodcastEpisode] {
-    episodes.sorted { a, b in
-      guard let aDate = a.publishedAt, let bDate = b.publishedAt else { return false }
-      return aDate < bDate
-    }
+    let sort = preferences.podcastEpisodeSort
+    let ascending = preferences.podcastEpisodeSortAscending
+    return episodes.sorted { sort.areInOrder($0, $1, ascending: ascending) }
   }
 
   private func resolveNextOfflineEpisode(currentEpisodeID: String) -> ResolvedItem? {

@@ -283,12 +283,14 @@ struct PodcastDetailsView: View {
           .font(.subheadline)
         }
 
-        HStack {
-          Image(systemName: "mic")
-            .accessibilityHidden(true)
-          Text("**Episodes:** \(model.episodeCount)")
+        if !model.episodesLoading {
+          HStack {
+            Image(systemName: "mic")
+              .accessibilityHidden(true)
+            Text("**Episodes:** \(model.episodeCount)")
+          }
+          .font(.subheadline)
         }
-        .font(.subheadline)
 
         if let podcastType = model.podcastType {
           HStack {
@@ -453,6 +455,21 @@ struct PodcastDetailsView: View {
   // MARK: - Episodes
 
   private var episodesSection: some View {
+    Group {
+      if model.episodesLoading {
+        HStack {
+          Spacer()
+          ProgressView("Loading episodes...")
+            .padding(.vertical, 40)
+          Spacer()
+        }
+      } else {
+        episodesContent
+      }
+    }
+  }
+
+  private var episodesContent: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         Text(model.episodesTitle)
@@ -672,6 +689,7 @@ extension PodcastDetailsView {
     var genres: [String]?
     var tags: [String]?
     var isLoading: Bool
+    var episodesLoading: Bool = false
     var error: String?
     var isExplicit: Bool
     var language: String?
@@ -727,36 +745,7 @@ extension PodcastDetailsView {
         result = result.filter { $0.progress > 0 && !$0.isCompleted }
       }
 
-      switch selectedSort {
-      case .pubDate:
-        result.sort {
-          if ascending {
-            return ($0.publishedAt ?? .distantPast) < ($1.publishedAt ?? .distantPast)
-          } else {
-            return ($0.publishedAt ?? .distantPast) > ($1.publishedAt ?? .distantPast)
-          }
-        }
-      case .title:
-        result.sort {
-          let order = $0.title.localizedCaseInsensitiveCompare($1.title)
-          return ascending ? order == .orderedAscending : order == .orderedDescending
-        }
-      case .season:
-        result.sort {
-          let s0 = Int($0.season ?? "") ?? 0
-          let s1 = Int($1.season ?? "") ?? 0
-          if s0 != s1 { return ascending ? s0 < s1 : s0 > s1 }
-          let e0 = Int($0.episode ?? "") ?? 0
-          let e1 = Int($1.episode ?? "") ?? 0
-          return ascending ? e0 < e1 : e0 > e1
-        }
-      case .episode:
-        result.sort {
-          let e0 = Int($0.episode ?? "") ?? 0
-          let e1 = Int($1.episode ?? "") ?? 0
-          return ascending ? e0 < e1 : e0 > e1
-        }
-      }
+      result.sort { selectedSort.areInOrder($0, $1, ascending: ascending) }
 
       return result
     }
@@ -836,8 +825,8 @@ extension PodcastDetailsView.Model {
     let duration: Double?
     let size: Int64?
     let description: String?
-    let isCompleted: Bool
-    let progress: Double
+    var isCompleted: Bool
+    var progress: Double
     let chapters: [Chapter]
     var downloadState: DownloadManager.DownloadState
     var contextMenu: PodcastEpisodeContextMenu.Model?
@@ -907,6 +896,47 @@ extension PodcastDetailsView.Model {
       case .episode: "Episode"
       }
     }
+
+    func areInOrder(_ a: some EpisodeSortable, _ b: some EpisodeSortable, ascending: Bool) -> Bool {
+      switch self {
+      case .pubDate:
+        let d0 = a.publishedAtDate ?? .distantPast
+        let d1 = b.publishedAtDate ?? .distantPast
+        return ascending ? d0 < d1 : d0 > d1
+      case .title:
+        let order = a.title.localizedCaseInsensitiveCompare(b.title)
+        return ascending ? order == .orderedAscending : order == .orderedDescending
+      case .season:
+        let s0 = Int(a.season ?? "") ?? 0
+        let s1 = Int(b.season ?? "") ?? 0
+        if s0 != s1 { return ascending ? s0 < s1 : s0 > s1 }
+        let e0 = Int(a.episode ?? "") ?? 0
+        let e1 = Int(b.episode ?? "") ?? 0
+        return ascending ? e0 < e1 : e0 > e1
+      case .episode:
+        let e0 = Int(a.episode ?? "") ?? 0
+        let e1 = Int(b.episode ?? "") ?? 0
+        return ascending ? e0 < e1 : e0 > e1
+      }
+    }
+  }
+}
+
+protocol EpisodeSortable {
+  var title: String { get }
+  var season: String? { get }
+  var episode: String? { get }
+  var publishedAtDate: Date? { get }
+}
+
+extension PodcastDetailsView.Model.Episode: EpisodeSortable {
+  var publishedAtDate: Date? { publishedAt }
+}
+
+extension PodcastEpisode: EpisodeSortable {
+  var publishedAtDate: Date? {
+    guard let publishedAt else { return nil }
+    return Date(timeIntervalSince1970: TimeInterval(publishedAt) / 1000)
   }
 }
 

@@ -272,6 +272,7 @@ final class BookPlayerModel: BookPlayer.Model {
     if sessionManager.current == nil {
       AppLogger.player.warning("Session was closed, recreating and reloading player")
 
+      pendingPlay = true
       Task {
         do {
           try await setupSession(forceTranscode: false)
@@ -282,6 +283,8 @@ final class BookPlayerModel: BookPlayer.Model {
             reloadPlayer()
           } else {
             AppLogger.player.info("Player using local files, no reload needed")
+            isLoading = false
+            resumePlayback()
           }
         } catch {
           AppLogger.player.error("Failed to recreate session: \(error)")
@@ -290,7 +293,14 @@ final class BookPlayerModel: BookPlayer.Model {
           Toast(error: "Couldn't reconnect. Please try again.").show()
         }
       }
+      return
     }
+
+    resumePlayback()
+  }
+
+  private func resumePlayback() {
+    guard let player else { return }
 
     if !hasPlayedThisSession, userPreferences.smartRewindOnSessionStart {
       applySmartRewind(reason: .sessionStart)
@@ -883,6 +893,9 @@ extension BookPlayerModel {
         case .finished:
           player.pause()
           self.isLoading = false
+          if self.mediaProgress.duration > 0 {
+            self.mediaProgress.currentTime = self.mediaProgress.duration
+          }
           self.recordBookCompletionIfNeeded(autoPlayNext: true)
 
         case .seek, .rateChanged:

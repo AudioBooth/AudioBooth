@@ -294,7 +294,8 @@ private extension AudioPlayer {
     NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime, object: item)
       .sink { [weak self] _ in
         guard let self else { return }
-        if self.currentTrackIndex == self.tracks.count - 1 {
+        let remainingItems = self.player.items()
+        if remainingItems.isEmpty || remainingItems == [item] {
           self.events.send(.finished)
         } else {
           self.currentTrackIndex += 1

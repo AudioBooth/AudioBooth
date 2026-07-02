@@ -16,6 +16,7 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
 
   private let playerManager = PlayerManager.shared
   private let downloadManager = DownloadManager.shared
+  var onProgressChanged: (() -> Void)?
 
   init(
     episodeID: String,
@@ -151,6 +152,7 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
         try await Audiobookshelf.shared.libraries.markAsFinished(bookID: episodeProgressID)
         actions.remove(.markAsFinished)
         actions.insert(.resetProgress)
+        onProgressChanged?()
       } catch {
         AppLogger.viewModel.error("Failed to mark episode as finished: \(error)")
       }
@@ -181,6 +183,7 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
         }
         actions.remove(.resetProgress)
         actions.insert(.markAsFinished)
+        onProgressChanged?()
       } catch {
         AppLogger.viewModel.error("Failed to reset episode progress: \(error)")
       }
