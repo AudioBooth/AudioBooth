@@ -10,6 +10,7 @@ final class TipJarViewModel: TipJarView.Model {
     super.init(isSandbox: [.debug, .testFlight].contains(UIApplication.buildType))
 
     loadOfferings()
+    loadSubscriptionStatus()
   }
 
   override func onTipSelected(_ tip: Tip) {
@@ -17,6 +18,19 @@ final class TipJarViewModel: TipJarView.Model {
       return
     }
     purchaseTip(package)
+  }
+
+  private func loadSubscriptionStatus() {
+    Task {
+      do {
+        let customerInfo = try await Purchases.shared.customerInfo()
+        hasActiveSubscription = !customerInfo.activeSubscriptions.isEmpty
+      } catch {
+        AppLogger.viewModel.error(
+          "Failed to fetch customer info: \(error.localizedDescription)"
+        )
+      }
+    }
   }
 
   private func loadOfferings() {
@@ -72,6 +86,7 @@ final class TipJarViewModel: TipJarView.Model {
 
         if !result.userCancelled {
           lastPurchaseSuccess = true
+          hasActiveSubscription = !result.customerInfo.activeSubscriptions.isEmpty
 
           Task { @MainActor in
             try? await Task.sleep(for: .seconds(5))

@@ -6,6 +6,11 @@ import SwiftUI
 struct TipJarView: View {
   @Environment(\.appTheme) var theme
   @ObservedObject var model: Model
+  @State private var isExpanded = false
+
+  private var isCollapsed: Bool {
+    model.hasActiveSubscription && !isExpanded
+  }
 
   var body: some View {
     if !model.tips.isEmpty {
@@ -13,67 +18,39 @@ struct TipJarView: View {
         VStack(alignment: .leading, spacing: 16) {
           header
 
-          ForEach(model.subscriptionTips) { tip in
-            subscriptionCard(tip)
-              .allowsHitTesting(model.isPurchasing == nil)
-              .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
-          }
-
-          if !model.oneTimeTips.isEmpty {
-            Divider()
-
-            Text("ONE-TIME TIP")
-              .font(.caption2)
-              .fontWeight(.semibold)
-              .foregroundStyle(.secondary)
-
-            HStack(spacing: 10) {
-              ForEach(model.oneTimeTips) { tip in
-                oneTimeCard(tip)
-                  .allowsHitTesting(model.isPurchasing == nil)
-                  .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
-              }
+          if !model.hasActiveSubscription {
+            ForEach(model.subscriptionTips) { tip in
+              subscriptionCard(tip)
+                .allowsHitTesting(model.isPurchasing == nil)
+                .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
             }
-
-            Text("Tip to thank and support the developer.")
-              .font(.caption2)
-              .foregroundStyle(.secondary)
-          }
-
-          if model.isSandbox {
-            HStack(spacing: 4) {
-              Text("TestFlight:")
-                .foregroundStyle(.red)
-                .fontWeight(.semibold)
-              Text("Test purchases only.")
-                .foregroundStyle(.secondary)
-              Link(destination: URL(string: "https://apps.apple.com/us/app/id6753017503")!) {
-                HStack(spacing: 2) {
-                  Text("Open App Store")
-                  Image(systemName: "arrow.up.forward")
-                    .font(.caption2)
-                }
-                .foregroundStyle(.pink)
-              }
-              Spacer(minLength: 0)
-            }
-            .font(.caption)
-          }
-
-          if model.lastPurchaseSuccess {
-            HStack(spacing: 8) {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-              Text("Thank you for your support!")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
-            .transition(.scale.combined(with: .opacity))
           }
         }
         .padding(16)
         .listRowInsets(EdgeInsets())
         .listRowBackground(theme.colors.background.card)
+        .listRowSeparator(.hidden)
+
+        if !isCollapsed {
+          VStack(alignment: .leading, spacing: 16) {
+            expandableContent
+
+            if model.lastPurchaseSuccess {
+              HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                  .foregroundStyle(.green)
+                Text("Thank you for your support!")
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
+              }
+              .transition(.scale.combined(with: .opacity))
+            }
+          }
+          .padding([.horizontal, .bottom], 16)
+          .listRowInsets(EdgeInsets())
+          .listRowBackground(theme.colors.background.card)
+          .listRowSeparator(.hidden)
+        }
       } header: {
         Text("Sponsor")
       }
@@ -83,27 +60,106 @@ struct TipJarView: View {
   }
 
   @ViewBuilder
+  private var expandableContent: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      if !model.oneTimeTips.isEmpty {
+        Divider()
+
+        Text("ONE-TIME TIP")
+          .font(.caption2)
+          .fontWeight(.semibold)
+          .foregroundStyle(.secondary)
+
+        HStack(spacing: 10) {
+          ForEach(model.oneTimeTips) { tip in
+            oneTimeCard(tip)
+              .allowsHitTesting(model.isPurchasing == nil)
+              .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
+          }
+        }
+
+        Text("Tip to thank and support the developer.")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+      }
+
+      if model.isSandbox {
+        HStack(spacing: 4) {
+          Text("TestFlight:")
+            .foregroundStyle(.red)
+            .fontWeight(.semibold)
+          Text("Test purchases only.")
+            .foregroundStyle(.secondary)
+          Link(destination: URL(string: "https://apps.apple.com/us/app/id6753017503")!) {
+            HStack(spacing: 2) {
+              Text("Open App Store")
+              Image(systemName: "arrow.up.forward")
+                .font(.caption2)
+            }
+            .foregroundStyle(.pink)
+          }
+          Spacer(minLength: 0)
+        }
+        .font(.caption)
+      }
+    }
+  }
+
+  @ViewBuilder
   private var header: some View {
+    if model.hasActiveSubscription {
+      Button(action: {
+        withAnimation(.easeInOut(duration: 0.3)) {
+          isExpanded.toggle()
+        }
+      }) {
+        headerContent
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+    } else {
+      headerContent
+    }
+  }
+
+  @ViewBuilder
+  private var headerContent: some View {
     HStack(spacing: 12) {
       RoundedRectangle(cornerRadius: 12, style: .continuous)
         .fill(.pink.opacity(0.15))
         .frame(width: 44, height: 44)
         .overlay(
-          Image(systemName: "heart")
+          Image(systemName: model.hasActiveSubscription ? "heart.fill" : "heart")
             .font(.system(size: 20, weight: .semibold))
             .foregroundStyle(.pink)
         )
 
       VStack(alignment: .leading, spacing: 2) {
-        Text("Help sustain AudioBooth")
-          .font(.headline)
-          .foregroundStyle(.primary)
-        Text("Indie app. Powered by supporters.")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
+        if model.hasActiveSubscription {
+          Text("You're a supporter")
+            .font(.headline)
+            .foregroundStyle(.primary)
+          Text("Thank you for sustaining AudioBooth!")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        } else {
+          Text("Help sustain AudioBooth")
+            .font(.headline)
+            .foregroundStyle(.primary)
+          Text("Indie app. Powered by supporters.")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
       }
 
       Spacer(minLength: 0)
+
+      if model.hasActiveSubscription {
+        Image(systemName: "chevron.down")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+          .rotationEffect(.degrees(isExpanded ? 180 : 0))
+      }
     }
   }
 
@@ -188,6 +244,7 @@ extension TipJarView {
     var isPurchasing: String?
     var lastPurchaseSuccess: Bool
     var isSandbox: Bool
+    var hasActiveSubscription: Bool
 
     var subscriptionTips: [Tip] {
       tips.filter { $0.id.hasPrefix("$rc_") }
@@ -203,12 +260,14 @@ extension TipJarView {
       tips: [Tip] = [],
       isPurchasing: String? = nil,
       lastPurchaseSuccess: Bool = false,
-      isSandbox: Bool = false
+      isSandbox: Bool = false,
+      hasActiveSubscription: Bool = false
     ) {
       self.tips = tips
       self.isPurchasing = isPurchasing
       self.lastPurchaseSuccess = lastPurchaseSuccess
       self.isSandbox = isSandbox
+      self.hasActiveSubscription = hasActiveSubscription
     }
   }
 }
@@ -238,4 +297,14 @@ extension TipJarView.Model {
 #Preview("TipJar") {
   TipJarView(model: .mock)
     .padding()
+}
+
+#Preview("TipJar Subscribed") {
+  TipJarView(
+    model: TipJarView.Model(
+      tips: TipJarView.Model.mock.tips,
+      hasActiveSubscription: true
+    )
+  )
+  .padding()
 }
