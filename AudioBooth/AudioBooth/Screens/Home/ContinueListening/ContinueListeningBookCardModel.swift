@@ -36,6 +36,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
         onProgressChanged: nil,
         onRemoveFromContinueListening: onRemoved
       ),
+      hasEbook: book.media.ebookFile != nil || book.media.ebookFormat != nil,
       isExplicit: book.media.metadata.explicit ?? false,
       timeRemaining: book.duration
     )
@@ -61,6 +62,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
         onProgressChanged: nil,
         onRemoveFromContinueListening: onRemoved
       ),
+      hasEbook: localBook.mediaType.contains(.ebook),
       isExplicit: localBook.isExplicit,
       timeRemaining: localBook.duration
     )
@@ -110,6 +112,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
         } else {
           self.cover.downloadProgress = nil
         }
+        self.isDownloaded = states[self.id] == .downloaded
       }
   }
 }

@@ -184,10 +184,16 @@ extension BookCard {
     private var cover: some View {
       Cover(model: model.cover)
         .frame(height: coverSize)
-        .overlay(alignment: .bottomLeading) {
-          ebookIndicator
-            .padding(4)
-            .padding(.bottom, 2)
+        .overlay(alignment: .bottom) {
+          HStack {
+            ebookIndicator
+              .padding(4)
+
+            Spacer()
+
+            downloadedIndicator
+              .padding(4)
+          }
         }
         .overlay(alignment: .topTrailing) {
           if let sequence = model.sequence, !sequence.isEmpty {
@@ -214,10 +220,16 @@ extension BookCard {
 
     private var rowCover: some View {
       Cover(model: model.cover, size: .small)
-        .overlay(alignment: .bottomLeading) {
-          ebookIndicator
-            .padding(.leading, 2)
-            .padding(.bottom, 6)
+        .overlay(alignment: .bottom) {
+          HStack {
+            ebookIndicator
+              .padding(2)
+
+            Spacer()
+
+            downloadedIndicator
+              .padding(2)
+          }
         }
         .overlay(alignment: .topTrailing) {
           if let sequence = model.sequence, !sequence.isEmpty {
@@ -295,14 +307,25 @@ extension BookCard {
     @ViewBuilder
     private var ebookIndicator: some View {
       if model.hasEbook {
-        Image(systemName: "book.fill")
-          .font(.caption2)
-          .foregroundStyle(Color.white)
-          .padding(.vertical, 2)
-          .padding(.horizontal, 4)
-          .background(Color.black.opacity(0.6))
-          .clipShape(.capsule)
+        coverBadge(systemImage: "book.fill")
       }
+    }
+
+    @ViewBuilder
+    private var downloadedIndicator: some View {
+      if model.isDownloaded {
+        coverBadge(systemImage: "arrow.down.circle.fill")
+      }
+    }
+
+    private func coverBadge(systemImage: String) -> some View {
+      Image(systemName: systemImage)
+        .font(.caption2)
+        .foregroundStyle(Color.white)
+        .padding(.horizontal, 4)
+        .frame(height: 16)
+        .background(Color.black.opacity(0.6))
+        .clipShape(.capsule)
     }
   }
 }
@@ -361,6 +384,7 @@ extension BookCard {
     var contextMenu: BookCardContextMenu.Model?
     var episodeContextMenu: PodcastEpisodeContextMenu.Model?
     let hasEbook: Bool
+    var isDownloaded: Bool
     let isExplicit: Bool
     var timeRemaining: TimeInterval?
 
@@ -380,6 +404,7 @@ extension BookCard {
       contextMenu: BookCardContextMenu.Model? = nil,
       episodeContextMenu: PodcastEpisodeContextMenu.Model? = nil,
       hasEbook: Bool = false,
+      isDownloaded: Bool = false,
       isExplicit: Bool = false,
       timeRemaining: TimeInterval? = nil
     ) {
@@ -396,6 +421,7 @@ extension BookCard {
       self.contextMenu = contextMenu
       self.episodeContextMenu = episodeContextMenu
       self.hasEbook = hasEbook
+      self.isDownloaded = isDownloaded
       self.isExplicit = isExplicit
       self.timeRemaining = timeRemaining
     }
