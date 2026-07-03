@@ -51,7 +51,7 @@ extension SessionManager {
   ) async throws -> any PlayableItem {
     let isSameItem = current?.libraryItemID == itemID && current?.episodeID == episodeID
 
-    if let current, !isSameItem {
+    if current != nil, !isSameItem {
       AppLogger.session.info(
         "Session exists for different item/episode, server will close old session when starting new one"
       )

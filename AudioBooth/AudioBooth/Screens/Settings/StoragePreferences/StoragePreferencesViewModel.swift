@@ -16,6 +16,10 @@ final class StoragePreferencesViewModel: StoragePreferencesView.Model {
     showDownloadConfirmation = true
   }
 
+  override func onKeepOfflineChanged() {
+    KeepOfflineManager.shared.reconcile()
+  }
+
   override func onClearCacheTapped() {
     showCacheConfirmation = true
   }

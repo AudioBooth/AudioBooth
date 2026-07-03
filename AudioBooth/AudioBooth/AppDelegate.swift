@@ -58,6 +58,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     _ = WatchConnectivityManager.shared
     _ = SessionManager.shared
     _ = UserPreferences.shared
+    _ = KeepOfflineManager.shared
 
     UNUserNotificationCenter.current().delegate = self
 

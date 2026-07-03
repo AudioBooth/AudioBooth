@@ -5,6 +5,8 @@ extension UserPreferences {
   private static let syncableKeys: [String] = [
     "homeSections",
     "autoDownloadBooks",
+    "keepOfflineMode",
+    "keepOfflineCount",
     "removeDownloadOnCompletion",
     "skipForwardInterval",
     "skipBackwardInterval",
