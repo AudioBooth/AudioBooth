@@ -10,10 +10,6 @@ final class BookCardModel: BookCard.Model {
     static let showSequence = Options(rawValue: 1 << 1)
   }
 
-  enum Item {
-    case local(LocalBook)
-    case remote(Book)
-  }
   private var downloadStateCancellable: AnyCancellable?
 
   init(_ item: LocalBook, options: Options = []) {
@@ -67,7 +63,7 @@ final class BookCardModel: BookCard.Model {
       isExplicit: item.isExplicit
     )
 
-    setupDownloadProgressObserver()
+    setupDownloadProgressObserver(showsIndicator: false)
 
     contextMenu = BookCardContextMenuModel(
       item,
@@ -156,7 +152,7 @@ final class BookCardModel: BookCard.Model {
       isExplicit: item.media.metadata.explicit ?? false
     )
 
-    setupDownloadProgressObserver()
+    setupDownloadProgressObserver(showsIndicator: true)
 
     contextMenu = BookCardContextMenuModel(
       item,
@@ -166,18 +162,19 @@ final class BookCardModel: BookCard.Model {
     )
   }
 
-  private func setupDownloadProgressObserver() {
+  private func setupDownloadProgressObserver(showsIndicator: Bool) {
     let id = self.id
     downloadStateCancellable = DownloadManager.shared.$downloadStates
-      .map { states -> Double? in
+      .sink { [weak self] states in
+        guard let self else { return }
         if case .downloading(let progress) = states[id] {
-          return progress
+          self.cover.downloadProgress = progress
+        } else {
+          self.cover.downloadProgress = nil
         }
-        return nil
-      }
-      .removeDuplicates()
-      .sink { [weak self] progress in
-        self?.cover.downloadProgress = progress
+        if showsIndicator {
+          self.isDownloaded = states[id] == .downloaded
+        }
       }
   }
 
