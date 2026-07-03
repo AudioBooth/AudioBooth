@@ -18,6 +18,33 @@ struct StoragePreferencesView: View {
     maxStorageGB == 0 ? String(localized: "Unlimited") : "\(maxStorageGB) GB"
   }
 
+  private func modePicker(
+    _ selection: Binding<AutoDownloadMode>,
+    accessibilityLabel: LocalizedStringKey
+  ) -> some View {
+    ZStack(alignment: .trailing) {
+      Picker(selection: .constant(AutoDownloadMode.wifiAndCellular)) {
+        Text(AutoDownloadMode.wifiAndCellular.displayName).tag(AutoDownloadMode.wifiAndCellular)
+      } label: {
+        EmptyView()
+      }
+      .labelsHidden()
+      .fixedSize()
+      .hidden()
+
+      Picker(selection: selection) {
+        ForEach(AutoDownloadMode.allCases, id: \.rawValue) { mode in
+          Text(mode.displayName).tag(mode)
+        }
+      } label: {
+        EmptyView()
+      }
+      .labelsHidden()
+      .fixedSize()
+      .accessibilityLabel(accessibilityLabel)
+    }
+  }
+
   var body: some View {
     Form {
       Section {
@@ -27,34 +54,83 @@ struct StoragePreferencesView: View {
       }
 
       Section {
-        Picker(selection: $preferences.autoDownloadBooks) {
-          ForEach(AutoDownloadMode.allCases, id: \.rawValue) { mode in
-            Text(mode.displayName).tag(mode)
-          }
-        } label: {
-          PreferenceRow(
-            systemImage: "arrow.down.circle",
-            tint: .green,
-            title: "Auto-Download Books",
-            subtitle: "Pull new books over automatically"
-          )
-        }
-        .listRowBackground(theme.colors.background.card)
+        VStack(spacing: 12) {
+          HStack {
+            PreferenceRow(
+              systemImage: "arrow.down.circle",
+              tint: .green,
+              title: "Auto-Download Books",
+              subtitle: "Pull new books over automatically"
+            )
 
-        if preferences.autoDownloadBooks != .off {
-          Picker(selection: $preferences.autoDownloadDelay) {
-            ForEach(AutoDownloadDelay.allCases, id: \.rawValue) { delay in
-              Text(delay.displayName).tag(delay)
-            }
-          } label: {
+            Spacer()
+
+            modePicker($preferences.autoDownloadBooks, accessibilityLabel: "Auto-Download Books")
+          }
+
+          HStack {
             PreferenceRow(
               systemImage: "clock",
               tint: .blue,
               title: "Delay Before Download"
             )
+
+            Spacer()
+
+            Picker(selection: $preferences.autoDownloadDelay) {
+              ForEach(AutoDownloadDelay.allCases, id: \.rawValue) { delay in
+                Text(delay.displayName).tag(delay)
+              }
+            } label: {
+              EmptyView()
+            }
+            .labelsHidden()
+            .fixedSize()
+            .accessibilityLabel("Delay Before Download")
           }
-          .listRowBackground(theme.colors.background.card)
+          .disabled(preferences.autoDownloadBooks == .off)
+          .opacity(preferences.autoDownloadBooks == .off ? 0.4 : 1)
         }
+        .listRowBackground(theme.colors.background.card)
+
+        VStack(spacing: 12) {
+          HStack {
+            PreferenceRow(
+              systemImage: "square.stack.3d.down.right",
+              tint: .indigo,
+              title: "Keep Next Items Offline",
+              subtitle: "Download what's next in started series and podcasts"
+            )
+
+            Spacer()
+
+            modePicker($preferences.keepOfflineMode, accessibilityLabel: "Keep Next Items Offline")
+          }
+
+          HStack {
+            PreferenceRow(
+              systemImage: "number",
+              tint: .purple,
+              title: "Number of Items"
+            )
+
+            Spacer()
+
+            Picker(selection: $preferences.keepOfflineCount) {
+              ForEach(KeepOfflineManager.counts, id: \.self) { count in
+                Text("^[\(count) Item](inflect: true)").tag(count)
+              }
+            } label: {
+              EmptyView()
+            }
+            .labelsHidden()
+            .fixedSize()
+            .accessibilityLabel("Number of Items")
+          }
+          .disabled(preferences.keepOfflineMode == .off)
+          .opacity(preferences.keepOfflineMode == .off ? 0.4 : 1)
+        }
+        .listRowBackground(theme.colors.background.card)
 
         Toggle(isOn: $preferences.autoDownloadQueuedEpisodes) {
           PreferenceRow(
@@ -206,6 +282,7 @@ struct StoragePreferencesView: View {
     .onDisappear {
       preferences.maxDownloadStorageGB = maxStorageGB
       preferences.removeAfterUnused = removeAfter
+      model.onKeepOfflineChanged()
     }
     .alert("Clear All Downloads?", isPresented: $model.showDownloadConfirmation) {
       Button("Cancel", role: .cancel) {}
@@ -406,6 +483,7 @@ extension StoragePreferencesView {
     func onConfirmClearDownloads() {}
     func onConfirmClearCache() {}
     func onRemoveDownload(bookID: String, serverID: String) {}
+    func onKeepOfflineChanged() {}
 
     init(
       isLoading: Bool = true,

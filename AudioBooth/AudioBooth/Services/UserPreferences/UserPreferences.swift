@@ -192,6 +192,12 @@ final class UserPreferences: ObservableObject {
   @AppStorage("podcastAutoQueueSettings")
   var podcastAutoQueueSettings: PodcastAutoQueueStore = .init()
 
+  @AppStorage("keepOfflineMode")
+  var keepOfflineMode: AutoDownloadMode = .off
+
+  @AppStorage("keepOfflineCount")
+  var keepOfflineCount: Int = 3
+
   @AppStorage("autoDownloadQueuedEpisodes")
   var autoDownloadQueuedEpisodes: Bool = false
 
