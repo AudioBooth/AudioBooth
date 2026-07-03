@@ -596,7 +596,7 @@ extension BookDetailsView {
       Divider()
 
       ShareLink(item: item, preview: sharePreview) {
-        Label("Share Book", systemImage: "square.and.arrow.up")
+        Label("Open Book in…", systemImage: "square.and.arrow.up")
       }
     } else if !model.shareItems.isEmpty {
       Divider()
@@ -608,7 +608,7 @@ extension BookDetailsView {
           }
         }
       } label: {
-        Label("Share Book", systemImage: "square.and.arrow.up")
+        Label("Open Book in…", systemImage: "square.and.arrow.up")
       }
     }
   }
