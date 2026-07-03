@@ -52,22 +52,38 @@ class DeepLinkManager: ObservableObject {
       return
     }
 
-    if let token = exportConnection.token {
-      let credentials: Credentials
-      if JWT(token)?.type == .api {
-        credentials = .apiKey(key: token)
-      } else {
-        credentials = .bearer(accessToken: "", refreshToken: token, expiresAt: 0)
-      }
-      let connection = Connection(
+    Toast(message: "Testing shared connection...").show()
+    Task {
+      await validateAndImportConnection(exportConnection)
+    }
+  }
+
+  private func validateAndImportConnection(_ exportConnection: ExportConnection) async {
+    do {
+      _ = try await Audiobookshelf.shared.networkDiscovery.fetchServerStatus(
         serverURL: exportConnection.url,
-        token: credentials,
+        headers: exportConnection.headers
+      )
+    } catch {
+      Toast(error: "Could not reach server with the shared URL and headers").show()
+      return
+    }
+
+    guard let token = exportConnection.token else {
+      pendingExportConnection = exportConnection
+      return
+    }
+
+    do {
+      _ = try await Audiobookshelf.shared.authentication.loginWithJWT(
+        serverURL: exportConnection.url,
+        token: token,
         customHeaders: exportConnection.headers,
         alias: exportConnection.alias
       )
-      Audiobookshelf.shared.authentication.restoreConnection(connection)
       Toast(success: "Connection imported successfully").show()
-    } else {
+    } catch {
+      Toast(error: "Server reachable, but Audiobookshelf credentials failed").show()
       pendingExportConnection = exportConnection
     }
   }
