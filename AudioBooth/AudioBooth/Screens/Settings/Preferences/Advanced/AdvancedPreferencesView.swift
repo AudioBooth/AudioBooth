@@ -19,14 +19,16 @@ struct AdvancedPreferencesView: View {
         .onChange(of: preferences.iCloudSyncEnabled) { _, enabled in
           if enabled {
             preferences.syncToCloud()
+            PlayerManager.shared.syncQueueToCloud()
           } else {
             preferences.purgeCloud()
+            PlayerManager.shared.purgeQueueFromCloud()
           }
         }
       } header: {
         Text("iCloud")
       } footer: {
-        Text("Sync your preferences across all your devices using iCloud.")
+        Text("Sync your preferences and Playing Next queue across all your devices using iCloud.")
           .font(.caption)
       }
 

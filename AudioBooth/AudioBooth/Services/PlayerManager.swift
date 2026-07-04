@@ -33,12 +33,17 @@ final class PlayerManager: ObservableObject, Sendable {
 
   private static let currentIDKey = "currentBookID"
   private static let queueKey = "playerQueue"
+  static let cloudQueueKey = "cloudPlayerQueue"
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
 
   private var cancellables = Set<AnyCancellable>()
 
+  var cloudQueueObserver: NSObjectProtocol?
+  var isApplyingCloudQueueChange = false
+
   private init() {
     loadQueue()
+    setupQueueCloudSync()
     setupRemoteCommandCenter()
     setupServerObserver()
   }
@@ -49,9 +54,16 @@ final class PlayerManager: ObservableObject, Sendable {
     Audiobookshelf.shared.libraries.objectWillChange
       .sink { [weak self] _ in
         DispatchQueue.main.async {
+          guard let self else { return }
           if serverID != Audiobookshelf.shared.libraries.current?.serverID {
-            self?.clearCurrent()
-            self?.clearQueue()
+            self.clearCurrent()
+            // Clear the local queue without pushing an empty queue to the cloud,
+            // which would otherwise wipe the queue another device built for the
+            // server we are switching to. Then adopt that server's cloud queue.
+            self.isApplyingCloudQueueChange = true
+            self.clearQueue()
+            self.isApplyingCloudQueueChange = false
+            self.syncQueueFromCloud()
           }
         }
       }
@@ -631,6 +643,7 @@ extension PlayerManager {
     if let data = try? JSONEncoder().encode(queue) {
       UserDefaults.standard.set(data, forKey: Self.queueKey)
     }
+    syncQueueToCloud()
   }
 
   fileprivate func loadQueue() {
