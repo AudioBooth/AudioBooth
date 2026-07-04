@@ -25,6 +25,7 @@ struct ProgressCard: View {
     HStack(spacing: 4) {
       Image(systemName: "chart.line.uptrend.xyaxis")
         .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
 
       Text(model.progress.formatted(.percent.precision(.fractionLength(0))))
         .fontWeight(.medium)
@@ -32,6 +33,7 @@ struct ProgressCard: View {
       if model.timeRemaining.isFinite, model.timeRemaining > 0 {
         Text(verbatim: "·")
           .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
 
         Text(model.timeRemaining.formattedTimeRemaining)
           .foregroundStyle(.secondary)
@@ -39,12 +41,14 @@ struct ProgressCard: View {
       }
     }
     .font(.subheadline)
+    .accessibilityElement(children: .combine)
   }
 
   private var finishedRow: some View {
     HStack(spacing: 4) {
       Image(systemName: "checkmark.circle.fill")
         .foregroundStyle(.green)
+        .accessibilityHidden(true)
 
       Text("Finished")
         .fontWeight(.medium)
@@ -52,18 +56,21 @@ struct ProgressCard: View {
       if let finishedAt = model.finishedAt {
         Text(verbatim: "·")
           .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
 
         Text(finishedAt.formatted(date: .abbreviated, time: .omitted))
           .foregroundStyle(.secondary)
       }
     }
     .font(.subheadline)
+    .accessibilityElement(children: .combine)
   }
 
   private var startedRow: some View {
     HStack(spacing: 4) {
       Image(systemName: "calendar")
         .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
 
       Text("Started")
         .foregroundStyle(.secondary)
@@ -72,6 +79,7 @@ struct ProgressCard: View {
         .foregroundStyle(.secondary)
     }
     .font(.subheadline)
+    .accessibilityElement(children: .combine)
   }
 }
 
