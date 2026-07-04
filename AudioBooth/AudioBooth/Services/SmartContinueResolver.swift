@@ -27,6 +27,9 @@ struct SmartContinueResolver {
       if let next = await resolveNextBookInSeries(currentBookID: currentItemID) {
         return next
       }
+      if let next = resolveNextBookInContinueListening(currentBookID: currentItemID) {
+        return next
+      }
       return resolveNextOfflineBook(currentBookID: currentItemID)
     }
   }
@@ -111,6 +114,28 @@ extension SmartContinueResolver {
     guard nextIndex < page.results.endIndex else { return nil }
 
     let next = page.results[nextIndex]
+    return ResolvedItem(
+      bookID: next.id,
+      title: next.title,
+      details: next.authorName,
+      coverURL: next.coverURL(),
+      podcastID: nil
+    )
+  }
+
+  private func resolveNextBookInContinueListening(currentBookID: String) -> ResolvedItem? {
+    guard
+      let personalized = audiobookshelf.libraries.getCachedPersonalized(),
+      let section = personalized.sections.first(where: { $0.id == "continue-listening" }),
+      case .books(let items) = section.entities
+    else { return nil }
+
+    guard
+      let next = items.first(where: {
+        $0.id != currentBookID && MediaProgress.progress(for: $0.id) < 1.0
+      })
+    else { return nil }
+
     return ResolvedItem(
       bookID: next.id,
       title: next.title,
