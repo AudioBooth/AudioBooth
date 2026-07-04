@@ -110,6 +110,11 @@ final class AudioPlayer {
       return
     }
 
+    if isPlaying {
+      events.send(.stateChanged(.playing))
+      return
+    }
+
     if player.currentItem == nil || player.currentItem?.status == .failed {
       let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
       currentTrackIndex = trackIndex

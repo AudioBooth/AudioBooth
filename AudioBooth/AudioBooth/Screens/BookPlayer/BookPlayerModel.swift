@@ -1046,6 +1046,7 @@ extension BookPlayerModel {
         AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")
+        interruptionBeganAt = nil
         try? audioSession.setActive(true)
         player?.resume()
       } else if let beganAt = interruptionBeganAt,
@@ -1053,6 +1054,7 @@ extension BookPlayerModel {
         !audioSession.secondaryAudioShouldBeSilencedHint
       {
         AppLogger.player.info("Audio interruption ended - resuming playback (within 5 minutes)")
+        interruptionBeganAt = nil
         try? audioSession.setActive(true)
         player?.resume()
       } else {
@@ -1078,8 +1080,8 @@ extension BookPlayerModel {
       AppLogger.player.info("Audio route changed (old device unavailable) - pausing")
       player?.pause()
 
-    case .newDeviceAvailable, .override, .routeConfigurationChange, .categoryChange:
-      guard isPlaying else { return }
+    case .newDeviceAvailable, .override:
+      guard isPlaying, interruptionBeganAt == nil else { return }
       AppLogger.player.info("Audio route changed (\(reason.rawValue)) - re-activating session")
       configureAudioSession()
       try? audioSession.setActive(true)
