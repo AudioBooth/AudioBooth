@@ -61,6 +61,11 @@ struct AudioBoothApp: App {
         }
       }
     }
+    #if targetEnvironment(macCatalyst)
+    .commands {
+      PlaybackCommands()
+    }
+    #endif
   }
 
   private func syncAccentColorToWidget(_ color: Color?) {
