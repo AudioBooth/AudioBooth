@@ -22,27 +22,16 @@ struct StoragePreferencesView: View {
     _ selection: Binding<AutoDownloadMode>,
     accessibilityLabel: LocalizedStringKey
   ) -> some View {
-    ZStack(alignment: .trailing) {
-      Picker(selection: .constant(AutoDownloadMode.wifiAndCellular)) {
-        Text(AutoDownloadMode.wifiAndCellular.displayName).tag(AutoDownloadMode.wifiAndCellular)
-      } label: {
-        EmptyView()
+    Picker(selection: selection) {
+      ForEach(AutoDownloadMode.allCases, id: \.rawValue) { mode in
+        Text(mode.displayName).tag(mode)
       }
-      .labelsHidden()
-      .fixedSize()
-      .hidden()
-
-      Picker(selection: selection) {
-        ForEach(AutoDownloadMode.allCases, id: \.rawValue) { mode in
-          Text(mode.displayName).tag(mode)
-        }
-      } label: {
-        EmptyView()
-      }
-      .labelsHidden()
-      .fixedSize()
-      .accessibilityLabel(accessibilityLabel)
+    } label: {
+      EmptyView()
     }
+    .labelsHidden()
+    .pickerStyle(.segmented)
+    .accessibilityLabel(accessibilityLabel)
   }
 
   var body: some View {
@@ -55,7 +44,7 @@ struct StoragePreferencesView: View {
 
       Section {
         VStack(spacing: 12) {
-          HStack {
+          VStack(alignment: .leading, spacing: 8) {
             PreferenceRow(
               systemImage: "arrow.down.circle",
               tint: .green,
@@ -63,9 +52,8 @@ struct StoragePreferencesView: View {
               subtitle: "Pull new books over automatically"
             )
 
-            Spacer()
-
             modePicker($preferences.autoDownloadBooks, accessibilityLabel: "Auto-Download Books")
+              .padding(.bottom, 4)
           }
 
           HStack {
@@ -94,7 +82,7 @@ struct StoragePreferencesView: View {
         .listRowBackground(theme.colors.background.card)
 
         VStack(spacing: 12) {
-          HStack {
+          VStack(alignment: .leading, spacing: 8) {
             PreferenceRow(
               systemImage: "square.stack.3d.down.right",
               tint: .indigo,
@@ -102,9 +90,8 @@ struct StoragePreferencesView: View {
               subtitle: "Download what's next in started series and podcasts"
             )
 
-            Spacer()
-
             modePicker($preferences.keepOfflineMode, accessibilityLabel: "Keep Next Items Offline")
+              .padding(.bottom, 4)
           }
 
           HStack {
@@ -258,6 +245,7 @@ struct StoragePreferencesView: View {
           }
           .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .buttonStyle(.plain)
         .listRowBackground(theme.colors.background.card)
         .disabled(model.serverDownloads.isEmpty || model.isLoading)
 
@@ -268,6 +256,7 @@ struct StoragePreferencesView: View {
             .foregroundStyle(.red)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .buttonStyle(.plain)
         .listRowBackground(theme.colors.background.card)
         .disabled(model.imageCacheBytes == 0 || model.isLoading)
       } header: {
