@@ -65,6 +65,20 @@ struct PlaybackCommands: Commands {
       }
       .keyboardShortcut("[", modifiers: .command)
       .disabled(current == nil)
+
+      Divider()
+
+      Button("Augmenter le volume") {
+        current?.volume.onIncrease()
+      }
+      .keyboardShortcut(.upArrow, modifiers: .command)
+      .disabled(current == nil)
+
+      Button("Baisser le volume") {
+        current?.volume.onDecrease()
+      }
+      .keyboardShortcut(.downArrow, modifiers: .command)
+      .disabled(current == nil)
     }
   }
 }
