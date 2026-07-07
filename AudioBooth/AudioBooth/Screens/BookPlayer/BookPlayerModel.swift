@@ -800,6 +800,8 @@ extension BookPlayerModel {
     player.volume = Float(userPreferences.volumeLevel)
 
     if pendingPlay {
+      configureAudioSession()
+      try? audioSession.setActive(true)
       player.resume()
       pendingPlay = false
     }
