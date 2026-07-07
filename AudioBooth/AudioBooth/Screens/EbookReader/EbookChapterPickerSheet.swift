@@ -68,6 +68,8 @@ struct EbookChapterPickerSheet: View {
               Image(systemName: model.showSubchapters ? "list.bullet.indent" : "list.bullet")
             }
             .tint(.primary)
+            .accessibilityLabel("Show subchapters")
+            .accessibilityValue(model.showSubchapters ? Text("On") : Text("Off"))
           }
         }
         ToolbarItem(placement: .topBarTrailing) {

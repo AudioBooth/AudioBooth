@@ -297,6 +297,7 @@ struct CollectionDetailPage: View {
           .foregroundStyle(Color.accentColor)
       }
       .buttonStyle(.plain)
+      .accessibilityLabel("Play")
     }
     .contentShape(Rectangle())
     .overlay {
