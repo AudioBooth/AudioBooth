@@ -95,6 +95,7 @@ struct EqualizerSheet: View {
         Text(verbatim: "\(formattedGain(model.preamp)) dB")
           .font(.system(size: 13, weight: .medium).monospacedDigit())
           .foregroundColor(.primary)
+          .accessibilityHidden(true)
       }
 
       Slider(
@@ -118,6 +119,7 @@ struct EqualizerSheet: View {
             .font(.system(size: 10, weight: .medium).monospacedDigit())
             .foregroundColor(.primary)
             .frame(width: 32)
+            .accessibilityHidden(true)
 
           VerticalSlider(
             value: Binding(
@@ -132,6 +134,7 @@ struct EqualizerSheet: View {
           Text(model.bandLabels[index])
             .font(.system(size: 9, weight: .medium))
             .foregroundColor(.primary)
+            .accessibilityHidden(true)
         }
         .frame(maxWidth: .infinity)
       }
