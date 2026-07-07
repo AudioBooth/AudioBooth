@@ -300,6 +300,8 @@ extension SessionManager {
       }
       current = nil
     } else {
+      current = nil
+
       do {
         let sessionSync = SessionSync(session)
         try await audiobookshelf.sessions.syncLocalSession(sessionSync)
@@ -315,7 +317,6 @@ extension SessionManager {
           "Failed to sync local session: \(error). Session will be synced on next app startup."
         )
       }
-      current = nil
     }
   }
 }
@@ -597,6 +598,7 @@ extension SessionManager {
         }
 
         AppLogger.session.info("Inactivity timeout reached - closing session")
+        inactivityTask = nil
         try? await closeSession()
       } catch {
         AppLogger.session.debug("Inactivity task sleep was interrupted: \(error)")
