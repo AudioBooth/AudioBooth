@@ -3148,7 +3148,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Heure de l’alarme"
+            "value" : "Heure de l'alarme"
           }
         },
         "it" : {
@@ -3196,7 +3196,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Type d’alarme"
+            "value" : "Type d'alarme"
           }
         },
         "it" : {
@@ -3915,7 +3915,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voulez-vous vraiment supprimer votre liste de lecture « %@ » ?"
+            "value" : "Voulez-vous vraiment supprimer votre playlist « %@ » ?"
           }
         },
         "it" : {
@@ -3963,7 +3963,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "À l’heure"
+            "value" : "À une heure précise"
           }
         },
         "it" : {
@@ -4201,7 +4201,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Livres audio et numériques"
+            "value" : "Livres audio et ebooks"
           }
         },
         "it" : {
@@ -5635,7 +5635,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bas de la file d'attente"
+            "value" : "Bas de la queue"
           }
         },
         "it" : {
@@ -7743,7 +7743,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Créez votre première liste de lecture ci-dessous."
+            "value" : "Créez votre première playlist ci-dessous."
           }
         },
         "it" : {
@@ -7791,7 +7791,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Créez votre première liste de lecture pour commencer."
+            "value" : "Créez votre première playlist pour commencer."
           }
         },
         "it" : {
@@ -8797,7 +8797,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Supprimer la liste de lecture"
+            "value" : "Supprimer la playlist"
           }
         },
         "it" : {
@@ -9181,7 +9181,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Échelle d’affichage"
+            "value" : "Échelle d'affichage"
           }
         },
         "it" : {
@@ -9993,7 +9993,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Livre numérique"
+            "value" : "Ebook"
           }
         },
         "it" : {
@@ -10041,7 +10041,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Livres numériques"
+            "value" : "Ebooks"
           }
         },
         "it" : {
@@ -11811,7 +11811,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fondu progressif avant l’alarme"
+            "value" : "Fondu progressif avant l'alarme"
           }
         },
         "it" : {
@@ -14824,7 +14824,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargement des téléchargements…"
+            "value" : "Chargement des téléchargements..."
           }
         },
         "it" : {
@@ -14872,7 +14872,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargement du livre numérique..."
+            "value" : "Chargement de l'ebook..."
           }
         },
         "it" : {
@@ -14920,7 +14920,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargement des épisodes…"
+            "value" : "Chargement des épisodes..."
           }
         },
         "it" : {
@@ -15112,7 +15112,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargement des listes de lecture..."
+            "value" : "Chargement des playlists..."
           }
         },
         "it" : {
@@ -15160,7 +15160,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargement des détails du podcast…"
+            "value" : "Chargement des détails du podcast..."
           }
         },
         "it" : {
@@ -17167,7 +17167,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nom de la nouvelle liste de lecture"
+            "value" : "Nom de la nouvelle playlist"
           }
         },
         "it" : {
@@ -18415,7 +18415,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucune liste de lecture"
+            "value" : "Aucune playlist"
           }
         },
         "it" : {
@@ -19996,7 +19996,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Liste de lecture épinglée"
+            "value" : "Playlist épinglée"
           }
         },
         "it" : {
@@ -20617,7 +20617,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les listes de lecture sont privées. Seul l'utilisateur qui les crée peut les voir."
+            "value" : "Les playlists sont privées. Seul l'utilisateur qui les crée peut les voir."
           }
         },
         "it" : {
@@ -21814,7 +21814,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se ré-authentifier"
+            "value" : "Se reconnecter"
           }
         },
         "it" : {
@@ -22484,7 +22484,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retirer de la playlist"
+            "value" : "Retirer de « Continuer l'écoute »"
           }
         },
         "it" : {
@@ -23974,7 +23974,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recherche"
+            "value" : "Déplacement"
           }
         },
         "it" : {
@@ -24213,7 +24213,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Envoyer le livre numérique à"
+            "value" : "Envoyer l'ebook à"
           }
         },
         "it" : {
@@ -25318,7 +25318,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Secouez votre téléphone pendant la lecture pour réinitialiser le minuteur."
+            "value" : "Secouez votre téléphone pendant la lecture pour réinitialiser la minuterie."
           }
         },
         "it" : {
@@ -26274,7 +26274,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avancer par"
+            "value" : "Sauter par"
           }
         },
         "it" : {
@@ -26896,7 +26896,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minuteur de veille"
+            "value" : "Minuterie de sommeil"
           }
         },
         "it" : {
@@ -26990,7 +26990,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minuteur de veille et alarme"
+            "value" : "Minuterie de sommeil et alarme"
           }
         },
         "it" : {
@@ -27132,7 +27132,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rembobinage intelligent"
+            "value" : "Retour intelligent"
           }
         },
         "it" : {
@@ -27228,7 +27228,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reporter ou arrêter l’alarme."
+            "value" : "Reporter ou arrêter l'alarme."
           }
         },
         "it" : {
@@ -27612,7 +27612,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrêter l’alarme"
+            "value" : "Arrêter l'alarme"
           }
         },
         "it" : {
@@ -28283,7 +28283,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appuyez pour définir un objectif quotidien"
+            "value" : "Touchez pour définir un objectif quotidien"
           }
         },
         "it" : {
@@ -28331,7 +28331,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zones de pression"
+            "value" : "Zones tactiles"
           }
         },
         "it" : {
@@ -28953,7 +28953,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cette liste de lecture est vide."
+            "value" : "Cette playlist est vide."
           }
         },
         "it" : {
@@ -29769,7 +29769,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Haut de la file d'attente"
+            "value" : "Haut de la queue"
           }
         },
         "it" : {
@@ -30103,7 +30103,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Impossible de charger le livre numérique"
+            "value" : "Impossible de charger l'ebook"
           }
         },
         "it" : {
@@ -31297,7 +31297,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vous n'avez aucune liste de lecture"
+            "value" : "Vous n'avez aucune playlist"
           }
         },
         "it" : {
