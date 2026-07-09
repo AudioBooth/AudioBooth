@@ -19,7 +19,6 @@ public struct ListeningStats: Codable {
   }
 
   public struct Item: Codable {
-    public let id: String
     public let timeListening: Double?
     public let mediaMetadata: MediaMetadata?
 
