@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tip jar for sponsors - Tip jar section now collapses when you have an active sponsor subscription
 
 ### Fixed
+- Custom headers - Fixed a crash when opening Custom Headers while adding the first server on iOS 18
 - Podcast playback - Various improvements and fixes around podcast playback and episode management (thanks @Creationsss)
 - Podcast library search - Fixed search failing in podcast libraries, now showing matching podcasts and episodes
 

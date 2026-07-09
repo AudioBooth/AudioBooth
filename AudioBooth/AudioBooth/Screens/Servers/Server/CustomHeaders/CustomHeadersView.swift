@@ -4,7 +4,7 @@ import SwiftUI
 struct CustomHeadersView: View {
   @Environment(\.appTheme) var theme
 
-  @StateObject var model: Model
+  @Bindable var model: Model
 
   var body: some View {
     List {
