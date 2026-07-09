@@ -92,7 +92,7 @@ public final class LocalBook {
     isAbridged: Bool = false,
     publisher: String? = nil,
     language: String? = nil,
-    displayOrder: Int = 0,
+    displayOrder: Int = Int(Date().timeIntervalSince1970 * 1000),
     createdAt: Date = Date(),
     ebookFile: URL? = nil
   ) {
