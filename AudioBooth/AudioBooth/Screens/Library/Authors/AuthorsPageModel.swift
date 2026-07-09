@@ -105,9 +105,15 @@ final class AuthorsPageModel: AuthorsPage.Model {
 
 extension AuthorsPageModel {
   private func sectionLetter(for name: String) -> String {
-    guard let firstChar = name.uppercased().first else { return "#" }
+    guard let firstChar = name.uppercased().first else { return "&" }
+    if firstChar.isNumber { return "#" }
     let validLetters: Set<Character> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    return validLetters.contains(firstChar) ? String(firstChar) : "#"
+    return validLetters.contains(firstChar) ? String(firstChar) : "&"
+  }
+
+  private func orderedSectionKeys() -> [String] {
+    let base = ["#"] + "ABCDEFGHIJKLMNOPQRSTUVWXYZ".map(String.init) + ["&"]
+    return UserPreferences.shared.authorsSortAscending ? base : base.reversed()
   }
 
   private func buildSections(from authors: [AuthorCard.Model]) -> [AuthorsPage.AuthorSection] {
@@ -139,24 +145,16 @@ extension AuthorsPageModel {
   }
 
   private func findNextAvailableLetter(after letter: String, in sections: Set<String>) -> String? {
-    let ascending = UserPreferences.shared.authorsSortAscending
-    let sortedSections = sections.filter { $0 != "#" }.sorted()
+    let order = orderedSectionKeys()
+    guard let index = order.firstIndex(of: letter) else { return nil }
 
-    if letter == "#" {
-      return ascending ? AuthorsPage.bottomScrollID : sortedSections.last
+    if let next = order[(index + 1)...].first(where: { sections.contains($0) }) {
+      return next
     }
 
-    if ascending {
-      if let next = sortedSections.first(where: { $0 > letter }) {
-        return next
-      }
-      return sections.contains("#") ? "#" : AuthorsPage.bottomScrollID
-    } else {
-      if let prev = sortedSections.last(where: { $0 < letter }) {
-        return prev
-      }
-      return AuthorsPage.bottomScrollID
-    }
+    if hasMorePages { return nil }
+
+    return order[..<index].last(where: { sections.contains($0) })
   }
 
   private func checkTargetLetterAfterLoad() {
