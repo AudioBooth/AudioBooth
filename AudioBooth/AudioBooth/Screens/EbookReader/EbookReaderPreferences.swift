@@ -101,16 +101,36 @@ class EbookReaderPreferences: ObservableObject {
   enum FontFamily: String, CaseIterable, Identifiable {
     case system = "Original"
     case sansSerif = "Sans Serif"
+    case iowanOldStyle = "Iowan Old Style"
+    case palatino = "Palatino"
+    case athelas = "Athelas"
+    case georgia = "Georgia"
+    case seravek = "Seravek"
+    case helveticaNeue = "Helvetica Neue"
+    case arial = "Arial"
     case iaWriterDuospace = "IA Writer Duospace"
     case accessibleDfA = "Accessible DfA"
     case openDyslexic = "OpenDyslexic"
 
     var id: String { rawValue }
 
+    static let groups: [[FontFamily]] = [
+      [.system, .sansSerif],
+      [.iaWriterDuospace, .accessibleDfA, .openDyslexic],
+      [.iowanOldStyle, .palatino, .athelas, .georgia, .seravek, .helveticaNeue, .arial],
+    ]
+
     var readiumFontFamily: ReadiumNavigator.FontFamily? {
       switch self {
       case .system: return nil
       case .sansSerif: return .sansSerif
+      case .iowanOldStyle: return .iowanOldStyle
+      case .palatino: return .palatino
+      case .athelas: return .athelas
+      case .georgia: return .georgia
+      case .seravek: return .seravek
+      case .helveticaNeue: return .helveticaNeue
+      case .arial: return .arial
       case .iaWriterDuospace: return .iaWriterDuospace
       case .accessibleDfA: return .accessibleDfA
       case .openDyslexic: return .openDyslexic

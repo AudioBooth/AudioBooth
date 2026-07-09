@@ -11,8 +11,12 @@ struct EbookReaderPreferencesView: View {
       List {
         Section("Typography") {
           Picker("Font Family", selection: $preferences.fontFamily) {
-            ForEach(EbookReaderPreferences.FontFamily.allCases) { family in
-              Text(family.rawValue).tag(family)
+            ForEach(Array(EbookReaderPreferences.FontFamily.groups.enumerated()), id: \.offset) { _, group in
+              Section {
+                ForEach(group) { family in
+                  Text(family.rawValue).tag(family)
+                }
+              }
             }
           }
 
