@@ -104,7 +104,17 @@ struct ContinueListeningCoverFlowView: View {
         }
       }
     }
+    .accessibilityLabel(accessibilityLabel(for: item))
+    .bookCardAccessibilityActions(model: item)
     .onAppear(perform: item.onAppear)
+  }
+
+  private func accessibilityLabel(for item: BookCard.Model) -> String {
+    if let author = item.author, !author.isEmpty {
+      "\(item.title), \(author)"
+    } else {
+      item.title
+    }
   }
 
   private func navigationDestination(for item: BookCard.Model) -> NavigationDestination {

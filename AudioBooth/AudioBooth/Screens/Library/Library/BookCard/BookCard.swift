@@ -22,6 +22,7 @@ struct BookCard: View {
         PodcastEpisodeContextMenu(model: model)
       }
     }
+    .bookCardAccessibilityActions(model: model)
     .sheet(
       item: Binding(
         get: { model.contextMenu?.collectionSelector },
@@ -66,6 +67,7 @@ struct BookListCard: View {
           PodcastEpisodeContextMenu(model: model)
         }
       }
+      .bookCardAccessibilityActions(model: model)
       .sheet(
         item: Binding(
           get: { model.contextMenu?.collectionSelector },
