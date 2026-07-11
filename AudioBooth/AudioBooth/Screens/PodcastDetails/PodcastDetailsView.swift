@@ -553,6 +553,10 @@ struct PodcastDetailsView: View {
               PodcastEpisodeContextMenu(model: contextMenu)
             }
           }
+          .podcastEpisodeAccessibilityActions(
+            episodeID: episode.id,
+            menu: episode.contextMenu
+          )
           .onChange(of: episode.contextMenu?.showingPlaylistSheet) { _, showing in
             guard showing == true else { return }
             episode.contextMenu?.showingPlaylistSheet = false
@@ -643,6 +647,10 @@ struct PodcastDetailsView: View {
       .clipShape(Capsule())
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(isCurrentlyPlaying ? "Pause" : "Play")
+    .accessibilityValue(
+      episodePlayButtonAccessibilityValue(for: episode, isCurrentlyPlaying: isCurrentlyPlaying)
+    )
   }
 
   private func episodePlayButtonText(
@@ -671,6 +679,27 @@ struct PodcastDetailsView: View {
       return "\(text) left"
     }
     return text
+  }
+
+  private func episodePlayButtonAccessibilityValue(
+    for episode: Model.Episode,
+    isCurrentlyPlaying: Bool
+  ) -> String {
+    if isCurrentlyPlaying {
+      return ""
+    }
+    if episode.isCompleted {
+      return String(localized: "Played")
+    }
+    guard let duration = episode.duration, duration > 0 else {
+      return ""
+    }
+    if episode.progress > 0 {
+      return (duration * (1 - episode.progress)).accessibilityTimeRemaining
+    }
+    return Duration.seconds(duration).formatted(
+      .units(allowed: [.hours, .minutes], width: .wide)
+    )
   }
 
 }

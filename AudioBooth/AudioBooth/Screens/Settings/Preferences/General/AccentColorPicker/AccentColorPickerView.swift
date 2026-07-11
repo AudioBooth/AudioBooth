@@ -24,14 +24,14 @@ extension AccentColorPickerView {
     @Binding var selection: Color
 
     let presets: [Preset] = [
-      .init(color: Color(.displayP3, red: 0.945, green: 0.651, blue: 0.255)),
-      .init(color: Color(.displayP3, red: 0.20, green: 0.50, blue: 0.90)),
-      .init(color: Color(.displayP3, red: 0.30, green: 0.80, blue: 0.50)),
-      .init(color: Color(.displayP3, red: 1.00, green: 0.40, blue: 0.70)),
-      .init(color: Color(.displayP3, red: 0.70, green: 0.30, blue: 0.85)),
-      .init(color: Color(.displayP3, red: 0.95, green: 0.35, blue: 0.40)),
-      .init(color: Color(.displayP3, red: 0.20, green: 0.85, blue: 0.80)),
-      .init(color: .black),
+      .init(name: "Orange", color: Color(.displayP3, red: 0.945, green: 0.651, blue: 0.255)),
+      .init(name: "Blue", color: Color(.displayP3, red: 0.20, green: 0.50, blue: 0.90)),
+      .init(name: "Green", color: Color(.displayP3, red: 0.30, green: 0.80, blue: 0.50)),
+      .init(name: "Pink", color: Color(.displayP3, red: 1.00, green: 0.40, blue: 0.70)),
+      .init(name: "Purple", color: Color(.displayP3, red: 0.70, green: 0.30, blue: 0.85)),
+      .init(name: "Red", color: Color(.displayP3, red: 0.95, green: 0.35, blue: 0.40)),
+      .init(name: "Teal", color: Color(.displayP3, red: 0.20, green: 0.85, blue: 0.80)),
+      .init(name: "Black", color: .black),
     ]
 
     var body: some View {
@@ -44,11 +44,14 @@ extension AccentColorPickerView {
             ) {
               selection = preset.color
             }
+            .accessibilityLabel(Text(preset.name))
+            .accessibilityAddTraits(matches(preset.color) ? .isSelected : [])
           }
           ColorPicker(selection: $selection, supportsOpacity: false) {
             EmptyView()
           }
           .labelsHidden()
+          .accessibilityLabel("Custom color")
         }
         .padding(.horizontal, 16)
       }
@@ -63,6 +66,7 @@ extension AccentColorPickerView {
 
 extension AccentColorPickerView.Row {
   struct Preset: Identifiable {
+    let name: LocalizedStringKey
     let color: Color
     var id: String { "\(color)" }
   }

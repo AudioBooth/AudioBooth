@@ -200,12 +200,16 @@ private struct SkipPresetCard: View {
       HStack {
         skipBadge(
           systemImage: "\(Int(backInterval)).arrow.trianglehead.counterclockwise",
-          label: "Back"
+          label: "Back",
+          accessibilityLabel: "Skip back",
+          selection: $backInterval
         )
         Spacer()
         skipBadge(
           systemImage: "\(Int(forwardInterval)).arrow.trianglehead.clockwise",
-          label: "Forward"
+          label: "Forward",
+          accessibilityLabel: "Skip forward",
+          selection: $forwardInterval
         )
       }
 
@@ -213,11 +217,17 @@ private struct SkipPresetCard: View {
         chipRow(label: "Back", selection: $backInterval)
         chipRow(label: "Forward", selection: $forwardInterval)
       }
+      .accessibilityHidden(true)
     }
     .padding(16)
   }
 
-  private func skipBadge(systemImage: String, label: LocalizedStringKey) -> some View {
+  private func skipBadge(
+    systemImage: String,
+    label: LocalizedStringKey,
+    accessibilityLabel: LocalizedStringKey,
+    selection: Binding<Double>
+  ) -> some View {
     VStack(spacing: 6) {
       Circle()
         .fill(Color.accentColor.opacity(0.15))
@@ -232,7 +242,32 @@ private struct SkipPresetCard: View {
         .foregroundStyle(.secondary)
     }
     .frame(maxWidth: .infinity)
-    .accessibilityHidden(true)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(accessibilityLabel)
+    .accessibilityValue(
+      Duration.seconds(selection.wrappedValue).formatted(.units(allowed: [.seconds], width: .wide))
+    )
+    .accessibilityAdjustableAction { direction in
+      adjust(selection, direction: direction)
+    }
+  }
+
+  private func adjust(_ selection: Binding<Double>, direction: AccessibilityAdjustmentDirection) {
+    let current = selection.wrappedValue
+    guard
+      let index = presets.indices.min(by: {
+        abs(presets[$0] - current) < abs(presets[$1] - current)
+      })
+    else { return }
+
+    switch direction {
+    case .increment:
+      selection.wrappedValue = presets[min(index + 1, presets.count - 1)]
+    case .decrement:
+      selection.wrappedValue = presets[max(index - 1, 0)]
+    @unknown default:
+      break
+    }
   }
 
   @ViewBuilder
@@ -246,13 +281,13 @@ private struct SkipPresetCard: View {
 
       HStack(spacing: 6) {
         ForEach(presets, id: \.self) { value in
-          presetChip(value, context: label, selection: selection)
+          presetChip(value, selection: selection)
         }
       }
     }
   }
 
-  private func presetChip(_ value: Double, context: LocalizedStringKey, selection: Binding<Double>) -> some View {
+  private func presetChip(_ value: Double, selection: Binding<Double>) -> some View {
     let isSelected = abs(selection.wrappedValue - value) < 0.1
     return Button {
       selection.wrappedValue = value
@@ -269,11 +304,6 @@ private struct SkipPresetCard: View {
         )
     }
     .buttonStyle(.plain)
-    .accessibilityLabel(
-      Text(context) + Text(verbatim: ", ")
-        + Text(Duration.seconds(value).formatted(.units(allowed: [.seconds], width: .wide)))
-    )
-    .accessibilityAddTraits(isSelected ? .isSelected : [])
   }
 }
 

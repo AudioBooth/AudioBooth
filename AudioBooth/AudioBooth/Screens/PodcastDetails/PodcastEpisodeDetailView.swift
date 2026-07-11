@@ -103,6 +103,8 @@ struct PodcastEpisodeDetailView: View {
       .clipShape(Capsule())
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
+    .accessibilityValue(episodePlayButtonAccessibilityValue)
   }
 
   private var downloadButton: some View {
@@ -123,6 +125,15 @@ struct PodcastEpisodeDetailView: View {
       .font(.title3)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(downloadButtonAccessibilityLabel)
+  }
+
+  private var downloadButtonAccessibilityLabel: Text {
+    switch model.downloadState {
+    case .notDownloaded: Text("Download")
+    case .downloading: Text("Cancel Download")
+    case .downloaded: Text("Remove Download")
+    }
   }
 
   private var toggleFinishedButton: some View {
@@ -132,6 +143,7 @@ struct PodcastEpisodeDetailView: View {
         .foregroundStyle(model.isCompleted ? .green : .secondary)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(model.isCompleted ? "Reset Progress" : "Mark as Finished")
   }
 
   private var addToPlaylistButton: some View {
@@ -141,6 +153,7 @@ struct PodcastEpisodeDetailView: View {
         .foregroundStyle(Color.accentColor)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel("Add to Playlist")
   }
 
   private var episodePlayButtonText: String {
@@ -166,6 +179,24 @@ struct PodcastEpisodeDetailView: View {
       return "\(text) left"
     }
     return text
+  }
+
+  private var episodePlayButtonAccessibilityValue: String {
+    if model.isPlaying {
+      return ""
+    }
+    if model.isCompleted {
+      return String(localized: "Played")
+    }
+    guard let duration = model.duration, duration > 0 else {
+      return ""
+    }
+    if model.progress > 0 {
+      return (duration * (1 - model.progress)).accessibilityTimeRemaining
+    }
+    return Duration.seconds(duration).formatted(
+      .units(allowed: [.hours, .minutes], width: .wide)
+    )
   }
 
   private func descriptionSection(_ description: String) -> some View {

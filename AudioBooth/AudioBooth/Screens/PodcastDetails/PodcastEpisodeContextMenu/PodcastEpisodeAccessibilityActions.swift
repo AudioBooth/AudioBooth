@@ -2,37 +2,36 @@ import API
 import Combine
 import SwiftUI
 
-struct BookCardAccessibilityActions: ViewModifier {
-  @ObservedObject var model: BookCard.Model
+struct PodcastEpisodeAccessibilityActions: ViewModifier {
+  let episodeID: String
+  let menu: PodcastEpisodeContextMenu.Model?
+
   @ObservedObject private var playerManager = PlayerManager.shared
   @ObservedObject private var downloadManager = DownloadManager.shared
 
   private let audiobookshelf = Audiobookshelf.shared
 
   func body(content: Content) -> some View {
-    if let menu = model.contextMenu {
+    if let menu {
       content.accessibilityActions {
         actions(for: menu)
       }
     } else {
-      content.podcastEpisodeAccessibilityActions(
-        episodeID: model.id,
-        menu: model.episodeContextMenu
-      )
+      content
     }
   }
 
-  private var isPlayingThisBook: Bool {
-    playerManager.current?.id == model.id && playerManager.isPlaying
+  private var isPlayingThisEpisode: Bool {
+    playerManager.current?.id == episodeID && playerManager.isPlaying
   }
 
   private var downloadState: DownloadManager.DownloadState {
-    downloadManager.downloadStates[model.id] ?? .notDownloaded
+    downloadManager.downloadStates[episodeID] ?? .notDownloaded
   }
 
   @ViewBuilder
-  private func actions(for menu: BookCardContextMenu.Model) -> some View {
-    if isPlayingThisBook {
+  private func actions(for menu: PodcastEpisodeContextMenu.Model) -> some View {
+    if isPlayingThisEpisode {
       Button("Pause", action: playerManager.pause)
     } else {
       Button("Play", action: menu.onPlayTapped)
@@ -59,14 +58,17 @@ struct BookCardAccessibilityActions: ViewModifier {
       Button("Mark as Finished", action: menu.onMarkAsFinishedTapped)
     }
 
-    if menu.actions.contains(.removeFromContinueListening) {
-      Button("Remove from continue listening", action: menu.onRemoveFromContinueListeningTapped)
+    if menu.actions.contains(.addToPlaylist) {
+      Button("Add to Playlist", action: menu.onAddToPlaylistTapped)
     }
   }
 }
 
 extension View {
-  func bookCardAccessibilityActions(model: BookCard.Model) -> some View {
-    modifier(BookCardAccessibilityActions(model: model))
+  func podcastEpisodeAccessibilityActions(
+    episodeID: String,
+    menu: PodcastEpisodeContextMenu.Model?
+  ) -> some View {
+    modifier(PodcastEpisodeAccessibilityActions(episodeID: episodeID, menu: menu))
   }
 }
