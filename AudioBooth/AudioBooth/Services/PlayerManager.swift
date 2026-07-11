@@ -650,7 +650,12 @@ extension PlayerManager {
     if let data = UserDefaults.standard.data(forKey: Self.queueKey),
       let savedQueue = try? JSONDecoder().decode([QueueItem].self, from: data)
     {
+      // Loading the persisted queue must not push to the cloud. An empty local
+      // queue would otherwise overwrite a queue another device stored before
+      // `setupQueueCloudSync()` has had a chance to pull it.
+      isApplyingCloudQueueChange = true
       queue = savedQueue
+      isApplyingCloudQueueChange = false
     }
   }
 
