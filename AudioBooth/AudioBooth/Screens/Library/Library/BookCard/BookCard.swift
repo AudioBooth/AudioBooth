@@ -22,6 +22,14 @@ struct BookCard: View {
         PodcastEpisodeContextMenu(model: model)
       }
     }
+    .sheet(
+      item: Binding(
+        get: { model.contextMenu?.collectionSelector },
+        set: { model.contextMenu?.collectionSelector = $0 }
+      )
+    ) { sheetModel in
+      CollectionSelectorSheet(model: sheetModel)
+    }
     .onAppear(perform: model.onAppear)
   }
 
@@ -57,6 +65,14 @@ struct BookListCard: View {
         } else if let model = model.episodeContextMenu {
           PodcastEpisodeContextMenu(model: model)
         }
+      }
+      .sheet(
+        item: Binding(
+          get: { model.contextMenu?.collectionSelector },
+          set: { model.contextMenu?.collectionSelector = $0 }
+        )
+      ) { sheetModel in
+        CollectionSelectorSheet(model: sheetModel)
       }
       .onAppear(perform: model.onAppear)
   }

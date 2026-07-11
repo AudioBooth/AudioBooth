@@ -43,7 +43,9 @@ struct BookCardContextMenu: View {
         }
       }
 
-      if !model.actions.isEmpty {
+      if !model.actions.isDisjoint(
+        with: [.markAsFinished, .resetProgress, .removeFromContinueListening]
+      ) {
         Divider()
       }
 
@@ -63,6 +65,18 @@ struct BookCardContextMenu: View {
         Button(action: model.onRemoveFromContinueListeningTapped) {
           Label("Remove from continue listening", systemImage: "eye.slash")
         }
+      }
+
+      Divider()
+
+      if audiobookshelf.authentication.server?.permissions?.update == true {
+        Button(action: model.onAddToCollectionTapped) {
+          Label("Add to Collection", systemImage: "square.stack.3d.up.fill")
+        }
+      }
+
+      Button(action: model.onAddToPlaylistTapped) {
+        Label("Add to Playlist", systemImage: "text.badge.plus")
       }
 
       if model.authorInfo != nil || model.narratorInfo != nil || model.seriesInfo != nil {
@@ -131,6 +145,7 @@ extension BookCardContextMenu {
 
     var downloadState: DownloadManager.DownloadState
     var actions: Actions
+    var collectionSelector: CollectionSelectorSheet.Model?
     let authorInfo: BookCard.Author?
     let narratorInfo: BookCard.Narrator?
     let seriesInfo: BookCard.Series?
@@ -145,6 +160,8 @@ extension BookCardContextMenu {
     func onMarkAsFinishedTapped() {}
     func onResetProgressTapped() {}
     func onRemoveFromContinueListeningTapped() {}
+    func onAddToCollectionTapped() {}
+    func onAddToPlaylistTapped() {}
 
     init(
       downloadState: DownloadManager.DownloadState = .notDownloaded,

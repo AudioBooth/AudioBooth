@@ -278,6 +278,14 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
     }
   }
 
+  override func onAddToCollectionTapped() {
+    collectionSelector = CollectionSelectorSheetModel(bookID: item.bookID, mode: .collections)
+  }
+
+  override func onAddToPlaylistTapped() {
+    collectionSelector = CollectionSelectorSheetModel(bookID: item.bookID, mode: .playlists)
+  }
+
   override func onRemoveFromContinueListeningTapped() {
     guard let onRemoveFromContinueListening else { return }
 
