@@ -123,6 +123,19 @@ struct PodcastEpisodeDetailView: View {
       .font(.title3)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel("Download")
+    .accessibilityValue(downloadStateLabel)
+  }
+
+  private var downloadStateLabel: Text {
+    switch model.downloadState {
+    case .notDownloaded:
+      return Text("Not downloaded")
+    case .downloading:
+      return Text("Downloading")
+    case .downloaded:
+      return Text("Downloaded")
+    }
   }
 
   private var toggleFinishedButton: some View {
@@ -132,6 +145,8 @@ struct PodcastEpisodeDetailView: View {
         .foregroundStyle(model.isCompleted ? .green : .secondary)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel("Mark as finished")
+    .accessibilityAddTraits(model.isCompleted ? .isSelected : [])
   }
 
   private var addToPlaylistButton: some View {
@@ -141,6 +156,7 @@ struct PodcastEpisodeDetailView: View {
         .foregroundStyle(Color.accentColor)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel("Add to playlist")
   }
 
   private var episodePlayButtonText: String {

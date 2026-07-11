@@ -21,6 +21,7 @@ struct AlternativeURLView: View {
                 .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Clear URL")
           }
         }
 

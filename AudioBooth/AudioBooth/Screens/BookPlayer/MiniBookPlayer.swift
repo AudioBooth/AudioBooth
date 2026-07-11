@@ -37,25 +37,35 @@ struct MiniBookPlayer: View, Equatable {
   @ViewBuilder
   var content: some View {
     HStack {
-      cover
+      HStack {
+        cover
 
-      VStack(alignment: .leading, spacing: 2) {
-        Text(player.title)
-          .font(.footnote)
-          .fontWeight(.medium)
-          .foregroundColor(.primary)
-          .lineLimit(1)
-          .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(player.title)
+            .font(.footnote)
+            .fontWeight(.medium)
+            .foregroundColor(.primary)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-        Text(player.playbackProgress.totalTimeRemaining.formattedTimeRemaining)
-          .font(.caption)
-          .foregroundColor(.secondary)
-          .fontWeight(.medium)
-          .accessibilityLabel(player.playbackProgress.totalTimeRemaining.accessibilityTimeRemaining)
+          Text(player.playbackProgress.totalTimeRemaining.formattedTimeRemaining)
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .fontWeight(.medium)
+            .accessibilityLabel(player.playbackProgress.totalTimeRemaining.accessibilityTimeRemaining)
+        }
+      }
+      .accessibilityElement(children: .combine)
+      .accessibilityAddTraits(.isButton)
+      .accessibilityHint("Opens the player")
+      .accessibilityAction {
+        playerManager.showFullPlayer()
       }
 
       buttons
     }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Player")
   }
 
   private var cover: some View {
@@ -88,6 +98,7 @@ struct MiniBookPlayer: View, Equatable {
         }
         .disabled(player.isLoading)
         .buttonStyle(.borderless)
+        .accessibilityLabel(player.isPlaying ? "Pause" : "Play")
 
         Button {
           player.isQueuePresented = true
@@ -97,6 +108,7 @@ struct MiniBookPlayer: View, Equatable {
             .foregroundColor(.secondary)
         }
         .buttonStyle(.borderless)
+        .accessibilityLabel("Playback queue")
       }
     }
   }
@@ -127,20 +139,28 @@ struct LegacyMiniBookPlayer: View {
   @ViewBuilder
   var content: some View {
     HStack {
-      cover
+      HStack {
+        cover
 
-      VStack(alignment: .leading, spacing: 2) {
-        Text(player.title)
-          .font(.footnote)
-          .fontWeight(.medium)
-          .foregroundColor(.primary)
-          .lineLimit(1)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(player.title)
+            .font(.footnote)
+            .fontWeight(.medium)
+            .foregroundColor(.primary)
+            .lineLimit(1)
 
-        Text(player.playbackProgress.totalTimeRemaining.formattedTimeRemaining)
-          .font(.caption)
-          .foregroundColor(.secondary)
-          .fontWeight(.medium)
-          .accessibilityLabel(player.playbackProgress.totalTimeRemaining.accessibilityTimeRemaining)
+          Text(player.playbackProgress.totalTimeRemaining.formattedTimeRemaining)
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .fontWeight(.medium)
+            .accessibilityLabel(player.playbackProgress.totalTimeRemaining.accessibilityTimeRemaining)
+        }
+      }
+      .accessibilityElement(children: .combine)
+      .accessibilityAddTraits(.isButton)
+      .accessibilityHint("Opens the player")
+      .accessibilityAction {
+        playerManager.showFullPlayer()
       }
 
       Spacer()
@@ -168,6 +188,7 @@ struct LegacyMiniBookPlayer: View {
         }
         .disabled(player.isLoading)
         .buttonStyle(.borderless)
+        .accessibilityLabel(player.isPlaying ? "Pause" : "Play")
 
         Button {
           player.isQueuePresented = true
@@ -177,8 +198,11 @@ struct LegacyMiniBookPlayer: View {
             .foregroundColor(.secondary)
         }
         .buttonStyle(.borderless)
+        .accessibilityLabel("Playback queue")
       }
     }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Player")
   }
 
   private var cover: some View {

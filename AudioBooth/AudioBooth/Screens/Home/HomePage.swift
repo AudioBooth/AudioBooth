@@ -2,6 +2,7 @@ import API
 import Combine
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct HomePage: View {
   @Environment(\.appTheme) var theme
@@ -91,6 +92,10 @@ struct HomePage: View {
             .tint(.primary)
             .frame(width: 44, height: 44)
             .glassEffect()
+            .accessibilityLabel("Daily listening goal")
+            .accessibilityValue(
+              Text("\(Int(dailyGoal.current / 60)) of \(dailyGoal.goal) minutes")
+            )
           }
           .sharedBackgroundVisibility(.hidden)
         }
@@ -103,6 +108,7 @@ struct HomePage: View {
           Image(systemName: "gear")
         }
         .tint(.primary)
+        .accessibilityLabel("Settings")
       }
     }
     .sheet(isPresented: $showingSettings) {
@@ -321,76 +327,205 @@ extension HomePage {
     }
   }
 
+  private var serverMenuAccessibilityLabel: String {
+    let name = libraries.current?.name ?? String(localized: "Server")
+    let status = String(localized: connectionStatusLabel)
+    return String(localized: "Server: \(name), \(status)")
+  }
+
   var serverMenuToolbarItem: some ToolbarContent {
     ToolbarItem(placement: .topBarLeading) {
-      Menu {
-        if authentication.isAuthenticated {
-          ForEach(model.availableLibraries) { library in
-            if library.id == libraries.current?.id {
-              Button {
-                model.onLibrarySelected(library.id)
-              } label: {
-                Label(library.name, systemImage: "checkmark")
-              }
-            } else {
-              Button {
-                model.onLibrarySelected(library.id)
-              } label: {
-                Text(library.name)
-              }
+      // SwiftUI's `Menu` inside a toolbar item is not activatable by VoiceOver on
+      // Mac Catalyst (the menu never opens). A UIKit pull-down button behaves
+      // identically on screen but is fully accessible, so use it there and keep
+      // the native SwiftUI menu everywhere else.
+      #if targetEnvironment(macCatalyst)
+      ServerMenuButton(
+        title: libraries.current?.name ?? String(localized: "Server"),
+        accessibilityLabel: serverMenuAccessibilityLabel,
+        isAuthenticated: authentication.isAuthenticated,
+        libraries: model.availableLibraries,
+        currentLibraryID: libraries.current?.id,
+        hasAlternativeURL: authentication.server?.alternativeURL != nil,
+        isUsingAlternativeURL: authentication.server?.isUsingAlternativeURL ?? false,
+        onSelectLibrary: { model.onLibrarySelected($0) },
+        onToggleAlternativeURL: { model.onToggleAlternativeURL() },
+        onServerDetails: { showingServerDetails = true },
+        onManageServers: { showingServerList = true }
+      )
+      #else
+      serverMenu
+      #endif
+    }
+  }
+
+  #if !targetEnvironment(macCatalyst)
+  private var serverMenu: some View {
+    Menu {
+      if authentication.isAuthenticated {
+        ForEach(model.availableLibraries) { library in
+          if library.id == libraries.current?.id {
+            Button {
+              model.onLibrarySelected(library.id)
+            } label: {
+              Label(library.name, systemImage: "checkmark")
+            }
+          } else {
+            Button {
+              model.onLibrarySelected(library.id)
+            } label: {
+              Text(library.name)
             }
           }
+        }
 
-          if let server = authentication.server, server.alternativeURL != nil {
-            ControlGroup("Server URL") {
-              Button("Primary", systemImage: server.isUsingAlternativeURL ? "circle" : "checkmark.circle.fill") {
-                if server.isUsingAlternativeURL {
-                  model.onToggleAlternativeURL()
-                }
+        if let server = authentication.server, server.alternativeURL != nil {
+          ControlGroup("Server URL") {
+            Button("Primary", systemImage: server.isUsingAlternativeURL ? "circle" : "checkmark.circle.fill") {
+              if server.isUsingAlternativeURL {
+                model.onToggleAlternativeURL()
               }
-              .tint(server.isUsingAlternativeURL ? nil : .accentColor)
-
-              Button("Alternative", systemImage: server.isUsingAlternativeURL ? "checkmark.circle.fill" : "circle") {
-                if !server.isUsingAlternativeURL {
-                  model.onToggleAlternativeURL()
-                }
-              }
-              .tint(server.isUsingAlternativeURL ? .accentColor : nil)
             }
-          }
+            .tint(server.isUsingAlternativeURL ? nil : .accentColor)
 
-          if !model.availableLibraries.isEmpty {
-            Divider()
+            Button("Alternative", systemImage: server.isUsingAlternativeURL ? "checkmark.circle.fill" : "circle") {
+              if !server.isUsingAlternativeURL {
+                model.onToggleAlternativeURL()
+              }
+            }
+            .tint(server.isUsingAlternativeURL ? .accentColor : nil)
           }
+        }
 
-          Button {
-            showingServerDetails = true
-          } label: {
-            Label("Server Details", systemImage: "info.circle")
-          }
+        if !model.availableLibraries.isEmpty {
+          Divider()
         }
 
         Button {
-          showingServerList = true
+          showingServerDetails = true
         } label: {
-          Label("Manage Servers", systemImage: "server.rack")
+          Label("Server Details", systemImage: "info.circle")
         }
-      } label: {
-        HStack(spacing: 4) {
-          #if !targetEnvironment(macCatalyst)
-          Text(verbatim: "●")
-            .foregroundStyle(connectionStatusColor)
-          #endif
-          Text(libraries.current?.name ?? "Server")
-            .bold()
-        }
-        .frame(maxWidth: 250)
       }
-      .accessibilityLabel("Server: \(libraries.current?.name ?? "Server"), \(connectionStatusLabel)")
-      .tint(.primary)
+
+      Button {
+        showingServerList = true
+      } label: {
+        Label("Manage Servers", systemImage: "server.rack")
+      }
+    } label: {
+      HStack(spacing: 4) {
+        Text(verbatim: "●")
+          .foregroundStyle(connectionStatusColor)
+        Text(libraries.current?.name ?? "Server")
+          .bold()
+      }
+      .frame(maxWidth: 250)
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(serverMenuAccessibilityLabel)
     }
+    .tint(.primary)
+  }
+  #endif
+}
+
+#if targetEnvironment(macCatalyst)
+/// UIKit-backed pull-down button used in place of SwiftUI's `Menu` on Mac Catalyst,
+/// where a toolbar `Menu` cannot be opened with VoiceOver. Renders identically but is
+/// fully accessible because UIKit pull-down buttons expose a real activation action.
+private struct ServerMenuButton: UIViewRepresentable {
+  let title: String
+  let accessibilityLabel: String
+  let isAuthenticated: Bool
+  let libraries: [HomePage.Model.LibraryItem]
+  let currentLibraryID: String?
+  let hasAlternativeURL: Bool
+  let isUsingAlternativeURL: Bool
+  let onSelectLibrary: (String) -> Void
+  let onToggleAlternativeURL: () -> Void
+  let onServerDetails: () -> Void
+  let onManageServers: () -> Void
+
+  func makeUIView(context: Context) -> UIButton {
+    let button = UIButton(type: .system)
+    button.showsMenuAsPrimaryAction = true
+    button.changesSelectionAsPrimaryAction = false
+    button.tintColor = .label
+    button.contentHorizontalAlignment = .leading
+    button.titleLabel?.font = UIFontMetrics(forTextStyle: .body)
+      .scaledFont(for: .systemFont(ofSize: 17, weight: .bold))
+    button.titleLabel?.adjustsFontForContentSizeCategory = true
+    button.titleLabel?.lineBreakMode = .byTruncatingTail
+    button.widthAnchor.constraint(lessThanOrEqualToConstant: 250).isActive = true
+    return button
+  }
+
+  func updateUIView(_ button: UIButton, context: Context) {
+    button.setTitle(title, for: .normal)
+    button.accessibilityLabel = accessibilityLabel
+    button.menu = makeMenu()
+  }
+
+  private func makeMenu() -> UIMenu {
+    var sections: [UIMenuElement] = []
+
+    if isAuthenticated {
+      let libraryActions = libraries.map { library in
+        let action = UIAction(title: library.name) { _ in
+          onSelectLibrary(library.id)
+        }
+        action.state = library.id == currentLibraryID ? .on : .off
+        return action
+      }
+      if !libraryActions.isEmpty {
+        sections.append(UIMenu(title: "", options: .displayInline, children: libraryActions))
+      }
+
+      if hasAlternativeURL {
+        let primary = UIAction(title: String(localized: "Primary")) { _ in
+          if isUsingAlternativeURL {
+            onToggleAlternativeURL()
+          }
+        }
+        primary.state = isUsingAlternativeURL ? .off : .on
+
+        let alternative = UIAction(title: String(localized: "Alternative")) { _ in
+          if !isUsingAlternativeURL {
+            onToggleAlternativeURL()
+          }
+        }
+        alternative.state = isUsingAlternativeURL ? .on : .off
+
+        sections.append(
+          UIMenu(
+            title: String(localized: "Server URL"),
+            options: .displayInline,
+            children: [primary, alternative]
+          )
+        )
+      }
+
+      let details = UIAction(
+        title: String(localized: "Server Details"),
+        image: UIImage(systemName: "info.circle")
+      ) { _ in
+        onServerDetails()
+      }
+      sections.append(UIMenu(title: "", options: .displayInline, children: [details]))
+    }
+
+    let manage = UIAction(
+      title: String(localized: "Manage Servers"),
+      image: UIImage(systemName: "server.rack")
+    ) { _ in
+      onManageServers()
+    }
+    sections.append(UIMenu(title: "", options: .displayInline, children: [manage]))
+
+    return UIMenu(title: "", children: sections)
   }
 }
+#endif
 
 extension HomePage {
   @Observable
