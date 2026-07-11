@@ -61,6 +61,9 @@ struct AudioBoothApp: App {
         }
       }
     }
+    .commands {
+      PlaybackCommands()
+    }
   }
 
   private func syncAccentColorToWidget(_ color: Color?) {

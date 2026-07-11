@@ -201,7 +201,7 @@ private struct SkipPresetCard: View {
         skipBadge(
           systemImage: "\(Int(backInterval)).arrow.trianglehead.counterclockwise",
           label: "Back",
-          accessibilityLabel: "Skip back",
+          accessibilityLabel: "Skip backward",
           selection: $backInterval
         )
         Spacer()
