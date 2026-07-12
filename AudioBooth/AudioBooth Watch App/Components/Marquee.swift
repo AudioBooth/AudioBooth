@@ -17,7 +17,7 @@ enum MarqueeLoopMode: String, CaseIterable, Identifiable {
 struct Marquee<Content: View>: View {
   let content: Content
   var mode: MarqueeLoopMode = .playOnce
-  var duration: Double = 6.0
+  var speed: Double = 30.0
   var delay: Double = 1.0
 
   @State private var width: CGFloat = .zero
@@ -63,7 +63,7 @@ struct Marquee<Content: View>: View {
 
   private var animation: Animation {
     guard animate else { return .default }
-    let base = Animation.linear(duration: duration).delay(delay)
+    let base = Animation.linear(duration: (width + 30) / speed).delay(delay)
     switch mode {
     case .playOnce: return base
     case .loop: return base.repeatForever(autoreverses: false)

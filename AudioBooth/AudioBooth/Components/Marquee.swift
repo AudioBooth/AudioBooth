@@ -2,7 +2,7 @@ import SwiftUI
 
 struct Marquee<Content: View>: View {
   let content: Content
-  var duration: Double = 6.0
+  var speed: Double = 30.0
   var delay: Double = 1.0
 
   @State private var width: CGFloat = .zero
@@ -41,7 +41,7 @@ struct Marquee<Content: View>: View {
       .offset(x: animate ? -width - 30 : 0)
       .animation(
         animate
-          ? Animation.linear(duration: duration)
+          ? Animation.linear(duration: (width + 30) / speed)
             .delay(delay)
             .repeatForever(autoreverses: false)
           : .default,
