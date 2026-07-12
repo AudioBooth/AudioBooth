@@ -108,11 +108,12 @@ final class DownloadManager: NSObject, ObservableObject {
       return
     }
 
-    if downloadStates[bookID] == .downloaded {
+    if type != .ebook, downloadStates[bookID] == .downloaded {
       return
     }
 
     AppLogger.download.info("Starting \(type) download for book: \(bookID)")
+    let wasDownloaded = downloadStates[bookID] == .downloaded
     let operation = DownloadOperation(bookID: bookID, type: type)
     activeOperations[bookID] = operation
 
@@ -139,10 +140,11 @@ final class DownloadManager: NSObject, ObservableObject {
 
         if operation.isFinished && !operation.isCancelled {
           AppLogger.download.info("Download completed successfully for book: \(bookID)")
-          self?.downloadStates[bookID] = operation.resultIsFullyDownloaded ? .downloaded : .notDownloaded
+          self?.downloadStates[bookID] =
+            operation.resultIsFullyDownloaded || wasDownloaded ? .downloaded : .notDownloaded
         } else {
           AppLogger.download.info("Download cancelled or failed for book: \(bookID)")
-          self?.downloadStates[bookID] = .notDownloaded
+          self?.downloadStates[bookID] = wasDownloaded ? .downloaded : .notDownloaded
         }
       }
     }
