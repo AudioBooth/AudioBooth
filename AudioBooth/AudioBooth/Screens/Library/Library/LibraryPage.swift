@@ -198,19 +198,31 @@ struct LibraryPage: View {
             }
           }
 
-          if model.actions.contains(.resetProgress) || model.actions.contains(.markAsFinished) {
+          if showsPlayAction || model.actions.contains(.resetProgress) || model.actions.contains(.markAsFinished) {
             Divider()
+          }
+
+          if showsPlayAction {
+            Button(action: hasSelection ? model.onPlaySelectedTapped : model.onPlayAllTapped) {
+              Label(hasSelection ? "Play Selected" : "Play All", systemImage: "play.fill")
+            }
           }
 
           if model.actions.contains(.resetProgress) {
             Button(action: model.onResetAllProgressTapped) {
-              Label("Reset All Progress", systemImage: "arrow.counterclockwise")
+              Label(
+                hasSelection ? "Reset Selected Progress" : "Reset All Progress",
+                systemImage: "arrow.counterclockwise"
+              )
             }
           }
 
           if model.actions.contains(.markAsFinished) {
             Button(action: model.onMarkAllFinishedTapped) {
-              Label("Mark All as Finished", systemImage: "checkmark.shield")
+              Label(
+                hasSelection ? "Mark Selected as Finished" : "Mark All as Finished",
+                systemImage: "checkmark.shield"
+              )
             }
           }
         } label: {
@@ -265,6 +277,14 @@ struct LibraryPage: View {
     }
   }
 
+  var hasSelection: Bool {
+    model.isSelecting && !model.selectedIDs.isEmpty
+  }
+
+  var showsPlayAction: Bool {
+    model.actions.contains(.playAll) && !model.items.isEmpty && (!model.isSelecting || hasSelection)
+  }
+
   var selectionTitle: String {
     if model.selectedIDs.isEmpty {
       String(localized: "Select Items")
@@ -302,6 +322,7 @@ extension LibraryPage {
       static let resetProgress = Actions(rawValue: 1 << 1)
       static let addToPlaylist = Actions(rawValue: 1 << 2)
       static let addToCollection = Actions(rawValue: 1 << 3)
+      static let playAll = Actions(rawValue: 1 << 4)
     }
 
     var isLoading: Bool
@@ -340,6 +361,8 @@ extension LibraryPage {
     func onDisplayModeTapped() {}
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
+    func onPlayAllTapped() {}
+    func onPlaySelectedTapped() {}
     func onResetAllProgressTapped() {}
     func onMarkAllFinishedTapped() {}
     func onFilterButtonTapped() {}

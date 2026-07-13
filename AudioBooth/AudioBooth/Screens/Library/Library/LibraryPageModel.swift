@@ -4,6 +4,7 @@ import Models
 
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
+  private let playerManager = PlayerManager.shared
 
   private var fetched: [LibraryView.Item] = []
 
@@ -85,7 +86,7 @@ final class LibraryPageModel: LibraryPage.Model {
 
     self.search = SearchViewModel()
 
-    self.actions = Self.collectionActions
+    self.actions = Self.collectionActions.union(.playAll)
   }
 
   private static var collectionActions: LibraryPage.Model.Actions {
@@ -219,25 +220,77 @@ final class LibraryPageModel: LibraryPage.Model {
     }
   }
 
+  override func onPlayAllTapped() {
+    play(allBooks)
+  }
+
+  override func onPlaySelectedTapped() {
+    play(selectedBooks)
+    exitSelection()
+  }
+
   override func onResetAllProgressTapped() {
-    for case let .book(model) in items {
-      model.contextMenu?.onResetProgressTapped()
+    if isSelecting {
+      guard !selectedIDs.isEmpty else { return }
+      for book in selectedBooks {
+        book.contextMenu?.onResetProgressTapped()
+      }
+      exitSelection()
+    } else {
+      for book in allBooks {
+        book.contextMenu?.onResetProgressTapped()
+      }
+      actions.remove(.resetProgress)
+      actions.insert(.markAsFinished)
     }
-    actions.remove(.resetProgress)
-    actions.insert(.markAsFinished)
   }
 
   override func onMarkAllFinishedTapped() {
-    for case let .book(model) in items {
-      model.contextMenu?.onMarkAsFinishedTapped()
+    if isSelecting {
+      guard !selectedIDs.isEmpty else { return }
+      for book in selectedBooks {
+        book.contextMenu?.onMarkAsFinishedTapped()
+      }
+      exitSelection()
+    } else {
+      for book in allBooks {
+        book.contextMenu?.onMarkAsFinishedTapped()
+      }
+      actions.remove(.markAsFinished)
+      actions.insert(.resetProgress)
     }
-    actions.remove(.markAsFinished)
-    actions.insert(.resetProgress)
+  }
+
+  private var allBooks: [BookCard.Model] {
+    items.compactMap { item in
+      if case .book(let model) = item { model } else { nil }
+    }
+  }
+
+  private var selectedBooks: [BookCard.Model] {
+    allBooks.filter { selectedIDs.contains($0.id) }
+  }
+
+  private func play(_ books: [BookCard.Model]) {
+    guard !books.isEmpty else { return }
+
+    let notCompleted = books.filter { MediaProgress.progress(for: $0.id) < 1.0 }
+    let source = notCompleted.isEmpty ? books : notCompleted
+    let queueItems = source.map { book in
+      QueueItem(
+        bookID: book.id,
+        title: book.title,
+        details: book.author,
+        coverURL: book.cover.url,
+        podcastID: book.podcastID
+      )
+    }
+    playerManager.playAll(queueItems)
   }
 
   private func updateActions() {
     guard case .series = filter else { return }
-    var updatedActions = actions.intersection([.addToPlaylist, .addToCollection])
+    var updatedActions = actions.intersection([.addToPlaylist, .addToCollection, .playAll])
     for case let .book(model) in items {
       let progress = MediaProgress.progress(for: model.id)
       if progress > 0 {
