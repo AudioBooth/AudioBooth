@@ -112,8 +112,8 @@ struct HomePreferencesView: View {
       PreferenceRow(
         systemImage: section.systemImage,
         tint: section.tint,
-        title: section.displayName,
-        subtitle: section.canBeDisabled ? nil : String(localized: "Always visible")
+        title: Text(section.displayName),
+        subtitle: section.canBeDisabled ? nil : Text("Always visible")
       )
 
       Spacer()

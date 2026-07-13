@@ -9,13 +9,13 @@ struct PreferenceRow: View {
   init(
     systemImage: String,
     tint: Color,
-    title: String,
-    subtitle: String? = nil
+    title: Text,
+    subtitle: Text? = nil
   ) {
     self.systemImage = systemImage
     self.tint = tint
-    self.title = Text(title)
-    self.subtitle = subtitle.map { Text($0) }
+    self.title = title
+    self.subtitle = subtitle
   }
 
   init(
@@ -24,10 +24,12 @@ struct PreferenceRow: View {
     title: LocalizedStringKey,
     subtitle: LocalizedStringKey? = nil
   ) {
-    self.systemImage = systemImage
-    self.tint = tint
-    self.title = Text(title)
-    self.subtitle = subtitle.map { Text($0) }
+    self.init(
+      systemImage: systemImage,
+      tint: tint,
+      title: Text(title),
+      subtitle: subtitle.map { Text($0) }
+    )
   }
 
   var body: some View {

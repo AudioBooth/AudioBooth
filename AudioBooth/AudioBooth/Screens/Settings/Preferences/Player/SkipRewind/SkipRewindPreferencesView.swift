@@ -53,7 +53,7 @@ struct SkipRewindPreferencesView: View {
           PreferenceRow(
             systemImage: "gobackward",
             tint: .blue,
-            title: "Auto-rewind on Resume",
+            title: Text("Auto-rewind on Resume"),
             subtitle: autoRewindSubtitle
           )
         }
@@ -165,13 +165,11 @@ struct SkipRewindPreferencesView: View {
     }
   }
 
-  private var autoRewindSubtitle: String {
+  private var autoRewindSubtitle: Text {
     if !autoRewindEnabled.wrappedValue {
-      return String(localized: "Off")
+      return Text("Off")
     }
-    return String(
-      localized: "On - \(Int(rewindMin))s to \(Int(rewindMax))s based on pause length"
-    )
+    return Text("On - \(Int(rewindMin))s to \(Int(rewindMax))s based on pause length")
   }
 
   private var rangeLabel: String {
@@ -292,7 +290,7 @@ private struct SkipPresetCard: View {
     return Button {
       selection.wrappedValue = value
     } label: {
-      Text("\(Int(value))s")
+      Text(verbatim: "\(Int(value))s")
         .font(.caption)
         .fontWeight(.semibold)
         .foregroundStyle(isSelected ? Color.white : Color.primary)

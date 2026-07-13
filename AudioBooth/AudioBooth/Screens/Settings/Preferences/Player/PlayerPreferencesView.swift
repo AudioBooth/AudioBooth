@@ -89,7 +89,7 @@ struct PlayerPreferencesView: View {
           PreferenceRow(
             systemImage: "slider.horizontal.3",
             tint: .orange,
-            title: "Controls & Layout",
+            title: Text("Controls & Layout"),
             subtitle: controlsLayoutSubtitle
           )
         }
@@ -114,7 +114,7 @@ struct PlayerPreferencesView: View {
           PreferenceRow(
             systemImage: "moon",
             tint: .purple,
-            title: "Sleep Timer & Alarm",
+            title: Text("Sleep Timer & Alarm"),
             subtitle: sleepShakeSubtitle
           )
         }
@@ -126,7 +126,7 @@ struct PlayerPreferencesView: View {
           PreferenceRow(
             systemImage: "play.square",
             tint: .indigo,
-            title: "Playback Display",
+            title: Text("Playback Display"),
             subtitle: playbackDisplaySubtitle
           )
         }
@@ -152,27 +152,27 @@ struct PlayerPreferencesView: View {
     .navigationTitle("Player")
   }
 
-  private var controlsLayoutSubtitle: String {
+  private var controlsLayoutSubtitle: Text {
     let enabled = preferences.playerControls
     let extraCount = max(PlayerControl.allCases.count - 3, 0)
     let names = enabled.prefix(3).map { String(localized: $0.displayName) }.joined(separator: ", ")
-    return extraCount > 0 ? "\(names) +\(extraCount)" : names
+    return Text(verbatim: extraCount > 0 ? "\(names) +\(extraCount)" : names)
   }
 
-  private var sleepShakeSubtitle: String {
-    let sensitivity = preferences.shakeSensitivity.displayText
+  private var sleepShakeSubtitle: Text {
+    let sensitivity = String(localized: preferences.shakeSensitivity.displayText)
     switch preferences.autoTimerMode {
-    case .off: return String(localized: "Sensitivity: \(sensitivity)")
+    case .off: return Text("Sensitivity: \(sensitivity)")
     case .duration(let s):
       let mins = Int(s / 60)
-      return String(localized: "\(mins) min · \(sensitivity)")
+      return Text("\(mins) min · \(sensitivity)")
     case .chapters(let n):
-      return String(localized: "\(n) chapter \(sensitivity)")
+      return Text("\(n) chapter \(sensitivity)")
     }
   }
 
-  private var playbackDisplaySubtitle: String {
-    preferences.playerOrientation.displayText
+  private var playbackDisplaySubtitle: Text {
+    Text(preferences.playerOrientation.displayText)
   }
 }
 

@@ -56,7 +56,7 @@ struct ControlsLayoutPreferencesView: View {
       PreferenceRow(
         systemImage: control.systemImage,
         tint: control.tint,
-        title: String(localized: control.displayName)
+        title: Text(control.displayName)
       )
       Spacer()
       Toggle(isOn: binding(for: control)) {}

@@ -51,7 +51,7 @@ struct SettingsView: View {
             PreferenceRow(
               systemImage: "cylinder",
               tint: .blue,
-              title: String(localized: "Storage"),
+              title: Text("Storage"),
               subtitle: storageSubtitle
             )
           }
@@ -164,13 +164,13 @@ struct SettingsView: View {
     }
   }
 
-  private var storageSubtitle: String {
+  private var storageSubtitle: Text {
     guard let storage = model.storagePreferences, storage.totalBytes > 0 else {
-      return String(localized: "Manage downloads & cache")
+      return Text("Manage downloads & cache")
     }
     let bookCount = storage.audiobooksCount + storage.ebooksCount
     let bookText = bookCount == 1 ? String(localized: "1 book") : String(localized: "\(bookCount) books")
-    return "\(storage.totalSize) · \(bookText)"
+    return Text(verbatim: "\(storage.totalSize) · \(bookText)")
   }
 
   @ViewBuilder

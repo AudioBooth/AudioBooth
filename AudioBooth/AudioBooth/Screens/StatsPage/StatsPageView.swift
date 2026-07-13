@@ -135,7 +135,7 @@ extension StatsPageView {
         .foregroundStyle(.secondary)
 
       HStack(alignment: .firstTextBaseline, spacing: 4) {
-        Text("\(hours.formatted())")
+        Text(hours.formatted())
           .font(.system(size: 64, weight: .bold, design: .rounded))
           .foregroundStyle(Color.accentColor)
           .monospacedDigit()

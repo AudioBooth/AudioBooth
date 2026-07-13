@@ -97,7 +97,7 @@ struct PodcastFeedView: View {
               .foregroundStyle(.secondary)
           }
           if let durationText = episode.durationText {
-            Text("•")
+            Text(verbatim: "•")
               .font(.caption)
               .foregroundStyle(.secondary)
             Text(durationText)

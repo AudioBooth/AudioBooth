@@ -25,11 +25,11 @@ struct YearInReviewCard: View {
                   Button {
                     model.onYearChanged(year)
                   } label: {
-                    Text("\(year, format: .number.grouping(.never))")
+                    Text(year.formatted(.number.grouping(.never)))
                   }
                 }
               } label: {
-                Text("\(model.year, format: .number.grouping(.never))")
+                Text(model.year.formatted(.number.grouping(.never)))
                   .font(.subheadline)
                   .fontWeight(.semibold)
                   .foregroundColor(.accentColor)

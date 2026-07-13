@@ -128,7 +128,7 @@ struct ServerView: View {
               Text(server.serverURL.absoluteString)
                 .foregroundColor(.primary)
               Spacer()
-              Text("\(Int(server.responseTime * 1000))ms")
+              Text(verbatim: "\(Int(server.responseTime * 1000))ms")
                 .font(.caption)
                 .foregroundColor(.secondary)
             }
