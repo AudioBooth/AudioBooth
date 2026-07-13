@@ -93,6 +93,16 @@ struct CardPreferencesView: View {
           )
         }
         .listRowBackground(theme.colors.background.card)
+
+        Toggle(isOn: $preferences.dimCoverWhenCompleted) {
+          PreferenceRow(
+            systemImage: "checkmark.circle",
+            tint: .green,
+            title: "Dim Finished Books",
+            subtitle: "Darken covers of completed books"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Layout")
       }
@@ -126,6 +136,7 @@ struct CardPreferencesView: View {
     !preferences.cardMinimalMode
       && !preferences.cardCoverDynamicRatio
       && !preferences.showBookSubtitle
+      && preferences.dimCoverWhenCompleted
       && preferences.cardCoverCornerRadius == .medium
       && preferences.cardCoverBorderWidth == .small
   }
@@ -134,6 +145,7 @@ struct CardPreferencesView: View {
     preferences.cardMinimalMode = false
     preferences.cardCoverDynamicRatio = false
     preferences.showBookSubtitle = false
+    preferences.dimCoverWhenCompleted = true
     preferences.cardCoverCornerRadius = .medium
     preferences.cardCoverBorderWidth = .small
   }
@@ -155,7 +167,7 @@ private struct CardPreview: View {
 
       HStack(alignment: .top, spacing: 16) {
         card(title: "Foundation", subtitle: "Foundation, Book 1", author: "Isaac Asimov", isDynamic: true)
-        card(title: "Dune", subtitle: "Dune Chronicles 1", author: "Frank Herbert", isDynamic: false)
+        card(title: "Dune", subtitle: "Dune Chronicles 1", author: "Frank Herbert", isDynamic: false, isCompleted: true)
       }
       .padding(.horizontal)
     }
@@ -164,9 +176,15 @@ private struct CardPreview: View {
     .background(theme.colors.background.card)
   }
 
-  private func card(title: String, subtitle: String, author: String, isDynamic: Bool) -> some View {
+  private func card(
+    title: String,
+    subtitle: String,
+    author: String,
+    isDynamic: Bool,
+    isCompleted: Bool = false
+  ) -> some View {
     VStack(alignment: .leading, spacing: 8) {
-      cover(title: title, author: author, isDynamic: isDynamic)
+      cover(title: title, author: author, isDynamic: isDynamic, isCompleted: isCompleted)
 
       if !preferences.cardMinimalMode {
         VStack(alignment: .leading, spacing: 2) {
@@ -192,7 +210,7 @@ private struct CardPreview: View {
     }
   }
 
-  private func cover(title: String, author: String, isDynamic: Bool) -> some View {
+  private func cover(title: String, author: String, isDynamic: Bool, isCompleted: Bool) -> some View {
     let useDynamic = isDynamic && preferences.cardCoverDynamicRatio
     return RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value, style: .continuous)
       .fill(
@@ -219,6 +237,13 @@ private struct CardPreview: View {
         .padding(8)
         .multilineTextAlignment(.center)
       }
+      .overlay(alignment: .bottom) {
+        if isCompleted {
+          ProgressOverlay(progress: 1)
+            .padding(4)
+        }
+      }
+      .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value, style: .continuous))
       .overlay {
         RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value, style: .continuous)
           .strokeBorder(Color.gray.opacity(0.6), lineWidth: preferences.cardCoverBorderWidth.value)

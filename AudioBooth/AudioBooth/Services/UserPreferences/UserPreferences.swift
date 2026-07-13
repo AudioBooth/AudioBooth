@@ -129,6 +129,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("cardCoverBorderWidth")
   var cardCoverBorderWidth: CardBorderWidth = .small
 
+  @AppStorage("dimCoverWhenCompleted")
+  var dimCoverWhenCompleted: Bool = true
+
   @AppStorage("showContinueTimeRemaining")
   var showContinueTimeRemaining: Bool = true
 
