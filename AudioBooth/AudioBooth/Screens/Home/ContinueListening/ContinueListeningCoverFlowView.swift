@@ -104,6 +104,7 @@ struct ContinueListeningCoverFlowView: View {
         }
       }
     }
+    .menuOrder(.priority)
     .accessibilityLabel(accessibilityLabel(for: item))
     .bookCardAccessibilityActions(model: item)
     .onAppear(perform: item.onAppear)

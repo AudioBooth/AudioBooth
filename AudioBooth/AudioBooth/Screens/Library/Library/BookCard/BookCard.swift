@@ -22,6 +22,7 @@ struct BookCard: View {
         PodcastEpisodeContextMenu(model: model)
       }
     }
+    .menuOrder(.priority)
     .bookCardAccessibilityActions(model: model)
     .sheet(
       item: Binding(
@@ -67,6 +68,7 @@ struct BookListCard: View {
           PodcastEpisodeContextMenu(model: model)
         }
       }
+      .menuOrder(.priority)
       .bookCardAccessibilityActions(model: model)
       .sheet(
         item: Binding(
