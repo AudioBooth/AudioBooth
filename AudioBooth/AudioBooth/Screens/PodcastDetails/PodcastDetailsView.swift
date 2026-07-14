@@ -553,6 +553,7 @@ struct PodcastDetailsView: View {
               PodcastEpisodeContextMenu(model: contextMenu)
             }
           }
+          .menuOrder(.priority)
           .podcastEpisodeAccessibilityActions(
             episodeID: episode.id,
             menu: episode.contextMenu
