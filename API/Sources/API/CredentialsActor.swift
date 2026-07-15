@@ -21,7 +21,7 @@ actor CredentialsActor {
         throw Audiobookshelf.AudiobookshelfError.networkError("No server")
       }
 
-      guard case .bearer(_, let refreshToken, let expiresAt) = server.token else {
+      guard case .bearer(_, let refreshToken, let expiresAt, _) = server.token else {
         return server.token
       }
 
@@ -44,43 +44,50 @@ actor CredentialsActor {
         )
       }
 
-      let task = Task<Credentials, Error> { @MainActor [server] in
-        try await Audiobookshelf.shared.authentication.refreshToken(for: server)
+      let task = Task<Credentials, Error> { [server] in
+        do {
+          return try await Audiobookshelf.shared.authentication.refreshToken(for: server)
+        } catch {
+          if let fallback = await self.handleError(error) {
+            return fallback
+          }
+          throw error
+        }
       }
 
       refreshTask = task
+      defer { refreshTask = nil }
 
-      do {
-        let credentials = try await task.value
-        refreshTask = nil
-        consecutiveFailures = 0
-        nextRetryAt = nil
-        return credentials
-      } catch {
-        refreshTask = nil
-        await handleError(error)
-        throw error
-      }
+      let credentials = try await task.value
+      consecutiveFailures = 0
+      nextRetryAt = nil
+      return credentials
     }
   }
 
-  private func handleError(_ error: Error) async {
+  private func handleError(_ error: Error) async -> Credentials? {
     if case NetworkError.httpError(let statusCode, _) = error,
       statusCode == 401 || statusCode == 403
     {
       consecutiveFailures = 0
       nextRetryAt = nil
-      await MainActor.run { [weak server] in
-        guard let server else { return }
-        let cleared = Credentials.bearer(accessToken: "", refreshToken: "", expiresAt: 0)
+      return await MainActor.run { [weak server] () -> Credentials? in
+        guard let server else { return nil }
+        if case .bearer(_, _, _, .some(let legacyToken)) = server.token, !legacyToken.isEmpty {
+          let fallback = Credentials.legacy(token: legacyToken)
+          Audiobookshelf.shared.authentication.updateToken(server.id, token: fallback)
+          return fallback
+        }
+        let cleared = Credentials.bearer(accessToken: "", refreshToken: "", expiresAt: 0, legacyToken: nil)
         Audiobookshelf.shared.authentication.updateToken(server.id, token: cleared)
         server.status = .authenticationError
+        return nil
       }
-      return
     }
 
     consecutiveFailures += 1
     let delay = min(60, pow(2.0, Double(consecutiveFailures)))
     nextRetryAt = Date().addingTimeInterval(delay)
+    return nil
   }
 }

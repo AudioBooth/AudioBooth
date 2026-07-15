@@ -12,7 +12,7 @@ public struct User: Codable, Sendable {
 
   public var credentials: Credentials? {
     if let accessToken, let refreshToken, let expiresAt = JWT(accessToken)?.exp {
-      return .bearer(accessToken: accessToken, refreshToken: refreshToken, expiresAt: expiresAt)
+      return .bearer(accessToken: accessToken, refreshToken: refreshToken, expiresAt: expiresAt, legacyToken: token)
     }
     if let token {
       return .legacy(token: token)

@@ -82,7 +82,7 @@ final class NetworkService {
   private let session: URLSessionProtocol = {
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = 30
-    config.timeoutIntervalForResource = 60
+    config.timeoutIntervalForResource = 120
 
     #if os(watchOS)
     config.timeoutIntervalForResource = 300

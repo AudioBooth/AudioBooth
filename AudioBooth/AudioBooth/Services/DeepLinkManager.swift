@@ -129,7 +129,7 @@ extension DeepLinkManager {
 
       if includeToken {
         switch connection.token {
-        case .bearer(_, let refreshToken, _):
+        case .bearer(_, let refreshToken, _, _):
           token = refreshToken
         case .apiKey(let key):
           token = key

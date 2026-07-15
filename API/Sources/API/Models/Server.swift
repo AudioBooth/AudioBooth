@@ -34,15 +34,15 @@ public final class Server: @unchecked Sendable {
   public var status: Status = .connected
 
   public var canAttemptRefresh: Bool {
-    if case .bearer(_, let refreshToken, _) = token {
+    if case .bearer(_, let refreshToken, _, _) = token {
       return !refreshToken.isEmpty
     }
     return false
   }
 
   func expireAccessToken() {
-    guard case .bearer(let accessToken, let refreshToken, _) = token else { return }
-    token = .bearer(accessToken: accessToken, refreshToken: refreshToken, expiresAt: 0)
+    guard case .bearer(let accessToken, let refreshToken, _, let legacyToken) = token else { return }
+    token = .bearer(accessToken: accessToken, refreshToken: refreshToken, expiresAt: 0, legacyToken: legacyToken)
   }
 
   @ObservationIgnored

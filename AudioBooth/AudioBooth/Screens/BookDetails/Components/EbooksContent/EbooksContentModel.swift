@@ -34,7 +34,7 @@ extension EbooksContent.SupplementaryEbook {
     switch token {
     case .legacy(let token):
       url.append(queryItems: [URLQueryItem(name: "token", value: token)])
-    case .bearer(let accessToken, _, _):
+    case .bearer(let accessToken, _, _, _):
       url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
     case .apiKey(let key):
       url.append(queryItems: [URLQueryItem(name: "token", value: key)])

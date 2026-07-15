@@ -337,6 +337,20 @@ public final class AuthenticationService: ObservableObject {
       let response = try await networkService.send(request)
       let authorize = response.value
       server?.update(with: authorize)
+      if let server, let legacyToken = authorize.user.token, !legacyToken.isEmpty,
+        case .bearer(let accessToken, let refreshToken, let expiresAt, let currentLegacyToken) = server.token,
+        currentLegacyToken != legacyToken
+      {
+        updateToken(
+          server.id,
+          token: .bearer(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            expiresAt: expiresAt,
+            legacyToken: legacyToken
+          )
+        )
+      }
       return authorize
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
@@ -468,7 +482,7 @@ public final class AuthenticationService: ObservableObject {
     case .refresh:
       let connection = Connection(
         serverURL: serverURL,
-        token: .bearer(accessToken: "", refreshToken: token, expiresAt: 0),
+        token: .bearer(accessToken: "", refreshToken: token, expiresAt: 0, legacyToken: nil),
         customHeaders: customHeaders,
         alias: alias
       )
@@ -489,7 +503,7 @@ public final class AuthenticationService: ObservableObject {
       return server.token
     }
 
-    guard case .bearer(_, let refreshToken, _) = server.token else {
+    guard case .bearer(_, let refreshToken, _, let legacyToken) = server.token else {
       throw Audiobookshelf.AudiobookshelfError.loginFailed("Token not in correct format")
     }
 
@@ -510,7 +524,8 @@ public final class AuthenticationService: ObservableObject {
       path: "/auth/refresh",
       method: .post,
       body: nil,
-      headers: headers
+      headers: headers,
+      timeout: 120
     )
 
     let response = try await networkService.send(request)
@@ -523,7 +538,8 @@ public final class AuthenticationService: ObservableObject {
     let newToken = Credentials.bearer(
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
-      expiresAt: newExpiresAt
+      expiresAt: newExpiresAt,
+      legacyToken: legacyToken
     )
 
     server.token = newToken
