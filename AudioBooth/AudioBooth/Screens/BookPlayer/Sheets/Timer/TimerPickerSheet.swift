@@ -89,11 +89,48 @@ struct TimerPickerSheet: View {
         .fontWeight(.semibold)
 
       runningCountdown
-        .font(.system(size: 40, weight: .bold, design: .monospaced))
-        .monospacedDigit()
     }
-    .padding(.top, 60)
+    .padding(.top, 40)
     .frame(maxWidth: .infinity)
+  }
+
+  private var canAddTime: Bool {
+    switch model.current {
+    case .preset, .custom: true
+    case .chapters, .atTime, .duration, .none: false
+    }
+  }
+
+  @ViewBuilder
+  private func addTimeButton(for minutes: Int) -> some View {
+    Button(action: { model.onAddTimeTapped(minutes) }) {
+      Text(verbatim: "+\(Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes], width: .abbreviated)))")
+        .frame(maxWidth: .infinity)
+    }
+    .buttonStyle(.bordered)
+  }
+
+  @ViewBuilder
+  private func chapterStepper(count: Int) -> some View {
+    HStack(spacing: 12) {
+      Button(action: { model.onRunningChaptersChanged(count - 1) }) {
+        ZStack {
+          Image(systemName: "plus")
+            .hidden()
+
+          Image(systemName: "minus")
+            .frame(maxWidth: .infinity)
+        }
+      }
+      .disabled(count < 2)
+
+      Button(action: { model.onRunningChaptersChanged(count + 1) }) {
+        Image(systemName: "plus")
+          .frame(maxWidth: .infinity)
+      }
+      .disabled(count >= model.maxRemainingChapters)
+    }
+    .buttonStyle(.bordered)
   }
 
   private var runningIcon: String {
@@ -111,8 +148,15 @@ struct TimerPickerSheet: View {
     switch model.current {
     case .preset(let seconds), .custom(let seconds), .duration(let seconds):
       Text(Duration.seconds(seconds).formatted(.time(pattern: .hourMinuteSecond)))
+        .font(.system(size: 40, weight: .bold, design: .monospaced))
+
     case .chapters(let count):
       Text(count == 1 ? "End of chapter" : "End of \(count) chapters")
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+        .padding(.horizontal, 20)
+        .font(.system(size: 36, weight: .bold, design: .monospaced))
+
     case .atTime(let trigger):
       Text(
         timerInterval: min(Date(), trigger)...trigger,
@@ -120,6 +164,8 @@ struct TimerPickerSheet: View {
         countsDown: true,
         showsHours: true
       )
+      .font(.system(size: 40, weight: .bold, design: .monospaced))
+
     case .none:
       EmptyView()
     }
@@ -127,18 +173,32 @@ struct TimerPickerSheet: View {
 
   @ViewBuilder
   private var runningFooter: some View {
-    Button {
-      if case .atTime = model.current {
-        model.onAlarmOffTapped()
-      } else {
-        model.onOffSelected()
+    VStack(spacing: 12) {
+      if canAddTime {
+        HStack(spacing: 12) {
+          ForEach([5, 10, 30], id: \.self) { minutes in
+            addTimeButton(for: minutes)
+          }
+        }
       }
-    } label: {
-      Text("Cancel").frame(maxWidth: .infinity)
+
+      if case .chapters(let count) = model.current {
+        chapterStepper(count: count)
+      }
+
+      Button {
+        if case .atTime = model.current {
+          model.onAlarmOffTapped()
+        } else {
+          model.onOffSelected()
+        }
+      } label: {
+        Text("Cancel").frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.borderedProminent)
+      .tint(.red)
     }
-    .buttonStyle(.borderedProminent)
     .controlSize(.large)
-    .tint(.red)
     .padding(.horizontal, 20)
     .padding(.bottom, 20)
   }
@@ -479,7 +539,9 @@ extension TimerPickerSheet {
     init() {}
 
     func onQuickTimerSelected(_ minutes: Int) {}
+    func onAddTimeTapped(_ minutes: Int) {}
     func onChaptersChanged(_ value: Int) {}
+    func onRunningChaptersChanged(_ value: Int) {}
     func onOffSelected() {}
     func onStartTimerTapped() {}
     func onAlarmStartTapped() {}

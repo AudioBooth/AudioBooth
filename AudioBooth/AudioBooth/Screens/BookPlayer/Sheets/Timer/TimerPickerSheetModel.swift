@@ -111,9 +111,45 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     onStartTimerTapped()
   }
 
+  override func onAddTimeTapped(_ minutes: Int) {
+    let additional = TimeInterval(minutes * 60)
+
+    let newRemaining: TimeInterval
+    switch current {
+    case .preset(let seconds):
+      newRemaining = seconds + additional
+      current = .preset(newRemaining)
+    case .custom(let seconds):
+      newRemaining = seconds + additional
+      current = .custom(newRemaining)
+    case .chapters, .atTime, .duration, .none:
+      return
+    }
+
+    player.volume = Float(preferences.volumeLevel)
+    startLiveActivity(duration: newRemaining)
+    PlaybackHistory.record(itemID: itemID, action: .timerExtended, position: player.time)
+    AppLogger.player.info("Sleep timer extended by \(minutes) minutes")
+  }
+
   override func onChaptersChanged(_ value: Int) {
     selected = .chapters(value)
     updateEstimatedEndTime(for: value)
+  }
+
+  override func onRunningChaptersChanged(_ value: Int) {
+    guard case .chapters(let count) = current, value >= 1, value <= maxRemainingChapters else { return }
+
+    current = .chapters(value)
+
+    if let duration = calculateChapterDuration(for: value) {
+      startLiveActivity(duration: duration)
+    }
+
+    if value > count {
+      PlaybackHistory.record(itemID: itemID, action: .timerExtended, position: player.time)
+    }
+    AppLogger.player.info("Chapter timer changed to \(value) chapters")
   }
 
   private func updateEstimatedEndTime(for chapterCount: Int) {
