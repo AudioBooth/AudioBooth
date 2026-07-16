@@ -39,7 +39,7 @@ struct EqualizerSheet: View {
     .opacity(model.isEnabled ? 1 : 0.5)
     .overlay(alignment: .topTrailing) {
       Toggle(
-        "",
+        "Equalizer",
         isOn: Binding(
           get: { model.isEnabled },
           set: { model.onToggleEnabled($0) }
@@ -78,6 +78,7 @@ struct EqualizerSheet: View {
       }
       .labelsHidden()
       .pickerStyle(.menu)
+      .accessibilityLabel("Volume Leveling")
     }
   }
 
@@ -94,6 +95,7 @@ struct EqualizerSheet: View {
         Text(verbatim: "\(formattedGain(model.preamp)) dB")
           .font(.system(size: 13, weight: .medium).monospacedDigit())
           .foregroundColor(.primary)
+          .accessibilityHidden(true)
       }
 
       Slider(
@@ -104,6 +106,8 @@ struct EqualizerSheet: View {
         in: -12...12,
         step: 0.5
       )
+      .accessibilityLabel("Preamplifier")
+      .accessibilityValue(Text(verbatim: "\(formattedGain(model.preamp)) decibels"))
     }
   }
 
@@ -115,19 +119,22 @@ struct EqualizerSheet: View {
             .font(.system(size: 10, weight: .medium).monospacedDigit())
             .foregroundColor(.primary)
             .frame(width: 32)
+            .accessibilityHidden(true)
 
           VerticalSlider(
             value: Binding(
               get: { model.bandGains[index] },
               set: { model.onBandChanged(index, gain: $0) }
             ),
-            range: -12...12
+            range: -12...12,
+            accessibilityLabel: "\(model.bandLabels[index]) hertz"
           )
           .frame(height: 160)
 
           Text(model.bandLabels[index])
             .font(.system(size: 9, weight: .medium))
             .foregroundColor(.primary)
+            .accessibilityHidden(true)
         }
         .frame(maxWidth: .infinity)
       }
@@ -177,6 +184,9 @@ struct EqualizerSheet: View {
 private struct VerticalSlider: View {
   @Binding var value: Float
   let range: ClosedRange<Float>
+  var step: Float = 0.5
+  var accessibilityLabel: String = ""
+
   var body: some View {
     GeometryReader { geo in
       let height = geo.size.height
@@ -213,6 +223,22 @@ private struct VerticalSlider: View {
           }
       )
     }
+    .accessibilityRepresentation {
+      Slider(
+        value: $value,
+        in: range,
+        step: step
+      ) {
+        Text(accessibilityLabel)
+      }
+      .accessibilityValue(Text(accessibilityValueText))
+    }
+  }
+
+  private var accessibilityValueText: String {
+    let rounded = (value * 2).rounded() / 2
+    let formatted = rounded == 0 ? "0" : String(format: "%+.1f", rounded)
+    return String(localized: "\(formatted) decibels")
   }
 }
 

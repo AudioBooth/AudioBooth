@@ -73,6 +73,16 @@ struct PlaybackProgressView: View {
         )
       }
       .frame(height: 16)
+      .accessibilityRepresentation {
+        Slider(
+          value: seekBinding,
+          in: 0...max(1.0, model.current + model.remaining),
+          step: 15
+        ) {
+          Text("Playback position")
+        }
+        .accessibilityValue(Text(accessibilityPositionDescription))
+      }
 
       HStack {
         Text(formatCurrentTime(model.current))
@@ -106,6 +116,32 @@ struct PlaybackProgressView: View {
 
   private func formatCurrentTime(_ duration: TimeInterval) -> String {
     Duration.seconds(duration).formatted(.time(pattern: .hourMinuteSecond))
+  }
+
+  /// Drives the VoiceOver / keyboard `Slider` exposed via `accessibilityRepresentation`.
+  /// Seeks on every adjustment while keeping the visible bar in sync; the total
+  /// (current + remaining) stays constant during a seek, so the slider range is stable.
+  private var seekBinding: Binding<Double> {
+    Binding(
+      get: { model.current },
+      set: { newValue in
+        let total = model.current + model.remaining
+        guard total > 0 else { return }
+        let clamped = min(max(0, newValue), total)
+        model.progress = clamped / total
+        model.current = clamped
+        model.remaining = total - clamped
+        model.onProgressChanged(model.progress)
+      }
+    )
+  }
+
+  private var accessibilityPositionDescription: String {
+    let elapsed = Duration.seconds(model.current)
+      .formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
+    let total = Duration.seconds(model.current + model.remaining)
+      .formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
+    return String(localized: "\(elapsed) of \(total)")
   }
 
   private var supplementary: (progress: Double, elapsed: TimeInterval, remaining: TimeInterval)? {
