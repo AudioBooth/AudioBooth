@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [1.11.0]
+
+### Added
 - Keep next items offline - New storage preference to automatically download what's next in started series and podcasts, with a configurable number of items
 - Volume leveling - New equalizer option that evens out loud and quiet passages, with low, medium, and high strength
 - Siri support - Use Siri to play a downloaded book or resume your current book
