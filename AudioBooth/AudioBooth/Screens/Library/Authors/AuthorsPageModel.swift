@@ -39,6 +39,7 @@ final class AuthorsPageModel: AuthorsPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
+    pageLoadFailed = false
 
     do {
       let preferences = UserPreferences.shared
@@ -59,6 +60,7 @@ final class AuthorsPageModel: AuthorsPage.Model {
 
     } catch {
       AppLogger.viewModel.error("Failed to fetch authors: \(error)")
+      pageLoadFailed = true
       if currentPage == 0 {
         sections = []
       }

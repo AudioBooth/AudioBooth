@@ -289,6 +289,8 @@ private extension AudioPlayer {
           self.events.send(.stateChanged(.ready))
         case .failed:
           AppLogger.player.error("Player item failed: \(item.error?.localizedDescription ?? "Unknown")")
+          self.player.pause()
+          self.player.removeAllItems()
           self.events.send(.error(item.error))
         default:
           break

@@ -68,6 +68,7 @@ final class CollectionsPageModel: CollectionsPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
+    pageLoadFailed = false
 
     do {
       let collectionItems: [CollectionRow.Model]
@@ -124,6 +125,7 @@ final class CollectionsPageModel: CollectionsPage.Model {
         return
       }
 
+      pageLoadFailed = true
       if currentPage == 0 {
         collections = []
       }

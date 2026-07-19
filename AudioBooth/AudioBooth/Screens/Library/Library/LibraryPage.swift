@@ -248,6 +248,7 @@ struct LibraryPage: View {
             items: model.items,
             displayMode: preferences.libraryDisplayMode == .card ? .grid : .list,
             hasMorePages: model.hasMorePages,
+            pageLoadFailed: model.pageLoadFailed,
             onLoadMore: model.loadNextPageIfNeeded,
             isSelecting: model.isSelecting,
             selectedIDs: model.selectedIDs,
@@ -258,6 +259,7 @@ struct LibraryPage: View {
             items: model.items,
             displayMode: preferences.libraryDisplayMode == .card ? .grid : .list,
             hasMorePages: model.hasMorePages,
+            pageLoadFailed: model.pageLoadFailed,
             onLoadMore: model.loadNextPageIfNeeded,
             isSelecting: model.isSelecting,
             selectedIDs: model.selectedIDs,
@@ -327,6 +329,7 @@ extension LibraryPage {
 
     var isLoading: Bool
     var hasMorePages: Bool
+    var pageLoadFailed: Bool = false
 
     var isRoot: Bool
 

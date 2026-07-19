@@ -323,6 +323,7 @@ final class LibraryPageModel: LibraryPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
+    pageLoadFailed = false
 
     do {
       let filter: String?
@@ -422,6 +423,7 @@ final class LibraryPageModel: LibraryPage.Model {
 
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
+      pageLoadFailed = true
       if currentPage == 0 {
         fetched = []
         items = []

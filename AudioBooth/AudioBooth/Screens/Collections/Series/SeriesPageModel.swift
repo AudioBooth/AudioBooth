@@ -52,6 +52,7 @@ final class SeriesPageModel: SeriesPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
+    pageLoadFailed = false
 
     do {
       let response = try await audiobookshelf.series.fetch(
@@ -79,6 +80,7 @@ final class SeriesPageModel: SeriesPage.Model {
 
     } catch {
       AppLogger.viewModel.error("Failed to fetch series: \(error)")
+      pageLoadFailed = true
       if currentPage == 0 {
         fetchedSeries = []
         series = []

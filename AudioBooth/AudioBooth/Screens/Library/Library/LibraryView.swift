@@ -9,6 +9,7 @@ struct LibraryView: View {
   let items: [Item]
   let displayMode: DisplayMode
   var hasMorePages: Bool = false
+  var pageLoadFailed: Bool = false
   var onLoadMore: (() -> Void)?
   var isSelecting: Bool = false
   var selectedIDs: [String] = []
@@ -35,12 +36,9 @@ struct LibraryView: View {
         }
 
         if hasMorePages {
-          ProgressView()
-            .frame(maxWidth: .infinity)
-            .padding()
-            .onAppear {
-              onLoadMore?()
-            }
+          PaginationFooter(hasError: pageLoadFailed) {
+            onLoadMore?()
+          }
         }
       }
     case .list:
@@ -50,12 +48,9 @@ struct LibraryView: View {
         }
 
         if hasMorePages {
-          ProgressView()
-            .frame(maxWidth: .infinity)
-            .padding()
-            .onAppear {
-              onLoadMore?()
-            }
+          PaginationFooter(hasError: pageLoadFailed) {
+            onLoadMore?()
+          }
         }
       }
     }
