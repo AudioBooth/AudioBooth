@@ -1,6 +1,7 @@
 import API
 import Combine
 import Foundation
+import Models
 import SwiftUI
 
 final class UserPreferences: ObservableObject {
@@ -65,6 +66,12 @@ final class UserPreferences: ObservableObject {
 
   @AppStorage("lockScreenNextPreviousUsesChapters")
   var lockScreenNextPreviousUsesChapters: Bool = false
+
+  @AppStorage("headphonePreviousAction")
+  var headphonePreviousAction: HeadphoneAction = .default
+
+  @AppStorage("headphoneNextAction")
+  var headphoneNextAction: HeadphoneAction = .default
 
   @AppStorage("lockScreenAllowPlaybackPositionChange")
   var lockScreenAllowPlaybackPositionChange: Bool = true

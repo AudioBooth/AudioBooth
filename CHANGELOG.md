@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Headphone controls - New settings page to override the next and previous gestures on your headphones, including an action to add a bookmark at the current position
+- Get current item shortcut - New Siri Shortcut and App Intent that returns the currently playing item with its chapter and playback position
 
 ### Changed
 

@@ -334,6 +334,73 @@ extension PlayerManager {
       userPreferences.lockScreenAllowPlaybackPositionChange
   }
 
+  /// Routes a headphone / remote "next" or "previous" gesture to the action the
+  /// user has configured for it, falling back to the app's built-in skip
+  /// behavior when no override is set.
+  private func handleHeadphoneGesture(_ gesture: HeadphoneGesture) {
+    guard let current else { return }
+
+    let action = gesture == .next
+      ? userPreferences.headphoneNextAction
+      : userPreferences.headphonePreviousAction
+
+    let hasChapters = !(current.chapters?.chapters.isEmpty ?? true)
+
+    let command = HeadphoneActionResolver.resolve(
+      action: action,
+      gesture: gesture,
+      usesChapters: userPreferences.lockScreenNextPreviousUsesChapters,
+      hasChapters: hasChapters
+    )
+
+    switch command {
+    case .skipForward:
+      current.onSkipForwardTapped(seconds: userPreferences.skipForwardInterval)
+    case .skipBackward:
+      current.onSkipBackwardTapped(seconds: userPreferences.skipBackwardInterval)
+    case .nextChapter:
+      current.chapters?.onNextChapterTapped()
+    case .previousChapter:
+      current.chapters?.onPreviousChapterTapped()
+    case .addBookmark:
+      addBookmarkAtCurrentPosition()
+    case .none:
+      break
+    }
+  }
+
+  /// Creates a bookmark at the current playback position with an empty title,
+  /// giving haptic and toast feedback since the gesture has no visible UI.
+  func addBookmarkAtCurrentPosition() {
+    guard
+      let current = current as? BookPlayerModel,
+      let time = current.getCurrentTime()
+    else { return }
+
+    let bookID = current.id
+    let bookTitle = current.title
+
+    Haptics.impact(.medium)
+
+    Task {
+      do {
+        _ = try await BookmarkSyncQueue.shared.create(
+          bookID: bookID,
+          title: "",
+          time: time
+        )
+        await MainActor.run {
+          Toast(success: "Bookmark added to \(bookTitle)").show()
+        }
+      } catch {
+        AppLogger.player.error("Failed to add bookmark from headphone gesture: \(error)")
+        await MainActor.run {
+          Toast(error: "Couldn't add bookmark").show()
+        }
+      }
+    }
+  }
+
   private func setupRemoteCommandCenter() {
     do {
       let audioSession = AVAudioSession.sharedInstance()
@@ -432,28 +499,17 @@ extension PlayerManager {
 
     commandCenter.nextTrackCommand.isEnabled = true
     commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-      guard let self, let current else { return .commandFailed }
+      guard let self, current != nil else { return .commandFailed }
 
-      if userPreferences.lockScreenNextPreviousUsesChapters, let chapters = current.chapters, !chapters.chapters.isEmpty
-      {
-        chapters.onNextChapterTapped()
-      } else {
-        current.onSkipForwardTapped(seconds: userPreferences.skipForwardInterval)
-      }
+      handleHeadphoneGesture(.next)
       return .success
     }
 
     commandCenter.previousTrackCommand.isEnabled = true
     commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-      guard let self, let current else { return .commandFailed }
+      guard let self, current != nil else { return .commandFailed }
 
-      if userPreferences.lockScreenNextPreviousUsesChapters, let chapters = current.chapters, !chapters.chapters.isEmpty
-      {
-        chapters.onPreviousChapterTapped()
-      } else {
-        current.onSkipBackwardTapped(seconds: userPreferences.skipBackwardInterval)
-      }
-
+      handleHeadphoneGesture(.previous)
       return .success
     }
 

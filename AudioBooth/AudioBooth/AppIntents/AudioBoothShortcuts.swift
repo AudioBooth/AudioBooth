@@ -112,5 +112,16 @@ struct AudioBoothShortcuts: AppShortcutsProvider {
       shortTitle: "Add bookmark",
       systemImageName: "bookmark"
     )
+
+    AppShortcut(
+      intent: GetCurrentItemIntent(),
+      phrases: [
+        "What's playing in \(.applicationName)",
+        "Get current item in \(.applicationName)",
+        "Get the current book in \(.applicationName)",
+      ],
+      shortTitle: "Current item",
+      systemImageName: "book"
+    )
   }
 }
