@@ -1,3 +1,4 @@
+import Models
 import SwiftUI
 
 struct PlayerPreferencesView: View {
@@ -150,7 +151,7 @@ struct PlayerPreferencesView: View {
           PreferenceRow(
             systemImage: "headphones",
             tint: .teal,
-            title: "Headphone Controls",
+            title: Text("Headphone Controls"),
             subtitle: headphoneSubtitle
           )
         }
