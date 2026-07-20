@@ -41,7 +41,7 @@ public final class SeriesService {
       )
     }
 
-    guard let library = audiobookshelf.libraries.current else {
+    guard let library = await audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "No library selected. Please select a library first."
       )

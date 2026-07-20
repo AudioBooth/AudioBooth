@@ -22,7 +22,8 @@ public final class BooksService {
       )
     }
 
-    let library = libraryID ?? audiobookshelf.libraries.current?.id
+    let currentLibraryID = await audiobookshelf.libraries.current?.id
+    let library = libraryID ?? currentLibraryID
     guard let library else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "No library selected. Please select a library first."

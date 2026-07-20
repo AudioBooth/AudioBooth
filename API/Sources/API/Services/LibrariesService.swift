@@ -3,7 +3,8 @@ import Foundation
 import Logging
 import Nuke
 
-public final class LibrariesService: ObservableObject, @unchecked Sendable {
+@MainActor
+public final class LibrariesService: ObservableObject {
   private let audiobookshelf: Audiobookshelf
 
   enum Keys {
@@ -52,8 +53,16 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
 
   public var current: Library? {
     get {
-      guard let data = audiobookshelf.authentication.server?.storage.data(forKey: Keys.library) else { return nil }
-      return try? JSONDecoder().decode(Library.self, from: data)
+      guard let server = audiobookshelf.authentication.server,
+        let data = server.storage.data(forKey: Keys.library),
+        var library = try? JSONDecoder().decode(Library.self, from: data)
+      else { return nil }
+
+      if library.serverID.isEmpty {
+        library.serverID = server.id
+      }
+
+      return library
     }
     set {
       objectWillChange.send()
@@ -100,7 +109,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
           return [:]
         }
 
-        var headers = server.customHeaders
+        var headers = await server.customHeaders
         headers["Authorization"] = credentials.bearer
         return headers
       }
@@ -124,10 +133,15 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
 
     do {
       let response = try await networkService.send(request)
-      let fetched = response.value.libraries
       let activeServerID = audiobookshelf.authentication.server?.id
+      let targetServerID = serverID ?? activeServerID ?? ""
+      let fetched = response.value.libraries.map { library in
+        var stamped = library
+        stamped.serverID = targetServerID
+        return stamped
+      }
       if serverID == nil || serverID == activeServerID {
-        await MainActor.run { libraries = fetched }
+        libraries = fetched
       }
       return fetched
     } catch {

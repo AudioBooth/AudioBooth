@@ -5,8 +5,9 @@ public struct Session {
   public let id: String
   public let url: URL
 
+  @MainActor
   public init?(from playSession: PlaySession) {
-    guard let serverURL = Audiobookshelf.shared.authentication.serverURL else {
+    guard let serverURL = Audiobookshelf.shared.serverURL else {
       return nil
     }
 

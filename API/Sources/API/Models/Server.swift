@@ -2,16 +2,17 @@ import Combine
 import Foundation
 
 @Observable
-public final class Server: @unchecked Sendable {
-  public let id: String
-  public let baseURL: URL
+@MainActor
+public final class Server {
+  nonisolated public let id: String
+  nonisolated public let baseURL: URL
   public internal(set) var token: Credentials
   public internal(set) var customHeaders: [String: String]
   public internal(set) var alias: String?
   public internal(set) var alternativeURL: URL?
   public var urlMode: URLMode
 
-  public enum URLMode {
+  public enum URLMode: Sendable {
     case primary
     case alternative
     case fallback
@@ -25,7 +26,7 @@ public final class Server: @unchecked Sendable {
     isUsingAlternativeURL ? alternativeURL ?? baseURL : baseURL
   }
 
-  public enum Status {
+  public enum Status: Sendable {
     case connected
     case connectionError
     case authenticationError
@@ -108,6 +109,7 @@ extension Server {
       set { fatalError() }
     }
 
+    @MainActor
     public static subscript(
       _enclosingInstance instance: Server,
       wrapped wrappedKeyPath: ReferenceWritableKeyPath<Server, Value>,

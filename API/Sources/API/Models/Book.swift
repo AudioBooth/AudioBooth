@@ -19,6 +19,7 @@ public struct Book: Codable, Sendable {
     case collapsedSeries
   }
 
+  @MainActor
   public func coverURL(raw: Bool = false) -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     var url = serverURL.appendingPathComponent("api/items/\(id)/cover")
@@ -34,6 +35,7 @@ public struct Book: Codable, Sendable {
     return url
   }
 
+  @MainActor
   public var ebookURL: URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     return serverURL.appendingPathComponent("api/items/\(id)/ebook")
@@ -161,6 +163,7 @@ extension Book {
     public let numBooks: Int
     public let libraryItemIds: [String]
 
+    @MainActor
     public func coverURLs(limit: Int = 3) -> [URL] {
       guard let serverURL = Audiobookshelf.shared.serverURL else { return [] }
       return libraryItemIds.prefix(limit).map { itemID in

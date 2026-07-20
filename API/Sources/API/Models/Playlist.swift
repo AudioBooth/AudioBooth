@@ -21,6 +21,7 @@ public struct Playlist: Codable, Sendable, CollectionLike {
     items.count
   }
 
+  @MainActor
   public var covers: [URL] {
     items.compactMap { $0.coverURL }
   }
@@ -60,6 +61,7 @@ public struct PlaylistItem: Sendable {
     case podcast(Podcast)
   }
 
+  @MainActor
   public var coverURL: URL? {
     switch libraryItem {
     case .book(let book): book.coverURL()

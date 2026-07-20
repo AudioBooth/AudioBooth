@@ -4,7 +4,7 @@ public struct Library: Codable, Sendable, Equatable {
   public let id: String
   public let name: String
   public let mediaType: MediaType
-  public let serverID: String
+  public internal(set) var serverID: String
 
   public enum MediaType: String, Codable, Sendable, Equatable {
     case book
@@ -15,6 +15,7 @@ public struct Library: Codable, Sendable, Equatable {
     case id
     case name
     case mediaType
+    case serverID
   }
 
   public init(from decoder: Decoder) throws {
@@ -22,7 +23,7 @@ public struct Library: Codable, Sendable, Equatable {
     id = try container.decode(String.self, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
     mediaType = try container.decodeIfPresent(MediaType.self, forKey: .mediaType) ?? .book
-    serverID = Audiobookshelf.shared.authentication.server?.id ?? ""
+    serverID = try container.decodeIfPresent(String.self, forKey: .serverID) ?? ""
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -30,5 +31,6 @@ public struct Library: Codable, Sendable, Equatable {
     try container.encode(id, forKey: .id)
     try container.encode(name, forKey: .name)
     try container.encode(mediaType, forKey: .mediaType)
+    try container.encode(serverID, forKey: .serverID)
   }
 }

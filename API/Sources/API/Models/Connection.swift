@@ -27,6 +27,7 @@ public struct Connection: Codable, Sendable {
     self.isUsingAlternativeURL = isUsingAlternativeURL
   }
 
+  @MainActor
   public init(_ server: Server) {
     self.init(
       id: server.id,

@@ -10,6 +10,7 @@ public struct Author: Codable, Sendable {
   public let numBooks: Int?
   public let imagePath: String?
 
+  @MainActor
   public var imageURL: URL? {
     guard imagePath != nil, let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     return serverURL.appendingPathComponent("api/authors/\(id)/image")

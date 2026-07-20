@@ -2,10 +2,11 @@ import Foundation
 import Nuke
 @_exported import NukeUI
 
-public final class Audiobookshelf: @unchecked Sendable {
+@MainActor
+public final class Audiobookshelf {
   public static let shared = Audiobookshelf()
 
-  var networkService: NetworkService?
+  nonisolated(unsafe) var networkService: NetworkService?
 
   public lazy var authentication = AuthenticationService(audiobookshelf: self)
   public lazy var libraries = LibrariesService(audiobookshelf: self)
@@ -52,14 +53,12 @@ public final class Audiobookshelf: @unchecked Sendable {
     networkService = NetworkService(
       server: server
     ) { [weak self] in
-      guard let self = self,
-        let server = self.authentication.server
-      else { return [:] }
+      guard let self, let server = await self.authentication.server else { return [:] }
 
       let freshToken = try? await server.freshToken
       guard let credentials = freshToken else { return [:] }
 
-      var headers = server.customHeaders
+      var headers = await server.customHeaders
       headers["Authorization"] = credentials.bearer
       return headers
     }

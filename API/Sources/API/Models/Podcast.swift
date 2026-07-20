@@ -19,6 +19,7 @@ public struct Podcast: Codable, Sendable {
     case recentEpisode
   }
 
+  @MainActor
   public func coverURL(raw: Bool = false) -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     var url = serverURL.appendingPathComponent("api/items/\(id)/cover")

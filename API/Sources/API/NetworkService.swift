@@ -74,9 +74,9 @@ struct NetworkResponse<T: Decodable> {
   let value: T
 }
 
-final class NetworkService {
+final class NetworkService: @unchecked Sendable {
   private let baseURL: URL?
-  private let headersProvider: () async -> [String: String]
+  private let headersProvider: @Sendable () async -> [String: String]
   private weak var server: Server?
 
   private let session: URLSessionProtocol = {
@@ -129,7 +129,7 @@ final class NetworkService {
   init(
     baseURL: URL? = nil,
     server: Server? = nil,
-    headersProvider: @escaping () async -> [String: String] = { [:] }
+    headersProvider: @escaping @Sendable () async -> [String: String] = { [:] }
   ) {
     self.baseURL = baseURL
     self.server = server
@@ -153,25 +153,31 @@ final class NetworkService {
       guard let urlError = error as? URLError,
         Self.fallbackURLErrorCodes.contains(urlError.code),
         let server,
-        server.alternativeURL != nil
+        await server.alternativeURL != nil
       else {
         throw error
       }
 
-      let previousMode = server.urlMode
-      server.urlMode = previousMode == .primary ? .fallback : .primary
+      let previousMode = await server.urlMode
+      let nextMode: Server.URLMode = previousMode == .primary ? .fallback : .primary
+      await MainActor.run { server.urlMode = nextMode }
 
       AppLogger.network.info(
-        "Request failed with network error, retrying with \(server.urlMode == .fallback ? "alternative" : "primary") URL"
+        "Request failed with network error, retrying with \(nextMode == .fallback ? "alternative" : "primary") URL"
       )
 
       do {
         return try await performRequest(request)
       } catch {
-        server.urlMode = previousMode
+        await MainActor.run { server.urlMode = previousMode }
         throw error
       }
     }
+  }
+
+  private func updateStatus(_ status: Server.Status) async {
+    guard let server else { return }
+    await MainActor.run { server.status = status }
   }
 
   private func performRequest<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
@@ -188,7 +194,7 @@ final class NetworkService {
 
       guard let httpResponse = response as? HTTPURLResponse else {
         AppLogger.network.error("Received non-HTTP response")
-        server?.status = .connectionError
+        await updateStatus(.connectionError)
         throw NetworkError.invalidResponse
       }
 
@@ -198,19 +204,21 @@ final class NetworkService {
           "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
         )
 
-        if httpResponse.statusCode == 401, let server, server.canAttemptRefresh {
-          server.expireAccessToken()
-          server.status = .connectionError
+        if httpResponse.statusCode == 401, let server, await server.canAttemptRefresh {
+          await MainActor.run {
+            server.expireAccessToken()
+            server.status = .connectionError
+          }
         } else if httpResponse.statusCode == 401 {
-          server?.status = .authenticationError
+          await updateStatus(.authenticationError)
         } else {
-          server?.status = .connectionError
+          await updateStatus(.connectionError)
         }
 
         throw NetworkError.httpError(statusCode: httpResponse.statusCode, message: responseBody)
       }
 
-      server?.status = .connected
+      await updateStatus(.connected)
 
       let decodedValue: T
       if T.self == Data.self {
@@ -258,7 +266,7 @@ final class NetworkService {
     } catch {
       if let urlError = error as? URLError, urlError.code != .cancelled {
         AppLogger.network.error("Network request failed: \(urlError.localizedDescription)")
-        server?.status = .connectionError
+        await updateStatus(.connectionError)
         if urlError.code == .notConnectedToInternet, let url = urlRequest.url, url.isIPAddress {
           throw NetworkError.localNetworkPermission
         }
@@ -272,7 +280,9 @@ final class NetworkService {
   ) async throws
     -> URLRequest
   {
-    guard let baseURL = baseURL ?? server?.activeURL else {
+    let serverURL = await server?.activeURL
+
+    guard let baseURL = baseURL ?? serverURL else {
       throw NetworkError.invalidResponse
     }
 
@@ -320,6 +330,35 @@ private extension URL {
   }
 }
 
+final class RedactedHosts: @unchecked Sendable {
+  static let shared = RedactedHosts()
+
+  private let lock = NSLock()
+  private var primaryHost: String?
+  private var alternativeHost: String?
+
+  func update(primaryHost: String?, alternativeHost: String?) {
+    lock.lock()
+    defer { lock.unlock() }
+    self.primaryHost = primaryHost
+    self.alternativeHost = alternativeHost
+  }
+
+  func replacement(for host: String?) -> String {
+    lock.lock()
+    defer { lock.unlock() }
+
+    guard let host else { return "abs.invalid" }
+
+    if host == alternativeHost {
+      return "abs.alternative"
+    } else if host == primaryHost {
+      return "abs.primary"
+    }
+    return "abs.invalid"
+  }
+}
+
 extension URL {
   public var redacted: URL {
     var components = URLComponents(url: self, resolvingAgainstBaseURL: false)
@@ -330,13 +369,7 @@ extension URL {
   }
 
   static func redactedHost(for host: String?) -> String {
-    let server = Audiobookshelf.shared.authentication.server
-    if let server, host == server.alternativeURL?.host {
-      return "abs.alternative"
-    } else if let server, host == server.baseURL.host {
-      return "abs.primary"
-    }
-    return "abs.invalid"
+    RedactedHosts.shared.replacement(for: host)
   }
 }
 

@@ -3,6 +3,7 @@ import Logging
 import Nuke
 import SimpleKeychain
 
+@MainActor
 public final class AuthenticationService: ObservableObject {
   private let audiobookshelf: Audiobookshelf
   private let keychain = SimpleKeychain(service: "me.jgrenier.AudioBS")
@@ -32,6 +33,7 @@ public final class AuthenticationService: ObservableObject {
       } else {
         UserDefaults.standard.removeObject(forKey: Keys.activeServerID)
       }
+      refreshRedactedHosts()
       audiobookshelf.setupNetworkService()
     }
   }
@@ -52,6 +54,8 @@ public final class AuthenticationService: ObservableObject {
         self.server = servers[activeServerID]
       }
     }
+
+    refreshRedactedHosts()
   }
 
   public func login(
@@ -200,7 +204,7 @@ public final class AuthenticationService: ObservableObject {
     let altService = NetworkService(baseURL: url, server: server) {
       let freshToken = try? await server.freshToken
       guard let credentials = freshToken else { return [:] }
-      var headers = server.customHeaders
+      var headers = await server.customHeaders
       headers["Authorization"] = credentials.bearer
       return headers
     }
@@ -212,12 +216,20 @@ public final class AuthenticationService: ObservableObject {
     guard let server = servers[serverID] else { return }
     server.alternativeURL = url
     connections[serverID] = Connection(server)
+    refreshRedactedHosts()
   }
 
   public func setUsingAlternativeURL(_ serverID: String, isUsing: Bool) {
     guard let server = servers[serverID] else { return }
     server.urlMode = isUsing ? .alternative : .primary
     connections[serverID] = Connection(server)
+  }
+
+  func refreshRedactedHosts() {
+    RedactedHosts.shared.update(
+      primaryHost: server?.baseURL.host,
+      alternativeHost: server?.alternativeURL?.host
+    )
   }
 
   public func updateAlias(_ serverID: String, alias: String?) {
