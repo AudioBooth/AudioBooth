@@ -10,6 +10,7 @@ final class AuthorsPageModel: AuthorsPage.Model {
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 100
+  private var loadTask: Task<Void, Never>?
 
   init() {
     super.init(
@@ -20,13 +21,16 @@ final class AuthorsPageModel: AuthorsPage.Model {
   }
 
   override func onAppear() {
-    guard sections.isEmpty else { return }
-    Task {
+    guard sections.isEmpty, loadTask == nil else { return }
+    loadTask = Task {
       await loadAuthors()
     }
   }
 
   override func refresh() async {
+    loadTask?.cancel()
+    loadTask = nil
+    isLoadingNextPage = false
     currentPage = 0
     hasMorePages = true
     allAuthors.removeAll()
@@ -50,6 +54,12 @@ final class AuthorsPageModel: AuthorsPage.Model {
         ascending: preferences.authorsSortAscending
       )
 
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       let authorCards = response.results.map { AuthorCardModel(author: $0) }
 
       allAuthors.append(contentsOf: authorCards)
@@ -59,6 +69,12 @@ final class AuthorsPageModel: AuthorsPage.Model {
       hasMorePages = (currentPage * itemsPerPage) < response.total
 
     } catch {
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       AppLogger.viewModel.error("Failed to fetch authors: \(error)")
       pageLoadFailed = true
       if currentPage == 0 {
@@ -68,12 +84,14 @@ final class AuthorsPageModel: AuthorsPage.Model {
 
     isLoadingNextPage = false
     isLoading = false
+    loadTask = nil
     try? await Task.sleep(for: .milliseconds(500))
     checkTargetLetterAfterLoad()
   }
 
   override func loadNextPageIfNeeded() {
-    Task {
+    guard loadTask == nil else { return }
+    loadTask = Task {
       await loadAuthors()
     }
   }

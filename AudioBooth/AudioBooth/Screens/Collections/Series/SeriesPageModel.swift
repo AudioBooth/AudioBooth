@@ -11,6 +11,7 @@ final class SeriesPageModel: SeriesPage.Model {
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 50
+  private var loadTask: Task<Void, Never>?
 
   init() {
     super.init(hasMorePages: true, currentSort: .name, ascending: true)
@@ -34,12 +35,16 @@ final class SeriesPageModel: SeriesPage.Model {
   }
 
   override func onAppear() {
-    Task {
+    guard loadTask == nil else { return }
+    loadTask = Task {
       await loadSeries()
     }
   }
 
   override func refresh() async {
+    loadTask?.cancel()
+    loadTask = nil
+    isLoadingNextPage = false
     currentPage = 0
     self.hasMorePages = true
     fetchedSeries.removeAll()
@@ -62,6 +67,12 @@ final class SeriesPageModel: SeriesPage.Model {
         ascending: ascending
       )
 
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       let ignorePrefix = Audiobookshelf.shared.authentication.server?.sortingIgnorePrefix ?? false
       let seriesCards = response.results.map { series in
         SeriesCardModel(series: series, sortingIgnorePrefix: ignorePrefix)
@@ -79,6 +90,12 @@ final class SeriesPageModel: SeriesPage.Model {
       self.hasMorePages = (currentPage * itemsPerPage) < response.total
 
     } catch {
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       AppLogger.viewModel.error("Failed to fetch series: \(error)")
       pageLoadFailed = true
       if currentPage == 0 {
@@ -89,10 +106,12 @@ final class SeriesPageModel: SeriesPage.Model {
 
     isLoadingNextPage = false
     isLoading = false
+    loadTask = nil
   }
 
   override func loadNextPageIfNeeded() {
-    Task {
+    guard loadTask == nil else { return }
+    loadTask = Task {
       await loadSeries()
     }
   }

@@ -11,6 +11,7 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 100
+  private var loadTask: Task<Void, Never>?
 
   init() {
     let preferences = UserPreferences.shared
@@ -49,15 +50,18 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
   }
 
   override func onAppear() {
-    guard fetched.isEmpty else { return }
+    guard fetched.isEmpty, loadTask == nil else { return }
 
-    Task {
+    loadTask = Task {
       await loadPodcasts()
     }
   }
 
   override func refresh() async {
+    loadTask?.cancel()
+    loadTask = nil
     isLoading = true
+    isLoadingNextPage = false
     currentPage = 0
     hasMorePages = true
     fetched.removeAll()
@@ -100,7 +104,8 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
   }
 
   override func loadNextPageIfNeeded() {
-    Task {
+    guard loadTask == nil else { return }
+    loadTask = Task {
       await loadPodcasts()
     }
   }
@@ -162,6 +167,12 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
         filter: filterString
       )
 
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       let newItems: [LibraryView.Item] = response.results.map { podcast in
         .book(PodcastCardModel(podcast, sortBy: sortBy))
       }
@@ -177,6 +188,12 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
       currentPage += 1
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       if currentPage == 0 {
         fetched = []
         items = []
@@ -185,5 +202,6 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
 
     isLoadingNextPage = false
     isLoading = false
+    loadTask = nil
   }
 }

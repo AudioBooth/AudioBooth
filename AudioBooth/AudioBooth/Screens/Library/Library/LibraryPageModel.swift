@@ -15,6 +15,7 @@ final class LibraryPageModel: LibraryPage.Model {
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 100
+  private var loadTask: Task<Void, Never>?
 
   init() {
     let preferences = UserPreferences.shared
@@ -99,16 +100,19 @@ final class LibraryPageModel: LibraryPage.Model {
 
   override func onAppear() {
     updateActions()
-    guard fetched.isEmpty else { return }
+    guard fetched.isEmpty, loadTask == nil else { return }
 
-    Task {
+    loadTask = Task {
       await loadBooks()
     }
   }
 
   override func refresh() async {
+    loadTask?.cancel()
+    loadTask = nil
     exitSelection()
     isLoading = true
+    isLoadingNextPage = false
     currentPage = 0
     hasMorePages = true
     fetched.removeAll()
@@ -160,7 +164,8 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func loadNextPageIfNeeded() {
-    Task {
+    guard loadTask == nil else { return }
+    loadTask = Task {
       await loadBooks()
     }
   }
@@ -388,6 +393,12 @@ final class LibraryPageModel: LibraryPage.Model {
         libraryID: libraryID
       )
 
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       var newItems = [LibraryView.Item]()
       let ignorePrefix = isRoot && (audiobookshelf.authentication.server?.sortingIgnorePrefix ?? false)
       for book in response.results {
@@ -423,6 +434,12 @@ final class LibraryPageModel: LibraryPage.Model {
 
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
+      guard !Task.isCancelled else {
+        isLoadingNextPage = false
+        isLoading = false
+        return
+      }
+
       pageLoadFailed = true
       if currentPage == 0 {
         fetched = []
@@ -433,6 +450,7 @@ final class LibraryPageModel: LibraryPage.Model {
     updateActions()
     isLoadingNextPage = false
     isLoading = false
+    loadTask = nil
   }
 
 }
