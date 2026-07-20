@@ -138,9 +138,16 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
       do {
         switch mode {
         case .playlists:
+          let itemsToRemove = indexSet.map { index -> (libraryItemID: String, episodeID: String?) in
+            let book = books[index]
+            if let podcastID = book.podcastID {
+              return (podcastID, book.id)
+            }
+            return (book.id, nil)
+          }
           let updatedPlaylist = try await audiobookshelf.playlists.removeItems(
             playlistID: collectionID,
-            items: idsToRemove
+            items: itemsToRemove
           )
 
           if updatedPlaylist.items.isEmpty {
