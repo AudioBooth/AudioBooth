@@ -260,7 +260,7 @@ public final class LibrariesService: ObservableObject {
       )
     }
 
-    struct Response: Codable {
+    struct Response: Decodable {
       let episodes: [RecentEpisode]
     }
 

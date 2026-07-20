@@ -1,6 +1,6 @@
 import Foundation
 
-public struct RecentEpisode: Codable, Sendable {
+public struct RecentEpisode: Decodable, Sendable {
   public let libraryItemID: String
   public let podcastTitle: String
   public let podcastAuthor: String?
@@ -30,12 +30,6 @@ public struct RecentEpisode: Codable, Sendable {
     let metadataContainer = try podcastContainer.nestedContainer(keyedBy: MetadataKeys.self, forKey: .metadata)
     podcastTitle = try metadataContainer.decode(String.self, forKey: .title)
     podcastAuthor = try metadataContainer.decodeIfPresent(String.self, forKey: .author)
-  }
-
-  public func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(libraryItemID, forKey: .libraryItemID)
-    try episode.encode(to: encoder)
   }
 
   @MainActor

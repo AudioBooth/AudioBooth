@@ -43,6 +43,7 @@ public struct Series: Codable, Sendable {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(id, forKey: .id)
     try container.encode(name, forKey: .name)
+    try container.encodeIfPresent(nameIgnorePrefix, forKey: .nameIgnorePrefix)
     try container.encodeIfPresent(addedAt, forKey: .addedAt)
     try container.encodeIfPresent(totalDuration, forKey: .totalDuration)
     try container.encode(books, forKey: .books)
