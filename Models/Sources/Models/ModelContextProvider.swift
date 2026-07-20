@@ -58,6 +58,7 @@ public final class ModelContextProvider {
       contexts[serverID] = container.mainContext
     }
     activeServerID = serverID
+    MediaProgress.reloadCache()
   }
 
   private func createContainer(for serverID: String) throws -> ModelContainer {
