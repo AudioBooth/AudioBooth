@@ -79,7 +79,7 @@ final class NetworkService: @unchecked Sendable {
   private let headersProvider: @Sendable () async -> [String: String]
   private weak var server: Server?
 
-  private let session: URLSessionProtocol = {
+  private static let session: URLSessionProtocol = {
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = 30
     config.timeoutIntervalForResource = 120
@@ -94,7 +94,7 @@ final class NetworkService: @unchecked Sendable {
     return URLSessionProxy(configuration: config)
   }()
 
-  private let discretionarySession: URLSessionProtocol = {
+  private static let discretionarySession: URLSessionProtocol = {
     let discretionaryConfig = URLSessionConfiguration.default
     discretionaryConfig.timeoutIntervalForRequest = 30
     discretionaryConfig.timeoutIntervalForResource = 60
@@ -187,7 +187,7 @@ final class NetworkService: @unchecked Sendable {
       "Sending \(urlRequest.httpMethod ?? "GET") request to: \(urlRequest.url?.absoluteString ?? "unknown")"
     )
 
-    let selectedSession = request.discretionary ? discretionarySession : session
+    let selectedSession = request.discretionary ? Self.discretionarySession : Self.session
 
     do {
       let (data, response) = try await selectedSession.data(for: urlRequest)
