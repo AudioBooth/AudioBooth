@@ -142,7 +142,6 @@ public final class AuthenticationService: ObservableObject {
     AppLogger.authentication.debug(
       "Query parameters: \(query.keys.joined(separator: ", "))"
     )
-    AppLogger.authentication.debug("Cookie header: \(cookieString)")
 
     let request = NetworkRequest<Authorize>(
       path: "/auth/openid/callback",
