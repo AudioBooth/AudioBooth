@@ -86,7 +86,7 @@ extension PlaybackSession {
   public static func fetchUnsynced() throws -> [PlaybackSession] {
     let context = ModelContextProvider.shared.context
     let predicate = #Predicate<PlaybackSession> { session in
-      session.pendingListeningTime > 0
+      session.pendingListeningTime > 0 && session.baseURL == nil
     }
     let descriptor = FetchDescriptor<PlaybackSession>(predicate: predicate)
     return try context.fetch(descriptor)

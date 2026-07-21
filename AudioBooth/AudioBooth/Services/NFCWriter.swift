@@ -79,7 +79,6 @@ class NFCWriter: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate {
       }
 
       session.invalidate()
-      continuation?.resume()
     }
   }
 
@@ -87,5 +86,6 @@ class NFCWriter: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate {
 
   func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
     continuation?.resume()
+    continuation = nil
   }
 }

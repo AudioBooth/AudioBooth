@@ -86,6 +86,15 @@ final class OfflineListViewModel: OfflineListView.Model {
   }
 
   override func onReorder(from source: IndexSet, to destination: Int) {
+    guard
+      searchText.trimmingCharacters(in: .whitespaces).isEmpty,
+      let lowerBound = source.min(),
+      let upperBound = source.max(),
+      lowerBound >= 0,
+      upperBound < filteredBooks.count,
+      destination <= filteredBooks.count
+    else { return }
+
     isReordering = true
 
     var reorderedBooks = filteredBooks
@@ -100,10 +109,9 @@ final class OfflineListViewModel: OfflineListView.Model {
   }
 
   override func onDelete(at indexSet: IndexSet) {
-    let flatItems = buildFlatItems()
     let idsToDelete = indexSet.compactMap { index -> String? in
-      guard index < flatItems.count else { return nil }
-      return flatItems[index].id
+      guard index < items.count else { return nil }
+      return items[index].id
     }
 
     Task {
@@ -307,12 +315,6 @@ extension OfflineListViewModel {
       ),
       author: episode.podcast?.title
     )
-  }
-
-  private func buildFlatItems() -> [OfflineListItem] {
-    let bookItems: [OfflineListItem] = filteredBooks.map { .book(BookCardModel($0)) }
-    let episodeItems: [OfflineListItem] = filteredEpisodes.map { .episode(makeEpisodeCardModel($0)) }
-    return bookItems + episodeItems
   }
 }
 
