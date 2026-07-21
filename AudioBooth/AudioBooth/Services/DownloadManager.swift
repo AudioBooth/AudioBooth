@@ -299,11 +299,22 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
   private let maxRetryAttempts = 3
 
-  private var currentTrack: URLSessionDownloadTask?
-  private var continuation: CheckedContinuation<Void, Error>?
+  private struct FileDownload {
+    let request: URLRequest
+    let expectedSize: Int64
+    let destination: URL
+  }
+
+  private struct ActiveDownload {
+    let file: FileDownload
+    let attempt: Int
+    let task: URLSessionDownloadTask
+  }
+
+  private var activeDownloads: [Int: ActiveDownload] = [:]
+  private var taskBytesWritten: [Int: Int64] = [:]
+  private var batchContinuation: CheckedContinuation<Void, Error>?
   private let continuationLock = NSLock()
-  private var trackDestination: URL?
-  private var lastResumeData: Data?
 
   private lazy var downloadSession: URLSession = {
     let config = URLSessionConfiguration.background(
@@ -361,7 +372,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   override func cancel() {
     AppLogger.download.info("Cancelling download for book: \(bookID)")
     super.cancel()
-    currentTrack?.cancel()
+    completeBatch(with: CancellationError())
     progressSubject.send(completion: .finished)
 
     Task {
@@ -482,7 +493,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     AppLogger.download.info("Downloading ebook: \(ext)")
     let ebookExpectedSize = book.media.ebookFile?.metadata.size ?? 50_000_000
-    let ebookFile = try await downloadEbook(from: ebookURL, ext: ext, expectedSize: ebookExpectedSize)
+    _ = try await downloadEbook(from: ebookURL, ext: ext, expectedSize: ebookExpectedSize)
 
     guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
       throw URLError(.userAuthenticationRequired)
@@ -493,7 +504,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     try? localBook.save()
     ebookStepCompleted = true
 
-    bytesDownloadedSoFar += diskSize(of: ebookFile)
   }
 
   private func executeEpisodeDownload(podcastID: String, episodeID: String) async throws {
@@ -526,11 +536,13 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let trackURL = context.serverURL.appendingPathComponent("api/items/\(podcastID)/file/\(ino)/download")
     let trackFile = episodeDirectory.appendingPathComponent("0\(ext)")
 
-    try await downloadFile(
-      request: authorizedRequest(url: trackURL, credentials: context.credentials),
-      expectedSize: fileSize,
-      destination: trackFile
-    )
+    try await downloadFiles([
+      FileDownload(
+        request: authorizedRequest(url: trackURL, credentials: context.credentials),
+        expectedSize: fileSize,
+        destination: trackFile
+      )
+    ])
 
     let localPodcast: LocalPodcast
     if let existing = try? LocalPodcast.fetch(podcastID: podcastID) {
@@ -589,6 +601,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     try prepareDownloadDirectory(bookDirectory)
 
     var tracks: [Track] = []
+    var files: [FileDownload] = []
 
     for apiTrack in apiTracks {
       guard !isCancelled else { throw CancellationError() }
@@ -598,19 +611,20 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       let trackURL = context.serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
       let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
 
-      try await downloadFile(
-        request: authorizedRequest(url: trackURL, credentials: context.credentials),
-        expectedSize: apiTrack.metadata?.size ?? 500_000_000,
-        destination: trackFile
+      files.append(
+        FileDownload(
+          request: authorizedRequest(url: trackURL, credentials: context.credentials),
+          expectedSize: apiTrack.metadata?.size ?? 500_000_000,
+          destination: trackFile
+        )
       )
-
-      bytesDownloadedSoFar += diskSize(of: trackFile)
 
       let track = Track(from: apiTrack)
       track.relativePath = URL(string: "\(context.serverID)/audiobooks/\(bookID)/\(apiTrack.index)\(ext)")
       tracks.append(track)
     }
 
+    try await downloadFiles(files)
     return tracks
   }
 
@@ -621,11 +635,13 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     let ebookFile = bookDirectory.appendingPathComponent("\(bookID)\(ext)")
 
-    try await downloadFile(
-      request: authorizedRequest(url: ebookURL, credentials: context.credentials),
-      expectedSize: expectedSize,
-      destination: ebookFile
-    )
+    try await downloadFiles([
+      FileDownload(
+        request: authorizedRequest(url: ebookURL, credentials: context.credentials),
+        expectedSize: expectedSize,
+        destination: ebookFile
+      )
+    ])
 
     return ebookFile
   }
@@ -676,60 +692,137 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     return request
   }
 
-  private func downloadFile(
-    request: URLRequest,
-    expectedSize: Int64,
-    destination: URL
-  ) async throws {
-    var lastError: Error?
-    lastResumeData = nil
+  private func downloadFiles(_ files: [FileDownload]) async throws {
+    guard !files.isEmpty else { return }
+    guard !isCancelled else { throw CancellationError() }
 
-    for attempt in 0..<maxRetryAttempts {
-      guard !isCancelled else { throw CancellationError() }
+    let isStreaming = await MainActor.run {
+      guard let current = PlayerManager.shared.current else { return false }
+      return current.isPlaying && current.downloadState == .notDownloaded
+    }
+    let priority = isStreaming ? URLSessionTask.lowPriority : URLSessionTask.defaultPriority
 
-      if attempt > 0 {
-        let delay = pow(2.0, Double(attempt))
-        AppLogger.download.info(
-          "Retry \(attempt)/\(maxRetryAttempts - 1) after \(delay)s for \(request.url?.lastPathComponent ?? "unknown")"
-        )
-        try await Task.sleep(for: .seconds(delay))
-      }
+    try await withCheckedThrowingContinuation { continuation in
+      continuationLock.lock()
+      batchContinuation = continuation
+      let tasks = files.map { makeDownloadTask(for: $0, attempt: 0, priority: priority) }
+      continuationLock.unlock()
 
-      do {
-        let isStreaming = await MainActor.run {
-          guard let current = PlayerManager.shared.current else { return false }
-          return current.isPlaying && current.downloadState == .notDownloaded
-        }
-        let priority = isStreaming ? URLSessionTask.lowPriority : URLSessionTask.defaultPriority
-
-        try await withCheckedThrowingContinuation { continuation in
-          let downloadTask: URLSessionDownloadTask
-          if let resumeData = lastResumeData {
-            downloadTask = downloadSession.downloadTask(withResumeData: resumeData)
-          } else {
-            downloadTask = downloadSession.downloadTask(with: request)
-          }
-          downloadTask.countOfBytesClientExpectsToReceive = expectedSize > 0 ? expectedSize : 500_000_000
-          downloadTask.priority = priority
-
-          self.currentTrack = downloadTask
-          self.storeContinuation(continuation)
-          self.trackDestination = destination
-          self.lastResumeData = nil
-
-          downloadTask.resume()
-        }
-        return
-      } catch {
-        lastError = error
-        lastResumeData = (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data
-        let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
-        if isCancelled { throw error }
-        AppLogger.download.error("Download attempt \(attempt + 1) failed: \(error.localizedDescription)")
+      AppLogger.download.info("Queued \(tasks.count) background download tasks for book: \(bookID)")
+      for task in tasks {
+        task.resume()
       }
     }
+  }
 
-    throw lastError ?? URLError(.unknown)
+  private func makeDownloadTask(
+    for file: FileDownload,
+    attempt: Int,
+    priority: Float,
+    resumeData: Data? = nil
+  ) -> URLSessionDownloadTask {
+    let task: URLSessionDownloadTask
+    if let resumeData {
+      task = downloadSession.downloadTask(withResumeData: resumeData)
+    } else {
+      task = downloadSession.downloadTask(with: file.request)
+    }
+    task.countOfBytesClientExpectsToReceive = file.expectedSize > 0 ? file.expectedSize : 500_000_000
+    task.priority = priority
+    activeDownloads[task.taskIdentifier] = ActiveDownload(file: file, attempt: attempt, task: task)
+    return task
+  }
+
+  private func retry(_ task: URLSessionDownloadTask, after error: Error) {
+    continuationLock.lock()
+    guard let activeDownload = activeDownloads[task.taskIdentifier] else {
+      continuationLock.unlock()
+      return
+    }
+
+    let nextAttempt = activeDownload.attempt + 1
+    guard nextAttempt < maxRetryAttempts, !isCancelled else {
+      continuationLock.unlock()
+      completeBatch(with: error)
+      return
+    }
+    continuationLock.unlock()
+
+    let delay = pow(2.0, Double(nextAttempt))
+    AppLogger.download.info(
+      "Retry \(nextAttempt)/\(maxRetryAttempts - 1) after \(delay)s for \(activeDownload.file.request.url?.lastPathComponent ?? "unknown")"
+    )
+
+    Task {
+      try? await Task.sleep(for: .seconds(delay))
+      guard !self.isCancelled else {
+        self.completeBatch(with: CancellationError())
+        return
+      }
+
+      let resumeData = (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data
+      let retryTask = self.withDownloadStateLock { () -> URLSessionDownloadTask? in
+        guard self.activeDownloads.removeValue(forKey: task.taskIdentifier) != nil else {
+          return nil
+        }
+        self.taskBytesWritten.removeValue(forKey: task.taskIdentifier)
+        return self.makeDownloadTask(
+          for: activeDownload.file,
+          attempt: nextAttempt,
+          priority: task.priority,
+          resumeData: resumeData
+        )
+      }
+      retryTask?.resume()
+    }
+  }
+
+  private func complete(_ task: URLSessionDownloadTask, at location: URL) throws {
+    continuationLock.lock()
+    guard let activeDownload = activeDownloads[task.taskIdentifier] else {
+      continuationLock.unlock()
+      return
+    }
+    continuationLock.unlock()
+
+    if FileManager.default.fileExists(atPath: activeDownload.file.destination.path) {
+      try FileManager.default.removeItem(at: activeDownload.file.destination)
+    }
+    try FileManager.default.moveItem(at: location, to: activeDownload.file.destination)
+
+    continuationLock.lock()
+    activeDownloads.removeValue(forKey: task.taskIdentifier)
+    taskBytesWritten.removeValue(forKey: task.taskIdentifier)
+    bytesDownloadedSoFar += diskSize(of: activeDownload.file.destination)
+    let continuation = activeDownloads.isEmpty ? takeBatchContinuationLocked() : nil
+    continuationLock.unlock()
+    continuation?.resume()
+  }
+
+  private func completeBatch(with error: Error) {
+    continuationLock.lock()
+    let continuation = takeBatchContinuationLocked()
+    let tasks = activeDownloads.values.map(\.task)
+    activeDownloads.removeAll()
+    taskBytesWritten.removeAll()
+    continuationLock.unlock()
+
+    for task in tasks {
+      task.cancel()
+    }
+    continuation?.resume(throwing: error)
+  }
+
+  private func takeBatchContinuationLocked() -> CheckedContinuation<Void, Error>? {
+    let continuation = batchContinuation
+    batchContinuation = nil
+    return continuation
+  }
+
+  private func withDownloadStateLock<T>(_ body: () -> T) -> T {
+    continuationLock.lock()
+    defer { continuationLock.unlock() }
+    return body()
   }
 
   private func finish(success: Bool, error: Error?) {
@@ -754,38 +847,14 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     }
   }
 
-  private func updateProgress(totalBytesWritten: Int64) {
+  private func updateProgress(taskID: Int, totalBytesWritten: Int64) {
     guard totalBytes > 0 else { return }
-    let totalBytesDownloaded = bytesDownloadedSoFar + totalBytesWritten
+    continuationLock.lock()
+    taskBytesWritten[taskID] = totalBytesWritten
+    let totalBytesDownloaded = bytesDownloadedSoFar + taskBytesWritten.values.reduce(0, +)
+    continuationLock.unlock()
     let newProgress = Double(totalBytesDownloaded) / Double(totalBytes)
     progressSubject.send(min(newProgress, 1.0))
-  }
-
-  private func trackDownloadCompleted(location: URL) throws {
-    guard let destination = trackDestination else {
-      throw URLError(.cannotCreateFile)
-    }
-
-    if FileManager.default.fileExists(atPath: destination.path) {
-      try FileManager.default.removeItem(at: destination)
-    }
-
-    try FileManager.default.moveItem(at: location, to: destination)
-    takeContinuation()?.resume()
-  }
-
-  private func storeContinuation(_ continuation: CheckedContinuation<Void, Error>) {
-    continuationLock.lock()
-    self.continuation = continuation
-    continuationLock.unlock()
-  }
-
-  private func takeContinuation() -> CheckedContinuation<Void, Error>? {
-    continuationLock.lock()
-    defer { continuationLock.unlock() }
-    let taken = continuation
-    continuation = nil
-    return taken
   }
 
 }
@@ -798,18 +867,22 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     totalBytesWritten: Int64,
     totalBytesExpectedToWrite: Int64
   ) {
-    guard currentTrack == downloadTask else { return }
-    updateProgress(totalBytesWritten: totalBytesWritten)
+    updateProgress(taskID: downloadTask.taskIdentifier, totalBytesWritten: totalBytesWritten)
   }
 
   func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
     guard
       let downloadTask = task as? URLSessionDownloadTask,
-      currentTrack == downloadTask,
       let error
     else { return }
 
-    takeContinuation()?.resume(throwing: error)
+    let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
+    if isCancelled {
+      completeBatch(with: error)
+    } else {
+      AppLogger.download.error("Download attempt failed: \(error.localizedDescription)")
+      retry(downloadTask, after: error)
+    }
   }
 
   func urlSession(
@@ -817,8 +890,6 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     downloadTask: URLSessionDownloadTask,
     didFinishDownloadingTo location: URL
   ) {
-    guard currentTrack == downloadTask else { return }
-
     if let httpResponse = downloadTask.response as? HTTPURLResponse {
       guard (200...299).contains(httpResponse.statusCode) else {
         let statusDescription = HTTPURLResponse.localizedString(
@@ -829,15 +900,15 @@ extension DownloadOperation: URLSessionDownloadDelegate {
           .badServerResponse,
           userInfo: [NSLocalizedDescriptionKey: statusDescription]
         )
-        takeContinuation()?.resume(throwing: error)
+        retry(downloadTask, after: error)
         return
       }
     }
 
     do {
-      try trackDownloadCompleted(location: location)
+      try complete(downloadTask, at: location)
     } catch {
-      takeContinuation()?.resume(throwing: error)
+      retry(downloadTask, after: error)
     }
   }
 
