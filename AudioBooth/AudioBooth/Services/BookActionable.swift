@@ -17,7 +17,13 @@ extension BookActionable {
     try await Audiobookshelf.shared.libraries.markAsFinished(bookID: bookID)
 
     if UserPreferences.shared.removeDownloadOnCompletion {
-      if DownloadManager.shared.downloadStates[bookID] == .downloaded {
+      // Deleting while this book is still loaded would leave the player pointing
+      // at files that no longer exist (e.g. re-listening right after finishing).
+      // Skip it here — removeCompleted() sweeps finished downloads on the next
+      // home fetch, once the book is no longer the current player.
+      if DownloadManager.shared.downloadStates[bookID] == .downloaded,
+        PlayerManager.shared.current?.id != bookID
+      {
         removeDownload()
       }
     }
