@@ -11,6 +11,10 @@ final class StorageManager {
   private init() {}
 
   func getDownloadedContentSize() async -> Int64 {
+    await Task.detached { Self.downloadedContentSize() }.value
+  }
+
+  nonisolated private static func downloadedContentSize() -> Int64 {
     guard
       let appGroupURL = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
@@ -33,7 +37,7 @@ final class StorageManager {
         FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
 
         if isDirectory.boolValue {
-          totalSize += calculateDirectorySize(at: directory)
+          totalSize += directory.directorySize
         }
       }
     } catch {
@@ -79,34 +83,32 @@ final class StorageManager {
 
     AppLogger.download.info("Cleaning up downloads unused since \(cutoffDate)")
 
-    let servers = Audiobookshelf.shared.authentication.servers
+    guard let activeServerID = Audiobookshelf.shared.authentication.server?.id else { return }
 
-    for server in servers.values {
-      do {
-        let context = try ModelContextProvider.shared.context(for: server.id)
+    do {
+      let context = try ModelContextProvider.shared.context(for: activeServerID)
 
-        let bookDescriptor = FetchDescriptor<LocalBook>()
-        let allBooks = try context.fetch(bookDescriptor)
-        let downloadedBooks = allBooks.filter { $0.isDownloaded || $0.mediaType.contains(.ebook) }
+      let bookDescriptor = FetchDescriptor<LocalBook>()
+      let allBooks = try context.fetch(bookDescriptor)
+      let downloadedBooks = allBooks.filter { $0.isDownloaded || $0.mediaType.contains(.ebook) }
 
-        for book in downloadedBooks {
-          if book.bookID == currentlyPlaying { continue }
+      for book in downloadedBooks {
+        if book.bookID == currentlyPlaying { continue }
 
-          let bookID = book.bookID
-          let progressPredicate = #Predicate<MediaProgress> { $0.bookID == bookID }
-          let progressDescriptor = FetchDescriptor<MediaProgress>(predicate: progressPredicate)
-          let progress = try? context.fetch(progressDescriptor).first
+        let bookID = book.bookID
+        let progressPredicate = #Predicate<MediaProgress> { $0.bookID == bookID }
+        let progressDescriptor = FetchDescriptor<MediaProgress>(predicate: progressPredicate)
+        let progress = try? context.fetch(progressDescriptor).first
 
-          let lastUsed = progress?.lastPlayedAt ?? book.createdAt
+        let lastUsed = progress?.lastPlayedAt ?? book.createdAt
 
-          if lastUsed < cutoffDate {
-            AppLogger.download.info("Removing unused download: \(book.title) (last used: \(lastUsed))")
-            DownloadManager.shared.deleteDownload(for: book.bookID)
-          }
+        if lastUsed < cutoffDate {
+          AppLogger.download.info("Removing unused download: \(book.title) (last used: \(lastUsed))")
+          DownloadManager.shared.deleteDownload(for: book.bookID)
         }
-      } catch {
-        AppLogger.download.error("Failed to cleanup downloads for server \(server.id): \(error)")
       }
+    } catch {
+      AppLogger.download.error("Failed to cleanup downloads for server \(activeServerID): \(error)")
     }
   }
 
@@ -122,30 +124,6 @@ final class StorageManager {
     URLCache.shared.removeAllCachedResponses()
   }
 
-  private func calculateDirectorySize(at url: URL) -> Int64 {
-    var size: Int64 = 0
-
-    guard
-      let enumerator = FileManager.default.enumerator(
-        at: url,
-        includingPropertiesForKeys: [.fileSizeKey],
-        options: [.skipsHiddenFiles]
-      )
-    else {
-      return 0
-    }
-
-    for case let fileURL as URL in enumerator {
-      do {
-        let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-        size += Int64(resourceValues.fileSize ?? 0)
-      } catch {
-        continue
-      }
-    }
-
-    return size
-  }
 }
 
 extension Int64 {

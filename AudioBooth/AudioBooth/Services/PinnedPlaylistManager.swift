@@ -129,16 +129,7 @@ final class PinnedPlaylistManager: ObservableObject {
   }
 
   private func autoDownloadItems(from playlist: Playlist, mode: AutoDownloadMode) {
-    let networkMonitor = NetworkMonitor.shared
-
-    switch mode {
-    case .off:
-      return
-    case .wifiOnly:
-      guard networkMonitor.interfaceType == .wifi else { return }
-    case .wifiAndCellular:
-      guard networkMonitor.isConnected else { return }
-    }
+    guard mode.isNetworkAllowed else { return }
 
     let downloadManager = DownloadManager.shared
 

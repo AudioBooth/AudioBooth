@@ -1,49 +1,55 @@
 import API
-import AVFoundation
 import Combine
 import Foundation
 import Logging
 import Models
+import Network
 import Pulse
 import SwiftData
+import UIKit
 
 final class DownloadManager: NSObject, ObservableObject {
   static let shared = DownloadManager()
 
-  static let appGroupIdentifier = "group.me.jgrenier.audioBS"
+  nonisolated static let appGroupIdentifier = "group.me.jgrenier.audioBS"
 
-  static let backgroundSessionPrefix = "me.jgrenier.AudioBS.download."
+  nonisolated static let sessionIdentifier = "me.jgrenier.AudioBS.download"
 
-  static let appGroupContainer: URL = {
+  nonisolated static let appGroupContainer: URL = {
     guard let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else {
       fatalError("App group container '\(appGroupIdentifier)' not configured")
     }
     return url
   }()
 
-  static func serverDirectory(serverID: String) -> URL {
+  nonisolated static func serverDirectory(serverID: String) -> URL {
     appGroupContainer.appendingPathComponent(serverID)
   }
 
-  static func audiobookDirectory(serverID: String, bookID: String) -> URL {
-    serverDirectory(serverID: serverID).appendingPathComponent("audiobooks").appendingPathComponent(bookID)
+  nonisolated static func audiobookPath(serverID: String, bookID: String) -> String {
+    "\(serverID)/audiobooks/\(bookID)"
   }
 
-  static func ebookDirectory(serverID: String, bookID: String) -> URL {
-    serverDirectory(serverID: serverID).appendingPathComponent("ebooks").appendingPathComponent(bookID)
+  nonisolated static func ebookPath(serverID: String, bookID: String) -> String {
+    "\(serverID)/ebooks/\(bookID)"
   }
 
-  static func episodeDirectory(serverID: String, podcastID: String, episodeID: String) -> URL {
-    serverDirectory(serverID: serverID)
-      .appendingPathComponent("episodes")
-      .appendingPathComponent(podcastID)
-      .appendingPathComponent(episodeID)
+  nonisolated static func episodePath(serverID: String, podcastID: String, episodeID: String) -> String {
+    "\(serverID)/episodes/\(podcastID)/\(episodeID)"
   }
 
-  enum DownloadType: Equatable {
-    case book
-    case ebook
-    case episode(podcastID: String, episodeID: String)
+  nonisolated static func audiobookDirectory(serverID: String, bookID: String) -> URL {
+    appGroupContainer.appendingPathComponent(audiobookPath(serverID: serverID, bookID: bookID))
+  }
+
+  nonisolated static func ebookDirectory(serverID: String, bookID: String) -> URL {
+    appGroupContainer.appendingPathComponent(ebookPath(serverID: serverID, bookID: bookID))
+  }
+
+  nonisolated static func episodeDirectory(serverID: String, podcastID: String, episodeID: String) -> URL {
+    appGroupContainer.appendingPathComponent(
+      episodePath(serverID: serverID, podcastID: podcastID, episodeID: episodeID)
+    )
   }
 
   enum DownloadState: Equatable {
@@ -52,31 +58,216 @@ final class DownloadManager: NSObject, ObservableObject {
     case downloaded
   }
 
-  struct DownloadInfo {
-    let title: String
-    let coverURL: URL?
-    let duration: Double?
-    let size: Int64?
-    let startedAt: Date
+  struct DownloadFile {
+    let request: URLRequest
+    let expectedSize: Int64
+    let relativePath: String
+    let destination: URL
+    var attempt: Int = 0
+    var task: URLSessionDownloadTask?
   }
 
-  private let operationQueue: OperationQueue = {
-    let queue = OperationQueue()
-    queue.maxConcurrentOperationCount = 1
-    queue.name = "me.jgrenier.AudioBS.downloadQueue"
-    return queue
+  final class ActiveDownload {
+    let itemID: String
+    let kind: DownloadRequest.Kind
+    let podcastID: String?
+    let priority: Float
+    let totalBytes: Int64
+    var files: [String: DownloadFile]
+    var bytesWritten: [String: Int64] = [:]
+    var bytesCompleted: Int64
+
+    init(
+      itemID: String,
+      kind: DownloadRequest.Kind,
+      podcastID: String?,
+      priority: Float,
+      files: [String: DownloadFile],
+      bytesCompleted: Int64,
+      totalBytes: Int64
+    ) {
+      self.itemID = itemID
+      self.kind = kind
+      self.podcastID = podcastID
+      self.priority = priority
+      self.files = files
+      self.bytesCompleted = bytesCompleted
+      self.totalBytes = totalBytes
+    }
+
+    var progress: Double {
+      guard totalBytes > 0 else { return 0 }
+      let downloaded = bytesCompleted + bytesWritten.values.reduce(0, +)
+      return min(Double(downloaded) / Double(totalBytes), 1.0)
+    }
+  }
+
+  private static let maxRetryAttempts = 3
+
+  private var active: ActiveDownload?
+  private var isPreparing = false
+  private var lastProgressPublish = Date.distantPast
+
+  @Published var downloadStates: [String: DownloadState] = [:]
+
+  private var backgroundCompletionHandler: (() -> Void)?
+  private var cancellables: Set<AnyCancellable> = []
+
+  private let sessionDelegate = DownloadSessionDelegate()
+
+  lazy var session: URLSession = {
+    let config = URLSessionConfiguration.background(withIdentifier: Self.sessionIdentifier)
+    config.timeoutIntervalForRequest = 300
+    config.sessionSendsLaunchEvents = true
+    config.isDiscretionary = false
+    config.httpMaximumConnectionsPerHost = 4
+    return URLSession(
+      configuration: config,
+      delegate: URLSessionProxyDelegate(delegate: sessionDelegate),
+      delegateQueue: nil
+    )
   }()
 
-  private var activeOperations: [String: DownloadOperation] = [:]
-  private var progressCancellables: [String: AnyCancellable] = [:]
-  @Published var downloadStates: [String: DownloadState] = [:]
-  @Published var downloadInfos: [String: DownloadInfo] = [:]
+  nonisolated static func itemID(fromRelativePath path: String) -> String? {
+    let components = path.split(separator: "/").map(String.init)
+    guard components.count >= 4 else { return nil }
+    switch components[1] {
+    case "audiobooks", "ebooks": return components[2]
+    case "episodes" where components.count == 5: return components[3]
+    default: return nil
+    }
+  }
 
-  var backgroundCompletionHandler: (() -> Void)?
+  func reattachInFlightDownloads() async {
+    guard active == nil else { return }
+
+    let tasks = await session.allTasks.compactMap { $0 as? URLSessionDownloadTask }
+
+    guard active == nil, !isPreparing else { return }
+
+    var byItem: [String: [URLSessionDownloadTask]] = [:]
+    for task in tasks {
+      guard
+        let path = task.taskDescription,
+        let itemID = Self.itemID(fromRelativePath: path)
+      else { continue }
+      byItem[itemID, default: []].append(task)
+    }
+
+    var candidates: [(request: DownloadRequest, tasks: [URLSessionDownloadTask])] = []
+    for (itemID, itemTasks) in byItem {
+      guard let request = try? DownloadRequest.fetch(itemID: itemID) else {
+        AppLogger.download.info("Cancelling in-flight tasks with no request: \(itemID)")
+        for task in itemTasks {
+          task.cancel()
+        }
+        continue
+      }
+      candidates.append((request, itemTasks))
+    }
+
+    guard let candidate = candidates.min(by: { $0.request < $1.request }) else { return }
+
+    for other in candidates where other.request.itemID != candidate.request.itemID {
+      AppLogger.download.info("Cancelling untracked in-flight tasks for \(other.request.itemID)")
+      for task in other.tasks {
+        task.cancel()
+      }
+    }
+
+    let request = candidate.request
+    let itemID = request.itemID
+
+    var files: [String: DownloadFile] = [:]
+    var bytesWritten: [String: Int64] = [:]
+    for task in candidate.tasks {
+      guard let path = task.taskDescription, let originalRequest = task.originalRequest else { continue }
+      files[path] = DownloadFile(
+        request: originalRequest,
+        expectedSize: task.countOfBytesExpectedToReceive,
+        relativePath: path,
+        destination: Self.appGroupContainer.appendingPathComponent(path),
+        task: task
+      )
+      bytesWritten[path] = task.countOfBytesReceived
+    }
+
+    guard !files.isEmpty else { return }
+
+    let download = ActiveDownload(
+      itemID: itemID,
+      kind: request.kind,
+      podcastID: request.podcastID,
+      priority: URLSessionTask.defaultPriority,
+      files: files,
+      bytesCompleted: downloadedBytes(itemID: itemID, kind: request.kind, podcastID: request.podcastID),
+      totalBytes: request.size
+    )
+    download.bytesWritten = bytesWritten
+    active = download
+    downloadStates[itemID] = .downloading(progress: download.progress)
+
+    AppLogger.download.info("Reattached \(files.count) in-flight file(s) for \(itemID)")
+  }
 
   override init() {
     super.init()
     updateDownloadStates()
+
+    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+      .sink { [weak self] _ in self?.resumeOutstandingRequests() }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: NetworkMonitor.didChange)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in self?.resumeOutstandingRequests() }
+      .store(in: &cancellables)
+  }
+
+  func resumeOutstandingRequests() {
+    guard NetworkMonitor.shared.interfaceType == .wifi else { return }
+    startNextIfIdle()
+  }
+
+  private func directories(
+    itemID: String,
+    kind: DownloadRequest.Kind,
+    podcastID: String?
+  ) -> [URL] {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else { return [] }
+
+    switch kind {
+    case .book:
+      return [
+        Self.audiobookDirectory(serverID: serverID, bookID: itemID),
+        Self.ebookDirectory(serverID: serverID, bookID: itemID),
+      ]
+    case .ebook:
+      return [Self.ebookDirectory(serverID: serverID, bookID: itemID)]
+    case .episode:
+      guard let podcastID else { return [] }
+      return [Self.episodeDirectory(serverID: serverID, podcastID: podcastID, episodeID: itemID)]
+    }
+  }
+
+  private func downloadedBytes(
+    itemID: String,
+    kind: DownloadRequest.Kind,
+    podcastID: String?
+  ) -> Int64 {
+    directories(itemID: itemID, kind: kind, podcastID: podcastID)
+      .reduce(Int64(0)) { $0 + $1.directorySize }
+  }
+
+  func downloadedFraction(
+    itemID: String,
+    kind: DownloadRequest.Kind,
+    podcastID: String?,
+    size: Int64
+  ) -> Double {
+    guard size > 0 else { return 0 }
+    let bytes = downloadedBytes(itemID: itemID, kind: kind, podcastID: podcastID)
+    return min(Double(bytes) / Double(size), 1.0)
   }
 
   func updateDownloadStates() {
@@ -84,481 +275,443 @@ final class DownloadManager: NSObject, ObservableObject {
 
     if let books = try? LocalBook.fetchAll() {
       for book in books {
+        if case .downloading = downloadStates[book.bookID] { continue }
         downloadStates[book.bookID] = book.isDownloaded ? .downloaded : .notDownloaded
       }
     }
 
     if let episodes = try? LocalEpisode.fetchAll() {
       for episode in episodes {
+        if case .downloading = downloadStates[episode.episodeID] { continue }
         downloadStates[episode.episodeID] = episode.isDownloaded ? .downloaded : .notDownloaded
       }
     }
   }
 
-  func isDownloading(for bookID: String) -> Bool {
-    activeOperations[bookID] != nil
+  private func persistedState(for id: String) -> DownloadState {
+    if let book = try? LocalBook.fetch(bookID: id) {
+      return book.isDownloaded ? .downloaded : .notDownloaded
+    }
+    if let episode = try? LocalEpisode.fetch(episodeID: id) {
+      return episode.isDownloaded ? .downloaded : .notDownloaded
+    }
+    return .notDownloaded
   }
 
-  func startDownload(
-    for bookID: String,
-    type: DownloadType = .book,
-    info: DownloadInfo? = nil,
-  ) {
-    guard activeOperations[bookID] == nil else {
-      return
-    }
+  func registerDownloadedFile(relativePath: String) {
+    let components = relativePath.split(separator: "/").map(String.init)
+    guard components.count >= 4 else { return }
+    guard components[0] == Audiobookshelf.shared.authentication.server?.id else { return }
 
-    if type != .ebook, downloadStates[bookID] == .downloaded {
-      return
-    }
+    switch components[1] {
+    case "audiobooks":
+      guard
+        let book = try? LocalBook.fetch(bookID: components[2]),
+        let index = Int(components[3].split(separator: ".").first ?? ""),
+        let track = book.tracks.first(where: { $0.index == index }),
+        track.relativePath == nil
+      else { return }
+      track.relativePath = URL(string: relativePath)
+      try? book.save()
 
-    AppLogger.download.info("Starting \(type) download for book: \(bookID)")
-    let wasDownloaded = downloadStates[bookID] == .downloaded
-    let operation = DownloadOperation(bookID: bookID, type: type)
-    activeOperations[bookID] = operation
+    case "ebooks":
+      guard
+        let book = try? LocalBook.fetch(bookID: components[2]),
+        book.ebookFile == nil
+      else { return }
+      book.ebookFile = URL(string: relativePath)
+      try? book.save()
 
-    Task { @MainActor [weak self] in
-      self?.downloadStates[bookID] = .downloading(progress: 0)
-      if let info {
-        self?.downloadInfos[bookID] = info
-      }
-    }
+    case "episodes" where components.count == 5:
+      guard
+        let episode = try? LocalEpisode.fetch(episodeID: components[3]),
+        let track = episode.track,
+        track.relativePath == nil
+      else { return }
+      track.relativePath = URL(string: relativePath)
+      try? episode.save()
 
-    let progressCancellable = operation.progressSubject
-      .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
-      .sink { [weak self] progress in
-        self?.downloadStates[bookID] = .downloading(progress: progress)
-      }
-    progressCancellables[bookID] = progressCancellable
-
-    operation.completionBlock = { [weak self] in
-      Task { @MainActor in
-        self?.progressCancellables[bookID]?.cancel()
-        self?.progressCancellables.removeValue(forKey: bookID)
-        self?.activeOperations.removeValue(forKey: bookID)
-        self?.downloadInfos.removeValue(forKey: bookID)
-
-        if operation.isFinished && !operation.isCancelled {
-          AppLogger.download.info("Download completed successfully for book: \(bookID)")
-          self?.downloadStates[bookID] =
-            operation.resultIsFullyDownloaded || wasDownloaded ? .downloaded : .notDownloaded
-        } else {
-          AppLogger.download.info("Download cancelled or failed for book: \(bookID)")
-          self?.downloadStates[bookID] = wasDownloaded ? .downloaded : .notDownloaded
-        }
-      }
-    }
-
-    operationQueue.addOperation(operation)
-  }
-
-  func cancelDownload(for bookID: String) {
-    AppLogger.download.info("Cancelling download for book: \(bookID)")
-    activeOperations[bookID]?.cancel()
-
-    Task { @MainActor in
-      downloadStates[bookID] = .notDownloaded
-      downloadInfos.removeValue(forKey: bookID)
-    }
-  }
-
-  func handleBackgroundSessionEvents(identifier: String, completionHandler: @escaping () -> Void) {
-    backgroundCompletionHandler = completionHandler
-
-    let bookID = identifier.replacingOccurrences(of: Self.backgroundSessionPrefix, with: "")
-    guard activeOperations[bookID] == nil else { return }
-
-    AppLogger.download.info("Reconnecting to orphaned background session: \(identifier)")
-    let config = URLSessionConfiguration.background(withIdentifier: identifier)
-    _ = URLSession(
-      configuration: config,
-      delegate: OrphanedDownloadSessionDelegate(),
-      delegateQueue: nil
-    )
-  }
-}
-
-private final class OrphanedDownloadSessionDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
-  nonisolated func urlSession(
-    _ session: URLSession,
-    downloadTask: URLSessionDownloadTask,
-    didFinishDownloadingTo location: URL
-  ) {
-    try? FileManager.default.removeItem(at: location)
-  }
-
-  nonisolated func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-    session.finishTasksAndInvalidate()
-    Task { @MainActor in
-      let manager = DownloadManager.shared
-      manager.backgroundCompletionHandler?()
-      manager.backgroundCompletionHandler = nil
-    }
-  }
-}
-
-extension DownloadManager {
-  func deleteDownload(for bookID: String) {
-    Task {
-      guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
-        AppLogger.download.error("No active server for deletion")
-        Toast(error: "No active server").show()
-        return
-      }
-
-      try? FileManager.default.removeItem(at: Self.audiobookDirectory(serverID: serverID, bookID: bookID))
-      try? FileManager.default.removeItem(at: Self.ebookDirectory(serverID: serverID, bookID: bookID))
-
-      if let item = try? LocalBook.fetch(bookID: bookID) {
-        try? item.delete()
-      }
-
-      Task { @MainActor in
-        downloadStates[bookID] = .notDownloaded
-      }
-
-      AppLogger.download.info("Deleted download for book: \(bookID)")
-    }
-  }
-
-  func deleteEpisodeDownload(episodeID: String, podcastID: String) {
-    Task {
-      guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
-        AppLogger.download.error("No active server for deletion")
-        Toast(error: "No active server").show()
-        return
-      }
-
-      try? FileManager.default.removeItem(
-        at: Self.episodeDirectory(serverID: serverID, podcastID: podcastID, episodeID: episodeID)
-      )
-
-      if let episode = try? LocalEpisode.fetch(episodeID: episodeID) {
-        try? episode.delete()
-      }
-
-      Task { @MainActor in
-        downloadStates[episodeID] = .notDownloaded
-      }
-
-      AppLogger.download.info("Deleted download for episode: \(episodeID)")
-    }
-  }
-
-  func removeCompleted() {
-    guard UserPreferences.shared.removeDownloadOnCompletion else { return }
-
-    let currentPlayingID = PlayerManager.shared.current?.id
-
-    for (bookID, state) in downloadStates {
-      guard state == .downloaded, bookID != currentPlayingID else { continue }
-      guard let progress = try? MediaProgress.fetch(bookID: bookID), progress.isFinished else { continue }
-      deleteDownload(for: bookID)
-    }
-  }
-
-  func deleteAllServerData() {
-    Task {
-      do {
-        let directories = try FileManager.default.contentsOfDirectory(
-          at: Self.appGroupContainer,
-          includingPropertiesForKeys: [.isDirectoryKey]
-        )
-
-        for directory in directories {
-          var isDirectory: ObjCBool = false
-          FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
-
-          if isDirectory.boolValue {
-            try? FileManager.default.removeItem(at: directory)
-          }
-        }
-
-        AppLogger.download.info("Deleted all server data")
-      } catch {
-        AppLogger.download.error(
-          "Failed to delete all server data: \(error.localizedDescription)"
-        )
-      }
-    }
-  }
-}
-
-private final class DownloadOperation: Operation, @unchecked Sendable {
-  private var audiobookshelf: Audiobookshelf { .shared }
-
-  let bookID: String
-  let type: DownloadManager.DownloadType
-  private(set) var resultIsFullyDownloaded: Bool = false
-  private var ebookStepCompleted = false
-  private var audioStepCompleted = false
-  let progressSubject = PassthroughSubject<Double, Never>()
-
-  private var totalBytes: Int64 = 0
-  private var bytesDownloadedSoFar: Int64 = 0
-
-  private let maxRetryAttempts = 3
-
-  private struct FileDownload {
-    let request: URLRequest
-    let expectedSize: Int64
-    let destination: URL
-  }
-
-  private struct ActiveDownload {
-    let file: FileDownload
-    let attempt: Int
-    let task: URLSessionDownloadTask
-  }
-
-  private var activeDownloads: [Int: ActiveDownload] = [:]
-  private var taskBytesWritten: [Int: Int64] = [:]
-  private var batchContinuation: CheckedContinuation<Void, Error>?
-  private let continuationLock = NSLock()
-
-  private lazy var downloadSession: URLSession = {
-    let config = URLSessionConfiguration.background(
-      withIdentifier: DownloadManager.backgroundSessionPrefix + bookID
-    )
-    config.timeoutIntervalForRequest = 300
-    config.sessionSendsLaunchEvents = true
-    config.isDiscretionary = false
-    let delegate = URLSessionProxyDelegate(delegate: self)
-    return URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
-  }()
-
-  private var _executing = false {
-    willSet {
-      willChangeValue(forKey: "isExecuting")
-    }
-    didSet {
-      didChangeValue(forKey: "isExecuting")
-    }
-  }
-
-  private var _finished = false {
-    willSet {
-      willChangeValue(forKey: "isFinished")
-    }
-    didSet {
-      didChangeValue(forKey: "isFinished")
-    }
-  }
-
-  override var isAsynchronous: Bool { true }
-  override var isExecuting: Bool { _executing }
-  override var isFinished: Bool { _finished }
-
-  init(bookID: String, type: DownloadManager.DownloadType) {
-    self.bookID = bookID
-    self.type = type
-
-    super.init()
-  }
-
-  override func start() {
-    guard !isCancelled else {
-      finish(success: false, error: CancellationError())
-      return
-    }
-
-    _executing = true
-
-    Task {
-      await executeDownload()
-    }
-  }
-
-  override func cancel() {
-    AppLogger.download.info("Cancelling download for book: \(bookID)")
-    super.cancel()
-    completeBatch(with: CancellationError())
-    progressSubject.send(completion: .finished)
-
-    Task {
-      await cleanupPartialDownload()
-    }
-  }
-
-  private func cleanupPartialDownload() async {
-    guard let serverID = Audiobookshelf.shared.authentication.server?.id else { return }
-
-    switch type {
-    case .book:
-      if !audioStepCompleted {
-        try? FileManager.default.removeItem(at: DownloadManager.audiobookDirectory(serverID: serverID, bookID: bookID))
-      }
-      if !ebookStepCompleted {
-        try? FileManager.default.removeItem(at: DownloadManager.ebookDirectory(serverID: serverID, bookID: bookID))
-      }
-    case .ebook:
-      if !ebookStepCompleted {
-        try? FileManager.default.removeItem(at: DownloadManager.ebookDirectory(serverID: serverID, bookID: bookID))
-      }
-    case .episode(let podcastID, let episodeID):
-      try? FileManager.default.removeItem(
-        at: DownloadManager.episodeDirectory(serverID: serverID, podcastID: podcastID, episodeID: episodeID)
-      )
-    }
-  }
-
-  private func executeDownload() async {
-    do {
-      switch type {
-      case .book, .ebook:
-        try await executeBookDownload()
-      case .episode(let podcastID, let episodeID):
-        try await executeEpisodeDownload(podcastID: podcastID, episodeID: episodeID)
-      }
-      finish(success: true, error: nil)
-    } catch {
-      AppLogger.download.error("Download failed for book \(bookID): \(error.localizedDescription)")
-      finish(success: false, error: error)
-    }
-  }
-
-  private func executeBookDownload() async throws {
-    let book = try await audiobookshelf.books.fetch(id: bookID)
-
-    let serverHasAudio = book.mediaType.contains(.audiobook) && !(book.tracks ?? []).isEmpty
-    let serverHasEbook = book.mediaType.contains(.ebook)
-
-    let wantsAudio = type == .book && serverHasAudio
-    let wantsEbook = (type == .book || type == .ebook) && serverHasEbook
-
-    guard wantsAudio || wantsEbook else {
-      AppLogger.download.error("Nothing to download for book \(bookID)")
-      throw URLError(.badURL)
-    }
-
-    totalBytes = 0
-    if wantsAudio {
-      totalBytes += (book.tracks ?? []).reduce(0) { $0 + ($1.metadata?.size ?? 0) }
-    }
-    if wantsEbook, let ebookSize = book.media.ebookFile?.metadata.size {
-      totalBytes += ebookSize
-    }
-
-    if wantsEbook {
-      guard !isCancelled else { throw CancellationError() }
-      try await downloadEbookStep(book: book)
-    }
-
-    if wantsAudio {
-      guard !isCancelled else { throw CancellationError() }
-      try await downloadAudiobookStep(book: book)
-    }
-
-    switch type {
-    case .book:
-      resultIsFullyDownloaded = true
-    case .ebook:
-      resultIsFullyDownloaded = !serverHasAudio
-    case .episode:
+    default:
       break
     }
-
-    if resultIsFullyDownloaded {
-      progressSubject.send(1.0)
-    }
   }
 
-  private func downloadAudiobookStep(book: Book) async throws {
-    let trackCount = book.tracks?.count ?? 0
-    let stepBytes = (book.tracks ?? []).reduce(0) { $0 + ($1.metadata?.size ?? 0) }
-    AppLogger.download.info("Downloading audiobook: \(trackCount) tracks, \(stepBytes.formattedByteSize)")
-
-    let tracks = try await downloadTracks(book: book)
-
-    let localBook = LocalBook(from: book)
-    localBook.tracks = tracks
-    try? localBook.save()
-
-    audioStepCompleted = true
+  private func refreshStateIfIdle(for id: String) {
+    reapRequestIfSatisfied(for: id)
+    guard active?.itemID != id else { return }
+    downloadStates[id] = persistedState(for: id)
   }
 
-  private func downloadEbookStep(book: Book) async throws {
-    guard let ebookURL = book.ebookURL else {
-      AppLogger.download.error("No ebook URL found for book: \(bookID)")
-      throw URLError(.badURL)
-    }
-
-    let ext: String
-    if let ebookFileExt = book.media.ebookFile?.metadata.ext {
-      ext = ebookFileExt
-    } else {
-      let pathExt = ebookURL.pathExtension
-      ext = pathExt.isEmpty ? ".epub" : ".\(pathExt)"
-    }
-
-    AppLogger.download.info("Downloading ebook: \(ext)")
-    let ebookExpectedSize = book.media.ebookFile?.metadata.size ?? 50_000_000
-    _ = try await downloadEbook(from: ebookURL, ext: ext, expectedSize: ebookExpectedSize)
-
-    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
-      throw URLError(.userAuthenticationRequired)
-    }
-
-    let localBook = LocalBook(from: book)
-    localBook.ebookFile = URL(string: "\(serverID)/ebooks/\(bookID)/\(bookID)\(ext)")
-    try? localBook.save()
-    ebookStepCompleted = true
-
+  private func reapRequestIfSatisfied(for itemID: String) {
+    guard
+      let request = try? DownloadRequest.fetch(itemID: itemID),
+      isRequestSatisfied(itemID: itemID, kind: request.kind)
+    else { return }
+    try? request.delete()
   }
 
-  private func executeEpisodeDownload(podcastID: String, episodeID: String) async throws {
-    let podcast = try await audiobookshelf.podcasts.fetch(id: podcastID)
-    guard !isCancelled else { throw CancellationError() }
+  func isDownloading(for bookID: String) -> Bool {
+    active?.itemID == bookID
+  }
 
-    guard let apiEpisode = podcast.media.episodes?.first(where: { $0.id == episodeID }) else {
-      AppLogger.download.error("Episode not found: \(episodeID)")
-      throw URLError(.badURL)
-    }
-
-    guard let audioTrack = apiEpisode.audioTrack, let ino = audioTrack.ino else {
-      AppLogger.download.error("No audio track for episode: \(episodeID)")
-      throw URLError(.badURL)
-    }
-
-    let fileSize = audioTrack.metadata?.size ?? apiEpisode.size ?? 0
-    self.totalBytes = fileSize
-    AppLogger.download.info("Downloading episode: \(apiEpisode.title), \(fileSize.formattedByteSize)")
-
-    let context = try await currentServerContext()
-    let episodeDirectory = DownloadManager.episodeDirectory(
-      serverID: context.serverID,
-      podcastID: podcastID,
-      episodeID: episodeID
+  func startDownload(_ book: Book, kind: DownloadRequest.Kind = .book) {
+    enqueue(
+      itemID: book.id,
+      kind: kind,
+      title: book.title,
+      coverURL: book.coverURL(),
+      duration: book.duration,
+      size: book.size ?? 0
     )
-    try prepareDownloadDirectory(episodeDirectory)
+  }
+
+  func startDownload(_ book: LocalBook, kind: DownloadRequest.Kind = .book) {
+    enqueue(
+      itemID: book.bookID,
+      kind: kind,
+      title: book.title,
+      coverURL: book.coverURL(),
+      duration: book.duration,
+      size: book.tracks.reduce(0) { $0 + ($1.size ?? 0) }
+    )
+  }
+
+  func startDownload(_ episode: PodcastEpisode, podcastID: String, coverURL: URL?) {
+    enqueue(
+      itemID: episode.id,
+      kind: .episode,
+      podcastID: podcastID,
+      title: episode.title,
+      coverURL: coverURL,
+      duration: episode.duration ?? 0,
+      size: episode.size ?? 0
+    )
+  }
+
+  func startDownload(_ episode: LocalEpisode) {
+    guard let podcastID = episode.podcast?.podcastID else { return }
+    enqueue(
+      itemID: episode.episodeID,
+      kind: .episode,
+      podcastID: podcastID,
+      title: episode.title,
+      coverURL: episode.coverURL(),
+      duration: episode.duration,
+      size: episode.track?.size ?? 0
+    )
+  }
+
+  func resumeDownload(_ request: DownloadRequest) {
+    enqueue(
+      itemID: request.itemID,
+      kind: request.kind,
+      podcastID: request.podcastID,
+      title: request.title,
+      coverURL: request.coverURL,
+      duration: request.duration,
+      size: request.size
+    )
+  }
+
+  private func enqueue(
+    itemID: String,
+    kind: DownloadRequest.Kind,
+    podcastID: String? = nil,
+    title: String,
+    coverURL: URL?,
+    duration: TimeInterval,
+    size: Int64
+  ) {
+    if kind == .episode, podcastID == nil { return }
+
+    var kind = kind
+    if let existing = try? DownloadRequest.fetch(itemID: itemID), existing.kind != kind {
+      kind = .book
+      existing.kind = .book
+      try? existing.save()
+    }
+
+    guard active?.itemID != itemID else { return }
+
+    if kind != .ebook, downloadStates[itemID] == .downloaded {
+      reapRequestIfSatisfied(for: itemID)
+      return
+    }
+
+    AppLogger.download.info("Queueing \(kind.rawValue) download for book: \(itemID)")
+
+    try? DownloadRequest(
+      itemID: itemID,
+      kind: kind,
+      podcastID: podcastID,
+      title: title,
+      coverURL: coverURL,
+      duration: duration,
+      size: size
+    ).save()
+
+    if let request = try? DownloadRequest.fetch(itemID: itemID), request.hasFailed {
+      request.failureCount = 0
+      try? request.save()
+    }
+
+    startNextIfIdle()
+  }
+
+  private func startNextIfIdle() {
+    guard active == nil, !isPreparing else { return }
+
+    let requests = (try? DownloadRequest.fetchAll()) ?? []
+    let outstanding =
+      requests
+      .filter { !$0.hasFailed }
+      .sorted()
+
+    guard let request = outstanding.first else { return }
+
+    let itemID = request.itemID
+    let kind = request.kind
+    let podcastID = request.podcastID
+
+    isPreparing = true
+    downloadStates[itemID] = .downloading(progress: 0)
+
+    Task {
+      do {
+        let started = try await prepare(itemID: itemID, kind: kind, podcastID: podcastID)
+        if !started {
+          finish(itemID: itemID, kind: kind)
+        }
+      } catch {
+        isPreparing = false
+        AppLogger.download.error("Download failed for \(itemID): \(error.localizedDescription)")
+        fail(itemID: itemID, error: error)
+      }
+    }
+  }
+
+  private func prepare(
+    itemID: String,
+    kind: DownloadRequest.Kind,
+    podcastID: String?
+  ) async throws -> Bool {
+    let plan: (files: [DownloadFile], totalBytes: Int64)
+    switch kind {
+    case .book, .ebook:
+      plan = try await planBook(itemID: itemID, kind: kind)
+    case .episode:
+      guard let podcastID else { throw URLError(.badURL) }
+      plan = try await planEpisode(episodeID: itemID, podcastID: podcastID)
+    }
+
+    guard await StorageManager.shared.canDownload(additionalBytes: plan.totalBytes) else {
+      AppLogger.download.error("Storage limit reached for book: \(itemID)")
+      Toast(error: "Storage limit reached").show()
+      throw CancellationError()
+    }
+
+    let request = try? DownloadRequest.fetch(itemID: itemID)
+
+    guard request != nil else {
+      AppLogger.download.info("Download cancelled while preparing: \(itemID)")
+      throw CancellationError()
+    }
+
+    var pending: [DownloadFile] = []
+    var bytesCompleted: Int64 = 0
+    for file in plan.files {
+      if file.expectedSize > 0, diskSize(of: file.destination) == file.expectedSize {
+        registerDownloadedFile(relativePath: file.relativePath)
+        bytesCompleted += file.expectedSize
+      } else {
+        pending.append(file)
+      }
+    }
+
+    guard !pending.isEmpty else {
+      AppLogger.download.info("All files already present for book: \(itemID)")
+      isPreparing = false
+      return false
+    }
+
+    let isStreaming =
+      PlayerManager.shared.current?.isPlaying == true
+      && PlayerManager.shared.current?.downloadState == .notDownloaded
+    let priority = isStreaming ? URLSessionTask.lowPriority : URLSessionTask.defaultPriority
+
+    let download = ActiveDownload(
+      itemID: itemID,
+      kind: kind,
+      podcastID: podcastID,
+      priority: priority,
+      files: Dictionary(uniqueKeysWithValues: pending.map { ($0.relativePath, $0) }),
+      bytesCompleted: bytesCompleted,
+      totalBytes: plan.totalBytes
+    )
+    active = download
+    isPreparing = false
+
+    AppLogger.download.info("Starting \(pending.count) download task(s) for book: \(itemID)")
+    for file in pending {
+      let task = makeTask(for: file, priority: priority)
+      download.files[file.relativePath]?.task = task
+      task.resume()
+    }
+
+    return true
+  }
+
+  private func makeTask(
+    for file: DownloadFile,
+    priority: Float,
+    resumeData: Data? = nil
+  ) -> URLSessionDownloadTask {
+    let task: URLSessionDownloadTask
+    if let resumeData {
+      task = session.downloadTask(withResumeData: resumeData)
+    } else {
+      task = session.downloadTask(with: file.request)
+    }
+    task.taskDescription = file.relativePath
+    task.countOfBytesClientExpectsToReceive = file.expectedSize > 0 ? file.expectedSize : 500_000_000
+    task.priority = priority
+    return task
+  }
+
+  fileprivate func progressed(relativePath: String, bytesWritten: Int64) {
+    guard let download = active, download.files[relativePath] != nil else { return }
+    download.bytesWritten[relativePath] = bytesWritten
+
+    guard Date().timeIntervalSince(lastProgressPublish) >= 0.1 else { return }
+    lastProgressPublish = Date()
+    downloadStates[download.itemID] = .downloading(progress: download.progress)
+  }
+
+  fileprivate func fileFinished(relativePath: String, task: URLSessionDownloadTask) {
+    registerDownloadedFile(relativePath: relativePath)
+
+    guard let download = active, let file = download.files[relativePath], file.task === task else {
+      if let itemID = Self.itemID(fromRelativePath: relativePath) {
+        refreshStateIfIdle(for: itemID)
+      }
+      return
+    }
+
+    download.files.removeValue(forKey: relativePath)
+    download.bytesWritten.removeValue(forKey: relativePath)
+    download.bytesCompleted += diskSize(of: file.destination)
+
+    guard download.files.isEmpty else {
+      downloadStates[download.itemID] = .downloading(progress: download.progress)
+      return
+    }
+
+    finish(itemID: download.itemID, kind: download.kind)
+  }
+
+  fileprivate func fileFailed(
+    relativePath: String,
+    task: URLSessionTask,
+    error: Error,
+    resumeData: Data?,
+    retryable: Bool = true
+  ) {
+    guard let download = active, var file = download.files[relativePath], file.task === task else {
+      if let itemID = Self.itemID(fromRelativePath: relativePath) {
+        releaseOrphanedDownload(itemID: itemID)
+      }
+      return
+    }
+
+    let wasCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
+    file.attempt += 1
+
+    guard retryable, !wasCancelled, file.attempt < Self.maxRetryAttempts else {
+      fail(itemID: download.itemID, error: error)
+      return
+    }
+
+    download.files[relativePath] = file
+    let delay = pow(2.0, Double(file.attempt))
+    AppLogger.download.info(
+      "Retry \(file.attempt)/\(Self.maxRetryAttempts - 1) in \(delay)s for \(relativePath)"
+    )
+
+    Task {
+      try? await Task.sleep(for: .seconds(delay))
+      guard active === download, download.files[relativePath] != nil else { return }
+      let task = makeTask(for: file, priority: download.priority, resumeData: resumeData)
+      download.files[relativePath]?.task = task
+      task.resume()
+    }
+  }
+
+  private func finish(itemID: String, kind: DownloadRequest.Kind) {
+    active = nil
+
+    let request = try? DownloadRequest.fetch(itemID: itemID)
+    let currentKind = request?.kind ?? kind
+
+    if isRequestSatisfied(itemID: itemID, kind: currentKind) {
+      deleteRequest(for: itemID)
+      Toast(success: "Download completed").show()
+      AppLogger.download.info("Download completed for book: \(itemID)")
+    } else if let request, currentKind == kind {
+      request.failureCount += 1
+      try? request.save()
+      AppLogger.download.error("Download incomplete for book: \(itemID)")
+    }
+
+    downloadStates[itemID] = persistedState(for: itemID)
+    startNextIfIdle()
+  }
+
+  private func fail(itemID: String, error: Error) {
+    cancelActiveTasks(for: itemID)
+    active = nil
+
+    let isOffline = !NetworkMonitor.shared.isConnected
+    let wasCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
+
+    if !isOffline {
+      if let request = try? DownloadRequest.fetch(itemID: itemID) {
+        request.failureCount += 1
+        try? request.save()
+      }
+
+      if !wasCancelled {
+        Toast(error: "Download failed: \(error.localizedDescription)").show()
+      }
+    }
+
+    downloadStates[itemID] = persistedState(for: itemID)
+
+    guard !isOffline else {
+      AppLogger.download.info("Offline, holding queue until connectivity returns")
+      return
+    }
+
+    startNextIfIdle()
+  }
+
+  private func cancelActiveTasks(for itemID: String) {
+    guard let download = active, download.itemID == itemID else { return }
+    for file in download.files.values {
+      file.task?.cancel()
+    }
+  }
+
+  func saveEpisodeRecord(podcast: Podcast, podcastID: String, episodeID: String) {
+    guard
+      let apiEpisode = podcast.media.episodes?.first(where: { $0.id == episodeID }),
+      let audioTrack = apiEpisode.audioTrack, audioTrack.ino != nil
+    else { return }
 
     let ext = audioTrack.sanitizedExt
-    let trackURL = context.serverURL.appendingPathComponent("api/items/\(podcastID)/file/\(ino)/download")
-    let trackFile = episodeDirectory.appendingPathComponent("0\(ext)")
+    let fileSize = audioTrack.metadata?.size ?? apiEpisode.size ?? 0
 
-    try await downloadFiles([
-      FileDownload(
-        request: authorizedRequest(url: trackURL, credentials: context.credentials),
-        expectedSize: fileSize,
-        destination: trackFile
-      )
-    ])
-
-    let localPodcast: LocalPodcast
-    if let existing = try? LocalPodcast.fetch(podcastID: podcastID) {
-      existing.title = podcast.title
-      existing.author = podcast.author
-      existing.coverURL = podcast.coverURL()
-      existing.podcastDescription = podcast.description
-      existing.genres = podcast.genres
-      existing.feedURL = podcast.feedURL
-      existing.language = podcast.language
-      existing.podcastType = podcast.podcastType
-      localPodcast = existing
-    } else {
-      localPodcast = LocalPodcast(from: podcast)
-    }
-    try? localPodcast.save()
+    try? LocalPodcast(from: podcast).save()
+    guard let localPodcast = try? LocalPodcast.fetch(podcastID: podcastID) else { return }
 
     let localEpisode = LocalEpisode(
       episodeID: episodeID,
@@ -577,80 +730,408 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         filename: audioTrack.metadata?.filename,
         ext: ext,
         size: fileSize,
-        relativePath: URL(string: "\(context.serverID)/episodes/\(podcastID)/\(episodeID)/0\(ext)")
+        relativePath: nil
       ),
       chapters: (apiEpisode.chapters ?? []).map {
         Chapter(id: $0.id, start: $0.start, end: $0.end, title: $0.title)
       }
     )
     try? localEpisode.save()
-
-    resultIsFullyDownloaded = true
-    progressSubject.send(1.0)
   }
 
-  private func downloadTracks(book: Book) async throws -> [Track] {
-    let apiTracks = book.tracks ?? []
-    guard !apiTracks.isEmpty else {
-      AppLogger.download.error("No tracks found for audiobook: \(bookID)")
-      throw URLError(.badURL)
+  func cancelDownload(for bookID: String) {
+    let request = try? DownloadRequest.fetch(itemID: bookID)
+    let isActive = active?.itemID == bookID
+
+    guard request != nil || isActive else { return }
+
+    AppLogger.download.info("Cancelling download for book: \(bookID)")
+
+    let kind = isActive ? active?.kind : request?.kind
+    let podcastID = isActive ? active?.podcastID : request?.podcastID
+
+    cancelActiveTasks(for: bookID)
+    if isActive {
+      active = nil
     }
 
-    let context = try await currentServerContext()
-    let bookDirectory = DownloadManager.audiobookDirectory(serverID: context.serverID, bookID: bookID)
-    try prepareDownloadDirectory(bookDirectory)
+    deleteRequest(for: bookID)
+    cancelSessionTasks(for: bookID)
 
-    var tracks: [Track] = []
-    var files: [FileDownload] = []
+    if let kind {
+      cleanupPartialDownload(itemID: bookID, kind: kind, podcastID: podcastID)
+    }
 
-    for apiTrack in apiTracks {
-      guard !isCancelled else { throw CancellationError() }
-      guard let ino = apiTrack.ino else { continue }
+    downloadStates[bookID] = persistedState(for: bookID)
+    startNextIfIdle()
+  }
 
-      let ext = apiTrack.sanitizedExt
-      let trackURL = context.serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
-      let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
+  private func cancelSessionTasks(for itemID: String) {
+    Task {
+      for task in await session.allTasks
+      where task.taskDescription.flatMap(Self.itemID(fromRelativePath:)) == itemID {
+        task.cancel()
+      }
+    }
+  }
 
-      files.append(
-        FileDownload(
-          request: authorizedRequest(url: trackURL, credentials: context.credentials),
-          expectedSize: apiTrack.metadata?.size ?? 500_000_000,
-          destination: trackFile
+  private func cleanupPartialDownload(
+    itemID: String,
+    kind: DownloadRequest.Kind,
+    podcastID: String?
+  ) {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else { return }
+
+    switch kind {
+    case .book, .ebook:
+      guard let book = try? LocalBook.fetch(bookID: itemID) else { return }
+
+      let audioComplete = !book.tracks.isEmpty && book.tracks.allSatisfy { $0.relativePath != nil }
+
+      if kind == .book, !audioComplete {
+        try? FileManager.default.removeItem(
+          at: Self.audiobookDirectory(serverID: serverID, bookID: itemID)
         )
+        for track in book.tracks {
+          track.relativePath = nil
+        }
+      }
+
+      if book.ebookFile == nil {
+        try? FileManager.default.removeItem(
+          at: Self.ebookDirectory(serverID: serverID, bookID: itemID)
+        )
+      }
+
+      if book.ebookFile == nil,
+        book.tracks.allSatisfy({ $0.relativePath == nil }),
+        PlayerManager.shared.current?.id != itemID
+      {
+        try? book.delete()
+      } else {
+        try? book.save()
+      }
+
+    case .episode:
+      guard let podcastID else { return }
+      guard let episode = try? LocalEpisode.fetch(episodeID: itemID) else { return }
+      guard episode.track?.relativePath == nil else { return }
+
+      try? FileManager.default.removeItem(
+        at: Self.episodeDirectory(serverID: serverID, podcastID: podcastID, episodeID: itemID)
       )
 
-      let track = Track(from: apiTrack)
-      track.relativePath = URL(string: "\(context.serverID)/audiobooks/\(bookID)/\(apiTrack.index)\(ext)")
-      tracks.append(track)
+      if PlayerManager.shared.current?.id != itemID {
+        try? episode.delete()
+      }
+    }
+  }
+
+  fileprivate func releaseOrphanedDownload(itemID: String) {
+    guard active?.itemID != itemID else { return }
+    AppLogger.download.info("Releasing stalled download from a previous session: \(itemID)")
+    downloadStates[itemID] = persistedState(for: itemID)
+  }
+
+  private func isRequestSatisfied(itemID: String, kind: DownloadRequest.Kind) -> Bool {
+    switch kind {
+    case .book:
+      return (try? LocalBook.fetch(bookID: itemID))?.isDownloaded == true
+    case .ebook:
+      return (try? LocalBook.fetch(bookID: itemID))?.ebookFile != nil
+    case .episode:
+      return (try? LocalEpisode.fetch(episodeID: itemID))?.isDownloaded == true
+    }
+  }
+
+  private func deleteRequest(for itemID: String) {
+    guard let request = try? DownloadRequest.fetch(itemID: itemID) else { return }
+    try? request.delete()
+  }
+
+  func handleBackgroundSessionEvents(identifier: String, completionHandler: @escaping () -> Void) {
+    guard identifier == Self.sessionIdentifier else {
+      completionHandler()
+      return
     }
 
-    try await downloadFiles(files)
-    return tracks
+    backgroundCompletionHandler = completionHandler
+    _ = session
+
+    Task { await reattachInFlightDownloads() }
   }
 
-  private func downloadEbook(from ebookURL: URL, ext: String, expectedSize: Int64) async throws -> URL {
-    let context = try await currentServerContext()
-    let bookDirectory = DownloadManager.ebookDirectory(serverID: context.serverID, bookID: bookID)
-    try prepareDownloadDirectory(bookDirectory)
+  func finishBackgroundEvents() {
+    backgroundCompletionHandler?()
+    backgroundCompletionHandler = nil
+  }
+}
 
-    let ebookFile = bookDirectory.appendingPathComponent("\(bookID)\(ext)")
-
-    try await downloadFiles([
-      FileDownload(
-        request: authorizedRequest(url: ebookURL, credentials: context.credentials),
-        expectedSize: expectedSize,
-        destination: ebookFile
+private final class DownloadSessionDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+  nonisolated func urlSession(
+    _ session: URLSession,
+    downloadTask: URLSessionDownloadTask,
+    didWriteData bytesWritten: Int64,
+    totalBytesWritten: Int64,
+    totalBytesExpectedToWrite: Int64
+  ) {
+    guard let relativePath = downloadTask.taskDescription else { return }
+    Task { @MainActor in
+      DownloadManager.shared.progressed(
+        relativePath: relativePath,
+        bytesWritten: totalBytesWritten
       )
-    ])
-
-    return ebookFile
+    }
   }
 
-  private func diskSize(of url: URL) -> Int64 {
-    let attrs = try? FileManager.default.attributesOfItem(atPath: url.path)
-    return (attrs?[.size] as? Int64) ?? 0
+  nonisolated func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    guard let error, let relativePath = task.taskDescription else { return }
+
+    AppLogger.download.error("Download attempt failed: \(error.localizedDescription)")
+    let resumeData = (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data
+
+    Task { @MainActor in
+      DownloadManager.shared.fileFailed(
+        relativePath: relativePath,
+        task: task,
+        error: error,
+        resumeData: resumeData
+      )
+    }
   }
 
+  nonisolated func urlSession(
+    _ session: URLSession,
+    downloadTask: URLSessionDownloadTask,
+    didFinishDownloadingTo location: URL
+  ) {
+    guard let relativePath = downloadTask.taskDescription, !relativePath.contains("..") else {
+      AppLogger.download.warning("Discarding download with no destination")
+      try? FileManager.default.removeItem(at: location)
+      return
+    }
+
+    if let httpResponse = downloadTask.response as? HTTPURLResponse,
+      !(200...299).contains(httpResponse.statusCode)
+    {
+      try? FileManager.default.removeItem(at: location)
+
+      let statusDescription = HTTPURLResponse.localizedString(
+        forStatusCode: httpResponse.statusCode
+      ).capitalized
+      AppLogger.download.error("Download failed with HTTP \(httpResponse.statusCode): \(statusDescription)")
+
+      let error = URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: statusDescription])
+      let retryable = httpResponse.statusCode >= 500 || httpResponse.statusCode == 429
+
+      Task { @MainActor in
+        DownloadManager.shared.fileFailed(
+          relativePath: relativePath,
+          task: downloadTask,
+          error: error,
+          resumeData: nil,
+          retryable: retryable
+        )
+      }
+      return
+    }
+
+    do {
+      try store(location, at: relativePath)
+    } catch {
+      AppLogger.download.error("Failed to store \(relativePath): \(error.localizedDescription)")
+      try? FileManager.default.removeItem(at: location)
+
+      Task { @MainActor in
+        DownloadManager.shared.fileFailed(
+          relativePath: relativePath,
+          task: downloadTask,
+          error: error,
+          resumeData: nil
+        )
+      }
+      return
+    }
+
+    Task { @MainActor in
+      DownloadManager.shared.fileFinished(relativePath: relativePath, task: downloadTask)
+    }
+  }
+
+  private func store(_ location: URL, at relativePath: String) throws {
+    let destination = DownloadManager.appGroupContainer.appendingPathComponent(relativePath)
+
+    try FileManager.default.createDirectory(
+      at: destination.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+    if FileManager.default.fileExists(atPath: destination.path) {
+      try FileManager.default.removeItem(at: destination)
+    }
+    try FileManager.default.moveItem(at: location, to: destination)
+  }
+
+  nonisolated func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+    Task { @MainActor in
+      DownloadManager.shared.finishBackgroundEvents()
+    }
+  }
+}
+
+extension DownloadManager {
+  private func removeDownloadedFiles(id: String, directories: [URL]) {
+    cancelDownload(for: id)
+    deleteRequest(for: id)
+
+    for directory in directories {
+      try? FileManager.default.removeItem(at: directory)
+    }
+
+    downloadStates[id] = .notDownloaded
+  }
+
+  func deleteDownload(for bookID: String) {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+      AppLogger.download.error("No active server for deletion")
+      Toast(error: "No active server").show()
+      return
+    }
+
+    removeDownloadedFiles(
+      id: bookID,
+      directories: [
+        Self.audiobookDirectory(serverID: serverID, bookID: bookID),
+        Self.ebookDirectory(serverID: serverID, bookID: bookID),
+      ]
+    )
+
+    if let book = try? LocalBook.fetch(bookID: bookID) {
+      if PlayerManager.shared.current?.id == bookID {
+        clearDownloadedPaths(of: book)
+      } else {
+        try? book.delete()
+      }
+    }
+
+    AppLogger.download.info("Deleted download for book: \(bookID)")
+  }
+
+  func deleteEbookDownload(for bookID: String) {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+      AppLogger.download.error("No active server for deletion")
+      Toast(error: "No active server").show()
+      return
+    }
+
+    cancelDownload(for: bookID)
+    deleteRequest(for: bookID)
+    try? FileManager.default.removeItem(at: Self.ebookDirectory(serverID: serverID, bookID: bookID))
+
+    if let book = try? LocalBook.fetch(bookID: bookID) {
+      book.ebookFile = nil
+      try? book.save()
+    }
+
+    AppLogger.download.info("Deleted ebook download for book: \(bookID)")
+  }
+
+  func deleteEpisodeDownload(episodeID: String, podcastID: String) {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+      AppLogger.download.error("No active server for deletion")
+      Toast(error: "No active server").show()
+      return
+    }
+
+    removeDownloadedFiles(
+      id: episodeID,
+      directories: [Self.episodeDirectory(serverID: serverID, podcastID: podcastID, episodeID: episodeID)]
+    )
+
+    if let episode = try? LocalEpisode.fetch(episodeID: episodeID) {
+      if PlayerManager.shared.current?.id == episodeID {
+        episode.track?.relativePath = nil
+        try? episode.save()
+      } else {
+        try? episode.delete()
+      }
+    }
+
+    AppLogger.download.info("Deleted download for episode: \(episodeID)")
+  }
+
+  private func clearDownloadedPaths(of book: LocalBook) {
+    for track in book.tracks {
+      track.relativePath = nil
+    }
+    book.ebookFile = nil
+    try? book.save()
+  }
+
+  func removeCompleted() {
+    guard UserPreferences.shared.removeDownloadOnCompletion else { return }
+
+    let currentPlayingID = PlayerManager.shared.current?.id
+
+    for (id, state) in downloadStates {
+      guard state == .downloaded, id != currentPlayingID else { continue }
+      guard let progress = try? MediaProgress.fetch(bookID: id), progress.isFinished else { continue }
+
+      if let episode = try? LocalEpisode.fetch(episodeID: id), let podcastID = episode.podcast?.podcastID {
+        deleteEpisodeDownload(episodeID: id, podcastID: podcastID)
+      } else {
+        deleteDownload(for: id)
+      }
+    }
+  }
+
+  func deleteAllServerData() async {
+    if let itemID = active?.itemID {
+      cancelDownload(for: itemID)
+    }
+
+    for task in await session.allTasks {
+      task.cancel()
+    }
+
+    for request in (try? DownloadRequest.fetchAll()) ?? [] {
+      try? request.delete()
+    }
+
+    do {
+      let directories = try FileManager.default.contentsOfDirectory(
+        at: Self.appGroupContainer,
+        includingPropertiesForKeys: [.isDirectoryKey]
+      )
+
+      for directory in directories {
+        var isDirectory: ObjCBool = false
+        FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
+
+        if isDirectory.boolValue {
+          try? FileManager.default.removeItem(at: directory)
+        }
+      }
+
+      for book in (try? LocalBook.fetchAll()) ?? [] {
+        clearDownloadedPaths(of: book)
+      }
+      for episode in (try? LocalEpisode.fetchAll()) ?? [] {
+        episode.track?.relativePath = nil
+        try? episode.save()
+      }
+
+      downloadStates = downloadStates.mapValues { _ in .notDownloaded }
+
+      AppLogger.download.info("Deleted all server data")
+    } catch {
+      AppLogger.download.error(
+        "Failed to delete all server data: \(error.localizedDescription)"
+      )
+    }
+  }
+}
+
+extension DownloadManager {
   private struct ServerContext {
     let serverID: String
     let serverURL: URL
@@ -669,18 +1150,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     return ServerContext(serverID: server.id, serverURL: serverURL, credentials: credentials)
   }
 
-  private func prepareDownloadDirectory(_ url: URL) throws {
-    if FileManager.default.fileExists(atPath: url.path) {
-      try? FileManager.default.removeItem(at: url)
-    }
-    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-
-    var parent = url.deletingLastPathComponent()
-    var values = URLResourceValues()
-    values.isExcludedFromBackup = true
-    try? parent.setResourceValues(values)
-  }
-
   private func authorizedRequest(url: URL, credentials: Credentials) -> URLRequest {
     var request = URLRequest(url: url)
     request.setValue(credentials.bearer, forHTTPHeaderField: "Authorization")
@@ -692,232 +1161,167 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     return request
   }
 
-  private func downloadFiles(_ files: [FileDownload]) async throws {
-    guard !files.isEmpty else { return }
-    guard !isCancelled else { throw CancellationError() }
+  private func prepareDownloadDirectory(_ url: URL) throws {
+    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
 
-    let isStreaming = await MainActor.run {
-      guard let current = PlayerManager.shared.current else { return false }
-      return current.isPlaying && current.downloadState == .notDownloaded
+    var parent = url.deletingLastPathComponent()
+    var values = URLResourceValues()
+    values.isExcludedFromBackup = true
+    try? parent.setResourceValues(values)
+  }
+
+  func diskSize(of url: URL) -> Int64 {
+    let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+    return (attributes?[.size] as? Int64) ?? 0
+  }
+
+  private func makeFile(
+    url: URL,
+    relativePath: String,
+    expectedSize: Int64,
+    credentials: Credentials
+  ) -> DownloadFile {
+    DownloadFile(
+      request: authorizedRequest(url: url, credentials: credentials),
+      expectedSize: expectedSize,
+      relativePath: relativePath,
+      destination: Self.appGroupContainer.appendingPathComponent(relativePath)
+    )
+  }
+
+  func planBook(
+    itemID: String,
+    kind: DownloadRequest.Kind
+  ) async throws -> (files: [DownloadFile], totalBytes: Int64) {
+    let book = try await Audiobookshelf.shared.books.fetch(id: itemID)
+    let context = try await currentServerContext()
+
+    let serverHasAudio = book.mediaType.contains(.audiobook) && !(book.tracks ?? []).isEmpty
+    let serverHasEbook = book.mediaType.contains(.ebook)
+
+    let wantsAudio = kind == .book && serverHasAudio
+    let wantsEbook = (kind == .book || kind == .ebook) && serverHasEbook
+
+    guard wantsAudio || wantsEbook else {
+      AppLogger.download.error("Nothing to download for book \(itemID)")
+      throw URLError(.badURL)
     }
-    let priority = isStreaming ? URLSessionTask.lowPriority : URLSessionTask.defaultPriority
 
-    try await withCheckedThrowingContinuation { continuation in
-      continuationLock.lock()
-      batchContinuation = continuation
-      let tasks = files.map { makeDownloadTask(for: $0, attempt: 0, priority: priority) }
-      continuationLock.unlock()
+    try? LocalBook(from: book).save()
 
-      AppLogger.download.info("Queued \(tasks.count) background download tasks for book: \(bookID)")
-      for task in tasks {
-        task.resume()
+    var files: [DownloadFile] = []
+    var totalBytes: Int64 = 0
+
+    if wantsEbook, let ebookURL = book.ebookURL {
+      let ext: String
+      if let ebookFileExt = book.media.ebookFile?.metadata.ext {
+        ext = ebookFileExt
+      } else {
+        let pathExt = ebookURL.pathExtension
+        ext = pathExt.isEmpty ? ".epub" : ".\(pathExt)"
+      }
+
+      let directoryPath = DownloadManager.ebookPath(serverID: context.serverID, bookID: itemID)
+      try prepareDownloadDirectory(
+        DownloadManager.ebookDirectory(serverID: context.serverID, bookID: itemID)
+      )
+
+      let expectedSize = book.media.ebookFile?.metadata.size ?? 0
+      files.append(
+        makeFile(
+          url: ebookURL,
+          relativePath: "\(directoryPath)/\(itemID)\(ext)",
+          expectedSize: expectedSize,
+          credentials: context.credentials
+        )
+      )
+      totalBytes += expectedSize
+    }
+
+    if wantsAudio {
+      let directoryPath = DownloadManager.audiobookPath(serverID: context.serverID, bookID: itemID)
+      try prepareDownloadDirectory(
+        DownloadManager.audiobookDirectory(serverID: context.serverID, bookID: itemID)
+      )
+
+      for apiTrack in book.tracks ?? [] {
+        guard let ino = apiTrack.ino else {
+          AppLogger.download.error("Track \(apiTrack.index) has no file id for book: \(itemID)")
+          throw URLError(.badServerResponse)
+        }
+
+        let expectedSize = apiTrack.metadata?.size ?? 0
+        let trackURL = context.serverURL.appendingPathComponent(
+          "api/items/\(itemID)/file/\(ino)/download"
+        )
+
+        files.append(
+          makeFile(
+            url: trackURL,
+            relativePath: "\(directoryPath)/\(apiTrack.index)\(apiTrack.sanitizedExt)",
+            expectedSize: expectedSize,
+            credentials: context.credentials
+          )
+        )
+        totalBytes += expectedSize
       }
     }
+
+    guard !files.isEmpty else {
+      AppLogger.download.error("Planned no files for book: \(itemID)")
+      throw URLError(.badURL)
+    }
+
+    AppLogger.download.info("Planned \(files.count) file(s), \(totalBytes.formattedByteSize) for book: \(itemID)")
+    return (files, totalBytes)
   }
 
-  private func makeDownloadTask(
-    for file: FileDownload,
-    attempt: Int,
-    priority: Float,
-    resumeData: Data? = nil
-  ) -> URLSessionDownloadTask {
-    let task: URLSessionDownloadTask
-    if let resumeData {
-      task = downloadSession.downloadTask(withResumeData: resumeData)
-    } else {
-      task = downloadSession.downloadTask(with: file.request)
-    }
-    task.countOfBytesClientExpectsToReceive = file.expectedSize > 0 ? file.expectedSize : 500_000_000
-    task.priority = priority
-    activeDownloads[task.taskIdentifier] = ActiveDownload(file: file, attempt: attempt, task: task)
-    return task
-  }
+  func planEpisode(
+    episodeID: String,
+    podcastID: String
+  ) async throws -> (files: [DownloadFile], totalBytes: Int64) {
+    let podcast = try await Audiobookshelf.shared.podcasts.fetch(id: podcastID)
+    let context = try await currentServerContext()
 
-  private func retry(_ task: URLSessionDownloadTask, after error: Error) {
-    continuationLock.lock()
-    guard let activeDownload = activeDownloads[task.taskIdentifier] else {
-      continuationLock.unlock()
-      return
+    saveEpisodeRecord(podcast: podcast, podcastID: podcastID, episodeID: episodeID)
+
+    guard let apiEpisode = podcast.media.episodes?.first(where: { $0.id == episodeID }) else {
+      AppLogger.download.error("Episode not found: \(episodeID)")
+      throw URLError(.badURL)
     }
 
-    let nextAttempt = activeDownload.attempt + 1
-    guard nextAttempt < maxRetryAttempts, !isCancelled else {
-      continuationLock.unlock()
-      completeBatch(with: error)
-      return
+    guard let audioTrack = apiEpisode.audioTrack, let ino = audioTrack.ino else {
+      AppLogger.download.error("No audio track for episode: \(episodeID)")
+      throw URLError(.badURL)
     }
-    continuationLock.unlock()
 
-    let delay = pow(2.0, Double(nextAttempt))
-    AppLogger.download.info(
-      "Retry \(nextAttempt)/\(maxRetryAttempts - 1) after \(delay)s for \(activeDownload.file.request.url?.lastPathComponent ?? "unknown")"
+    let directoryPath = DownloadManager.episodePath(
+      serverID: context.serverID,
+      podcastID: podcastID,
+      episodeID: episodeID
+    )
+    try prepareDownloadDirectory(
+      DownloadManager.episodeDirectory(
+        serverID: context.serverID,
+        podcastID: podcastID,
+        episodeID: episodeID
+      )
     )
 
-    Task {
-      try? await Task.sleep(for: .seconds(delay))
-      guard !self.isCancelled else {
-        self.completeBatch(with: CancellationError())
-        return
-      }
+    let expectedSize = audioTrack.metadata?.size ?? apiEpisode.size ?? 0
+    let trackURL = context.serverURL.appendingPathComponent(
+      "api/items/\(podcastID)/file/\(ino)/download"
+    )
 
-      let resumeData = (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data
-      let retryTask = self.withDownloadStateLock { () -> URLSessionDownloadTask? in
-        guard self.activeDownloads.removeValue(forKey: task.taskIdentifier) != nil else {
-          return nil
-        }
-        self.taskBytesWritten.removeValue(forKey: task.taskIdentifier)
-        return self.makeDownloadTask(
-          for: activeDownload.file,
-          attempt: nextAttempt,
-          priority: task.priority,
-          resumeData: resumeData
-        )
-      }
-      retryTask?.resume()
-    }
-  }
+    let file = makeFile(
+      url: trackURL,
+      relativePath: "\(directoryPath)/0\(audioTrack.sanitizedExt)",
+      expectedSize: expectedSize,
+      credentials: context.credentials
+    )
 
-  private func complete(_ task: URLSessionDownloadTask, at location: URL) throws {
-    continuationLock.lock()
-    guard let activeDownload = activeDownloads[task.taskIdentifier] else {
-      continuationLock.unlock()
-      return
-    }
-    continuationLock.unlock()
-
-    if FileManager.default.fileExists(atPath: activeDownload.file.destination.path) {
-      try FileManager.default.removeItem(at: activeDownload.file.destination)
-    }
-    try FileManager.default.moveItem(at: location, to: activeDownload.file.destination)
-
-    continuationLock.lock()
-    activeDownloads.removeValue(forKey: task.taskIdentifier)
-    taskBytesWritten.removeValue(forKey: task.taskIdentifier)
-    bytesDownloadedSoFar += diskSize(of: activeDownload.file.destination)
-    let continuation = activeDownloads.isEmpty ? takeBatchContinuationLocked() : nil
-    continuationLock.unlock()
-    continuation?.resume()
-  }
-
-  private func completeBatch(with error: Error) {
-    continuationLock.lock()
-    let continuation = takeBatchContinuationLocked()
-    let tasks = activeDownloads.values.map(\.task)
-    activeDownloads.removeAll()
-    taskBytesWritten.removeAll()
-    continuationLock.unlock()
-
-    for task in tasks {
-      task.cancel()
-    }
-    continuation?.resume(throwing: error)
-  }
-
-  private func takeBatchContinuationLocked() -> CheckedContinuation<Void, Error>? {
-    let continuation = batchContinuation
-    batchContinuation = nil
-    return continuation
-  }
-
-  private func withDownloadStateLock<T>(_ body: () -> T) -> T {
-    continuationLock.lock()
-    defer { continuationLock.unlock() }
-    return body()
-  }
-
-  private func finish(success: Bool, error: Error?) {
-    _executing = false
-    _finished = true
-
-    progressSubject.send(completion: .finished)
-
-    if success {
-      downloadSession.finishTasksAndInvalidate()
-    } else {
-      downloadSession.invalidateAndCancel()
-    }
-
-    if success {
-      Toast(success: "Download completed").show()
-    } else if let error {
-      let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
-      if !isCancelled {
-        Toast(error: "Download failed: \(error.localizedDescription)").show()
-      }
-    }
-  }
-
-  private func updateProgress(taskID: Int, totalBytesWritten: Int64) {
-    guard totalBytes > 0 else { return }
-    continuationLock.lock()
-    taskBytesWritten[taskID] = totalBytesWritten
-    let totalBytesDownloaded = bytesDownloadedSoFar + taskBytesWritten.values.reduce(0, +)
-    continuationLock.unlock()
-    let newProgress = Double(totalBytesDownloaded) / Double(totalBytes)
-    progressSubject.send(min(newProgress, 1.0))
-  }
-
-}
-
-extension DownloadOperation: URLSessionDownloadDelegate {
-  func urlSession(
-    _ session: URLSession,
-    downloadTask: URLSessionDownloadTask,
-    didWriteData bytesWritten: Int64,
-    totalBytesWritten: Int64,
-    totalBytesExpectedToWrite: Int64
-  ) {
-    updateProgress(taskID: downloadTask.taskIdentifier, totalBytesWritten: totalBytesWritten)
-  }
-
-  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-    guard
-      let downloadTask = task as? URLSessionDownloadTask,
-      let error
-    else { return }
-
-    let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
-    if isCancelled {
-      completeBatch(with: error)
-    } else {
-      AppLogger.download.error("Download attempt failed: \(error.localizedDescription)")
-      retry(downloadTask, after: error)
-    }
-  }
-
-  func urlSession(
-    _ session: URLSession,
-    downloadTask: URLSessionDownloadTask,
-    didFinishDownloadingTo location: URL
-  ) {
-    if let httpResponse = downloadTask.response as? HTTPURLResponse {
-      guard (200...299).contains(httpResponse.statusCode) else {
-        let statusDescription = HTTPURLResponse.localizedString(
-          forStatusCode: httpResponse.statusCode
-        ).capitalized
-        AppLogger.download.error("Download failed with HTTP \(httpResponse.statusCode): \(statusDescription)")
-        let error = URLError(
-          .badServerResponse,
-          userInfo: [NSLocalizedDescriptionKey: statusDescription]
-        )
-        retry(downloadTask, after: error)
-        return
-      }
-    }
-
-    do {
-      try complete(downloadTask, at: location)
-    } catch {
-      retry(downloadTask, after: error)
-    }
-  }
-
-  func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-    Task { @MainActor in
-      let manager = DownloadManager.shared
-      manager.backgroundCompletionHandler?()
-      manager.backgroundCompletionHandler = nil
-    }
+    AppLogger.download.info("Planned \(expectedSize.formattedByteSize) for episode: \(episodeID)")
+    return ([file], expectedSize)
   }
 }
 

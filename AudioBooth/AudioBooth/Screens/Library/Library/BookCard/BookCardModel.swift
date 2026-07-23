@@ -171,9 +171,9 @@ final class BookCardModel: BookCard.Model {
           self.cover.downloadProgress = progress
         } else {
           self.cover.downloadProgress = nil
-        }
-        if showsIndicator {
-          self.isDownloaded = states[id] == .downloaded
+          if showsIndicator {
+            self.isDownloaded = (try? LocalBook.fetch(bookID: id))?.isDownloaded ?? false
+          }
         }
       }
   }

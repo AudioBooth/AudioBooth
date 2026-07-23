@@ -69,9 +69,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     AppDependencyManager.shared.add(dependency: player)
 
     Task { @MainActor in
+      await DownloadManager.shared.reattachInFlightDownloads()
       await PlayerManager.shared.restoreLastPlayer()
       await Audiobookshelf.shared.authentication.checkServersHealth()
       await StorageManager.shared.cleanupUnusedDownloads()
+      DownloadManager.shared.resumeOutstandingRequests()
     }
 
     #if !targetEnvironment(macCatalyst)

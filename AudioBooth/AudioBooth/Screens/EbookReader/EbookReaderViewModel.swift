@@ -12,12 +12,19 @@ import WebKit
 
 final class EbookReaderViewModel: EbookReaderView.Model {
   enum Source {
-    case local(URL)
-    case remote(URL)
+    case local(url: URL, bookID: String)
+    case book(Book)
+    case temporary(URL)
   }
 
   private let source: Source
-  private let bookID: String?
+  private var bookID: String? {
+    switch source {
+    case .local(_, let bookID): return bookID
+    case .book(let book): return book.id
+    case .temporary: return nil
+    }
+  }
   private var publication: Publication?
   private var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
@@ -42,9 +49,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     )
   )
 
-  init(source: Source, bookID: String?) {
+  init(source: Source) {
     self.source = source
-    self.bookID = bookID
     super.init()
     observeChanges()
   }
@@ -98,16 +104,15 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       let localURL: URL
       switch source {
-      case .local(let url):
+      case .local(let url, _):
         localURL = url
 
-      case .remote(let remoteURL):
-        if let bookID {
-          localURL = try await downloadEbook(bookID: bookID)
-        } else {
-          localURL = try await downloadTemporaryFile(from: remoteURL)
-          temporaryFileURL = localURL
-        }
+      case .book(let book):
+        localURL = try await downloadEbook(book)
+
+      case .temporary(let remoteURL):
+        localURL = try await downloadTemporaryFile(from: remoteURL)
+        temporaryFileURL = localURL
       }
 
       guard let fileURL = FileURL(url: localURL) else { throw EbookError.unsupportedURL }
@@ -487,12 +492,18 @@ extension EbookReaderViewModel {
 }
 
 extension EbookReaderViewModel {
-  private func downloadEbook(bookID: String) async throws -> URL {
-    DownloadManager.shared.startDownload(for: bookID, type: .ebook)
+  private func downloadEbook(_ book: Book) async throws -> URL {
+    DownloadManager.shared.startDownload(book, kind: .ebook)
 
-    for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
-      if let path = updatedItem.ebookLocalPath {
+    for await _ in DownloadManager.shared.$downloadStates.values {
+      if let path = (try? LocalBook.fetch(bookID: book.id))?.ebookLocalPath {
         return path
+      }
+
+      let request = try? DownloadRequest.fetch(itemID: book.id)
+
+      guard let request, !request.hasFailed else {
+        throw EbookError.downloadFailed
       }
     }
 

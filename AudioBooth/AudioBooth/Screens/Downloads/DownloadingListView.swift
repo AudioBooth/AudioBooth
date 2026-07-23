@@ -10,7 +10,12 @@ struct DownloadingListView: View {
       VStack(spacing: 12) {
         ForEach(model.books) { book in
           NavigationLink(value: NavigationDestination.book(id: book.id)) {
-            Row(book: book, onCancel: { model.onCancelDownload(bookID: book.id) })
+            Row(
+              book: book,
+              onCancel: { model.onCancelDownload(bookID: book.id) },
+              onResume: { model.onResumeDownload(bookID: book.id) },
+              onRemove: { model.onRemoveDownload(bookID: book.id) }
+            )
           }
         }
       }
@@ -25,6 +30,8 @@ extension DownloadingListView {
   struct Row: View {
     let book: BookItem
     let onCancel: () -> Void
+    let onResume: () -> Void
+    let onRemove: () -> Void
 
     @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 60
 
@@ -40,28 +47,60 @@ extension DownloadingListView {
             .allowsTightening(true)
 
           if let details = book.details {
-            Text(details)
+            Text(verbatim: details)
               .font(.caption2)
               .lineLimit(1)
           }
 
           HStack {
             ProgressView(value: book.progress)
-              .tint(.accentColor)
+              .tint(book.status == .downloading ? .accentColor : .secondary)
 
-            Text(book.progress.formatted(.percent.precision(.fractionLength(0))))
-              .font(.caption2)
-              .foregroundStyle(.secondary)
-              .monospacedDigit()
+            switch book.status {
+            case .downloading:
+              Text(book.progress.formatted(.percent.precision(.fractionLength(0))))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            case .queued:
+              EmptyView()
+            case .failed:
+              Label("Paused", systemImage: "pause.circle")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
           }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
-        Button(action: onCancel) {
-          Image(systemName: "stop.circle")
-            .font(.title2)
+        switch book.status {
+        case .downloading:
+          Button(action: onCancel) {
+            Image(systemName: "stop.circle")
+              .font(.title2)
+          }
+          .buttonStyle(.plain)
+
+        case .queued:
+          Button(action: onCancel) {
+            Image(systemName: "xmark.circle")
+              .font(.title2)
+          }
+          .buttonStyle(.plain)
+
+        case .failed:
+          Button(action: onResume) {
+            Image(systemName: "arrow.down.circle")
+              .font(.title2)
+          }
+          .buttonStyle(.plain)
+
+          Button(action: onRemove) {
+            Image(systemName: "trash")
+              .font(.title2)
+          }
+          .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
       }
       .foregroundColor(.primary)
       .padding(.horizontal)
@@ -77,11 +116,20 @@ extension DownloadingListView {
 
 extension DownloadingListView {
   struct BookItem: Identifiable {
+    enum Status {
+      case downloading
+      case queued
+      case failed
+    }
+
     let id: String
     let title: String
-    let details: String?
+    var details: String?
     let coverURL: URL?
+    let duration: TimeInterval
+    let totalSize: Int64
     var progress: Double
+    var status: Status
   }
 
   @Observable
@@ -90,6 +138,8 @@ extension DownloadingListView {
 
     func onAppear() {}
     func onCancelDownload(bookID: String) {}
+    func onResumeDownload(bookID: String) {}
+    func onRemoveDownload(bookID: String) {}
 
     init(books: [BookItem] = []) {
       self.books = books

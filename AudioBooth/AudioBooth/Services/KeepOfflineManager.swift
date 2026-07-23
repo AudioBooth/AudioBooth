@@ -75,6 +75,7 @@ final class KeepOfflineManager {
 
     let unlistened = localBooks.count { book in
       book.bookID != bookID
+        && book.isDownloaded
         && book.series.contains { $0.id == seriesID }
         && MediaProgress.progress(for: book.bookID) < 1.0
     }
@@ -84,6 +85,7 @@ final class KeepOfflineManager {
       return
     }
 
+    let libraryID = currentBook.libraryID
     AppLogger.download.info("Keep offline reconciling series \(seriesID)")
 
     do {
@@ -96,7 +98,7 @@ final class KeepOfflineManager {
           limit: 100,
           page: page,
           filter: filter,
-          libraryID: currentBook.libraryID
+          libraryID: libraryID
         )
         books.append(contentsOf: response.results)
 
@@ -128,6 +130,7 @@ final class KeepOfflineManager {
 
     let unlistened = localEpisodes.count { episode in
       episode.episodeID != episodeID
+        && episode.isDownloaded
         && episode.podcast?.podcastID == id
         && MediaProgress.progress(for: episode.episodeID) < 1.0
     }
@@ -166,43 +169,16 @@ final class KeepOfflineManager {
   private func downloadBook(_ book: Book) async {
     guard await StorageManager.shared.canDownload(additionalBytes: book.size ?? 0) else { return }
 
-    downloadManager.startDownload(
-      for: book.id,
-      type: .book,
-      info: .init(
-        title: book.title,
-        coverURL: book.coverURL(),
-        duration: book.duration,
-        size: book.size,
-        startedAt: Date()
-      )
-    )
+    downloadManager.startDownload(book)
   }
 
   private func downloadEpisode(_ episode: PodcastEpisode, podcast: Podcast) async {
     guard await StorageManager.shared.canDownload(additionalBytes: episode.size ?? 0) else { return }
 
-    downloadManager.startDownload(
-      for: episode.id,
-      type: .episode(podcastID: podcast.id, episodeID: episode.id),
-      info: .init(
-        title: episode.title,
-        coverURL: podcast.coverURL(),
-        duration: episode.duration,
-        size: episode.size,
-        startedAt: Date()
-      )
-    )
+    downloadManager.startDownload(episode, podcastID: podcast.id, coverURL: podcast.coverURL())
   }
 
   private var isNetworkAllowed: Bool {
-    switch preferences.keepOfflineMode {
-    case .off:
-      false
-    case .wifiOnly:
-      NetworkMonitor.shared.interfaceType == .wifi
-    case .wifiAndCellular:
-      NetworkMonitor.shared.isConnected
-    }
+    preferences.keepOfflineMode.isNetworkAllowed
   }
 }

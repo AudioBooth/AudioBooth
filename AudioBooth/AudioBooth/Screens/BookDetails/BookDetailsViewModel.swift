@@ -382,7 +382,13 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] states in
         guard let self else { return }
-        self.downloadState = states[bookID] ?? .notDownloaded
+        if case .downloading(let progress) = states[bookID] {
+          self.downloadState = .downloading(progress: progress)
+        } else {
+          self.downloadState =
+            (localBook ?? (try? LocalBook.fetch(bookID: bookID)))?
+              .isDownloaded == true ? .downloaded : .notDownloaded
+        }
         self.updateActions()
       }
       .store(in: &cancellables)
@@ -532,9 +538,9 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   override func onReadTapped() {
     if let ebookURL = localBook?.ebookLocalPath {
-      ebookReader = EbookReaderViewModel(source: .local(ebookURL), bookID: bookID)
-    } else if let book, let ebookURL = book.ebookURL {
-      ebookReader = EbookReaderViewModel(source: .remote(ebookURL), bookID: bookID)
+      ebookReader = EbookReaderViewModel(source: .local(url: ebookURL, bookID: bookID))
+    } else if let book, book.ebookURL != nil {
+      ebookReader = EbookReaderViewModel(source: .book(book))
     } else {
       Toast(error: "Ebook URL not available").show()
     }

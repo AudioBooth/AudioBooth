@@ -101,20 +101,11 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
   override func onDownloadAllEpisodes() {
     let episodes = filteredEpisodes.filter { $0.downloadState == .notDownloaded }
 
-    Task {
-      for episode in episodes {
-        let size = episode.size ?? 0
-        downloadManager.startDownload(
-          for: episode.id,
-          type: .episode(podcastID: podcastID, episodeID: episode.id),
-          info: .init(
-            title: episode.title,
-            coverURL: coverURL,
-            duration: episode.duration,
-            size: size > 0 ? size : nil,
-            startedAt: Date()
-          )
-        )
+    for episode in episodes {
+      if let apiEpisode = apiEpisodes.first(where: { $0.id == episode.id }) {
+        downloadManager.startDownload(apiEpisode, podcastID: podcastID, coverURL: coverURL)
+      } else if let localEpisode = localPodcast?.episodes.first(where: { $0.episodeID == episode.id }) {
+        downloadManager.startDownload(localEpisode)
       }
     }
   }

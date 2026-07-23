@@ -1,6 +1,7 @@
 import API
 import Combine
 import Foundation
+import Network
 import SwiftUI
 
 final class UserPreferences: ObservableObject {
@@ -350,6 +351,14 @@ enum AutoDownloadMode: String, CaseIterable, Codable {
     case .off: "Off"
     case .wifiOnly: "Wi-Fi Only"
     case .wifiAndCellular: "Wi-Fi & Cellular"
+    }
+  }
+
+  var isNetworkAllowed: Bool {
+    switch self {
+    case .off: false
+    case .wifiOnly: NetworkMonitor.shared.interfaceType == .wifi
+    case .wifiAndCellular: NetworkMonitor.shared.isConnected
     }
   }
 }

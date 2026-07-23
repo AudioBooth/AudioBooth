@@ -122,17 +122,11 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
         Toast(error: "Storage limit reached").show()
         return
       }
-      downloadManager.startDownload(
-        for: episodeID,
-        type: .episode(podcastID: podcastID, episodeID: episodeID),
-        info: .init(
-          title: episodeTitle,
-          coverURL: coverURL,
-          duration: episodeDuration,
-          size: size > 0 ? size : nil,
-          startedAt: Date()
-        )
-      )
+      if let apiEpisode {
+        downloadManager.startDownload(apiEpisode, podcastID: podcastID, coverURL: coverURL)
+      } else if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
+        downloadManager.startDownload(localEpisode)
+      }
     }
   }
 

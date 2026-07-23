@@ -173,15 +173,15 @@ final class PlayerManager: ObservableObject, Sendable {
 
   func openLocalBookAsEbook(_ localBook: LocalBook) {
     if let ebookURL = localBook.ebookLocalPath {
-      reader = EbookReaderViewModel(source: .local(ebookURL), bookID: localBook.bookID)
+      reader = EbookReaderViewModel(source: .local(url: ebookURL, bookID: localBook.bookID))
     } else {
       Toast(error: "Ebook file not available").show()
     }
   }
 
   func openRemoteBookAsEbook(_ book: Book) {
-    if let ebookURL = book.ebookURL {
-      reader = EbookReaderViewModel(source: .remote(ebookURL), bookID: book.id)
+    if book.ebookURL != nil {
+      reader = EbookReaderViewModel(source: .book(book))
     } else {
       Toast(error: "Ebook not available").show()
     }

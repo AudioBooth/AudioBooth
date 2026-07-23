@@ -170,15 +170,9 @@ final class PodcastAutoQueueManager {
       guard state == .notDownloaded else { continue }
 
       downloadManager.startDownload(
-        for: episodeID,
-        type: .episode(podcastID: podcastID, episodeID: episodeID),
-        info: .init(
-          title: recent.episode.title,
-          coverURL: recent.coverURL(),
-          duration: recent.episode.duration,
-          size: recent.episode.size,
-          startedAt: Date()
-        )
+        recent.episode,
+        podcastID: podcastID,
+        coverURL: recent.coverURL()
       )
     }
   }

@@ -5,7 +5,6 @@ struct DownloadsRootPage: View {
     case downloaded
     case downloading
   }
-  @ObservedObject private var downloadManager = DownloadManager.shared
 
   @State private var selectedTab: DownloadTab = .downloaded
 
@@ -13,7 +12,7 @@ struct DownloadsRootPage: View {
   @StateObject private var downloading = DownloadingListViewModel()
 
   private var hasDownloadingBooks: Bool {
-    !downloadManager.downloadInfos.isEmpty
+    !downloading.books.isEmpty
   }
 
   var body: some View {

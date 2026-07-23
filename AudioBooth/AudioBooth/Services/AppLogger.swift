@@ -5,7 +5,7 @@ import Pulse
 import PulseLogHandler
 import UIKit
 
-enum AppLogger {
+nonisolated enum AppLogger {
   static let session = Logger(label: "session")
   static let watchConnectivity = Logger(label: "watch-connectivity")
   static let player = Logger(label: "player")
@@ -15,6 +15,7 @@ enum AppLogger {
   static let authentication = Logger(label: "authentication")
   static let crash = Logger(label: "crash")
 
+  @MainActor
   static func bootstrap() {
     configureNetworkLogger()
 

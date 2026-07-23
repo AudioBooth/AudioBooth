@@ -103,17 +103,11 @@ final class PodcastEpisodeDetailViewModel: PodcastEpisodeDetailView.Model {
           Toast(error: "Storage limit reached").show()
           return
         }
-        downloadManager.startDownload(
-          for: episodeID,
-          type: .episode(podcastID: podcastID, episodeID: episodeID),
-          info: .init(
-            title: title,
-            coverURL: coverURL,
-            duration: duration,
-            size: size > 0 ? size : nil,
-            startedAt: Date()
-          )
-        )
+        if let apiEpisode {
+          downloadManager.startDownload(apiEpisode, podcastID: podcastID, coverURL: coverURL)
+        } else if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
+          downloadManager.startDownload(localEpisode)
+        }
       }
     case .downloading:
       downloadManager.cancelDownload(for: episodeID)

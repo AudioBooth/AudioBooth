@@ -5,6 +5,8 @@ import Network
 final class NetworkMonitor {
   static let shared = NetworkMonitor()
 
+  static let didChange = Notification.Name("NetworkMonitorDidChange")
+
   private let monitor = NWPathMonitor()
   private let queue = DispatchQueue(label: "me.jgrenier.AudioBS.NetworkMonitor")
 
@@ -39,6 +41,10 @@ final class NetworkMonitor {
         previousInterfaceType != newInterfaceType
       {
         self?.onNetworkInterfaceChanged()
+      }
+
+      if previousInterfaceType != newInterfaceType {
+        NotificationCenter.default.post(name: NetworkMonitor.didChange, object: nil)
       }
     }
     monitor.start(queue: queue)

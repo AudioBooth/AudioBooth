@@ -15,7 +15,7 @@ enum AudiobookIndexer {
 
     Task {
       let books = ((try? LocalBook.fetchAll()) ?? [])
-        .filter { $0.mediaType.contains(.audiobook) }
+        .filter { $0.isDownloaded && $0.mediaType.contains(.audiobook) }
 
       let entities = books.map { book in
         AudiobookEntity(

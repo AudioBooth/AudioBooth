@@ -65,7 +65,7 @@ extension SmartContinueResolver {
   }
 
   private func resolveNextOfflineEpisode(currentEpisodeID: String) -> ResolvedItem? {
-    let episodes = (try? LocalEpisode.fetchAll()) ?? []
+    let episodes = ((try? LocalEpisode.fetchAll()) ?? []).filter { $0.isDownloaded }
     guard let currentIndex = episodes.firstIndex(where: { $0.episodeID == currentEpisodeID }) else {
       return nil
     }
@@ -121,7 +121,7 @@ extension SmartContinueResolver {
   }
 
   private func resolveNextOfflineBook(currentBookID: String) -> ResolvedItem? {
-    let books = (try? LocalBook.fetchAll())?.sorted() ?? []
+    let books = (try? LocalBook.fetchAll())?.filter { $0.isDownloaded }.sorted() ?? []
     guard let currentIndex = books.firstIndex(where: { $0.bookID == currentBookID }) else {
       return nil
     }

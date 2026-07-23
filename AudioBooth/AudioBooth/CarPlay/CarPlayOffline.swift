@@ -62,7 +62,7 @@ final class CarPlayOffline: CarPlayPageProtocol {
   private func buildBookItems() async -> [CPListItem] {
     do {
       let offlineBooks = try LocalBook.fetchAll()
-        .filter({ downloadManager.downloadStates[$0.bookID] == .downloaded && $0.duration > 0 })
+        .filter({ $0.isDownloaded && $0.duration > 0 })
         .sorted()
 
       return offlineBooks.map { localBook in
@@ -119,7 +119,7 @@ final class CarPlayOffline: CarPlayPageProtocol {
   private func buildEpisodeItems() async -> [CPListItem] {
     do {
       let offlineEpisodes = try LocalEpisode.fetchAll()
-        .filter { downloadManager.downloadStates[$0.episodeID] == .downloaded && $0.duration > 0 }
+        .filter { $0.isDownloaded && $0.duration > 0 }
         .sorted { ($0.publishedAt ?? .distantPast) > ($1.publishedAt ?? .distantPast) }
 
       return offlineEpisodes.map { episode in

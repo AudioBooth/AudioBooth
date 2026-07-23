@@ -46,56 +46,17 @@ extension BookActionable {
   }
 
   public func download() throws {
-    let title: String
-    let duration: TimeInterval
-    let size: Int64
-    let coverURL: URL?
-
     if let book = self as? Book {
-      title = book.title
-      duration = book.duration
-      size = book.size ?? 0
-      coverURL = book.coverURL()
+      DownloadManager.shared.startDownload(book)
     } else if let localBook = self as? LocalBook {
-      title = localBook.title
-      duration = localBook.duration
-      size = localBook.tracks.reduce(0) { $0 + ($1.size ?? 0) }
-      coverURL = localBook.coverURL()
+      DownloadManager.shared.startDownload(localBook)
     } else {
       throw BookActionableError.unsupportedType
-    }
-
-    Task {
-      let canDownload = await StorageManager.shared.canDownload(additionalBytes: size)
-      guard canDownload else {
-        Toast(error: "Storage limit reached").show()
-        return
-      }
-
-      DownloadManager.shared.startDownload(
-        for: bookID,
-        type: .book,
-        info: .init(
-          title: title,
-          coverURL: coverURL,
-          duration: duration,
-          size: size > 0 ? size : nil,
-          startedAt: Date()
-        )
-      )
     }
   }
 
   public func removeDownload() {
     DownloadManager.shared.deleteDownload(for: bookID)
-
-    if PlayerManager.shared.current?.id != bookID {
-      if let localBook = self as? LocalBook {
-        try? localBook.delete()
-      } else if let localBook = try? LocalBook.fetch(bookID: bookID) {
-        try? localBook.delete()
-      }
-    }
   }
 
   public func play() where Self == LocalBook {

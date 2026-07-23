@@ -372,17 +372,7 @@ final class BookPlayerModel: BookPlayer.Model {
         downloadManager.deleteEpisodeDownload(episodeID: episode.episodeID, podcastID: podcast.podcastID)
       case .notDownloaded:
         downloadState = .downloading(progress: 0)
-        downloadManager.startDownload(
-          for: episode.episodeID,
-          type: .episode(podcastID: podcast.podcastID, episodeID: episode.episodeID),
-          info: .init(
-            title: title,
-            coverURL: coverURL,
-            duration: episode.duration,
-            size: episode.track?.size,
-            startedAt: Date()
-          )
-        )
+        downloadManager.startDownload(episode)
       }
     }
   }
@@ -604,19 +594,7 @@ extension BookPlayerModel {
 
     guard let item, !item.isDownloaded, mode != .off else { return }
 
-    let networkMonitor = NetworkMonitor.shared
-
-    let shouldAutoDownload: Bool
-    switch mode {
-    case .off:
-      return
-    case .wifiOnly:
-      shouldAutoDownload = networkMonitor.interfaceType == .wifi
-    case .wifiAndCellular:
-      shouldAutoDownload = networkMonitor.isConnected
-    }
-
-    guard shouldAutoDownload else {
+    guard mode.isNetworkAllowed else {
       AppLogger.player.debug("Auto-download skipped (mode: \(mode.rawValue))")
       return
     }
@@ -647,18 +625,7 @@ extension BookPlayerModel {
     let listeningSeconds = Int(session.timeListening + session.pendingListeningTime)
     guard listeningSeconds >= delay.rawValue else { return }
 
-    let networkMonitor = NetworkMonitor.shared
-    let shouldDownload: Bool
-    switch mode {
-    case .off:
-      return
-    case .wifiOnly:
-      shouldDownload = networkMonitor.interfaceType == .wifi
-    case .wifiAndCellular:
-      shouldDownload = networkMonitor.isConnected
-    }
-
-    guard shouldDownload else { return }
+    guard mode.isNetworkAllowed else { return }
 
     AppLogger.player.info("Auto-download starting after \(listeningSeconds)s of listening")
     if let localBook = item as? LocalBook {
