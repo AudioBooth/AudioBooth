@@ -17,7 +17,7 @@ extension BookActionable {
     try await Audiobookshelf.shared.libraries.markAsFinished(bookID: bookID)
 
     if UserPreferences.shared.removeDownloadOnCompletion {
-      if DownloadManager.shared.downloadStates[bookID] == .downloaded {
+      if DownloadManager.shared.downloadStates[bookID] == .downloaded, PlayerManager.shared.current?.id != bookID {
         removeDownload()
       }
     }
