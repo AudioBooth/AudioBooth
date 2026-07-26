@@ -369,8 +369,10 @@ extension PlayerManager {
     }
   }
 
-  /// Creates a bookmark at the current playback position with an empty title,
-  /// giving haptic and toast feedback since the gesture has no visible UI.
+  /// Creates a bookmark at the current playback position, giving haptic and
+  /// toast feedback since the gesture has no visible UI. The user isn't prompted
+  /// for a title, so we auto-fill a date-based one — matching the app's manual
+  /// bookmark flow — because the server rejects an empty title.
   func addBookmarkAtCurrentPosition() {
     guard
       let current = current as? BookPlayerModel,
@@ -380,13 +382,17 @@ extension PlayerManager {
     let bookID = current.id
     let bookTitle = current.title
 
+    let formatter = DateFormatter()
+    formatter.dateFormat = "M/d/yyyy HH:mm"
+    let title = formatter.string(from: Date())
+
     Haptics.impact(.medium)
 
     Task {
       do {
         _ = try await BookmarkSyncQueue.shared.create(
           bookID: bookID,
-          title: "",
+          title: title,
           time: time
         )
         await MainActor.run {
