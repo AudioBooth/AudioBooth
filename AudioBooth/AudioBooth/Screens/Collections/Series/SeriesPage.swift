@@ -94,6 +94,7 @@ struct SeriesPage: View {
       SeriesView(
         series: model.series,
         hasMorePages: model.hasMorePages,
+        pageLoadFailed: model.pageLoadFailed,
         onLoadMore: model.loadNextPageIfNeeded
       )
       .padding(.horizontal)
@@ -106,6 +107,7 @@ extension SeriesPage {
   @Observable class Model: ObservableObject {
     var isLoading: Bool
     var hasMorePages: Bool
+    var pageLoadFailed: Bool = false
 
     var series: [SeriesCard.Model]
     var search: SearchView.Model = SearchView.Model()

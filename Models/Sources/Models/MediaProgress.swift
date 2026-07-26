@@ -102,6 +102,10 @@ extension MediaProgress {
   }
 
   public static func progress(for bookID: String) -> Double { cache[bookID, default: 0] }
+
+  public static func reloadCache() {
+    cache = initialize()
+  }
 }
 
 @MainActor
@@ -315,6 +319,9 @@ extension MediaProgress {
 
     let allLocalProgress = try MediaProgress.fetchAll()
     let remoteBookIDs = Set(userData.mediaProgress.map { $0.episodeId ?? $0.libraryItemId })
+    let pendingSessionBookIDs = Set(
+      (try? PlaybackSession.fetchUnsynced())?.map { $0.episodeID ?? $0.libraryItemID } ?? []
+    )
     var progressMap = Dictionary(
       uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) }
     )
@@ -347,6 +354,10 @@ extension MediaProgress {
     for localProgress in allLocalProgress {
       if !remoteBookIDs.contains(localProgress.bookID) {
         if let currentPlayingBookID, localProgress.bookID == currentPlayingBookID {
+          continue
+        }
+
+        if pendingSessionBookIDs.contains(localProgress.bookID) {
           continue
         }
 

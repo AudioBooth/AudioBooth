@@ -113,12 +113,14 @@ final class PinnedPlaylistManager: ObservableObject {
 
     guard !completedItems.isEmpty else { return playlist }
 
-    let completedIDs = completedItems.map(\.libraryItemID)
+    let completedItemIdentities = completedItems.map {
+      (libraryItemID: $0.libraryItemID, episodeID: $0.episodeID)
+    }
 
     do {
       return try await Audiobookshelf.shared.playlists.removeItems(
         playlistID: playlist.id,
-        items: completedIDs
+        items: completedItemIdentities
       )
     } catch {
       AppLogger.general.error("Failed to remove completed items from pinned playlist: \(error)")

@@ -77,7 +77,7 @@ final class CollectionSelectorSheetModel: CollectionSelectorSheet.Model {
           } else {
             updatedCollection = try await audiobookshelf.playlists.removeItems(
               playlistID: playlist.id,
-              items: bookIDs
+              items: bookIDs.map { (libraryItemID: $0, episodeID: nil) }
             )
           }
         case .collections:

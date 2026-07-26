@@ -52,6 +52,7 @@ public final class LocalPodcast {
     self.podcastType = podcastType
   }
 
+  @MainActor
   public convenience init(from podcast: Podcast) {
     self.init(
       podcastID: podcast.id,

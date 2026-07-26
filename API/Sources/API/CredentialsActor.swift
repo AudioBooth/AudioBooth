@@ -21,15 +21,17 @@ actor CredentialsActor {
         throw Audiobookshelf.AudiobookshelfError.networkError("No server")
       }
 
-      guard case .bearer(_, let refreshToken, let expiresAt, _) = server.token else {
-        return server.token
+      let currentToken = await server.token
+
+      guard case .bearer(_, let refreshToken, let expiresAt, _) = currentToken else {
+        return currentToken
       }
 
       let currentTime = Date().timeIntervalSince1970
       let bufferTime: TimeInterval = 60
 
       if currentTime < (expiresAt - bufferTime) {
-        return server.token
+        return currentToken
       }
 
       if refreshToken.isEmpty {

@@ -17,7 +17,7 @@ public final class PlaylistsService {
       )
     }
 
-    guard let library = audiobookshelf.libraries.current else {
+    guard let library = await audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "No library selected. Please select a library first."
       )
@@ -83,7 +83,10 @@ public final class PlaylistsService {
     return response.value
   }
 
-  public func removeItems(playlistID: String, items: [String]) async throws -> Playlist {
+  public func removeItems(
+    playlistID: String,
+    items: [(libraryItemID: String, episodeID: String?)]
+  ) async throws -> Playlist {
     struct PlaylistItem: Codable {
       let libraryItemID: String
       let episodeID: String?
@@ -104,7 +107,7 @@ public final class PlaylistsService {
       )
     }
 
-    let playlistItems = items.map { PlaylistItem(libraryItemID: $0, episodeID: nil) }
+    let playlistItems = items.map { PlaylistItem(libraryItemID: $0.libraryItemID, episodeID: $0.episodeID) }
     let requestBody = RemoveItemsRequest(items: playlistItems)
 
     let request = NetworkRequest<Playlist>(
@@ -146,7 +149,7 @@ public final class PlaylistsService {
       )
     }
 
-    guard let library = audiobookshelf.libraries.current else {
+    guard let library = await audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "No library selected. Please select a library first."
       )

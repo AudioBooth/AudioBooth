@@ -1,6 +1,6 @@
 import Foundation
 
-public struct RecentEpisode: Codable, Sendable {
+public struct RecentEpisode: Decodable, Sendable {
   public let libraryItemID: String
   public let podcastTitle: String
   public let podcastAuthor: String?
@@ -32,12 +32,7 @@ public struct RecentEpisode: Codable, Sendable {
     podcastAuthor = try metadataContainer.decodeIfPresent(String.self, forKey: .author)
   }
 
-  public func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(libraryItemID, forKey: .libraryItemID)
-    try episode.encode(to: encoder)
-  }
-
+  @MainActor
   public func coverURL() -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     return serverURL.appendingPathComponent("api/items/\(libraryItemID)/cover")

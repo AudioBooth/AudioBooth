@@ -11,6 +11,7 @@ public struct Collection: Codable, Sendable, CollectionLike {
 
   public var itemCount: Int { books.count }
 
+  @MainActor
   public var covers: [URL] {
     books.compactMap { $0.coverURL() }
   }

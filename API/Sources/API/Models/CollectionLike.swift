@@ -5,5 +5,5 @@ public protocol CollectionLike {
   var name: String { get }
   var description: String? { get }
   var itemCount: Int { get }
-  var covers: [URL] { get }
+  @MainActor var covers: [URL] { get }
 }

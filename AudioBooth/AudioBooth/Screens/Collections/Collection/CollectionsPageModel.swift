@@ -42,14 +42,20 @@ final class CollectionsPageModel: CollectionsPage.Model {
   }
 
   override func onDelete(at indexSet: IndexSet) {
+    let itemsToDelete = indexSet.map { collections[$0] }
+
     Task {
-      for index in indexSet {
-        let collection = collections[index]
+      for collection in itemsToDelete {
         do {
-          try await audiobookshelf.playlists.delete(playlistID: collection.id)
-          collections.remove(at: index)
+          switch mode {
+          case .playlists:
+            try await audiobookshelf.playlists.delete(playlistID: collection.id)
+          case .collections:
+            try await audiobookshelf.collections.delete(collectionID: collection.id)
+          }
+          collections.removeAll { $0.id == collection.id }
         } catch {
-          AppLogger.viewModel.error("Failed to delete playlist: \(error)")
+          AppLogger.viewModel.error("Failed to delete item: \(error)")
         }
       }
     }
@@ -68,6 +74,7 @@ final class CollectionsPageModel: CollectionsPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
+    pageLoadFailed = false
 
     do {
       let collectionItems: [CollectionRow.Model]
@@ -124,6 +131,7 @@ final class CollectionsPageModel: CollectionsPage.Model {
         return
       }
 
+      pageLoadFailed = true
       if currentPage == 0 {
         collections = []
       }

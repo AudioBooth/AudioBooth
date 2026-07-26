@@ -12,6 +12,7 @@ public struct AuthorDetails: Codable, Sendable {
   public let series: [SeriesWithItems]
   public let libraryItems: [Book]
 
+  @MainActor
   public var imageURL: URL? {
     guard imagePath != nil, let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     return serverURL.appendingPathComponent("api/authors/\(id)/image")

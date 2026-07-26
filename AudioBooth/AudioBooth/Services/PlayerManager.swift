@@ -36,6 +36,7 @@ final class PlayerManager: ObservableObject, Sendable {
   private let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
 
   private var cancellables = Set<AnyCancellable>()
+  private var serverID: String?
 
   private init() {
     loadQueue()
@@ -44,15 +45,18 @@ final class PlayerManager: ObservableObject, Sendable {
   }
 
   private func setupServerObserver() {
-    let serverID = Audiobookshelf.shared.libraries.current?.serverID
+    serverID = Audiobookshelf.shared.libraries.current?.serverID
 
     Audiobookshelf.shared.libraries.objectWillChange
+      .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
-        DispatchQueue.main.async {
-          if serverID != Audiobookshelf.shared.libraries.current?.serverID {
-            self?.clearCurrent()
-            self?.clearQueue()
-          }
+        guard let self else { return }
+
+        let currentServerID = Audiobookshelf.shared.libraries.current?.serverID
+        if serverID != currentServerID {
+          serverID = currentServerID
+          clearCurrent()
+          clearQueue()
         }
       }
       .store(in: &cancellables)

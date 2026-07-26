@@ -3,6 +3,7 @@ import SwiftUI
 struct SeriesView: View {
   let series: [SeriesCard.Model]
   var hasMorePages: Bool = false
+  var pageLoadFailed: Bool = false
   var onLoadMore: (() -> Void)?
 
   @Environment(\.itemDisplayMode) private var displayMode
@@ -34,12 +35,9 @@ struct SeriesView: View {
     }
 
     if hasMorePages {
-      ProgressView()
-        .frame(maxWidth: .infinity)
-        .padding()
-        .onAppear {
-          onLoadMore?()
-        }
+      PaginationFooter(hasError: pageLoadFailed) {
+        onLoadMore?()
+      }
     }
   }
 }

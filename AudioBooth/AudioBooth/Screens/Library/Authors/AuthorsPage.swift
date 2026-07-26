@@ -107,12 +107,7 @@ struct AuthorsPage: View {
       }
 
       if model.hasMorePages {
-        ProgressView()
-          .frame(maxWidth: .infinity)
-          .padding()
-          .onAppear {
-            model.loadNextPageIfNeeded()
-          }
+        PaginationFooter(hasError: model.pageLoadFailed, onLoadMore: model.loadNextPageIfNeeded)
       }
 
       Color.clear
@@ -196,6 +191,7 @@ extension AuthorsPage {
   @Observable class Model: ObservableObject {
     var isLoading: Bool
     var hasMorePages: Bool
+    var pageLoadFailed: Bool = false
     var scrollTarget: ScrollTarget?
 
     struct ScrollTarget: Equatable {

@@ -16,9 +16,9 @@ public struct SessionSync: Codable, Sendable {
   public let updatedAt: Int
 
   public struct DeviceInfo: Codable, Sendable {
-    public let deviceId: String
+    public let deviceId: String?
     public let clientVersion: String?
-    public let clientName: String
+    public let clientName: String?
 
     public init(
       deviceID: String,

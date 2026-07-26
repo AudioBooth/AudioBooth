@@ -63,11 +63,7 @@ struct CollectionsPage: View {
       .deleteDisabled(!model.canDelete)
 
       if model.hasMorePages {
-        ProgressView()
-          .frame(maxWidth: .infinity)
-          .onAppear {
-            model.loadNextPageIfNeeded()
-          }
+        PaginationFooter(hasError: model.pageLoadFailed, onLoadMore: model.loadNextPageIfNeeded)
           .listRowBackground(theme.colors.background.page)
       }
     }
@@ -83,6 +79,7 @@ extension CollectionsPage {
     var isLoading: Bool
     var collections: [CollectionRow.Model]
     var hasMorePages: Bool
+    var pageLoadFailed: Bool = false
     var mode: CollectionMode
     var canDelete: Bool
 

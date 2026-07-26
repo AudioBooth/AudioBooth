@@ -156,7 +156,7 @@ struct OfflineListView: View {
         }
       }
       .onMove(
-        perform: model.isGroupedBySeries
+        perform: model.isGroupedBySeries || !model.searchText.isEmpty
           ? nil
           : { from, to in
             model.onReorder(from: from, to: to)
