@@ -382,9 +382,7 @@ extension PlayerManager {
     let bookID = current.id
     let bookTitle = current.title
 
-    let formatter = DateFormatter()
-    formatter.dateFormat = "M/d/yyyy HH:mm"
-    let title = formatter.string(from: Date())
+    let title = Date().formatted(date: .abbreviated, time: .shortened)
 
     Haptics.impact(.medium)
 
