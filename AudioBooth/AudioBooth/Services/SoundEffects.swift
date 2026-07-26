@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import Logging
 
 /// Plays short UI sound effects. Because these players share the app's already
 /// active `.playback` audio session, they mix over any ongoing audiobook
