@@ -390,6 +390,8 @@ extension PlayerManager {
           time: time
         )
         await MainActor.run {
+          // Subtle audio cue that mixes over playback without interrupting it.
+          SoundEffects.playBookmark()
           Toast(success: "Bookmark added to \(bookTitle)").show()
         }
       } catch {
