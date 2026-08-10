@@ -40,6 +40,21 @@ struct AdaptiveSheetModifier<SheetContent: View>: ViewModifier {
                 }
             }
           )
+          #if targetEnvironment(macCatalyst)
+        // Mac Catalyst has no swipe-to-dismiss gesture, and these sheets
+        // have no close button of their own, so without this the only way
+        // to dismiss one is the Escape key. Matches the Label("Close",
+        // systemImage: "xmark") convention used everywhere else in the
+        // app; top-trailing is free on every adaptive sheet except
+        // EqualizerSheet, which moved its own top-trailing control to
+        // make room.
+        .overlay(alignment: .topTrailing) {
+          Button(action: { isPresented = false }) {
+            Label("Close", systemImage: "xmark")
+          }
+          .padding()
+        }
+          #endif
           .presentationDetents([.height(contentHeight)])
           .presentationDragIndicator(.visible)
       }

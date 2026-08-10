@@ -37,7 +37,7 @@ struct EqualizerSheet: View {
         .disabled(!model.isEnabled)
     }
     .opacity(model.isEnabled ? 1 : 0.5)
-    .overlay(alignment: .topTrailing) {
+    .overlay(alignment: .topLeading) {
       Toggle(
         "",
         isOn: Binding(
