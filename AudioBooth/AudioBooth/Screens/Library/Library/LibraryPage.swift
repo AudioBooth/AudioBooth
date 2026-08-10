@@ -5,6 +5,7 @@ import SwiftUI
 struct LibraryPage: View {
   @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
+  @ObservedObject private var playerManager = PlayerManager.shared
 
   @ObservedObject var model: Model
 
@@ -275,6 +276,10 @@ struct LibraryPage: View {
         }
       }
       .padding(.horizontal)
+      // tabViewBottomAccessory's safe-area inset doesn't always reach pushed
+      // NavigationStack destinations reliably, so the last row can end up
+      // permanently hidden behind the mini player. Pad past it explicitly.
+      .padding(.bottom, playerManager.hasActivePlayer ? 80 : 0)
       .environment(\.itemDisplayMode, preferences.libraryDisplayMode)
     }
   }
