@@ -37,7 +37,7 @@ struct EqualizerSheet: View {
         .disabled(!model.isEnabled)
     }
     .opacity(model.isEnabled ? 1 : 0.5)
-    .overlay(alignment: .topLeading) {
+    .overlay(alignment: .topTrailing) {
       Toggle(
         "",
         isOn: Binding(
@@ -46,6 +46,9 @@ struct EqualizerSheet: View {
         )
       )
       .labelsHidden()
+      // Mac Catalyst renders a plain Toggle as a checkbox; this keeps it a
+      // switch there, and is a no-op on iOS where switch is already default.
+      .toggleStyle(.switch)
       .padding()
     }
   }
