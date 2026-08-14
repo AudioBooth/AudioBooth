@@ -83,6 +83,17 @@ struct SleepPreferencesView: View {
           }
           .listRowBackground(theme.colors.background.card)
         }
+
+        VStack(alignment: .leading, spacing: 12) {
+          Text("Playback Pause Behavior")
+            .font(.subheadline)
+            .fontWeight(.medium)
+          TimerPauseBehaviorRow(selection: $preferences.timerPauseBehavior)
+          Text(preferences.timerPauseBehavior.explanation)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Sleep Timer")
       }
@@ -145,6 +156,32 @@ struct SleepPreferencesView: View {
       return String(localized: "No Fade")
     }
     return Duration.seconds(value).formatted()
+  }
+}
+
+private struct TimerPauseBehaviorRow: View {
+  @Binding var selection: TimerPauseBehavior
+
+  var body: some View {
+    HStack(spacing: 8) {
+      ForEach(TimerPauseBehavior.allCases, id: \.self) { behavior in
+        Button {
+          selection = behavior
+        } label: {
+          Text(behavior.displayText)
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(selection == behavior ? Color.white : Color.primary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+              RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(selection == behavior ? Color.accentColor : Color.gray.opacity(0.12))
+            )
+        }
+        .buttonStyle(.plain)
+      }
+    }
   }
 }
 

@@ -60,6 +60,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("timerFadeOut")
   var timerFadeOut: Double = 30.0
 
+  @AppStorage("timerPauseBehavior")
+  var timerPauseBehavior: TimerPauseBehavior = .none
+
   @AppStorage("alarmFadeOut")
   var alarmFadeOut: Double = 10.0
 
@@ -449,6 +452,31 @@ extension AutoTimerMode: RawRepresentable {
       return "duration:\(duration)"
     case .chapters(let count):
       return "chapters:\(count)"
+    }
+  }
+}
+
+enum TimerPauseBehavior: String, CaseIterable {
+  case none
+  case pause
+  case reset
+  case off
+
+  var displayText: LocalizedStringResource {
+    switch self {
+    case .none: "None"
+    case .pause: "Pause"
+    case .reset: "Reset"
+    case .off: "Off"
+    }
+  }
+
+  var explanation: LocalizedStringResource {
+    switch self {
+    case .none: "Timer keeps counting down while playback is paused."
+    case .pause: "Timer pauses with playback and resumes on play."
+    case .reset: "Timer stops with playback and restarts in full on play."
+    case .off: "Pausing playback turns the sleep timer off."
     }
   }
 }
