@@ -27,9 +27,10 @@ final class NarratorsPageModel: NarratorsPage.Model {
     do {
       let response = try await audiobookshelf.narrators.fetch()
 
-      let narratorCards = response.map { narrator in
-        NarratorCardModel(narrator: narrator)
-      }
+      let narratorCards =
+        response
+        .map { narrator in NarratorCardModel(narrator: narrator) }
+        .filter { $0.bookCount > 0 }
 
       self.narrators = narratorCards
     } catch {
