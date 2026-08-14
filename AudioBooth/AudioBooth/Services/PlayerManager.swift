@@ -566,7 +566,10 @@ extension PlayerManager {
     guard
       userPreferences.smartContinuePlayback,
       let currentID = current?.id
-    else { return }
+    else {
+      clearCurrent()
+      return
+    }
 
     let currentPodcastID = current?.podcastID
 
