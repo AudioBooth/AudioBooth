@@ -60,7 +60,7 @@ struct SleepPreferencesView: View {
               .font(.subheadline)
               .fontWeight(.medium)
             AutoTimerTriggerRow(selection: $preferences.autoTimerTrigger)
-            if preferences.autoTimerTrigger.includesFocus {
+            if preferences.autoTimerTrigger != .timeWindow {
               Text(
                 "Add AudioBooth to any Focus under Settings → Focus → Focus Filters. The timer starts whenever that Focus is on."
               )
@@ -70,7 +70,7 @@ struct SleepPreferencesView: View {
           }
           .listRowBackground(theme.colors.background.card)
 
-          if preferences.autoTimerTrigger.includesTimeWindow {
+          if preferences.autoTimerTrigger != .focus {
             HStack {
               Text("Time Window")
                 .font(.subheadline)

@@ -454,12 +454,12 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     guard mode != .off, current == .none else { return }
 
-    if trigger.includesTimeWindow, isInAutoTimerWindow() {
+    if trigger != .focus, isInAutoTimerWindow() {
       startAutoTimer(mode: mode)
       return
     }
 
-    guard trigger.includesFocus else { return }
+    guard trigger != .timeWindow else { return }
 
     Task { [weak self] in
       guard await FocusFilterIntent.isActive else { return }

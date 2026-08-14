@@ -464,9 +464,6 @@ enum AutoTimerTrigger: String, CaseIterable {
   case focus
   case either
 
-  var includesTimeWindow: Bool { self != .focus }
-  var includesFocus: Bool { self != .timeWindow }
-
   var displayText: LocalizedStringResource {
     switch self {
     case .timeWindow: "Time Window"

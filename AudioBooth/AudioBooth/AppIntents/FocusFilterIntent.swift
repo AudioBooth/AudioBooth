@@ -33,7 +33,7 @@ struct FocusFilterIntent: SetFocusFilterIntent {
 
   func perform() async throws -> some IntentResult {
     guard isEnabled,
-      UserPreferences.shared.autoTimerTrigger.includesFocus,
+      UserPreferences.shared.autoTimerTrigger != .timeWindow,
       let playerModel = PlayerManager.shared.current,
       let timer = playerModel.timer as? TimerPickerSheetViewModel
     else {
