@@ -3,6 +3,7 @@ import AVKit
 import Combine
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct BookPlayer: View {
   @ObservedObject var model: Model
@@ -12,6 +13,8 @@ struct BookPlayer: View {
   @Environment(\.verticalSizeClass) private var verticalSizeClass
   @ObservedObject private var playerManager = PlayerManager.shared
   @ObservedObject private var preferences = UserPreferences.shared
+
+  @State private var path = NavigationPath()
 
   private var supportedOrientations: UIInterfaceOrientationMask {
     switch preferences.playerOrientation {
@@ -25,7 +28,7 @@ struct BookPlayer: View {
   }
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $path) {
       ZStack {
         playerBackground
           .accessibilityHidden(true)
@@ -71,71 +74,18 @@ struct BookPlayer: View {
         }
 
         ToolbarItem(placement: .topBarTrailing) {
-          Menu {
-            if let podcastID = model.podcastID {
-              NavigationLink(value: NavigationDestination.podcast(id: podcastID)) {
-                Label("Podcast Details", systemImage: "mic")
-              }
-            } else {
-              NavigationLink(value: NavigationDestination.book(id: model.id)) {
-                Label("Book Details", systemImage: "book")
-              }
-            }
-
-            if Audiobookshelf.shared.authentication.server?.permissions?.download == true,
-              model.downloadState == .notDownloaded
-            {
-              Button(action: { model.onDownloadTapped() }) {
-                Label("Download", systemImage: "icloud.and.arrow.down")
-              }
-            }
-
-            let disabledControls = Set(PlayerControl.allCases).subtracting(preferences.playerControls)
-            if disabledControls.contains(.speed) {
-              Button(action: { model.speed.isPresented = true }) {
-                Label(PlayerControl.speed.displayName, systemImage: PlayerControl.speed.systemImage)
-              }
-            }
-            if disabledControls.contains(.timer) {
-              Button(action: { model.timer.isPresented = true }) {
-                Label(PlayerControl.timer.displayName, systemImage: PlayerControl.timer.systemImage)
-              }
-            }
-            if disabledControls.contains(.bookmarks), model.bookmarks != nil {
-              Button(action: { model.onBookmarksTapped() }) {
-                Label(PlayerControl.bookmarks.displayName, systemImage: PlayerControl.bookmarks.systemImage)
-              }
-            }
-            if disabledControls.contains(.history), model.history != nil {
-              Button(action: { model.onHistoryTapped() }) {
-                Label(PlayerControl.history.displayName, systemImage: PlayerControl.history.systemImage)
-              }
-            }
-            if disabledControls.contains(.volume) {
-              Button(action: { model.volume.isPresented = true }) {
-                Label(PlayerControl.volume.displayName, systemImage: PlayerControl.volume.systemImage)
-              }
-            }
-
-            if disabledControls.contains(.equalizer) {
-              Button(action: { model.equalizer.isPresented = true }) {
-                Label(PlayerControl.equalizer.displayName, systemImage: PlayerControl.equalizer.systemImage)
-              }
-            }
-
-            Button(action: { model.isQueuePresented = true }) {
-              Label("Queue", systemImage: "list.bullet")
-            }
-
-            Divider()
-
-            Button(action: { model.isSettingsPresented = true }) {
-              Label("Player Settings", systemImage: "gearshape")
-            }
-          } label: {
-            Label("More", systemImage: "ellipsis")
-          }
+          // A SwiftUI toolbar `Menu` cannot be opened with VoiceOver on Mac Catalyst,
+          // so back it with a UIKit pull-down there and keep the native menu on iOS.
+          #if targetEnvironment(macCatalyst)
+          UIKitMenuButton(
+            systemImage: "ellipsis",
+            accessibilityLabel: String(localized: "More"),
+            menu: moreUIMenu
+          )
           .tint(.primary)
+          #else
+          moreMenu
+          #endif
         }
       }
       .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
@@ -201,6 +151,177 @@ struct BookPlayer: View {
       }
     }
   }
+
+  #if !targetEnvironment(macCatalyst)
+  private var moreMenu: some View {
+    Menu {
+      if let podcastID = model.podcastID {
+        NavigationLink(value: NavigationDestination.podcast(id: podcastID)) {
+          Label("Podcast Details", systemImage: "mic")
+        }
+      } else {
+        NavigationLink(value: NavigationDestination.book(id: model.id)) {
+          Label("Book Details", systemImage: "book")
+        }
+      }
+
+      if Audiobookshelf.shared.authentication.server?.permissions?.download == true,
+        model.downloadState == .notDownloaded
+      {
+        Button(action: { model.onDownloadTapped() }) {
+          Label("Download", systemImage: "icloud.and.arrow.down")
+        }
+      }
+
+      let disabledControls = Set(PlayerControl.allCases).subtracting(preferences.playerControls)
+      if disabledControls.contains(.speed) {
+        Button(action: { model.speed.isPresented = true }) {
+          Label(PlayerControl.speed.displayName, systemImage: PlayerControl.speed.systemImage)
+        }
+      }
+      if disabledControls.contains(.timer) {
+        Button(action: { model.timer.isPresented = true }) {
+          Label(PlayerControl.timer.displayName, systemImage: PlayerControl.timer.systemImage)
+        }
+      }
+      if disabledControls.contains(.bookmarks), model.bookmarks != nil {
+        Button(action: { model.onBookmarksTapped() }) {
+          Label(PlayerControl.bookmarks.displayName, systemImage: PlayerControl.bookmarks.systemImage)
+        }
+      }
+      if disabledControls.contains(.history), model.history != nil {
+        Button(action: { model.onHistoryTapped() }) {
+          Label(PlayerControl.history.displayName, systemImage: PlayerControl.history.systemImage)
+        }
+      }
+      if disabledControls.contains(.volume) {
+        Button(action: { model.volume.isPresented = true }) {
+          Label(PlayerControl.volume.displayName, systemImage: PlayerControl.volume.systemImage)
+        }
+      }
+
+      if disabledControls.contains(.equalizer) {
+        Button(action: { model.equalizer.isPresented = true }) {
+          Label(PlayerControl.equalizer.displayName, systemImage: PlayerControl.equalizer.systemImage)
+        }
+      }
+
+      Button(action: { model.isQueuePresented = true }) {
+        Label("Queue", systemImage: "list.bullet")
+      }
+
+      Divider()
+
+      Button(action: { model.isSettingsPresented = true }) {
+        Label("Player Settings", systemImage: "gearshape")
+      }
+    } label: {
+      Label("More", systemImage: "ellipsis")
+    }
+    .tint(.primary)
+  }
+  #endif
+
+  #if targetEnvironment(macCatalyst)
+  private func moreUIMenu() -> UIMenu {
+    var items: [UIMenuElement] = []
+
+    if let podcastID = model.podcastID {
+      items.append(
+        UIAction(title: String(localized: "Podcast Details"), image: UIImage(systemName: "mic")) { _ in
+          path.append(NavigationDestination.podcast(id: podcastID))
+        }
+      )
+    } else {
+      items.append(
+        UIAction(title: String(localized: "Book Details"), image: UIImage(systemName: "book")) { _ in
+          path.append(NavigationDestination.book(id: model.id))
+        }
+      )
+    }
+
+    if Audiobookshelf.shared.authentication.server?.permissions?.download == true,
+      model.downloadState == .notDownloaded
+    {
+      items.append(
+        UIAction(
+          title: String(localized: "Download"),
+          image: UIImage(systemName: "icloud.and.arrow.down")
+        ) { _ in
+          model.onDownloadTapped()
+        }
+      )
+    }
+
+    let disabledControls = Set(PlayerControl.allCases).subtracting(preferences.playerControls)
+    if disabledControls.contains(.speed) {
+      items.append(playerControlAction(.speed) { model.speed.isPresented = true })
+    }
+    if disabledControls.contains(.timer) {
+      items.append(playerControlAction(.timer) { model.timer.isPresented = true })
+    }
+    if disabledControls.contains(.bookmarks), model.bookmarks != nil {
+      items.append(playerControlAction(.bookmarks) { model.onBookmarksTapped() })
+    }
+    if disabledControls.contains(.history), model.history != nil {
+      items.append(playerControlAction(.history) { model.onHistoryTapped() })
+    }
+    if disabledControls.contains(.volume) {
+      items.append(playerControlAction(.volume) { model.volume.isPresented = true })
+    }
+    if disabledControls.contains(.equalizer) {
+      items.append(playerControlAction(.equalizer) { model.equalizer.isPresented = true })
+    }
+
+    items.append(
+      UIAction(title: String(localized: "Queue"), image: UIImage(systemName: "list.bullet")) { _ in
+        model.isQueuePresented = true
+      }
+    )
+
+    let settings = UIAction(
+      title: String(localized: "Player Settings"),
+      image: UIImage(systemName: "gearshape")
+    ) { _ in
+      model.isSettingsPresented = true
+    }
+
+    return UIMenu(children: [
+      UIMenu(title: "", options: .displayInline, children: items),
+      UIMenu(title: "", options: .displayInline, children: [settings]),
+    ])
+  }
+
+  private func playerControlAction(_ control: PlayerControl, handler: @escaping () -> Void) -> UIAction {
+    UIAction(
+      title: String(localized: control.displayName),
+      image: UIImage(systemName: control.systemImage)
+    ) { _ in
+      handler()
+    }
+  }
+
+  private struct UIKitMenuButton: UIViewRepresentable {
+    let systemImage: String
+    let accessibilityLabel: String
+    let menu: () -> UIMenu
+
+    func makeUIView(context: Context) -> UIButton {
+      let button = UIButton(type: .system)
+      button.showsMenuAsPrimaryAction = true
+      button.tintColor = .label
+      button.setImage(UIImage(systemName: systemImage), for: .normal)
+      button.setContentHuggingPriority(.required, for: .horizontal)
+      return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+      button.setImage(UIImage(systemName: systemImage), for: .normal)
+      button.accessibilityLabel = accessibilityLabel
+      button.menu = menu()
+    }
+  }
+  #endif
 
   @ViewBuilder
   private var playerBackground: some View {
