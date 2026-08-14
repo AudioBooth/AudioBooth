@@ -16,6 +16,7 @@ extension UserPreferences {
     "shakeSensitivity",
     "customTimerMinutes",
     "timerFadeOut",
+    "timerPauseBehavior",
     "alarmFadeOut",
     "lockScreenNextPreviousUsesChapters",
     "lockScreenAllowPlaybackPositionChange",
