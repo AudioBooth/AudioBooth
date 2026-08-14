@@ -42,6 +42,7 @@ extension UserPreferences {
     "autoTimerMode",
     "autoTimerWindowStart",
     "autoTimerWindowEnd",
+    "autoTimerTrigger",
     "playerOrientation",
     "colorScheme",
     "appTheme",

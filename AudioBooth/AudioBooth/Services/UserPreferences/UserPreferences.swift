@@ -171,6 +171,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("autoTimerWindowEnd")
   var autoTimerWindowEnd: Int = 6 * 60
 
+  @AppStorage("autoTimerTrigger")
+  var autoTimerTrigger: AutoTimerTrigger = .timeWindow
+
   @AppStorage("playerOrientation")
   var playerOrientation: PlayerOrientation = .auto
 
@@ -452,6 +455,23 @@ extension AutoTimerMode: RawRepresentable {
       return "duration:\(duration)"
     case .chapters(let count):
       return "chapters:\(count)"
+    }
+  }
+}
+
+enum AutoTimerTrigger: String, CaseIterable {
+  case timeWindow
+  case focus
+  case either
+
+  var includesTimeWindow: Bool { self != .focus }
+  var includesFocus: Bool { self != .timeWindow }
+
+  var displayText: LocalizedStringResource {
+    switch self {
+    case .timeWindow: "Time Window"
+    case .focus: "Focus"
+    case .either: "Either"
     }
   }
 }

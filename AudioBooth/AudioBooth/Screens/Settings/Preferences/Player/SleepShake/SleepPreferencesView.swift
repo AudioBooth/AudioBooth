@@ -35,7 +35,7 @@ struct SleepPreferencesView: View {
             systemImage: "moon",
             tint: .purple,
             title: "Auto Sleep",
-            subtitle: "Start a timer when playing within a window."
+            subtitle: "Start a timer automatically while playing."
           )
         }
         .listRowBackground(theme.colors.background.card)
@@ -55,17 +55,34 @@ struct SleepPreferencesView: View {
           }
           .listRowBackground(theme.colors.background.card)
 
-          HStack {
-            Text("Time Window")
+          VStack(alignment: .leading, spacing: 12) {
+            Text("Start During")
               .font(.subheadline)
               .fontWeight(.medium)
-            Spacer()
-            TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowStart)
-            Text(verbatim: "–")
+            AutoTimerTriggerRow(selection: $preferences.autoTimerTrigger)
+            if preferences.autoTimerTrigger.includesFocus {
+              Text(
+                "Add AudioBooth to any Focus under Settings → Focus → Focus Filters. The timer starts whenever that Focus is on."
+              )
+              .font(.caption)
               .foregroundStyle(.secondary)
-            TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowEnd)
+            }
           }
           .listRowBackground(theme.colors.background.card)
+
+          if preferences.autoTimerTrigger.includesTimeWindow {
+            HStack {
+              Text("Time Window")
+                .font(.subheadline)
+                .fontWeight(.medium)
+              Spacer()
+              TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowStart)
+              Text(verbatim: "–")
+                .foregroundStyle(.secondary)
+              TimePicker(minutesSinceMidnight: $preferences.autoTimerWindowEnd)
+            }
+            .listRowBackground(theme.colors.background.card)
+          }
 
           Picker(selection: $preferences.timerFadeOut) {
             ForEach(fadeOptions, id: \.self) { value in
@@ -156,6 +173,32 @@ struct SleepPreferencesView: View {
       return String(localized: "No Fade")
     }
     return Duration.seconds(value).formatted()
+  }
+}
+
+private struct AutoTimerTriggerRow: View {
+  @Binding var selection: AutoTimerTrigger
+
+  var body: some View {
+    HStack(spacing: 8) {
+      ForEach(AutoTimerTrigger.allCases, id: \.self) { trigger in
+        Button {
+          selection = trigger
+        } label: {
+          Text(trigger.displayText)
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(selection == trigger ? Color.white : Color.primary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+              RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(selection == trigger ? Color.accentColor : Color.gray.opacity(0.12))
+            )
+        }
+        .buttonStyle(.plain)
+      }
+    }
   }
 }
 
