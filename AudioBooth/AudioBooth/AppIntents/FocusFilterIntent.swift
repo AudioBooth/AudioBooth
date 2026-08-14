@@ -2,18 +2,17 @@ import AppIntents
 import Foundation
 
 struct FocusFilterIntent: SetFocusFilterIntent {
-  static let title: LocalizedStringResource = "Auto Sleep"
-  static let description = IntentDescription(
-    "Automatically starts a sleep timer while this Focus is on."
-  )
+  static let title: LocalizedStringResource = "Focus Features"
 
-  @Parameter(title: "Start Sleep Timer", default: false)
-  var startSleepTimer: Bool
+  @Parameter(title: "Start Sleep Timer")
+  var startSleepTimer: Bool?
+
+  private var isEnabled: Bool { startSleepTimer == true }
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(
-      title: "Auto Sleep",
-      subtitle: startSleepTimer ? "Sleep timer on" : "Sleep timer off"
+      title: "Focus Features",
+      subtitle: isEnabled ? "Sleep timer on" : "Sleep timer off"
     )
   }
 
@@ -28,12 +27,12 @@ struct FocusFilterIntent: SetFocusFilterIntent {
   static var isActive: Bool {
     get async {
       let filter = try? await Self.current
-      return filter?.startSleepTimer ?? false
+      return filter?.isEnabled ?? false
     }
   }
 
   func perform() async throws -> some IntentResult {
-    guard startSleepTimer,
+    guard isEnabled,
       UserPreferences.shared.autoTimerTrigger.includesFocus,
       let playerModel = PlayerManager.shared.current,
       let timer = playerModel.timer as? TimerPickerSheetViewModel
