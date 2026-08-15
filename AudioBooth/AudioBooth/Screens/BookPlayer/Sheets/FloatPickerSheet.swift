@@ -100,7 +100,7 @@ struct FloatPickerSheet: View {
       }
       .padding(.bottom, 40)
     }
-    .overlay(alignment: .topTrailing) {
+    .overlay(alignment: .topLeading) {
       Button(model.isEditing ? "Done" : "Edit") {
         model.onToggleEdit()
       }
