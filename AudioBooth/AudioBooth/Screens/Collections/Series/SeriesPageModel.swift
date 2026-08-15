@@ -35,7 +35,7 @@ final class SeriesPageModel: SeriesPage.Model {
   }
 
   override func onAppear() {
-    guard loadTask == nil else { return }
+    guard series.isEmpty, loadTask == nil else { return }
     loadTask = Task {
       await loadSeries()
     }

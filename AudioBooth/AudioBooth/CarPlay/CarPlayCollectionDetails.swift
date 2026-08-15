@@ -7,22 +7,44 @@ import Nuke
 final class CarPlayCollectionDetails {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
-  private let items: [QueueItem]
+  private let id: String
+  private let mode: CollectionMode
+  private var items: [QueueItem] = []
   private var loadingTask: Task<Void, Never>?
+  private var loadTask: Task<Void, Never>?
 
   let template: CPListTemplate
 
   init(
     interfaceController: CPInterfaceController,
     nowPlaying: CarPlayNowPlaying,
+    id: String,
     name: String,
-    items: [QueueItem]
+    mode: CollectionMode
   ) {
     self.interfaceController = interfaceController
     self.nowPlaying = nowPlaying
-    self.items = items
+    self.id = id
+    self.mode = mode
 
     template = CPListTemplate(title: name, sections: [])
+    template.emptyViewTitleVariants = [String(localized: "Loading...")]
+
+    loadTask = Task { await load() }
+  }
+
+  private func load() async {
+    switch mode {
+    case .collections:
+      let collection = try? await Audiobookshelf.shared.collections.fetch(id: id)
+      items = collection?.queueItems ?? []
+    case .playlists:
+      let playlist = try? await Audiobookshelf.shared.playlists.fetch(id: id)
+      items = playlist?.queueItems ?? []
+    }
+
+    guard !Task.isCancelled else { return }
+
     buildSections()
   }
 
@@ -125,5 +147,34 @@ final class CarPlayCollectionDetails {
   private func loadImage(from url: URL) async -> UIImage? {
     let request = ImageRequest(url: url)
     return try? await ImagePipeline.shared.image(for: request)
+  }
+}
+
+private extension Collection {
+  var queueItems: [QueueItem] {
+    books.map {
+      QueueItem(bookID: $0.id, title: $0.title, details: $0.authorName, coverURL: $0.coverURL())
+    }
+  }
+}
+
+private extension Playlist {
+  var queueItems: [QueueItem] {
+    items.compactMap { item in
+      switch item.libraryItem {
+      case .book(let book):
+        return QueueItem(bookID: book.id, title: book.title, details: book.authorName, coverURL: book.coverURL())
+      case .podcast(let podcast):
+        guard let episodeID = item.episodeID else { return nil }
+        let title = item.episode?.title ?? podcast.title
+        return QueueItem(
+          bookID: episodeID,
+          title: title,
+          details: podcast.title,
+          coverURL: podcast.coverURL(),
+          podcastID: podcast.id
+        )
+      }
+    }
   }
 }
