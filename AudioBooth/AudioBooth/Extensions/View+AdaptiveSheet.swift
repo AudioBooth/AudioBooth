@@ -29,33 +29,37 @@ struct AdaptiveSheetModifier<SheetContent: View>: ViewModifier {
           .hidden()
       )
       .sheet(isPresented: $isPresented) {
-        sheetContent()
-          .background(
-            GeometryReader { proxy in
-              Color.clear
-                .onChange(of: proxy.size.height) {
-                  withAnimation {
-                    contentHeight = proxy.size.height
+        ScrollView {
+          sheetContent()
+            .background(
+              GeometryReader { proxy in
+                Color.clear
+                  .onChange(of: proxy.size.height) {
+                    withAnimation {
+                      contentHeight = proxy.size.height
+                    }
                   }
-                }
-            }
-          )
-          #if targetEnvironment(macCatalyst)
-            .overlay(alignment: .topTrailing) {
-              Button(action: { isPresented = false }) {
-                Image(systemName: "xmark")
-                  .font(.system(size: 12, weight: .bold))
-                  .foregroundStyle(.secondary)
-                  .frame(width: 28, height: 28)
-                  .background(Color.primary.opacity(0.12), in: .circle)
               }
-              .buttonStyle(.plain)
-              .accessibilityLabel("Close")
-              .padding()
-            }
-          #endif
-          .presentationDetents([.height(contentHeight)])
-          .presentationDragIndicator(.visible)
+            )
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        #if targetEnvironment(macCatalyst)
+        .overlay(alignment: .topTrailing) {
+          Button(action: { isPresented = false }) {
+            Image(systemName: "xmark")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.secondary)
+            .frame(width: 28, height: 28)
+            .background(Color.primary.opacity(0.12), in: .circle)
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel("Close")
+          .padding()
+        }
+        #endif
+        .presentationDetents([.height(contentHeight)])
+        .presentationDragIndicator(.visible)
+        .presentationContentInteraction(.scrolls)
       }
   }
 }

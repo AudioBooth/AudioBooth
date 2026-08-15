@@ -5,32 +5,57 @@ struct EqualizerSheet: View {
   @ObservedObject var model: Model
 
   #if targetEnvironment(macCatalyst)
-    private let enableToggleAlignment: Alignment = .topLeading
+  private let headerTrailingInset: CGFloat = 44
   #else
-    private let enableToggleAlignment: Alignment = .topTrailing
+  private let headerTrailingInset: CGFloat = 0
   #endif
 
   var body: some View {
     VStack(spacing: 0) {
+      headerView
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
+
+      settingsView
+        .opacity(model.isEnabled ? 1 : 0.5)
+        .disabled(!model.isEnabled)
+    }
+  }
+
+  private var headerView: some View {
+    HStack {
       Text("Equalizer")
         .font(.title2)
         .fontWeight(.semibold)
         .foregroundColor(.primary)
-        .padding(.top, 50)
 
+      Spacer()
+
+      Toggle(
+        "Equalizer",
+        isOn: Binding(
+          get: { model.isEnabled },
+          set: { model.onToggleEnabled($0) }
+        )
+      )
+      .labelsHidden()
+      .toggleStyle(.switch)
+    }
+    .padding(.trailing, headerTrailingInset)
+  }
+
+  private var settingsView: some View {
+    VStack(spacing: 0) {
       preampView
         .padding(.horizontal, 24)
         .padding(.top, 24)
-        .disabled(!model.isEnabled)
 
       bandsView
         .padding(.top, 24)
-        .disabled(!model.isEnabled)
 
       presetsView
         .padding(.top, 20)
         .padding(.horizontal, 16)
-        .disabled(!model.isEnabled)
 
       Divider()
         .padding(.horizontal, 24)
@@ -40,20 +65,6 @@ struct EqualizerSheet: View {
         .padding(.horizontal, 24)
         .padding(.top, 24)
         .padding(.bottom, 40)
-        .disabled(!model.isEnabled)
-    }
-    .opacity(model.isEnabled ? 1 : 0.5)
-    .overlay(alignment: enableToggleAlignment) {
-      Toggle(
-        "",
-        isOn: Binding(
-          get: { model.isEnabled },
-          set: { model.onToggleEnabled($0) }
-        )
-      )
-      .labelsHidden()
-      .toggleStyle(.switch)
-      .padding()
     }
   }
 
