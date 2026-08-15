@@ -4,6 +4,12 @@ import SwiftUI
 struct EqualizerSheet: View {
   @ObservedObject var model: Model
 
+  #if targetEnvironment(macCatalyst)
+    private let enableToggleAlignment: Alignment = .topLeading
+  #else
+    private let enableToggleAlignment: Alignment = .topTrailing
+  #endif
+
   var body: some View {
     VStack(spacing: 0) {
       Text("Equalizer")
@@ -37,7 +43,7 @@ struct EqualizerSheet: View {
         .disabled(!model.isEnabled)
     }
     .opacity(model.isEnabled ? 1 : 0.5)
-    .overlay(alignment: .topTrailing) {
+    .overlay(alignment: enableToggleAlignment) {
       Toggle(
         "",
         isOn: Binding(
@@ -46,6 +52,7 @@ struct EqualizerSheet: View {
         )
       )
       .labelsHidden()
+      .toggleStyle(.switch)
       .padding()
     }
   }
