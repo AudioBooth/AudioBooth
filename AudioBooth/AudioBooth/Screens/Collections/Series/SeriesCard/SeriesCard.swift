@@ -66,7 +66,7 @@ struct SeriesCard: View {
   var cardLayout: some View {
     VStack(alignment: .leading, spacing: 6) {
       stackedCovers
-        .frame(width: coverSize, height: coverSize)
+        .frame(height: coverSize)
         .onGeometryChange(for: CGFloat.self) {
           $0.size.width
         } action: { width in
@@ -77,9 +77,9 @@ struct SeriesCard: View {
         Text(model.title)
           .font(.caption)
           .fontWeight(.medium)
-          .lineLimit(2)
+          .lineLimit(2, reservesSpace: preferences.cardCoverDynamicRatio)
           .multilineTextAlignment(.leading)
-          .frame(maxWidth: coverSize ?? coverWidth, alignment: .leading)
+          .frame(maxWidth: coverWidth, alignment: .topLeading)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,44 +87,43 @@ struct SeriesCard: View {
 
   var stackedCovers: some View {
     let covers = Array(model.bookCovers.prefix(3))
-    let backCount = max(covers.count - 1, 0)
-    let stackPadding = CGFloat(backCount) * 4
+    let backCovers = Array(covers.dropFirst())
+    let stackPadding = CGFloat(backCovers.count) * 4
 
-    return ZStack(alignment: .topLeading) {
-      ForEach(Array(covers.enumerated().reversed()), id: \.offset) { index, cover in
-        if index == 0 {
-          coverImage(cover)
-            .overlay(alignment: .bottom) {
-              ProgressOverlay(progress: model.progress)
-                .padding(4)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(alignment: .topTrailing) {
-              bookCountBadge
-            }
-        } else {
-          coverImage(cover)
-            .overlay {
-              if model.progress == 1.0 {
-                Color.black.opacity(0.5)
-              }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+    return frontCover(covers.first ?? Cover.Model(url: nil))
+      .background(alignment: .topLeading) {
+        ForEach(Array(backCovers.enumerated().reversed()), id: \.offset) { index, cover in
+          backCover(cover)
             .offset(
-              x: CGFloat(index) * 4,
-              y: CGFloat(index) * 4
+              x: CGFloat(index + 1) * 4,
+              y: CGFloat(index + 1) * 4
             )
         }
       }
-    }
-    .padding(.trailing, stackPadding)
-    .padding(.bottom, stackPadding)
-    .aspectRatio(1.0, contentMode: .fit)
+      .padding(.trailing, stackPadding)
+      .padding(.bottom, stackPadding)
   }
 
-  private func coverImage(_ cover: Cover.Model) -> some View {
-    Cover(model: cover, style: .plain)
-      .aspectRatio(1.0, contentMode: .fit)
+  private func frontCover(_ cover: Cover.Model) -> some View {
+    Cover(model: cover)
+      .overlay(alignment: .bottom) {
+        ProgressOverlay(progress: model.progress)
+          .padding(4)
+      }
+      .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value))
+      .overlay(alignment: .topTrailing) {
+        bookCountBadge
+      }
+  }
+
+  private func backCover(_ cover: Cover.Model) -> some View {
+    Cover(model: cover)
+      .overlay {
+        if model.progress == 1.0 {
+          Color.black.opacity(0.5)
+        }
+      }
+      .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value))
   }
 
   @ViewBuilder
