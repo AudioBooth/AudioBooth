@@ -201,7 +201,7 @@ final class NetworkService: @unchecked Sendable {
       guard 200...299 ~= httpResponse.statusCode else {
         let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response body"
         AppLogger.network.error(
-          "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
+          "HTTP \(httpResponse.statusCode) error for \(urlRequest.httpMethod ?? "GET") \(urlRequest.url?.absoluteString ?? "unknown"). Response body: \(responseBody)"
         )
 
         if httpResponse.statusCode == 401, let server, await server.canAttemptRefresh {
