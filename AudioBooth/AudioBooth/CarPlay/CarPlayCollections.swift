@@ -26,8 +26,8 @@ final class CarPlayCollections: CarPlayPageProtocol {
   }
 
   private func load() async {
-    async let collectionsResult = try? Audiobookshelf.shared.collections.fetch()
-    async let playlistsResult = try? Audiobookshelf.shared.playlists.fetch()
+    async let collectionsResult = fetchCollections()
+    async let playlistsResult = fetchPlaylists()
 
     let (collectionsPage, playlistsPage) = await (collectionsResult, playlistsResult)
 
@@ -56,6 +56,14 @@ final class CarPlayCollections: CarPlayPageProtocol {
     }
 
     template.updateSections(sections)
+  }
+
+  private func fetchCollections() async -> Page<Collection>? {
+    try? await Audiobookshelf.shared.collections.fetch()
+  }
+
+  private func fetchPlaylists() async -> Page<Playlist>? {
+    try? await Audiobookshelf.shared.playlists.fetch()
   }
 
   private func createListItem(name: String, count: Int, coverURL: URL?, queueItems: [QueueItem]) -> CPListItem {

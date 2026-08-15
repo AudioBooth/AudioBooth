@@ -31,6 +31,7 @@ struct FocusFilterIntent: SetFocusFilterIntent {
     }
   }
 
+  @MainActor
   func perform() async throws -> some IntentResult {
     guard isEnabled,
       UserPreferences.shared.autoTimerTrigger != .timeWindow,
