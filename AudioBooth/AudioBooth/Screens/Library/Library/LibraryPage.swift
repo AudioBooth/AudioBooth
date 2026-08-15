@@ -275,6 +275,7 @@ struct LibraryPage: View {
         }
       }
       .padding(.horizontal)
+      .padding(.bottom, 80)
       .environment(\.itemDisplayMode, preferences.libraryDisplayMode)
     }
   }
