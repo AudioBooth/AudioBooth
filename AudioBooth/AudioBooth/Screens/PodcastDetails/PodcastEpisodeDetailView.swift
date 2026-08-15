@@ -4,6 +4,8 @@ import RichText
 import SwiftUI
 
 struct PodcastEpisodeDetailView: View {
+  @Environment(\.appTheme) var theme
+
   private let audiobookshelf = Audiobookshelf.shared
 
   @ObservedObject var model: Model
@@ -23,6 +25,7 @@ struct PodcastEpisodeDetailView: View {
       }
       .padding()
     }
+    .background(theme.colors.background.page)
     .navigationTitle(model.title)
     .navigationBarTitleDisplayMode(.inline)
     .sheet(

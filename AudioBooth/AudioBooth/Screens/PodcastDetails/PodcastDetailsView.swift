@@ -609,7 +609,16 @@ struct PodcastDetailsView: View {
             .foregroundStyle(.secondary)
         }
 
-        episodePlayButton(episode)
+        HStack(spacing: 8) {
+          episodePlayButton(episode)
+
+          if episode.downloadState == .downloaded {
+            Image(systemName: "arrow.down.circle.fill")
+              .font(.title3)
+              .foregroundStyle(.green)
+              .accessibilityLabel("Downloaded")
+          }
+        }
 
         if episode.progress > 0 {
           ProgressView(value: min(episode.progress, 1.0))

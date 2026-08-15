@@ -1,9 +1,11 @@
 import API
+import Combine
 import Foundation
 import Models
 
 final class PodcastCardModel: BookCard.Model {
   private var progressObservation: Task<Void, Never>?
+  private var downloadStateCancellable: AnyCancellable?
 
   init(_ podcast: Podcast, sortBy: SortBy?) {
     let id = podcast.recentEpisode?.id ?? podcast.id
@@ -66,9 +68,25 @@ final class PodcastCardModel: BookCard.Model {
       episodeContextMenu: episodeContextMenu
     )
 
+    setupDownloadStateObserver()
+
     if sortBy == nil {
       observeMediaProgress()
     }
+  }
+
+  private func setupDownloadStateObserver() {
+    let episodeID = id
+    downloadStateCancellable = DownloadManager.shared.$downloadStates
+      .sink { [weak self] states in
+        guard let self else { return }
+        if case .downloading(let progress) = states[episodeID] {
+          self.cover.downloadProgress = progress
+        } else {
+          self.cover.downloadProgress = nil
+        }
+        self.isDownloaded = states[episodeID] == .downloaded
+      }
   }
 
   private func observeMediaProgress() {

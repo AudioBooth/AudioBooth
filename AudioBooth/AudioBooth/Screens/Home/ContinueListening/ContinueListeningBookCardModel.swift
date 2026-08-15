@@ -88,6 +88,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
     )
 
     observeMediaProgress()
+    setupDownloadProgressObserver()
   }
 
   override func onAppear() {
