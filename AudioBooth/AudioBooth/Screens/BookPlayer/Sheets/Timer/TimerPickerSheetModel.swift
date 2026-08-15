@@ -450,14 +450,37 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
   func activateAutoTimerIfNeeded() {
     let mode = preferences.autoTimerMode
+    let trigger = preferences.autoTimerTrigger
 
-    guard mode != .off,
+    guard mode != .off, current == .none else { return }
+
+    if trigger != .focus, isInAutoTimerWindow() {
+      startAutoTimer(mode: mode)
+      return
+    }
+
+    guard trigger != .timeWindow else { return }
+
+    Task { [weak self] in
+      guard await FocusFilterIntent.isActive else { return }
+      guard let self, self.current == .none else { return }
+      self.startAutoTimer(mode: self.preferences.autoTimerMode)
+    }
+  }
+
+  func activateFocusTimer() {
+    guard preferences.autoTimerMode != .off,
       current == .none,
-      isInAutoTimerWindow()
+      player.isPlaying
     else {
       return
     }
 
+    AppLogger.player.info("Focus enabled during playback - starting auto-timer")
+    startAutoTimer(mode: preferences.autoTimerMode)
+  }
+
+  private func startAutoTimer(mode: AutoTimerMode) {
     let position = player.time
 
     switch mode {
