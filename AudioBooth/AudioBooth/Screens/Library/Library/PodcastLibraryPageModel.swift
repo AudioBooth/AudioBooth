@@ -25,6 +25,7 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
       title: "Podcasts"
     )
 
+    kind = .podcasts
     self.filters = FilterPickerModel(currentFilter: filter)
   }
 
@@ -47,6 +48,8 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
     default:
       fatalError("PodcastLibraryPageModel cannot be initialized with a \(destination) destination")
     }
+
+    kind = .podcasts
   }
 
   override func onAppear() {
@@ -186,6 +189,7 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
       items = fetched
 
       currentPage += 1
+      totalCount = response.total
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
       guard !Task.isCancelled else {

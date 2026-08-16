@@ -432,6 +432,7 @@ final class LibraryPageModel: LibraryPage.Model {
 
       currentPage += 1
 
+      totalCount = response.total
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
       guard !Task.isCancelled else {

@@ -91,13 +91,23 @@ struct SeriesPage: View {
 
   var seriesContent: some View {
     ScrollView {
-      SeriesView(
-        series: model.series,
-        hasMorePages: model.hasMorePages,
-        pageLoadFailed: model.pageLoadFailed,
-        onLoadMore: model.loadNextPageIfNeeded
-      )
+      VStack {
+        if let total = model.totalCount {
+          Text("^[\(total) series](inflect: true)")
+            .font(.title2.bold())
+            .foregroundColor(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
+        SeriesView(
+          series: model.series,
+          hasMorePages: model.hasMorePages,
+          pageLoadFailed: model.pageLoadFailed,
+          onLoadMore: model.loadNextPageIfNeeded
+        )
+      }
       .padding(.horizontal)
+      .padding(.vertical)
     }
     .environment(\.itemDisplayMode, preferences.libraryDisplayMode)
   }
@@ -108,6 +118,7 @@ extension SeriesPage {
     var isLoading: Bool
     var hasMorePages: Bool
     var pageLoadFailed: Bool = false
+    var totalCount: Int?
 
     var series: [SeriesCard.Model]
     var search: SearchView.Model = SearchView.Model()
@@ -160,7 +171,9 @@ extension SeriesPage.Model {
       ),
     ]
 
-    return SeriesPage.Model(series: sampleSeries)
+    let model = SeriesPage.Model(series: sampleSeries)
+    model.totalCount = sampleSeries.count
+    return model
   }
 }
 

@@ -47,8 +47,26 @@ struct CollectionsPage: View {
     )
   }
 
+  private var countLabel: Text? {
+    guard let total = model.totalCount else { return nil }
+    switch model.mode {
+    case .playlists:
+      return Text("^[\(total) playlist](inflect: true)")
+    case .collections:
+      return Text("^[\(total) collection](inflect: true)")
+    }
+  }
+
   private var listView: some View {
     List {
+      if let countLabel {
+        countLabel
+          .font(.title2.bold())
+          .foregroundColor(.primary)
+          .listRowSeparator(.hidden)
+          .listRowBackground(theme.colors.background.page)
+      }
+
       ForEach(model.collections) { collection in
         NavigationLink(value: model.navigationDestination(for: collection.id)) {
           CollectionRow(model: collection)
@@ -56,6 +74,7 @@ struct CollectionsPage: View {
         .buttonStyle(.plain)
         .listRowSeparator(.hidden)
         .listRowBackground(theme.colors.background.page)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 12, trailing: 16))
       }
       .onDelete { indexSet in
         model.onDelete(at: indexSet)
@@ -67,6 +86,7 @@ struct CollectionsPage: View {
           .listRowBackground(theme.colors.background.page)
       }
     }
+    .listRowSpacing(0.0)
     .listStyle(.plain)
     .scrollContentBackground(.hidden)
     .background(theme.colors.background.page)
@@ -80,6 +100,7 @@ extension CollectionsPage {
     var collections: [CollectionRow.Model]
     var hasMorePages: Bool
     var pageLoadFailed: Bool = false
+    var totalCount: Int?
     var mode: CollectionMode
     var canDelete: Bool
 
@@ -158,7 +179,9 @@ extension CollectionsPage.Model {
       ),
     ]
 
-    return CollectionsPage.Model(collections: sampleCollections)
+    let model = CollectionsPage.Model(collections: sampleCollections)
+    model.totalCount = sampleCollections.count
+    return model
   }
 }
 

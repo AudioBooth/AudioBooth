@@ -114,6 +114,7 @@ final class CollectionsPageModel: CollectionsPage.Model {
           CollectionRowModel(collection: playlist)
         }
 
+        totalCount = response.total
         hasMorePages = (currentPage + 1) * itemsPerPage < response.total
 
       case .collections:
@@ -132,6 +133,7 @@ final class CollectionsPageModel: CollectionsPage.Model {
           CollectionRowModel(collection: collection)
         }
 
+        totalCount = response.total
         hasMorePages = (currentPage + 1) * itemsPerPage < response.total
       }
 

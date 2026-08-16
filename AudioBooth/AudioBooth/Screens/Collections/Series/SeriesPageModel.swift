@@ -87,6 +87,7 @@ final class SeriesPageModel: SeriesPage.Model {
       self.series = fetchedSeries
       currentPage += 1
 
+      totalCount = response.total
       self.hasMorePages = (currentPage * itemsPerPage) < response.total
 
     } catch {

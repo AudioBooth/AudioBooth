@@ -93,6 +93,14 @@ struct AuthorsPage: View {
 
   var authorsList: some View {
     LazyVStack(alignment: .leading, spacing: 0) {
+      if let total = model.totalCount {
+        Text("^[\(total) author](inflect: true)")
+          .font(.title2.bold())
+          .foregroundColor(.primary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal)
+      }
+
       ForEach(model.sections) { section in
         Section {
           ForEach(section.authors, id: \.id) { author in
@@ -114,6 +122,7 @@ struct AuthorsPage: View {
         .frame(height: 1)
         .id(Self.bottomScrollID)
     }
+    .padding(.vertical)
   }
 
   func authorRow(for author: AuthorCard.Model) -> some View {
@@ -192,6 +201,7 @@ extension AuthorsPage {
     var isLoading: Bool
     var hasMorePages: Bool
     var pageLoadFailed: Bool = false
+    var totalCount: Int?
     var scrollTarget: ScrollTarget?
 
     struct ScrollTarget: Equatable {
@@ -284,7 +294,9 @@ extension AuthorsPage.Model {
       ),
     ]
 
-    return AuthorsPage.Model(sections: sections)
+    let model = AuthorsPage.Model(sections: sections)
+    model.totalCount = sections.reduce(0) { $0 + $1.authors.count }
+    return model
   }
 }
 

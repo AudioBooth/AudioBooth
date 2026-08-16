@@ -68,6 +68,7 @@ final class AuthorsPageModel: AuthorsPage.Model {
       sections = buildSections(from: allAuthors)
       currentPage += 1
 
+      totalCount = response.total
       hasMorePages = (currentPage * itemsPerPage) < response.total
 
     } catch {

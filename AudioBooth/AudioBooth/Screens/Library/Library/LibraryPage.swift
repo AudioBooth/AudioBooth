@@ -242,7 +242,14 @@ struct LibraryPage: View {
 
   var libraryView: some View {
     ScrollView {
-      Group {
+      VStack {
+        if let countLabel {
+          countLabel
+            .font(.title2.bold())
+            .foregroundColor(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
         if model.isRoot {
           LibraryView(
             items: model.items,
@@ -275,8 +282,24 @@ struct LibraryPage: View {
         }
       }
       .padding(.horizontal)
+      .padding(.top)
       .padding(.bottom, 80)
       .environment(\.itemDisplayMode, preferences.libraryDisplayMode)
+    }
+  }
+
+  var countLabel: Text? {
+    if model.isSelecting {
+      return Text("\(model.selectedIDs.count) of \(model.selectableCount) selected")
+    } else if let total = model.totalCount {
+      switch model.kind {
+      case .books:
+        return Text("^[\(total) book](inflect: true)")
+      case .podcasts:
+        return Text("^[\(total) podcast](inflect: true)")
+      }
+    } else {
+      return nil
     }
   }
 
@@ -318,6 +341,11 @@ struct LibraryPage: View {
 extension LibraryPage {
   @Observable
   class Model: ObservableObject {
+    enum Kind {
+      case books
+      case podcasts
+    }
+
     struct Actions: OptionSet {
       let rawValue: Int
 
@@ -331,6 +359,8 @@ extension LibraryPage {
     var isLoading: Bool
     var hasMorePages: Bool
     var pageLoadFailed: Bool = false
+    var totalCount: Int?
+    var kind: Kind = .books
 
     var isRoot: Bool
 
@@ -440,7 +470,9 @@ extension LibraryPage.Model {
       ),
     ]
 
-    return LibraryPage.Model(items: sampleItems)
+    let model = LibraryPage.Model(items: sampleItems)
+    model.totalCount = sampleItems.count
+    return model
   }
 }
 
