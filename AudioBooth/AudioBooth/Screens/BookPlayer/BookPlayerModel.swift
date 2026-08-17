@@ -830,7 +830,6 @@ extension BookPlayerModel {
           case .playing:
             self.handlePlaybackStateChange(true)
             self.isLoading = false
-            self.recoveryAttempts = 0
             (self.timer as? TimerPickerSheetViewModel)?.resumeLiveActivityIfNeeded()
           case .paused, .stopped:
             self.handlePlaybackStateChange(false)
@@ -907,6 +906,10 @@ extension BookPlayerModel {
   }
 
   private func onTimeChanged(_ globalTime: TimeInterval) {
+    if recoveryAttempts > 0, !isRecovering {
+      recoveryAttempts = 0
+    }
+
     if globalTime > 0 || self.mediaProgress.currentTime == 0 {
       if abs(self.mediaProgress.currentTime - globalTime) > 5 {
         AppLogger.player.debug(
