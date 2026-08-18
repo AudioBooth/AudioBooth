@@ -88,7 +88,10 @@ extension PlaybackSession {
     let predicate = #Predicate<PlaybackSession> { session in
       session.pendingListeningTime > 0 && session.baseURL == nil
     }
-    let descriptor = FetchDescriptor<PlaybackSession>(predicate: predicate)
+    let descriptor = FetchDescriptor<PlaybackSession>(
+      predicate: predicate,
+      sortBy: [SortDescriptor(\.updatedAt, order: .forward)]
+    )
     return try context.fetch(descriptor)
   }
 
