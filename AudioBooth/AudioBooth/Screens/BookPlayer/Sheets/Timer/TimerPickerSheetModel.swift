@@ -490,6 +490,12 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       PlaybackHistory.record(itemID: itemID, action: .timerStarted, position: position)
       AppLogger.player.info("Auto-timer activated: \(duration) seconds")
 
+    case .custom(let duration):
+      current = .custom(duration)
+      startSleepTimer(duration: duration)
+      PlaybackHistory.record(itemID: itemID, action: .timerStarted, position: position)
+      AppLogger.player.info("Auto-timer activated: \(duration) seconds (custom)")
+
     case .chapters(let count):
       current = .chapters(count)
       if let duration = calculateChapterDuration(for: count) {

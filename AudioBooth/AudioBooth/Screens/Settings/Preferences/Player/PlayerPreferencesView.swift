@@ -163,7 +163,7 @@ struct PlayerPreferencesView: View {
     let sensitivity = String(localized: preferences.shakeSensitivity.displayText)
     switch preferences.autoTimerMode {
     case .off: return Text("Sensitivity: \(sensitivity)")
-    case .duration(let s):
+    case .duration(let s), .custom(let s):
       let mins = Int(s / 60)
       return Text("\(mins) min · \(sensitivity)")
     case .chapters(let n):
