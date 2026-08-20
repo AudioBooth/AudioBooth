@@ -24,10 +24,14 @@ struct SearchPage: View {
 
 struct SearchView: View {
   @ObservedObject var model: Model
+  @Environment(\.appTheme) var theme
+
   var body: some View {
     ScrollView {
       content
     }
+    .frame(maxWidth: .infinity)
+    .background(theme.colors.background.page)
     .scrollDismissesKeyboard(.interactively)
     .onAppear {
       model.onSearchChanged(model.searchText)
