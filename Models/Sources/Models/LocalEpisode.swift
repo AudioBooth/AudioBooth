@@ -16,6 +16,7 @@ public final class LocalEpisode {
   public var track: Track?
   public var chapters: [Chapter]
   public var createdAt: Date = Date()
+  public var coverFile: URL?
 
   public var isDownloaded: Bool { track?.relativePath != nil }
 
@@ -27,7 +28,25 @@ public final class LocalEpisode {
     chapters.sorted(by: { $0.start < $1.start })
   }
 
+  public var localCoverURL: URL? {
+    guard let coverFile else { return nil }
+
+    guard
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
+    else {
+      return nil
+    }
+
+    let fileURL = appGroupURL.appendingPathComponent(coverFile.relativePath)
+    guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+    return fileURL
+  }
+
   public func coverURL(raw: Bool = false) -> URL? {
+    if let localCoverURL { return localCoverURL }
+
     guard var url = coverURL else { return nil }
 
     #if os(watchOS)
@@ -103,6 +122,7 @@ extension LocalEpisode {
       existing.episodeDescription = self.episodeDescription
       existing.publishedAt = self.publishedAt
       existing.coverURL = self.coverURL
+      existing.coverFile = self.coverFile ?? existing.coverFile
       existing.chapters = self.chapters
 
       if let newTrack = self.track {

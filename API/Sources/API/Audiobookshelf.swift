@@ -28,14 +28,7 @@ public final class Audiobookshelf {
   private init() {
     setupNetworkService()
 
-    ImagePipeline.shared = ImagePipeline {
-      let configuration = DataLoader.defaultConfiguration
-      configuration.urlCache = nil
-      configuration.httpAdditionalHeaders = authentication.server?.customHeaders
-      $0.dataLoader = DataLoader(configuration: configuration)
-
-      $0.dataCache = try? DataCache(name: "me.jgrenier.audioBS.images")
-    }
+    ImagePipeline.shared = .audioBooth(customHeaders: authentication.server?.customHeaders)
   }
 
   public func logout(serverID: String) {

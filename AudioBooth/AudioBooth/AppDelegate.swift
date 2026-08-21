@@ -74,6 +74,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
       await Audiobookshelf.shared.authentication.checkServersHealth()
       await StorageManager.shared.cleanupUnusedDownloads()
       DownloadManager.shared.resumeOutstandingRequests()
+      DownloadManager.shared.backfillMissingCovers()
     }
 
     #if !targetEnvironment(macCatalyst)

@@ -26,6 +26,7 @@ public final class LocalBook {
   public var displayOrder: Int = 0
   public var createdAt: Date = Date()
   public var ebookFile: URL?
+  public var coverFile: URL?
 
   public var authorNames: String {
     authors.map(\.name).joined(separator: ", ")
@@ -58,7 +59,25 @@ public final class LocalBook {
     return fileURL
   }
 
+  public var localCoverURL: URL? {
+    guard let coverFile else { return nil }
+
+    guard
+      let appGroupURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
+      )
+    else {
+      return nil
+    }
+
+    let fileURL = appGroupURL.appendingPathComponent(coverFile.relativePath)
+    guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+    return fileURL
+  }
+
   public func coverURL(raw: Bool = false) -> URL? {
+    if let localCoverURL { return localCoverURL }
+
     guard var url = coverURL else { return nil }
 
     #if os(watchOS)
@@ -160,6 +179,7 @@ extension LocalBook {
       existingItem.publisher = self.publisher
       existingItem.language = self.language
       existingItem.ebookFile = self.ebookFile ?? existingItem.ebookFile
+      existingItem.coverFile = self.coverFile ?? existingItem.coverFile
 
       var mergedTracks: [Track] = []
       for newTrack in self.tracks {

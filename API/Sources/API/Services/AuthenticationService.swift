@@ -244,12 +244,7 @@ public final class AuthenticationService: ObservableObject {
 
     server.customHeaders = customHeaders
 
-    ImagePipeline.shared = ImagePipeline {
-      let configuration = DataLoader.defaultConfiguration
-      configuration.requestCachePolicy = .returnCacheDataElseLoad
-      configuration.httpAdditionalHeaders = customHeaders
-      $0.dataLoader = DataLoader(configuration: configuration)
-    }
+    ImagePipeline.shared = .audioBooth(customHeaders: customHeaders)
 
     var allConnections = connections
     allConnections[serverID] = Connection(server)
