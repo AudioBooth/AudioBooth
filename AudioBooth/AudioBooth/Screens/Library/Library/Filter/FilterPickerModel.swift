@@ -11,8 +11,8 @@ final class FilterPickerModel: FilterPicker.Model {
       selectedFilter: currentFilter
     )
 
-    Task {
-      await fetchFilterData()
+    if let cached = audiobookshelf.libraries.getCachedFilterData() {
+      applyFilterData(cached)
     }
   }
 
@@ -26,10 +26,6 @@ final class FilterPickerModel: FilterPicker.Model {
   }
 
   private func fetchFilterData() async {
-    if let cached = audiobookshelf.libraries.getCachedFilterData() {
-      applyFilterData(cached)
-    }
-
     do {
       let data = try await audiobookshelf.libraries.fetchFilterData()
       applyFilterData(data)

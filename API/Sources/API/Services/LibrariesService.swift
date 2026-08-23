@@ -6,6 +6,8 @@ import Nuke
 @MainActor
 public final class LibrariesService: ObservableObject {
   private let audiobookshelf: Audiobookshelf
+  private var filterData: (libraryID: String, data: FilterData)?
+  private var filterDataTasks: [String: Task<FilterData, Error>] = [:]
 
   enum Keys {
     static let library = "selected_library"
@@ -89,6 +91,7 @@ public final class LibrariesService: ObservableObject {
   }
 
   public func clearAllCaches() {
+    filterData = nil
     guard let storage = audiobookshelf.authentication.server?.storage else { return }
     let keys = storage.dictionaryRepresentation().keys
     for key in keys where key.hasPrefix("personalized_") || key.hasPrefix("filterdata_") {
@@ -306,21 +309,42 @@ public final class LibrariesService: ObservableObject {
 
   public func getCachedFilterData() -> FilterData? {
     guard let library = audiobookshelf.libraries.current else { return nil }
+
+    if let filterData, filterData.libraryID == library.id {
+      return filterData.data
+    }
+
     let key = Keys.filterData(libraryID: library.id)
-    guard let data = audiobookshelf.authentication.server?.storage.data(forKey: key) else { return nil }
-    return try? JSONDecoder().decode(FilterData.self, from: data)
+    guard let data = audiobookshelf.authentication.server?.storage.data(forKey: key),
+      let decoded = try? JSONDecoder().decode(FilterData.self, from: data)
+    else { return nil }
+
+    filterData = (library.id, decoded)
+    return decoded
   }
 
   public func fetchFilterData() async throws -> FilterData {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "No library selected. Please select a library first."
+      )
+    }
+
+    if let inFlight = filterDataTasks[library.id] {
+      return try await inFlight.value
+    }
+
+    let task = Task { try await performFilterDataFetch(library: library) }
+    filterDataTasks[library.id] = task
+    defer { filterDataTasks[library.id] = nil }
+
+    return try await task.value
+  }
+
+  private func performFilterDataFetch(library: Library) async throws -> FilterData {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first."
       )
     }
 
@@ -336,6 +360,8 @@ public final class LibrariesService: ObservableObject {
 
     do {
       let response = try await networkService.send(request)
+
+      filterData = (library.id, response.value.filterdata)
 
       let encoder = JSONEncoder()
       if let data = try? encoder.encode(response.value.filterdata) {
