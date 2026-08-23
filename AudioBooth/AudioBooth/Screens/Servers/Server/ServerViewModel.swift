@@ -215,7 +215,7 @@ final class ServerViewModel: ServerView.Model {
 
     authModel.isLoading = true
     let normalizedURL = buildFullServerURL()
-    let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
+    let headers = customHeaders.dictionary
 
     Task {
       do {
@@ -250,7 +250,7 @@ final class ServerViewModel: ServerView.Model {
 
     authModel.isLoading = true
     let normalizedURL = buildFullServerURL()
-    let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
+    let headers = customHeaders.dictionary
 
     Task {
       do {
@@ -282,7 +282,7 @@ final class ServerViewModel: ServerView.Model {
     }
 
     let normalizedURL = buildFullServerURL()
-    let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
+    let headers = customHeaders.dictionary
 
     authModel.isLoading = true
 
@@ -385,7 +385,7 @@ final class ServerViewModel: ServerView.Model {
 
     Task {
       do {
-        let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
+        let headers = customHeaders.dictionary
 
         let status = try await audiobookshelf.networkDiscovery.fetchServerStatus(
           serverURL: serverURL,

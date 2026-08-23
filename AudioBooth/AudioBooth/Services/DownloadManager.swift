@@ -553,7 +553,7 @@ final class DownloadManager: NSObject, ObservableObject {
       kind: kind,
       podcastID: podcastID,
       priority: priority,
-      files: Dictionary(uniqueKeysWithValues: pending.map { ($0.relativePath, $0) }),
+      files: Dictionary(pending.map { ($0.relativePath, $0) }, uniquingKeysWith: { first, _ in first }),
       bytesCompleted: bytesCompleted,
       totalBytes: plan.totalBytes
     )

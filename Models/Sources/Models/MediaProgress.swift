@@ -88,13 +88,14 @@ extension MediaProgress {
     do {
       let allProgress = try fetchAll()
       return Dictionary(
-        uniqueKeysWithValues: allProgress.map {
+        allProgress.map {
           if $0.progress > 0 {
             return ($0.bookID, $0.progress)
           } else {
             return ($0.bookID, $0.ebookProgress ?? 0)
           }
-        }
+        },
+        uniquingKeysWith: { first, _ in first }
       )
     } catch {
       return [:]
@@ -323,7 +324,8 @@ extension MediaProgress {
       (try? PlaybackSession.fetchUnsynced())?.map { $0.episodeID ?? $0.libraryItemID } ?? []
     )
     var progressMap = Dictionary(
-      uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) }
+      allLocalProgress.map { ($0.bookID, $0) },
+      uniquingKeysWith: { first, _ in first }
     )
 
     AppLogger.sync.debug(

@@ -281,10 +281,11 @@ extension HomePageModel {
     let existingModels: [String: ContinueListeningBookCardModel]
     if let continueListening {
       existingModels = Dictionary(
-        uniqueKeysWithValues: continueListening.items.compactMap { item in
+        continueListening.items.compactMap { item in
           guard let cardModel = item as? ContinueListeningBookCardModel else { return nil }
           return (cardModel.id, cardModel)
-        }
+        },
+        uniquingKeysWith: { first, _ in first }
       )
     } else {
       existingModels = [:]
@@ -353,7 +354,8 @@ extension HomePageModel {
     let existingModels: [String: BookCard.Model]
     if let continueListening {
       existingModels = Dictionary(
-        uniqueKeysWithValues: continueListening.items.map { ($0.id, $0) }
+        continueListening.items.map { ($0.id, $0) },
+        uniquingKeysWith: { first, _ in first }
       )
     } else {
       existingModels = [:]
@@ -516,7 +518,8 @@ extension HomePageModel {
         .sorted { $0.lastUpdate > $1.lastUpdate }
 
       let continueListeningByID = Dictionary(
-        uniqueKeysWithValues: continueListeningBooks.map { ($0.id, $0) }
+        continueListeningBooks.map { ($0.id, $0) },
+        uniquingKeysWith: { first, _ in first }
       )
 
       var books: [BookEntry] = []

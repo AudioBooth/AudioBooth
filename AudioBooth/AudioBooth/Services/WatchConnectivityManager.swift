@@ -58,7 +58,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   func syncContinueListening(books: [Book]) {
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
-      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0) }
+      allProgress.map { ($0.bookID, $0) },
+      uniquingKeysWith: { first, _ in first }
     )
 
     var continueListening: [[String: Any]] = []
@@ -126,7 +127,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
-      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0) }
+      allProgress.map { ($0.bookID, $0) },
+      uniquingKeysWith: { first, _ in first }
     )
 
     var bookIDs = continueListening.compactMap { $0["id"] as? String }

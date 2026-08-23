@@ -50,11 +50,7 @@ final class CustomHeadersViewModel: CustomHeadersView.Model {
     notifyHeadersChanged()
   }
 
-  func getHeadersDictionary() -> [String: String] {
-    Dictionary(uniqueKeysWithValues: headers.map { ($0.key, $0.value) })
-  }
-
   private func notifyHeadersChanged() {
-    onHeadersChanged?(getHeadersDictionary())
+    onHeadersChanged?(dictionary)
   }
 }

@@ -116,6 +116,10 @@ extension CustomHeadersView {
     var newHeaderKey: String
     var newHeaderValue: String
 
+    var dictionary: [String: String] {
+      Dictionary(headers.map { ($0.key, $0.value) }, uniquingKeysWith: { _, last in last })
+    }
+
     func onAddHeaderTapped() {}
     func onSaveHeader() {}
     func onCancelAdd() {}
