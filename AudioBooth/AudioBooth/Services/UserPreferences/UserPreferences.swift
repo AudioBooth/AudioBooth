@@ -149,7 +149,7 @@ final class UserPreferences: ObservableObject {
   var librarySortAscending: Bool = true
 
   @AppStorage("libraryFilter")
-  var libraryFilter: LibraryPageModel.Filter = .all
+  var libraryFilter: FilterPicker.Model.Filter = .all
 
   @AppStorage("showNFCTagWriting")
   var showNFCTagWriting: Bool = false

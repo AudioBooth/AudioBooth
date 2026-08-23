@@ -76,8 +76,8 @@ struct LibraryPage: View {
             model.onFilterButtonTapped()
           } label: {
             Label(
-              filterButtonLabel ?? "All",
-              systemImage: filterButtonLabel == nil
+              model.filters?.selectedFilter?.title ?? "All",
+              systemImage: model.filters?.selectedFilter?.title == nil
                 ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
             )
           }
@@ -318,24 +318,6 @@ struct LibraryPage: View {
       String(localized: "\(model.selectedIDs.count) Selected")
     }
   }
-
-  var filterButtonLabel: String? {
-    switch model.filters?.selectedFilter {
-    case .all: return nil
-    case .explicit: return "Explicit"
-    case .abridged: return "Abridged"
-    case .progress(let name): return name
-    case .authors(_, let name): return name
-    case .series(_, let name): return name
-    case .narrators(let name): return name
-    case .genres(let name): return name
-    case .tags(let name): return name
-    case .languages(let name): return name
-    case .publishers(let name): return name
-    case .publishedDecades(let decade): return decade
-    case nil: return nil
-    }
-  }
 }
 
 extension LibraryPage {
@@ -400,7 +382,7 @@ extension LibraryPage {
     func onResetAllProgressTapped() {}
     func onMarkAllFinishedTapped() {}
     func onFilterButtonTapped() {}
-    func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
+    func onFilterPreferenceChanged(_ filter: FilterPicker.Model.Filter) {}
     func onSelectTapped() {}
     func onCancelSelectTapped() {}
     func onSelectAllTapped() {}

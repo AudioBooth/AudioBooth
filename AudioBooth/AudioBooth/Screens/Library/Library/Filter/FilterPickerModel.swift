@@ -5,8 +5,11 @@ import Logging
 final class FilterPickerModel: FilterPicker.Model {
   private let audiobookshelf = Audiobookshelf.shared
 
-  init(currentFilter: LibraryPageModel.Filter?) {
+  var onFilterSelected: ((FilterPicker.Model.Filter?) -> Void)?
+
+  init(currentFilter: FilterPicker.Model.Filter?, source: Source) {
     super.init(
+      source: source,
       progressOptions: ["Finished", "In Progress", "Not Started", "Not Finished"],
       selectedFilter: currentFilter
     )
@@ -16,9 +19,12 @@ final class FilterPickerModel: FilterPicker.Model {
     }
   }
 
-  override func onFilterChanged(_ filter: LibraryPageModel.Filter?) {
+  override func onFilterChanged(_ filter: FilterPicker.Model.Filter?) {
     selectedFilter = filter
-    UserPreferences.shared.libraryFilter = filter ?? .all
+    if source == .library {
+      UserPreferences.shared.libraryFilter = filter ?? .all
+    }
+    onFilterSelected?(filter)
   }
 
   override func refresh() async {

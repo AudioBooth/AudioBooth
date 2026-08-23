@@ -36,7 +36,27 @@ struct SeriesPage: View {
       text: $model.search.searchText,
       prompt: "Search books, series, and authors"
     )
+    .sheet(isPresented: $model.showingFilterSelection) {
+      if let filters = model.filters {
+        NavigationStack {
+          FilterPicker(model: filters)
+        }
+      }
+    }
     .toolbar {
+      ToolbarItem(placement: .topBarLeading) {
+        Button {
+          model.onFilterTapped()
+        } label: {
+          Label(
+            model.filters?.selectedFilter?.title ?? "All",
+            systemImage: model.filters?.selectedFilter?.title == nil
+              ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
+          )
+        }
+        .tint(.primary)
+      }
+
       ToolbarItem(placement: .topBarTrailing) {
         Menu {
           Toggle(
@@ -127,11 +147,15 @@ extension SeriesPage {
     var currentSort: SeriesService.SortBy
     var ascending: Bool
 
+    var filters: FilterPicker.Model?
+    var showingFilterSelection: Bool = false
+
     func onAppear() {}
     func refresh() async {}
     func loadNextPageIfNeeded() {}
     func onDisplayModeTapped() {}
     func onSortOptionTapped(_ sortBy: SeriesService.SortBy) {}
+    func onFilterTapped() {}
 
     init(
       isLoading: Bool = false,

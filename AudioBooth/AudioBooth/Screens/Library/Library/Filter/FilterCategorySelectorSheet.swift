@@ -145,7 +145,7 @@ extension FilterCategorySelectorSheet {
     var publishers: [String]
     var publishedDecades: [String]
 
-    var selectedFilter: LibraryPageModel.Filter?
+    var selectedFilter: FilterPicker.Model.Filter?
 
     var selectedProgress: String? {
       get {
@@ -267,7 +267,7 @@ extension FilterCategorySelectorSheet {
       languages: [String] = [],
       publishers: [String] = [],
       publishedDecades: [String] = [],
-      selectedFilter: LibraryPageModel.Filter? = nil
+      selectedFilter: FilterPicker.Model.Filter? = nil
     ) {
       self.progressOptions = progressOptions
       self.authors = authors

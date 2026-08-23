@@ -7,6 +7,7 @@ final class SeriesPageModel: SeriesPage.Model {
   private let preferences = UserPreferences.shared
 
   private var fetchedSeries: [SeriesCard.Model] = []
+  private var filter: FilterPicker.Model.Filter?
 
   private var currentPage: Int = 0
   private var isLoadingNextPage: Bool = false
@@ -16,6 +17,23 @@ final class SeriesPageModel: SeriesPage.Model {
   init() {
     super.init(hasMorePages: true, currentSort: .name, ascending: true)
     self.search = SearchViewModel()
+
+    let picker = FilterPickerModel(currentFilter: nil, source: .series)
+    picker.onFilterSelected = { [weak self] filter in
+      self?.onFilterSelected(filter)
+    }
+    self.filters = picker
+  }
+
+  override func onFilterTapped() {
+    showingFilterSelection = true
+  }
+
+  private func onFilterSelected(_ filter: FilterPicker.Model.Filter?) {
+    self.filter = filter
+    Task {
+      await refresh()
+    }
   }
 
   override func onDisplayModeTapped() {
@@ -49,6 +67,7 @@ final class SeriesPageModel: SeriesPage.Model {
     self.hasMorePages = true
     fetchedSeries.removeAll()
     series.removeAll()
+    await filters?.refresh()
     await loadSeries()
   }
 
@@ -64,7 +83,8 @@ final class SeriesPageModel: SeriesPage.Model {
         limit: itemsPerPage,
         page: currentPage,
         sortBy: currentSort,
-        ascending: ascending
+        ascending: ascending,
+        filter: filter?.queryValue
       )
 
       guard !Task.isCancelled else {

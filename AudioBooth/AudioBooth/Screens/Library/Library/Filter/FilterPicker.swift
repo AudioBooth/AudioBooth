@@ -100,7 +100,7 @@ struct FilterPicker: View {
         }
       }
 
-      if !model.series.isEmpty {
+      if model.source == .library, !model.series.isEmpty {
         CollapsibleSection(
           title: String(localized: "Series"),
           isExpanded: expandedSection == .series,
@@ -180,7 +180,7 @@ struct FilterPicker: View {
         }
       }
 
-      if !model.publishedDecades.isEmpty {
+      if model.source == .library, !model.publishedDecades.isEmpty {
         CollapsibleSection(
           title: String(localized: "Published Decades"),
           isExpanded: expandedSection == .publishedDecades,
@@ -200,26 +200,28 @@ struct FilterPicker: View {
         }
       }
 
-      Section {
-        FilterRow(
-          title: String(localized: "Explicit"),
-          isSelected: model.selectedFilter == .explicit,
-          action: {
-            model.onFilterChanged(.explicit)
-            dismiss()
-          }
-        )
-      }
+      if model.source == .library {
+        Section {
+          FilterRow(
+            title: String(localized: "Explicit"),
+            isSelected: model.selectedFilter == .explicit,
+            action: {
+              model.onFilterChanged(.explicit)
+              dismiss()
+            }
+          )
+        }
 
-      Section {
-        FilterRow(
-          title: String(localized: "Abridged"),
-          isSelected: model.selectedFilter == .abridged,
-          action: {
-            model.onFilterChanged(.abridged)
-            dismiss()
-          }
-        )
+        Section {
+          FilterRow(
+            title: String(localized: "Abridged"),
+            isSelected: model.selectedFilter == .abridged,
+            action: {
+              model.onFilterChanged(.abridged)
+              dismiss()
+            }
+          )
+        }
       }
     }
     .listSectionSpacing(.compact)
@@ -235,7 +237,7 @@ struct FilterPicker: View {
     }
   }
 
-  func isSelected(_ filter: LibraryPageModel.Filter) -> Bool {
+  func isSelected(_ filter: FilterPicker.Model.Filter) -> Bool {
     model.selectedFilter == filter
   }
 
@@ -333,6 +335,13 @@ enum FilterCategory: Hashable {
 extension FilterPicker {
   @Observable
   class Model: ObservableObject {
+    enum Source {
+      case library
+      case series
+    }
+
+    let source: Source
+
     var progressOptions: [String]
     var authors: [FilterData.Author]
     var genres: [String]
@@ -343,12 +352,13 @@ extension FilterPicker {
     var publishers: [String]
     var publishedDecades: [String]
 
-    var selectedFilter: LibraryPageModel.Filter?
+    var selectedFilter: FilterPicker.Model.Filter?
 
-    func onFilterChanged(_ filter: LibraryPageModel.Filter?) {}
+    func onFilterChanged(_ filter: FilterPicker.Model.Filter?) {}
     func refresh() async {}
 
     init(
+      source: Source,
       progressOptions: [String] = [],
       authors: [FilterData.Author] = [],
       genres: [String] = [],
@@ -358,8 +368,9 @@ extension FilterPicker {
       languages: [String] = [],
       publishers: [String] = [],
       publishedDecades: [String] = [],
-      selectedFilter: LibraryPageModel.Filter? = nil
+      selectedFilter: FilterPicker.Model.Filter? = nil
     ) {
+      self.source = source
       self.progressOptions = progressOptions
       self.authors = authors
       self.genres = genres
