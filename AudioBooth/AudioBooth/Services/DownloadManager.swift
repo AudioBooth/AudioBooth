@@ -225,6 +225,7 @@ final class DownloadManager: NSObject, ObservableObject {
   }
 
   func resumeOutstandingRequests() {
+    guard ModelContextProvider.shared.activeServerID != nil else { return }
     guard NetworkMonitor.shared.interfaceType == .wifi else { return }
     startNextIfIdle()
   }
