@@ -38,6 +38,10 @@ final class AudioPlayer {
   private var timeObserver: Any?
   private var cancellables = Set<AnyCancellable>()
   private var itemObservers = Set<AnyCancellable>()
+  private var shouldBePlaying = false
+  private var decodeFailureTime: TimeInterval?
+  private var decodeRecoveryAttempts = 0
+  private var isRecoveringDecodeFailure = false
 
   let events = PassthroughSubject<Event, Never>()
 
@@ -85,6 +89,8 @@ final class AudioPlayer {
 
   func setQueue(for session: PlaybackSession) {
     let wasPlaying = isPlaying
+    resetDecodeRecovery()
+    shouldBePlaying = wasPlaying
     self.session = session
     self.tracks = session.tracks.filter { url(for: $0) != nil }
 
@@ -101,7 +107,12 @@ final class AudioPlayer {
   }
 
   func pause() {
+    shouldBePlaying = false
     player.pause()
+    if isRecoveringDecodeFailure {
+      isRecoveringDecodeFailure = false
+      events.send(.stateChanged(.paused))
+    }
   }
 
   func resume() {
@@ -109,6 +120,8 @@ final class AudioPlayer {
       events.send(.error(nil))
       return
     }
+
+    shouldBePlaying = true
 
     if isPlaying {
       events.send(.stateChanged(.playing))
@@ -126,6 +139,8 @@ final class AudioPlayer {
   }
 
   func stop() {
+    shouldBePlaying = false
+    resetDecodeRecovery()
     removeTimeObserver()
     player.pause()
     player.removeAllItems()
@@ -169,6 +184,8 @@ final class AudioPlayer {
 
 private extension AudioPlayer {
   static let maxQueuedItems = 3
+  static let maxDecodeRecoveryAttempts = 10
+  static let decodeRecoveryWindow = TimeInterval(maxDecodeRecoveryAttempts) + 1
 
   func loadQueue(from index: Int, seekTo offset: TimeInterval, autoPlay: Bool) {
     guard tracks.indices.contains(index) else { return }
@@ -255,6 +272,7 @@ private extension AudioPlayer {
       .removeDuplicates()
       .sink { [weak self] status in
         guard let self else { return }
+        guard !self.isRecoveringDecodeFailure else { return }
         switch status {
         case .paused:
           self.events.send(.stateChanged(.paused))
@@ -294,11 +312,13 @@ private extension AudioPlayer {
         guard let self else { return }
         switch status {
         case .readyToPlay:
+          self.isRecoveringDecodeFailure = false
           self.events.send(.stateChanged(.ready))
         case .failed:
           AppLogger.player.error("Player item failed: \(item.error?.localizedDescription ?? "Unknown")")
           self.player.pause()
           self.player.removeAllItems()
+          self.resetDecodeRecovery()
           self.events.send(.error(item.error))
         default:
           break
@@ -324,10 +344,15 @@ private extension AudioPlayer {
       .store(in: &itemObservers)
 
     NotificationCenter.default.publisher(for: AVPlayerItem.failedToPlayToEndTimeNotification, object: item)
+      .receive(on: DispatchQueue.main)
       .sink { [weak self] notification in
         let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
         AppLogger.player.error("Failed to play to end: \(error?.localizedDescription ?? "Unknown")")
-        self?.events.send(.stalled)
+        if self?.isDecodeFailure(error) == true {
+          self?.recoverFromDecodeFailure()
+        } else {
+          self?.events.send(.stalled)
+        }
       }
       .store(in: &itemObservers)
 
@@ -344,7 +369,12 @@ private extension AudioPlayer {
     let interval = CMTime(seconds: 0.5, preferredTimescale: 1000)
     timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] _ in
       guard let self, self.player.currentSeconds > 0 else { return }
-      self.events.send(.timeUpdate(self.time))
+      let time = self.time
+      if let decodeFailureTime = self.decodeFailureTime, time > decodeFailureTime + 1 {
+        AppLogger.player.info("Decode recovery succeeded at \(time)s")
+        self.resetDecodeRecovery()
+      }
+      self.events.send(.timeUpdate(time))
     }
   }
 
@@ -353,6 +383,58 @@ private extension AudioPlayer {
       player.removeTimeObserver(observer)
       timeObserver = nil
     }
+  }
+
+  func isDecodeFailure(_ error: Error?) -> Bool {
+    guard let error = error as NSError? else { return false }
+    if error.domain == AVFoundationErrorDomain,
+      error.code == AVError.Code.decodeFailed.rawValue
+    {
+      return true
+    }
+    return isDecodeFailure(error.userInfo[NSUnderlyingErrorKey] as? Error)
+  }
+
+  // Apple's xHE-AAC decoder (FB22340742) stays failed until the queue is rebuilt, so seeking cannot recover.
+  func recoverFromDecodeFailure() {
+    let failureTime = max(time, mediaProgress.currentTime)
+    if let decodeFailureTime {
+      if abs(failureTime - decodeFailureTime) > Self.decodeRecoveryWindow {
+        self.decodeFailureTime = failureTime
+        decodeRecoveryAttempts = 0
+      }
+    } else {
+      decodeFailureTime = failureTime
+      decodeRecoveryAttempts = 0
+    }
+
+    guard
+      let decodeFailureTime,
+      decodeRecoveryAttempts < Self.maxDecodeRecoveryAttempts,
+      decodeFailureTime - Double(decodeRecoveryAttempts + 1) >= 0
+    else {
+      resetDecodeRecovery()
+      events.send(.stalled)
+      return
+    }
+
+    decodeRecoveryAttempts += 1
+    let retryTime = decodeFailureTime - Double(decodeRecoveryAttempts)
+
+    AppLogger.player.warning(
+      "Decode recovery \(self.decodeRecoveryAttempts): \(decodeFailureTime)s -> \(retryTime)s"
+    )
+
+    isRecoveringDecodeFailure = true
+    mediaProgress.currentTime = retryTime
+    let (trackIndex, offset) = trackAndOffset(for: retryTime)
+    loadQueue(from: trackIndex, seekTo: offset, autoPlay: shouldBePlaying)
+  }
+
+  func resetDecodeRecovery() {
+    decodeFailureTime = nil
+    decodeRecoveryAttempts = 0
+    isRecoveringDecodeFailure = false
   }
 }
 
