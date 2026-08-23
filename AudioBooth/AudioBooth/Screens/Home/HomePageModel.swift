@@ -65,7 +65,7 @@ final class HomePageModel: HomePage.Model {
 
   override func refresh() async {
     if Audiobookshelf.shared.libraries.current != nil {
-      _ = try? await Audiobookshelf.shared.libraries.fetchFilterData()
+      _ = try? await Audiobookshelf.shared.filterData.fetch()
     }
     discoverBooks = []
     await fetchContent()

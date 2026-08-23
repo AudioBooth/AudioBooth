@@ -30,7 +30,7 @@ struct AudioBoothApp: App {
         .task {
           if libraries.current != nil {
             Task {
-              try? await Audiobookshelf.shared.libraries.fetchFilterData()
+              try? await Audiobookshelf.shared.filterData.fetch()
             }
           }
         }
@@ -57,7 +57,7 @@ struct AudioBoothApp: App {
     .onChange(of: libraries.current) { _, newValue in
       if newValue != nil {
         Task {
-          try? await Audiobookshelf.shared.libraries.fetchFilterData()
+          try? await Audiobookshelf.shared.filterData.fetch()
         }
       }
     }
