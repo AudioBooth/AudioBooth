@@ -234,6 +234,7 @@ final class DownloadManager: NSObject, ObservableObject {
   }
 
   func resumeOutstandingRequests() {
+    guard Audiobookshelf.shared.libraries.current != nil else { return }
     guard NetworkMonitor.shared.interfaceType == .wifi else { return }
     startNextIfIdle()
   }
@@ -728,6 +729,7 @@ final class DownloadManager: NSObject, ObservableObject {
   }
 
   func backfillMissingCovers() {
+    guard Audiobookshelf.shared.libraries.current != nil else { return }
     guard NetworkMonitor.shared.isConnected else { return }
 
     let books = ((try? LocalBook.fetchAll()) ?? [])
