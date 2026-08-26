@@ -77,15 +77,7 @@ public struct Toast {
   private final class PassThroughWindow: UIWindow {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
       guard let rootView = rootViewController?.view else { return nil }
-
-      for subview in rootView.subviews {
-        let relativePoint = convert(point, to: subview)
-        if subview.bounds.contains(relativePoint) {
-          return super.hitTest(point, with: event)
-        }
-      }
-
-      return nil
+      return rootView.layer.hitTest(point)?.name == nil ? rootView : nil
     }
   }
 }
