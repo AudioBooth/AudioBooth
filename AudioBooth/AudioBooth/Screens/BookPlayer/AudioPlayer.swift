@@ -90,6 +90,7 @@ final class AudioPlayer {
   func setQueue(for session: PlaybackSession) {
     let wasPlaying = isPlaying
     wantsPlayback = wasPlaying
+    pendingSeekTarget = nil
     resetDecodeRetry()
     self.session = session
     self.tracks = session.tracks.filter { url(for: $0) != nil }
@@ -129,7 +130,7 @@ final class AudioPlayer {
       currentTrackIndex = trackIndex
       loadQueue(from: trackIndex, seekTo: offset, autoPlay: true)
     } else {
-      if abs((pendingSeekTarget ?? time) - mediaProgress.currentTime) > 0.5 {
+      if pendingSeekTarget != mediaProgress.currentTime {
         seek(to: mediaProgress.currentTime)
       }
       player.play()
@@ -138,6 +139,7 @@ final class AudioPlayer {
 
   func stop() {
     wantsPlayback = false
+    pendingSeekTarget = nil
     removeTimeObserver()
     player.pause()
     player.removeAllItems()
