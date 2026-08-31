@@ -38,7 +38,12 @@ struct BookPlayer: View {
             portraitLayout
           }
         }
+
+        if model.isLocked {
+          unlockOverlay
+        }
       }
+      .animation(.easeInOut, value: model.isLocked)
       .orientationLock(supportedOrientations)
       .onAppear { UIApplication.shared.isIdleTimerDisabled = preferences.keepScreenAwakeInPlayer }
       .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
@@ -120,6 +125,16 @@ struct BookPlayer: View {
             if disabledControls.contains(.equalizer) {
               Button(action: { model.equalizer.isPresented = true }) {
                 Label(PlayerControl.equalizer.displayName, systemImage: PlayerControl.equalizer.systemImage)
+              }
+            }
+
+            if model.isLocked {
+              Button(action: { model.onUnlockTapped() }) {
+                Label("Unlock", systemImage: "lock.open.fill")
+              }
+            } else if disabledControls.contains(.lock) {
+              Button(action: { model.onLockTapped() }) {
+                Label(PlayerControl.lock.displayName, systemImage: PlayerControl.lock.systemImage)
               }
             }
 
@@ -249,6 +264,7 @@ struct BookPlayer: View {
       }
       .padding(.horizontal, 24)
       .disabled(model.isLoading)
+      .allowsHitTesting(!model.isLocked)
     }
   }
 
@@ -272,6 +288,7 @@ struct BookPlayer: View {
       .frame(maxWidth: .infinity)
       .padding(.horizontal, 24)
       .disabled(model.isLoading)
+      .allowsHitTesting(!model.isLocked)
     }
     .padding(.horizontal, 24)
   }
@@ -315,6 +332,37 @@ struct BookPlayer: View {
     .foregroundColor(.white.opacity(0.7))
     .padding(.vertical, 12)
     .buttonStyle(.borderless)
+    .opacity(model.isLocked ? 0 : 1)
+  }
+
+  private var unlockOverlay: some View {
+    VStack {
+      Spacer()
+
+      HStack(spacing: 6) {
+        Image(systemName: "lock.fill")
+        Text("Hold to unlock")
+      }
+      .font(.footnote)
+      .fontWeight(.bold)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 10)
+      .background(Color.black.opacity(0.7))
+      .foregroundColor(.white)
+      .clipShape(.capsule)
+      .contentShape(.capsule)
+      .onLongPressGesture(minimumDuration: 1) {
+        Haptics.impact(.medium)
+        model.onUnlockTapped()
+      }
+      .accessibilityElement(children: .ignore)
+      .accessibilityAddTraits(.isButton)
+      .accessibilityLabel("Player locked")
+      .accessibilityHint("Touch and hold to unlock")
+      .accessibilityAction { model.onUnlockTapped() }
+    }
+    .padding(.bottom, 24)
+    .transition(.opacity)
   }
 
   @ViewBuilder
@@ -408,6 +456,21 @@ struct BookPlayer: View {
       Button(action: {
         Haptics.impact(.soft)
         model.equalizer.isPresented = true
+      }) {
+        VStack(spacing: 6) {
+          Image(systemName: control.systemImage)
+            .font(.system(size: 20))
+            .frame(width: 20, height: 20)
+          Text(control.displayName)
+            .font(.caption2)
+        }
+      }
+      .frame(maxWidth: .infinity)
+
+    case .lock:
+      Button(action: {
+        Haptics.impact(.soft)
+        model.onLockTapped()
       }) {
         VStack(spacing: 6) {
           Image(systemName: control.systemImage)
@@ -538,6 +601,10 @@ extension BookPlayer {
     var isPresented: Bool = true
     var isSettingsPresented: Bool = false
     var isQueuePresented: Bool = false
+    var isLocked: Bool = false
+
+    func onLockTapped() { isLocked = true }
+    func onUnlockTapped() { isLocked = false }
 
     func onTogglePlaybackTapped() {}
     func onPauseTapped() {}

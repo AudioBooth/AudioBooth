@@ -51,7 +51,10 @@ struct ContentView: View {
           BookPlayer(model: currentPlayer)
             .displayScaled()
             .presentationDetents([.large])
-            .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
+            .presentationDragIndicator(
+              (UIAccessibility.isVoiceOverRunning || currentPlayer.isLocked) ? .hidden : .visible
+            )
+            .interactiveDismissDisabled(currentPlayer.isLocked)
         }
       }
       .fullScreenCover(item: $playerManager.reader) { reader in

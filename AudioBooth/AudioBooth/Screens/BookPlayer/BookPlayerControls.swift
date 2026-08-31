@@ -100,5 +100,6 @@ struct BookPlayerControls: View {
       }
     }
     .buttonStyle(.borderless)
+    .opacity(model.isLocked ? 0.4 : 1)
   }
 }

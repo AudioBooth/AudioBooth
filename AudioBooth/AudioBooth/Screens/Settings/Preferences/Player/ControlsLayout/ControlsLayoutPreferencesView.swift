@@ -119,6 +119,7 @@ extension PlayerControl {
     case .history: .blue
     case .volume: .green
     case .equalizer: .red
+    case .lock: .gray
     }
   }
 }
