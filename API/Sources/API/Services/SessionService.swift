@@ -217,6 +217,8 @@ public final class SessionService {
 
     do {
       _ = try await networkService.send(request)
+    } catch let error as NetworkError {
+      throw error
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Failed to sync local session: \(error.localizedDescription)"
