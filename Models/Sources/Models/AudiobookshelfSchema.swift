@@ -13,6 +13,8 @@ enum AudiobookshelfSchema: VersionedSchema {
       DownloadRequest.self,
       Track.self,
       Chapter.self,
+      Author.self,
+      Series.self,
       MediaProgress.self,
       Bookmark.self,
       PlaybackSession.self,

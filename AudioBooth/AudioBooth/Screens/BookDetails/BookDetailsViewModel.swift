@@ -4,6 +4,7 @@ import Foundation
 import Logging
 import Models
 import Nuke
+import SwiftData
 import SwiftUI
 
 final class BookDetailsViewModel: BookDetailsView.Model {
@@ -47,10 +48,15 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   }
 
   override func onAppear() {
+    progressObservation?.cancel()
+    itemObservation?.cancel()
+    cancellables.removeAll()
+
     Task {
       await loadLocalBook()
       await loadBookFromAPI()
     }
+
     setupDownloadStateBinding()
     setupProgressObservation()
     setupItemObservation()
@@ -219,9 +225,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       error = nil
       isLoading = false
 
-      if localBook != nil {
-        let updated = LocalBook(from: book)
-        try? updated.save()
+      if localBook?.isDeleted == false {
+        try? LocalBook(from: book).save()
       }
 
       await loadSessions()

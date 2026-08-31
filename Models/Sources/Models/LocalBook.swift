@@ -160,37 +160,39 @@ extension LocalBook {
   public func save() throws {
     let context = ModelContextProvider.shared.context
 
-    if let existingItem = try LocalBook.fetch(bookID: self.bookID) {
-      existingItem.libraryID = self.libraryID
-      existingItem.title = self.title
-      existingItem.authors = self.authors
-      existingItem.narrators = self.narrators
-      existingItem.series = self.series
-      existingItem.coverURL = self.coverURL
-      existingItem.duration = self.duration
-      existingItem.chapters = self.chapters
-      existingItem.publishedYear = self.publishedYear
-      existingItem.subtitle = self.subtitle
-      existingItem.bookDescription = self.bookDescription
-      existingItem.genres = self.genres
-      existingItem.tags = self.tags
-      existingItem.isExplicit = self.isExplicit
-      existingItem.isAbridged = self.isAbridged
-      existingItem.publisher = self.publisher
-      existingItem.language = self.language
-      existingItem.ebookFile = self.ebookFile ?? existingItem.ebookFile
-      existingItem.coverFile = self.coverFile ?? existingItem.coverFile
+    guard modelContext == nil else {
+      try? context.save()
+      return
+    }
 
-      var mergedTracks: [Track] = []
-      for newTrack in self.tracks {
-        if let existingTrack = existingItem.tracks.first(where: { $0.index == newTrack.index }) {
-          newTrack.relativePath = newTrack.relativePath ?? existingTrack.relativePath
-        }
-        mergedTracks.append(newTrack)
-      }
-      existingItem.tracks = mergedTracks
-    } else {
+    guard let existingItem = try LocalBook.fetch(bookID: bookID) else {
       context.insert(self)
+      try? context.save()
+      return
+    }
+
+    existingItem.libraryID = libraryID
+    existingItem.title = title
+    existingItem.authors = authors
+    existingItem.narrators = narrators
+    existingItem.series = series
+    existingItem.coverURL = coverURL
+    existingItem.duration = duration
+    existingItem.chapters = chapters
+    existingItem.publishedYear = publishedYear
+    existingItem.subtitle = subtitle
+    existingItem.bookDescription = bookDescription
+    existingItem.genres = genres
+    existingItem.tags = tags
+    existingItem.isExplicit = isExplicit
+    existingItem.isAbridged = isAbridged
+    existingItem.publisher = publisher
+    existingItem.language = language
+    existingItem.ebookFile = ebookFile ?? existingItem.ebookFile
+    existingItem.coverFile = coverFile ?? existingItem.coverFile
+
+    if existingItem.tracks.allSatisfy({ $0.relativePath == nil }) {
+      existingItem.tracks = tracks
     }
 
     try? context.save()

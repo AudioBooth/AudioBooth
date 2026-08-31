@@ -125,8 +125,11 @@ extension SessionManager {
     let updatedItem: any PlayableItem
 
     if let item {
-      if let localBook = item as? LocalBook {
-        localBook.chapters = audiobookshelfSession.chapters?.map(Chapter.init) ?? []
+      if let localBook = item as? LocalBook,
+        let sessionChapters = audiobookshelfSession.chapters, !sessionChapters.isEmpty
+      {
+        localBook.chapters = sessionChapters.map(Chapter.init)
+        try? localBook.save()
       }
       updatedItem = item
       AppLogger.session.debug("Updated session with chapters")
@@ -168,7 +171,7 @@ extension SessionManager {
       case .book(let book):
         let newItem = LocalBook(from: book)
         try? newItem.save()
-        updatedItem = newItem
+        updatedItem = (try? LocalBook.fetch(bookID: newItem.bookID)) ?? newItem
       case .podcast:
         throw SessionError.failedToCreateSession
       }
