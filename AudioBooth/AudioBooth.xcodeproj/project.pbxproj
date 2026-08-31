@@ -109,6 +109,7 @@
 		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = API; path = ../API; sourceTree = SOURCE_ROOT; };
 		3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBooth Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBooth.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FF3ECCD30452F3300FFE416 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -266,11 +267,12 @@
 			isa = PBXGroup;
 			children = (
 				3FC8DC702E638F5E00A4B080 /* AudioBooth */,
-				3FC8DC822E63904C00A4B080 /* Packages */,
 				3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */,
-				3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */,
 				3F5A20532F6E656C00CFD89E /* AudioBoothWatchWidget */,
+				3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */,
+				3FF3ECCD30452F3300FFE416 /* CHANGELOG.md */,
 				3F6E94DB2E6395A20039F187 /* Frameworks */,
+				3FC8DC822E63904C00A4B080 /* Packages */,
 				3FC8DC6F2E638F5E00A4B080 /* Products */,
 				FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */,
 			);
