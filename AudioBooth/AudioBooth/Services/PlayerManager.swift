@@ -563,10 +563,7 @@ extension PlayerManager {
       return
     }
 
-    guard
-      userPreferences.smartContinuePlayback,
-      let currentID = current?.id
-    else {
+    guard let currentID = current?.id else {
       clearCurrent()
       return
     }
@@ -580,7 +577,10 @@ extension PlayerManager {
           currentItemID: currentID,
           currentPodcastID: currentPodcastID
         )
-      else { return }
+      else {
+        clearCurrent()
+        return
+      }
 
       let item = QueueItem(
         bookID: resolved.bookID,

@@ -196,8 +196,14 @@ final class UserPreferences: ObservableObject {
   @AppStorage("autoPlayNextInQueue")
   var autoPlayNextInQueue: Bool = true
 
-  @AppStorage("smartContinuePlayback")
-  var smartContinuePlayback: Bool = true
+  @AppStorage("continueNextInSeries")
+  var continueNextInSeries: Bool = true
+
+  @AppStorage("continueNextDownloadedBook")
+  var continueNextDownloadedBook: Bool = true
+
+  @AppStorage("continueNextPodcastEpisode")
+  var continueNextPodcastEpisode: Bool = true
 
   @AppStorage("podcastAutoQueueSettings")
   var podcastAutoQueueSettings: PodcastAutoQueueStore = .init()
@@ -255,6 +261,7 @@ final class UserPreferences: ObservableObject {
     migrateShakeToExtendTimer()
     migrateAutoTimerDuration()
     migrateVolumeBoost()
+    migrateSmartContinuePlayback()
     setupCloudSync()
   }
 
@@ -289,6 +296,17 @@ final class UserPreferences: ObservableObject {
         autoTimerMode = .duration(duration)
       }
     }
+  }
+
+  private func migrateSmartContinuePlayback() {
+    guard UserDefaults.standard.object(forKey: "smartContinuePlayback") is Bool else { return }
+
+    let wasEnabled = UserDefaults.standard.bool(forKey: "smartContinuePlayback")
+    UserDefaults.standard.removeObject(forKey: "smartContinuePlayback")
+
+    continueNextInSeries = wasEnabled
+    continueNextDownloadedBook = wasEnabled
+    continueNextPodcastEpisode = wasEnabled
   }
 
   private func migrateVolumeBoost() {
