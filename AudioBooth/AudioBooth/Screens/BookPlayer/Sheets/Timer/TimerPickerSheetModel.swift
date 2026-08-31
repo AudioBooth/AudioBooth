@@ -481,6 +481,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func startAutoTimer(mode: AutoTimerMode) {
+    guard !AVAudioSession.sharedInstance().isCarPlayConnected else {
+      AppLogger.player.info("CarPlay is connected - skipping auto-timer")
+      return
+    }
+
     let position = player.time
 
     switch mode {
