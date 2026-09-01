@@ -84,7 +84,7 @@ struct PlayerQueueView: View {
         .bold()
         .background(.regularMaterial)
       }
-      .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+      .navigationDestinations()
     }
   }
 }

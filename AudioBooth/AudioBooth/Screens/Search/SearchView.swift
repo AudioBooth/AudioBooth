@@ -12,7 +12,7 @@ struct SearchPage: View {
       SearchView(model: model)
         .searchable(text: $model.searchText)
         .searchFocused($fieldFocused)
-        .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+        .navigationDestinations()
         .onAppear {
           if model.searchText.isEmpty {
             fieldFocused = true

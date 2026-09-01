@@ -34,7 +34,7 @@ struct CollectionSelectorSheet: View {
           .tint(.primary)
         }
       }
-      .navigationDestination(for: NavigationDestination.self) { destination in
+      .navigationDestinations { destination in
         switch destination {
         case .playlist(let id):
           CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))

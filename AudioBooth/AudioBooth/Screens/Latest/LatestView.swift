@@ -11,7 +11,7 @@ struct LatestView: View {
       content
         .background(theme.colors.background.page)
         .navigationTitle("Latest")
-        .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+        .navigationDestinations()
         .refreshable {
           await model.refresh()
         }

@@ -58,7 +58,7 @@ struct ContinueListeningCoverFlowView: View {
   }
 
   private func card(for item: BookCard.Model, containerWidth: CGFloat) -> some View {
-    NavigationLink(value: navigationDestination(for: item)) {
+    DestinationLink(destination: navigationDestination(for: item), zooms: true) {
       ZStack {
         Color.clear
 

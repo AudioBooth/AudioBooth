@@ -38,7 +38,7 @@ struct LibraryRootPage: View {
             .fixedSize(horizontal: true, vertical: true)
           }
         }
-        .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+        .navigationDestinations()
     }
   }
 }

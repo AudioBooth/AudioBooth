@@ -38,7 +38,7 @@ struct DownloadsRootPage: View {
           }
         }
       }
-      .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+      .navigationDestinations()
     }
     .onChange(of: hasDownloadingBooks) { _, hasDownloading in
       if !hasDownloading {

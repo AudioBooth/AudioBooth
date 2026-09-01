@@ -13,7 +13,10 @@ struct SeriesCard: View {
   @ObservedObject var model: Model
 
   var body: some View {
-    NavigationLink(value: NavigationDestination.series(id: model.id, name: model.title)) {
+    DestinationLink(
+      destination: .series(id: model.id, name: model.title),
+      zooms: displayMode == .card
+    ) {
       content
         .contentShape(Rectangle())
     }

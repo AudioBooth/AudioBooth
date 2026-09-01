@@ -36,7 +36,7 @@ struct PodcastsRootPage: View {
             .fixedSize(horizontal: true, vertical: true)
           }
         }
-        .navigationDestination(for: NavigationDestination.self) { destination in
+        .navigationDestinations { destination in
           switch destination {
           case .book(let id):
             BookDetailsView(model: BookDetailsViewModel(bookID: id))

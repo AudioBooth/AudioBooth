@@ -33,7 +33,7 @@ struct HomePage: View {
   var body: some View {
     NavigationStack {
       content
-        .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+        .navigationDestinations()
     }
   }
 

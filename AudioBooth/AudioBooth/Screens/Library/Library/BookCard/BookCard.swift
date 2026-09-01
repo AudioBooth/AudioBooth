@@ -9,9 +9,10 @@ extension EnvironmentValues {
 
 struct BookCard: View {
   @ObservedObject var model: Model
+  @Environment(\.itemDisplayMode) private var displayMode
 
   var body: some View {
-    NavigationLink(value: navigationDestination) {
+    DestinationLink(destination: navigationDestination, zooms: displayMode == .card) {
       Content(model: model)
     }
     .buttonStyle(.plain)

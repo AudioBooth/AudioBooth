@@ -49,3 +49,81 @@ extension NavigationDestination {
     }
   }
 }
+
+struct ZoomDestination: Hashable {
+  let destination: NavigationDestination
+  let sourceID: String
+}
+
+extension EnvironmentValues {
+  @Entry var zoomNamespace: Namespace.ID? = nil
+}
+
+struct DestinationLink<Label: View>: View {
+  let destination: NavigationDestination
+  let zooms: Bool
+  @ViewBuilder let label: () -> Label
+
+  @Environment(\.zoomNamespace) private var namespace
+  @State private var sourceID = UUID().uuidString
+
+  var body: some View {
+    if #available(iOS 18.0, *), zooms, destination.isZoomable, let namespace {
+      NavigationLink(value: ZoomDestination(destination: destination, sourceID: sourceID), label: label)
+        .matchedTransitionSource(id: sourceID, in: namespace)
+    } else {
+      NavigationLink(value: destination, label: label)
+    }
+  }
+}
+
+extension View {
+  func navigationDestinations() -> some View {
+    navigationDestinations { $0.resolvedView }
+  }
+
+  func navigationDestinations(
+    @ViewBuilder destination: @escaping (NavigationDestination) -> some View
+  ) -> some View {
+    modifier(NavigationDestinationsModifier(destination: destination))
+  }
+}
+
+private struct NavigationDestinationsModifier<Destination: View>: ViewModifier {
+  let destination: (NavigationDestination) -> Destination
+
+  @Namespace private var namespace
+
+  func body(content: Content) -> some View {
+    content
+      .environment(\.zoomNamespace, namespace)
+      .navigationDestination(for: NavigationDestination.self) { value in
+        destination(value)
+          .environment(\.zoomNamespace, namespace)
+      }
+      .navigationDestination(for: ZoomDestination.self) { value in
+        zoomed(destination(value.destination), sourceID: value.sourceID)
+          .environment(\.zoomNamespace, namespace)
+      }
+  }
+
+  @ViewBuilder
+  private func zoomed(_ view: some View, sourceID: String) -> some View {
+    if #available(iOS 18.0, *) {
+      view.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+    } else {
+      view
+    }
+  }
+}
+
+extension NavigationDestination {
+  var isZoomable: Bool {
+    switch self {
+    case .book, .podcast, .series:
+      true
+    case .author, .authorLibrary, .narrator, .genre, .tag, .playlist, .collection, .podcastFeed, .offline, .stats:
+      false
+    }
+  }
+}

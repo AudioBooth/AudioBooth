@@ -153,7 +153,7 @@ struct BookPlayer: View {
           .tint(.primary)
         }
       }
-      .navigationDestination(for: NavigationDestination.self) { $0.resolvedView }
+      .navigationDestinations()
     }
     .preferredColorScheme(.dark)
     .sheet(
