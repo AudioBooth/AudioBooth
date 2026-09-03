@@ -70,6 +70,14 @@ struct EbookReaderView: View {
         }
       }
     }
+    .overlay(alignment: .top) {
+      if let readAlong = model.readAlong, let message = readAlongStatusMessage(readAlong.status) {
+        ReadAlongStatusPill(message: message, status: readAlong.status)
+          .padding(.top, 8)
+          .transition(.move(edge: .top).combined(with: .opacity))
+      }
+    }
+    .animation(.easeInOut(duration: 0.25), value: model.readAlong?.status)
     .overlay {
       if showZoneEditor {
         EbookTapZonesEditorView(preferences: model.preferences) {
@@ -111,7 +119,7 @@ struct EbookReaderView: View {
     }
     .onAppear(perform: model.onAppear)
     .onDisappear(perform: model.onDisappear)
-    .statusBarHidden(!showControls)
+    .statusBarHidden(true)
     .preferredColorScheme(preferredColorScheme)
     .background {
       if volumeButtonsEnabled {
@@ -237,6 +245,37 @@ struct EbookReaderView: View {
   }
 
   @ViewBuilder
+  private var readAlongIcon: some View {
+    switch model.readAlong?.status {
+    case .preparing:
+      ProgressView()
+        .controlSize(.small)
+    case .locating:
+      Image(systemName: "waveform.badge.magnifyingglass")
+    case .following:
+      Image(systemName: "waveform")
+        .symbolEffect(.variableColor.iterative, options: .repeating)
+    case .failed:
+      Image(systemName: "waveform.badge.exclamationmark")
+    case .off, .none:
+      Image(systemName: "waveform")
+    }
+  }
+
+  private func readAlongStatusMessage(_ status: ReadAlongCoordinator.Status) -> String? {
+    switch status {
+    case let .preparing(fraction):
+      String(localized: "Preparing Read Along… \(Int(fraction * 100))%")
+    case .locating:
+      String(localized: "Listening for your place in the book…")
+    case let .failed(message):
+      message
+    case .off, .following:
+      nil
+    }
+  }
+
+  @ViewBuilder
   private var bottomControlBar: some View {
     HStack(alignment: .bottom, spacing: 0) {
       if model.chapters != nil {
@@ -276,6 +315,20 @@ struct EbookReaderView: View {
         }
       }
       .frame(maxWidth: .infinity)
+
+      if model.supportsReadAlong {
+        Button(action: { model.onReadAlongTapped() }) {
+          VStack(spacing: 6) {
+            readAlongIcon
+              .font(.system(size: 20))
+              .frame(height: 20)
+            Text("Read Along")
+              .font(.caption2)
+          }
+        }
+        .frame(maxWidth: .infinity)
+        .tint(model.readAlong?.status.isActive == true ? .accentColor : .primary)
+      }
 
       if playerManager.current != nil {
         Button(action: { showPlayerSheet = true }) {
@@ -356,6 +409,9 @@ extension EbookReaderView {
     var search: EbookSearchView.Model?
     var supportsSearch: Bool
 
+    var supportsReadAlong: Bool
+    var readAlong: ReadAlongCoordinator?
+
     func onAppear() {}
     func onDisappear() {}
     func onTableOfContentsTapped() {}
@@ -367,6 +423,7 @@ extension EbookReaderView {
     func onTapRight() {}
     func onAutoScrollPlayPauseTapped() {}
     func onShowControlsChanged(_ isVisible: Bool) {}
+    func onReadAlongTapped() {}
 
     init(
       isLoading: Bool = true,
@@ -378,7 +435,8 @@ extension EbookReaderView {
       preferences: EbookReaderPreferences = EbookReaderPreferences(),
       supportsSettings: Bool = false,
       search: EbookSearchView.Model? = nil,
-      supportsSearch: Bool = false
+      supportsSearch: Bool = false,
+      supportsReadAlong: Bool = false
     ) {
       self.isLoading = isLoading
       self.error = error
@@ -390,6 +448,7 @@ extension EbookReaderView {
       self.supportsSettings = supportsSettings
       self.search = search
       self.supportsSearch = supportsSearch
+      self.supportsReadAlong = supportsReadAlong
     }
   }
 }

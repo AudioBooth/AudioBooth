@@ -73,6 +73,9 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.autoScrollSpeed") var autoScrollSpeed: Double = 0.0
   @AppStorage("ebookReader.progressDisplay") var progressDisplay: EbookProgressDisplay = .percent
 
+  @AppStorage("ebookReader.readAlongFollows") var readAlongFollowsNarration: Bool = true
+  @AppStorage("ebookReader.readAlongHighlightsWord") var readAlongHighlightsWord: Bool = true
+
   @AppStorage("ebookReader.tapZonesData") private var tapZonesData: Data = Data()
 
   var tapZones: [EbookTapZone] {

@@ -11,6 +11,7 @@ nonisolated enum AppLogger {
   static let player = Logger(label: "player")
   static let download = Logger(label: "download")
   static let viewModel = Logger(label: "viewModel")
+  static let readAlong = Logger(label: "read-along")
   static let general = Logger(label: "general")
   static let authentication = Logger(label: "authentication")
   static let crash = Logger(label: "crash")

@@ -232,6 +232,10 @@ final class BookPlayerModel: BookPlayer.Model {
     onLoad()
   }
 
+  override var secondsFromStartOfBook: TimeInterval {
+    player?.time ?? mediaProgress.currentTime
+  }
+
   override func onTogglePlaybackTapped() {
     if isPlaying {
       onPauseTapped()

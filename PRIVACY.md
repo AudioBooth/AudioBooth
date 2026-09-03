@@ -1,6 +1,6 @@
 # Privacy Policy for AudioBooth
 
-**Last Updated: October 18, 2025**
+**Last Updated: September 2, 2026**
 
 ## Overview
 
@@ -30,6 +30,12 @@ This information is:
 - Audiobook files you choose to download are stored locally on your device
 - This data remains on your device and is not transmitted elsewhere
 - You can delete this data at any time through the app's settings
+
+**Read Along (iOS 26 and later):**
+- When you turn on Read Along, the app transcribes the audiobook you are listening to in order to find the matching passage in the ebook
+- Transcription uses Apple's on-device speech models; the audio and the resulting text never leave your device and are never sent to the developer or any third party
+- Nothing is written to disk: the transcript is held in memory only while Read Along is running and is discarded when you turn it off or close the reader
+- Turning on Read Along may download an Apple speech model for your book's language, which is handled by the operating system
 
 ### Information Automatically Collected
 

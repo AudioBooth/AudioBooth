@@ -603,6 +603,8 @@ extension BookPlayer {
     var isQueuePresented: Bool = false
     var isLocked: Bool = false
 
+    var secondsFromStartOfBook: TimeInterval { 0 }
+
     func onLockTapped() { isLocked = true }
     func onUnlockTapped() { isLocked = false }
 
