@@ -57,6 +57,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>AudioBooth uses the camera to scan a page of your printed book and find it in the audiobook.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AudioBooth transcribes a short piece of the audiobook on your device to pinpoint the scanned page.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>AudioBooth uses notifications for alarm alerts.</string>
 	<key>UIApplicationSceneManifest</key>
