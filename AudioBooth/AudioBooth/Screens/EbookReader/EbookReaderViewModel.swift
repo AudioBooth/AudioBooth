@@ -18,24 +18,31 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   private let source: Source
-  private var bookID: String? {
+  var bookID: String? {
     switch source {
     case .local(_, let bookID): return bookID
     case .book(let book): return book.id
     case .temporary: return nil
     }
   }
-  private var publication: Publication?
-  private var navigator: (any Navigator)?
+  private(set) var publication: Publication?
+  private(set) var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
   private let audiobookshelf = Audiobookshelf.shared
   private var temporaryFileURL: URL?
   private var positions: [Locator] = []
 
+  var pendingReadAlongDecorations: [Decoration]?
+  var lastReadAlongDecorationAt: Date?
+  var readAlongDecorationTask: Task<Void, Never>?
+
+  var pendingReadAlongNavigation: Locator?
+  var readAlongNavigationTask: Task<Void, Never>?
+
   private var cancellables = Set<AnyCancellable>()
   private var autoScrollTask: Task<Void, Never>?
   private var isAutoScrollPaused: Bool = false
-  private weak var currentScrollView: UIScrollView?
+  weak var currentScrollView: UIScrollView?
 
   private lazy var assetRetriever = AssetRetriever(
     httpClient: DefaultHTTPClient()
@@ -68,6 +75,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         guard let self else { return }
         self.applyPreferences(self.preferences)
         self.updateAutoScroll()
+        self.syncReadAlongPreferences()
       }
       .store(in: &cancellables)
 
@@ -76,10 +84,16 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   override func onShowControlsChanged(_ isVisible: Bool) {
     isAutoScrollPaused = isVisible
     updateAutoScroll()
+
+    if isVisible, readAlong == nil {
+      supportsReadAlong = isReadAlongSupported
+    }
   }
 
-  private func updateAutoScroll() {
-    if preferences.autoScrollSpeed > 0 && preferences.scroll && !isAutoScrollPaused {
+  func updateAutoScroll() {
+    if preferences.autoScrollSpeed > 0 && preferences.scroll && !isAutoScrollPaused
+      && readAlong?.status.isActive != true
+    {
       startAutoScroll()
     } else {
       stopAutoScroll()
@@ -94,7 +108,13 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   override func onDisappear() {
     stopAutoScroll()
+    tearDownReadAlong()
     cleanupTemporaryFile()
+  }
+
+  override func onReadAlongTapped() {
+    toggleReadAlong()
+    updateAutoScroll()
   }
 
   private func loadEbook() async {
@@ -156,6 +176,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       updateProgress()
       updateCurrentChapterIndex()
+      supportsReadAlong = isReadAlongSupported
 
       await setupChapters()
 
@@ -179,9 +200,10 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         config: EPUBNavigatorViewController.Configuration(
           preferences: preferences.toEPUBPreferences(colorScheme: systemColorScheme),
           contentInset: [
-            .compact: (top: 0, bottom: 0),
-            .regular: (top: 0, bottom: 0),
-          ]
+            .compact: (top: 40, bottom: 0),
+            .regular: (top: 40, bottom: 0),
+          ],
+          decorationTemplates: HTMLDecorationTemplate.defaultTemplates(experimentalPositioning: true)
         )
       )
       navigator.delegate = self
@@ -385,7 +407,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     autoScrollTask = nil
   }
 
-  private func updateCurrentScrollView(in view: UIView) {
+  func updateCurrentScrollView(in view: UIView) {
     var best: (WKWebView, CGFloat)?
     let mid = view.window?.bounds.midX ?? 0
     findWebViews(in: view) { wv in
@@ -447,6 +469,10 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     AppLogger.viewModel.info("Cleared search highlights")
   }
 
+  private var minimumSecondsBetweenProgressSyncs: TimeInterval {
+    readAlong?.status == .following ? 15 : 1
+  }
+
   private func syncProgressToServer(_ progress: Double) {
     guard let bookID else { return }
 
@@ -462,7 +488,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     )
 
     let now = Date()
-    if let lastUpdate = lastProgressUpdate, now.timeIntervalSince(lastUpdate) < 1.0 {
+    if let lastUpdate = lastProgressUpdate,
+      now.timeIntervalSince(lastUpdate) < minimumSecondsBetweenProgressSyncs
+    {
       return
     }
 

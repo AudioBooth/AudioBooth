@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Read Along - Follow the ebook while the audiobook plays, with the narrated sentence highlighted and the page turning itself. Transcription happens entirely on device and requires iOS 26
 - Total counts - Show total item counts on the library, authors, series, and collections pages
 - Sleep timer Focus intent - Activate the auto sleep timer using a Focus (thanks @fivezeroes)
 - Sleep timer pause behavior - Configurable sleep timer behavior when playback is paused (thanks @fivezeroes)

@@ -58,6 +58,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AudioBooth transcribes your audiobook on this device so Read Along can highlight the passage being narrated in the ebook. No audio leaves your device.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>AudioBooth uses notifications for alarm alerts.</string>
 	<key>UIApplicationSceneManifest</key>

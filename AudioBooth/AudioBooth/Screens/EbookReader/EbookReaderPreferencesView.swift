@@ -92,6 +92,18 @@ struct EbookReaderPreferencesView: View {
         }
         .listRowBackground(theme.colors.background.card)
 
+        Section {
+          Toggle("Follow the Narrator", isOn: $preferences.readAlongFollowsNarration)
+          Toggle("Highlight Each Word", isOn: $preferences.readAlongHighlightsWord)
+        } header: {
+          Text("Read Along")
+        } footer: {
+          Text(
+            "Read Along listens to the audiobook and highlights the passage being narrated. Turning off Follow the Narrator keeps the highlight but leaves the page where you put it."
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
+
         Section("Appearance") {
           Picker("Theme", selection: $preferences.theme) {
             ForEach(EbookReaderPreferences.Theme.allCases) { theme in
