@@ -26,6 +26,7 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>me.jgrenier.AudioBS.close-session</string>
+		<string>me.jgrenier.AudioBS.dismiss-sleep-timer-activity</string>
 	</array>
 	<key>CFBundleGetInfoString</key>
 	<string></string>

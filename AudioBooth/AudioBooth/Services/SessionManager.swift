@@ -554,8 +554,8 @@ extension SessionManager {
       task.setTaskCompleted(success: false)
     } else {
       AppLogger.session.info("Playback is not active, attempting to close session")
-      endAllSleepTimerLiveActivities()
       Task {
+        await endAllSleepTimerLiveActivities()
         do {
           try await closeSession()
           task.setTaskCompleted(success: true)
@@ -642,16 +642,14 @@ extension SessionManager {
 
 extension SessionManager {
   #if !targetEnvironment(macCatalyst)
-  private func endAllSleepTimerLiveActivities() {
-    Task {
-      for activity in Activity<SleepTimerActivityAttributes>.activities {
-        await activity.end(nil, dismissalPolicy: .immediate)
-      }
-      AppLogger.session.info("Ended all sleep timer Live Activities during session cleanup")
+  private func endAllSleepTimerLiveActivities() async {
+    for activity in Activity<SleepTimerActivityAttributes>.activities {
+      await activity.end(nil, dismissalPolicy: .immediate)
     }
+    AppLogger.session.info("Ended all sleep timer Live Activities during session cleanup")
   }
   #else
-  private func endAllSleepTimerLiveActivities() {}
+  private func endAllSleepTimerLiveActivities() async {}
   #endif
 }
 
