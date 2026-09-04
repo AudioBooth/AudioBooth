@@ -85,6 +85,12 @@ struct BookPlayer: View {
               NavigationLink(value: NavigationDestination.book(id: model.id)) {
                 Label("Book Details", systemImage: "book")
               }
+
+              if model.supportsPageSync {
+                Button(action: { model.onPageSyncTapped() }) {
+                  Label("Page Sync", systemImage: "camera.viewfinder")
+                }
+              }
             }
 
             if Audiobookshelf.shared.authentication.server?.permissions?.download == true,
@@ -203,6 +209,12 @@ struct BookPlayer: View {
     }
     .sheet(isPresented: $model.isQueuePresented) {
       PlayerQueueView(model: PlayerQueueViewModel())
+    }
+    .sheet(item: $model.intro) { intro in
+      PageSyncIntroSheet(model: intro)
+    }
+    .sheet(item: $model.pageSync) { pageSync in
+      PageSyncSheet(model: pageSync)
     }
     .sheet(isPresented: $model.isSettingsPresented) {
       NavigationStack {
@@ -602,6 +614,10 @@ extension BookPlayer {
     var isSettingsPresented: Bool = false
     var isQueuePresented: Bool = false
     var isLocked: Bool = false
+    /// The title also has an ebook in the library, which Page Sync needs.
+    var supportsPageSync: Bool = false
+    var intro: PageSyncIntroSheet.Model?
+    var pageSync: PageSyncSheet.Model?
 
     func onLockTapped() { isLocked = true }
     func onUnlockTapped() { isLocked = false }
@@ -614,6 +630,7 @@ extension BookPlayer {
     func onDownloadTapped() {}
     func onBookmarksTapped() {}
     func onHistoryTapped() {}
+    func onPageSyncTapped() {}
 
     init(
       id: String = UUID().uuidString,

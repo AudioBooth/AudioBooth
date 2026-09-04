@@ -78,6 +78,7 @@ final class BookPlayerModel: BookPlayer.Model {
     )
 
     setupDownloadStateBinding(bookID: book.id)
+    setupPageSync(bookID: book.id)
     setupHistory()
 
     onLoad()
@@ -120,6 +121,7 @@ final class BookPlayerModel: BookPlayer.Model {
     )
 
     setupDownloadStateBinding(bookID: item.bookID)
+    setupPageSync(bookID: item.bookID)
     setupHistory()
 
     onLoad()
@@ -345,6 +347,35 @@ final class BookPlayerModel: BookPlayer.Model {
   func getCurrentTime() -> Int? {
     guard let player else { return nil }
     return Int(ceil(player.time))
+  }
+
+  /// Scan a page of the printed book and jump to it. Lives in the player menu, like Audible's.
+  override func onPageSyncTapped() {
+    guard let audiobook = pageSyncBook else { return }
+    PageSyncIntro.gate(
+      { [weak self] in
+        guard let self else { return }
+        let model = PageSyncViewModel(book: audiobook, localBook: try? LocalBook.fetch(bookID: audiobook.id))
+        model.onFinished = { [weak self] in
+          self?.pageSync = nil
+        }
+        pageSync = model
+      },
+      present: { [weak self] intro in
+        self?.intro = intro
+      }
+    )
+  }
+
+  private var pageSyncBook: Book?
+
+  /// Enables Page Sync when the library also has the ebook edition of this title.
+  private func setupPageSync(bookID: String) {
+    Task { [weak self] in
+      guard let pair = await ReadListenPairing.resolve(itemID: bookID), let self else { return }
+      pageSyncBook = pair.audiobook
+      supportsPageSync = pair.audiobook != nil && pair.ebook != nil
+    }
   }
 
   override func onHistoryTapped() {
