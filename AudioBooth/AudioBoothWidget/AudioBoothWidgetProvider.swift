@@ -74,7 +74,7 @@ struct AudioBoothWidgetProvider: TimelineProvider {
       }
 
       do {
-        let request = ImageRequest(url: thumbnailURL)
+        let request = ImageRequest(url: thumbnailURL, processors: [ImageProcessors.Resize(width: 500, unit: .pixels)])
         coverImage = try await ImagePipeline.shared.image(for: request)
       } catch {
       }
@@ -113,7 +113,7 @@ struct AudioBoothWidgetProvider: TimelineProvider {
       }
 
       do {
-        let request = ImageRequest(url: thumbnailURL)
+        let request = ImageRequest(url: thumbnailURL, processors: [ImageProcessors.Resize(width: 200, unit: .pixels)])
         let image = try await ImagePipeline.shared.image(for: request)
         images[book.bookID] = image
       } catch {

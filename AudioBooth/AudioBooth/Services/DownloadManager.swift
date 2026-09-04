@@ -679,8 +679,8 @@ final class DownloadManager: NSObject, ObservableObject {
 
   private func storeCover(itemID: String, fallbackURL: URL?) {
     let remoteURL =
-      (try? LocalBook.fetch(bookID: itemID))?.coverURL
-      ?? (try? LocalEpisode.fetch(episodeID: itemID))?.coverURL
+      (try? LocalBook.fetch(bookID: itemID))?.coverURL(raw: true)
+      ?? (try? LocalEpisode.fetch(episodeID: itemID))?.coverURL(raw: true)
       ?? fallbackURL
 
     guard let remoteURL, !remoteURL.isFileURL else { return }
