@@ -16,6 +16,7 @@ struct EbookPlayerSheet: View {
       BookPlayerPlaybackSection(model: player)
     }
     .padding(.top, 50)
+    .padding(.bottom, UIDevice.current.userInterfaceIdiom == .pad ? 50 : 0)
     .padding(.horizontal, 24)
     .preferredColorScheme(.dark)
     .presentationDragIndicator(.visible)
