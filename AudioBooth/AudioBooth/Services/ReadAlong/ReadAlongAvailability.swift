@@ -18,11 +18,11 @@ nonisolated enum ReadAlongAvailability {
       case let .localeUnsupported(locale):
         String(localized: "Read Along doesn't support \(locale.displayName) yet.")
       case .modelInstallFailed:
-        String(localized: "Couldn't download the speech model. Check your connection and try again.")
+        String(localized: "Couldn't finish preparing Read Along. Check your connection and try again.")
       case .modelStillDownloading:
-        String(localized: "The speech model is still downloading. Try Read Along again in a moment.")
+        String(localized: "Read Along is still preparing. Try again in a moment.")
       case let .localeUnavailable(locale):
-        String(localized: "Read Along couldn't reserve the \(locale.displayName) speech model.")
+        String(localized: "Couldn't prepare Read Along for \(locale.displayName). Try again in a moment.")
       }
     }
   }

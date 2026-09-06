@@ -9,6 +9,7 @@ nonisolated final class NarrationTranscriber: Sendable {
     case noAudioTrack
     case unsupportedAudioFormat
     case readFailed(any Error)
+    case analyzerStopped
 
     var errorDescription: String? {
       switch self {
@@ -16,6 +17,8 @@ nonisolated final class NarrationTranscriber: Sendable {
         String(localized: "This audiobook's audio can't be analyzed for Read Along.")
       case .readFailed:
         String(localized: "Couldn't read the audiobook's audio.")
+      case .analyzerStopped:
+        String(localized: "Read Along lost the narration and couldn't pick it back up.")
       }
     }
   }
@@ -23,11 +26,22 @@ nonisolated final class NarrationTranscriber: Sendable {
   private let locale: Locale
   private let source: NarrationSource
 
-  private static let maximumSecondsAheadOfPlayhead: TimeInterval = 90
+  private static let maximumSecondsAheadOfPlayhead: TimeInterval = 300
   private static let secondsBetweenPlayheadChecks: TimeInterval = 2
   private static let secondsBetweenFinalizations: TimeInterval = 15
   private static let playheadRecheckDelay = Duration.seconds(2)
   private static let timescale: CMTimeScale = 600
+  private static let secondsBeforeRetrying: TimeInterval = 2
+  private static let maximumAttemptsWithoutProgress = 4
+  private static let secondsOfOverlapAfterFailure: TimeInterval = 2
+  private static let minimumSecondsCountingAsProgress: TimeInterval = 5
+
+  private static func isWorthRetrying(_ error: any Error) -> Bool {
+    switch error {
+    case is CancellationError, Failure.noAudioTrack, Failure.unsupportedAudioFormat: false
+    default: true
+    }
+  }
 
   init(locale: Locale, source: NarrationSource) {
     self.locale = locale
@@ -58,23 +72,26 @@ nonisolated final class NarrationTranscriber: Sendable {
     reader.cancelReading()
   }
 
+  @MainActor
   func words(
     from bookTime: TimeInterval,
     playhead: @Sendable @escaping () async -> TimeInterval?
   ) -> AsyncThrowingStream<TranscribedWord, any Error> {
-    AsyncThrowingStream { continuation in
-      let reading = Task.detached(priority: .utility) {
-        do {
-          try await self.transcribe(from: bookTime, playhead: playhead) { continuation.yield($0) }
-          continuation.finish()
-        } catch is CancellationError {
-          continuation.finish()
-        } catch {
-          continuation.finish(throwing: error)
-        }
+    let (stream, continuation) = AsyncThrowingStream<TranscribedWord, any Error>.makeStream()
+
+    let session = NarrationSession.begin {
+      do {
+        try await self.transcribe(from: bookTime, playhead: playhead) { continuation.yield($0) }
+        continuation.finish()
+      } catch is CancellationError {
+        continuation.finish()
+      } catch {
+        continuation.finish(throwing: error)
       }
-      continuation.onTermination = { _ in reading.cancel() }
     }
+
+    continuation.onTermination = { _ in session.cancel() }
+    return stream
   }
 }
 
@@ -85,44 +102,101 @@ nonisolated private extension NarrationTranscriber {
     playhead: @Sendable @escaping () async -> TimeInterval?,
     yield: @Sendable @escaping (TranscribedWord) -> Void
   ) async throws {
-    guard let start = source.locate(bookTime: bookTime) else { return }
+    var resumeAt = bookTime
+    var attemptsWithoutProgress = 0
 
+    while true {
+      guard let start = source.locate(bookTime: resumeAt) else { return }
+
+      let progress = SessionProgress()
+
+      do {
+        try await runSession(from: start, playhead: playhead) {
+          progress.record($0)
+          yield($0)
+        }
+        return
+      } catch {
+        try Task.checkCancellation()
+        guard Self.isWorthRetrying(error) else { throw error }
+
+        if let reached = progress.lastWordStart, reached > resumeAt + Self.minimumSecondsCountingAsProgress {
+          resumeAt = reached - Self.secondsOfOverlapAfterFailure
+          attemptsWithoutProgress = 0
+        } else {
+          attemptsWithoutProgress += 1
+          guard attemptsWithoutProgress <= Self.maximumAttemptsWithoutProgress else { throw error }
+        }
+
+        AppLogger.readAlong.warning("Narration stopped (\(error)), listening again from \(Int(resumeAt))s")
+        try await Task.sleep(for: .seconds(Self.secondsBeforeRetrying))
+      }
+    }
+  }
+
+  func runSession(
+    from start: (trackIndex: Int, offsetInTrack: TimeInterval),
+    playhead: @Sendable @escaping () async -> TimeInterval?,
+    yield: @Sendable @escaping (TranscribedWord) -> Void
+  ) async throws {
     let transcriber = ReadAlongAvailability.makeTranscriber(locale: locale)
     guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber]) else {
       throw Failure.unsupportedAudioFormat
     }
 
+    try Task.checkCancellation()
+
     let (audio, audioContinuation) = AsyncStream<AnalyzerInput>.makeStream()
     let analyzer = SpeechAnalyzer(modules: [transcriber])
 
-    let publishing = Task {
-      for try await result in transcriber.results {
-        let words = result.timedWords
-        for word in words {
-          yield(word)
-        }
-      }
-    }
-
     do {
       try await analyzer.start(inputSequence: audio)
-      try await feedTracks(
-        from: start,
-        into: audioContinuation,
-        analyzerFormat: analyzerFormat,
-        playhead: playhead,
-        analyzer: analyzer,
-        inputTimeline: InputTimeline(sampleRate: analyzerFormat.sampleRate)
-      )
-      audioContinuation.finish()
-      try await analyzer.finalizeAndFinishThroughEndOfInput()
-      try await publishing.value
     } catch {
       audioContinuation.finish()
-      publishing.cancel()
       await analyzer.cancelAndFinishNow()
       throw error
     }
+
+    try await withThrowingTaskGroup(of: SessionOutcome.self) { group in
+      group.addTask {
+        try await self.feedTracks(
+          from: start,
+          into: audioContinuation,
+          analyzerFormat: analyzerFormat,
+          playhead: playhead,
+          analyzer: analyzer,
+          inputTimeline: InputTimeline(sampleRate: analyzerFormat.sampleRate)
+        )
+        return .fedAllAudio
+      }
+
+      group.addTask {
+        for try await result in transcriber.results {
+          for word in result.timedWords {
+            yield(word)
+          }
+        }
+        return .resultsEnded
+      }
+
+      do {
+        guard try await group.next() == .fedAllAudio else { throw Failure.analyzerStopped }
+        audioContinuation.finish()
+        try await analyzer.finalizeAndFinishThroughEndOfInput()
+      } catch {
+        group.cancelAll()
+        audioContinuation.finish()
+        await analyzer.cancelAndFinishNow()
+        throw error
+      }
+
+      try await group.waitForAll()
+    }
+  }
+
+  enum SessionOutcome {
+    case fedAllAudio
+    case resultsEnded
   }
 
   func feedTracks(
@@ -167,7 +241,7 @@ nonisolated private extension NarrationTranscriber {
 
     var nextPlayheadCheck: TimeInterval = 0
     var nextFinalization = track.secondsFromStartOfBook + offset + Self.secondsBetweenFinalizations
-    var buffersFed = 0
+    var isBehindPlayhead = false
 
     while let sampleBuffer = reader.output.copyNextSampleBuffer() {
       try Task.checkCancellation()
@@ -175,8 +249,9 @@ nonisolated private extension NarrationTranscriber {
       let bookTime = track.secondsFromStartOfBook + sampleBuffer.presentationTimeStamp.seconds
 
       if bookTime >= nextPlayheadCheck {
-        try await waitUntilPlayheadIsNear(bookTime, playhead: playhead)
+        let lead = try await waitUntilPlayheadIsNear(bookTime, playhead: playhead)
         nextPlayheadCheck = bookTime + Self.secondsBetweenPlayheadChecks
+        report(lead: lead, wasBehind: &isBehindPlayhead)
       }
 
       guard let buffer = sampleBuffer.pcmBuffer(format: reader.readerFormat) else { continue }
@@ -184,7 +259,6 @@ nonisolated private extension NarrationTranscriber {
       guard let startTime = inputTimeline.startTime(at: bookTime, frames: input.frameLength) else { continue }
 
       continuation.yield(AnalyzerInput(buffer: input, bufferStartTime: startTime))
-      buffersFed += 1
 
       if bookTime >= nextFinalization {
         try await analyzer.finalize(through: nil)
@@ -200,15 +274,27 @@ nonisolated private extension NarrationTranscriber {
   func waitUntilPlayheadIsNear(
     _ bookTime: TimeInterval,
     playhead: @Sendable @escaping () async -> TimeInterval?
-  ) async throws {
+  ) async throws -> TimeInterval {
     while true {
       try Task.checkCancellation()
 
       if let current = await playhead(), current + Self.maximumSecondsAheadOfPlayhead >= bookTime {
-        return
+        return bookTime - current
       }
 
       try await Task.sleep(for: Self.playheadRecheckDelay)
+    }
+  }
+
+  func report(lead: TimeInterval, wasBehind: inout Bool) {
+    guard lead.isFinite else { return }
+
+    if lead < 0, !wasBehind {
+      wasBehind = true
+      AppLogger.readAlong.warning("Transcription is \(Int(-lead))s behind the playhead")
+    } else if lead >= 0, wasBehind {
+      wasBehind = false
+      AppLogger.readAlong.info("Transcription caught up, \(Int(lead))s ahead of the playhead")
     }
   }
 
@@ -370,6 +456,14 @@ nonisolated private extension AVAudioPCMBuffer {
 
     if let conversionError { throw NarrationTranscriber.Failure.readFailed(conversionError) }
     return output
+  }
+}
+
+nonisolated private final class SessionProgress: @unchecked Sendable {
+  private(set) var lastWordStart: TimeInterval?
+
+  func record(_ word: TranscribedWord) {
+    lastWordStart = word.start
   }
 }
 

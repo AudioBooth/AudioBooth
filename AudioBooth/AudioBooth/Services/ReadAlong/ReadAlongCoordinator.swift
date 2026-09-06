@@ -70,6 +70,8 @@ final class ReadAlongCoordinator {
   private var playheadStableSince: Date?
   private var timelineCoveredPlayheadAt: Date?
   private var lastRecoveryAt: Date?
+  private var transcriptionFailure: (any Error)?
+  private var attemptsWithoutMatch = 0
 
   private static let alignmentWindowSize = 16
   private static let alignmentWindowStride = 8
@@ -78,10 +80,12 @@ final class ReadAlongCoordinator {
   private static let fastestPlaybackRate: Double = 4
   private static let secondsOfStablePlayheadBeforeResuming: TimeInterval = 1.5
   private static let secondsBeforeConsideredLost: TimeInterval = 45
-  private static let secondsOfSilenceBeforeRecovering: TimeInterval = 20
+  private static let secondsOfSilenceBeforeRecovering: TimeInterval = 6
   private static let secondsBetweenRecoveries: TimeInterval = 30
+  private static let maximumAttemptsWithoutMatch = 3
   private static let secondsOfRunUpBeforePlayhead: TimeInterval = 2
-  private static let highlightRefreshInterval = Duration.milliseconds(100)
+  private static let maximumWordsToSweep = 4
+  private static let highlightRefreshInterval = Duration.milliseconds(50)
   private static let modelDownloadShareOfPreparation = 0.5
 
   init(
@@ -136,6 +140,8 @@ final class ReadAlongCoordinator {
     playheadStableSince = nil
     timelineCoveredPlayheadAt = nil
     lastRecoveryAt = nil
+    transcriptionFailure = nil
+    attemptsWithoutMatch = 0
     sentenceLocator = nil
     wordLocator = nil
     status = .off
@@ -265,6 +271,8 @@ private extension ReadAlongCoordinator {
   func startTranscription(from bookTime: TimeInterval) {
     guard let locale else { return }
 
+    transcriptionFailure = nil
+
     let supersededRun = transcriptionTask
     supersededRun?.cancel()
 
@@ -294,8 +302,7 @@ private extension ReadAlongCoordinator {
         self.flushPendingWords()
       } catch {
         guard let self, !Task.isCancelled else { return }
-        AppLogger.readAlong.error("Transcription failed: \(error)")
-        self.status = .failed(error.localizedDescription)
+        self.noteTranscriptionFailed(with: error)
       }
     }
   }
@@ -331,6 +338,7 @@ private extension ReadAlongCoordinator {
     }
 
     lastMatchAt = Date()
+    attemptsWithoutMatch = 0
     narratorPosition = alignment.expectedStartOfNextWindow(stride: Self.alignmentWindowStride)
 
     for aligned in alignment.words {
@@ -340,14 +348,31 @@ private extension ReadAlongCoordinator {
   }
 
   func noteUnmatchedNarration() {
-    guard status == .following, let lastMatchAt,
-      Date().timeIntervalSince(lastMatchAt) > Self.secondsBeforeConsideredLost
-    else {
+    guard let lastMatchAt, Date().timeIntervalSince(lastMatchAt) > Self.secondsBeforeConsideredLost else {
+      return
+    }
+
+    self.lastMatchAt = Date()
+
+    guard status == .following else {
+      _ = keepTryingAfterUnmatchedNarration()
       return
     }
 
     status = .locating
     clearHighlight()
+  }
+
+  func keepTryingAfterUnmatchedNarration() -> Bool {
+    attemptsWithoutMatch += 1
+    guard attemptsWithoutMatch > Self.maximumAttemptsWithoutMatch else { return true }
+
+    AppLogger.readAlong.error("Read Along gave up after \(attemptsWithoutMatch) attempts")
+    fail(
+      withMessage: transcriptionFailure?.localizedDescription
+        ?? String(localized: "Read Along couldn't match the narration to this ebook's text.")
+    )
+    return false
   }
 
   func startHighlighting() {
@@ -410,11 +435,12 @@ private extension ReadAlongCoordinator {
 
     guard bookWord != highlightedWord else { return }
 
-    highlightedWord = bookWord
+    let underlined = wordToUnderline(approaching: bookWord, in: index)
+    highlightedWord = underlined
     moveSentenceHighlight(to: bookWord, in: index)
-    wordLocator = highlightsWord ? index.wordLocator(forWord: bookWord) : nil
+    wordLocator = highlightsWord ? index.wordLocator(forWord: underlined) : nil
     onHighlightChanged?(sentenceLocator, wordLocator)
-    follow(bookWord, in: index)
+    follow(underlined, in: index)
 
     if !isAwaitingNavigation {
       markNarrationVisible()
@@ -423,6 +449,20 @@ private extension ReadAlongCoordinator {
 
   func plausibleAdvance(since: Date, now: Date) -> TimeInterval {
     now.timeIntervalSince(since) * Self.fastestPlaybackRate + Self.secondsIndicatingSeek
+  }
+
+  func wordToUnderline(approaching narratedWord: Int, in index: BookTextIndex) -> Int {
+    guard highlightsWord,
+      let underlined = highlightedWord,
+      narratedWord > underlined,
+      narratedWord - underlined <= Self.maximumWordsToSweep,
+      let sentence = index.words.entries[safe: underlined]?.sentence,
+      sentence == index.words.entries[safe: narratedWord]?.sentence
+    else {
+      return narratedWord
+    }
+
+    return underlined + 1
   }
 
   func moveSentenceHighlight(to bookWord: Int, in index: BookTextIndex) {
@@ -458,6 +498,7 @@ private extension ReadAlongCoordinator {
 
     AppLogger.readAlong.info("No narration reached \(bookTime)s, listening again from there")
     lastRecoveryAt = now
+    guard keepTryingAfterUnmatchedNarration() else { return }
     relocate(from: bookTime)
   }
 
@@ -473,6 +514,7 @@ private extension ReadAlongCoordinator {
   func handleSeek(to bookTime: TimeInterval) {
     highlightedWord = nil
     highlightedSentence = nil
+    attemptsWithoutMatch = 0
 
     guard !timeline.covers(bookTime) else {
       narratorPosition = timeline.bookWord(at: bookTime)
@@ -489,6 +531,20 @@ private extension ReadAlongCoordinator {
     timelineCoveredPlayheadAt = Date()
     status = .locating
     startTranscription(from: bookTime)
+  }
+
+  func noteTranscriptionFailed(with error: any Error) {
+    AppLogger.readAlong.error("Transcription failed: \(error)")
+    transcriptionFailure = error
+  }
+
+  func fail(withMessage message: String) {
+    transcriptionTask?.cancel()
+    transcriptionTask = nil
+    highlightTask?.cancel()
+    highlightTask = nil
+    clearHighlight()
+    status = .failed(message)
   }
 
   func stopBecausePlaybackEnded() {
