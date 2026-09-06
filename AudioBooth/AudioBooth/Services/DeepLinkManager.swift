@@ -7,6 +7,7 @@ class DeepLinkManager: ObservableObject {
   static let shared = DeepLinkManager()
 
   @Published var pendingExportConnection: ExportConnection?
+  @Published private(set) var isImportingConnection = false
 
   private init() {}
 
@@ -53,8 +54,10 @@ class DeepLinkManager: ObservableObject {
     }
 
     Toast(message: "Testing shared connection...").show()
+    isImportingConnection = true
     Task {
       await validateAndImportConnection(exportConnection)
+      isImportingConnection = false
     }
   }
 
@@ -116,11 +119,13 @@ class DeepLinkManager: ObservableObject {
 }
 
 extension DeepLinkManager {
-  public struct ExportConnection: Codable, Sendable, Equatable {
+  public struct ExportConnection: Codable, Sendable, Equatable, Identifiable {
     public let url: URL
     public let token: String?
     public let headers: [String: String]
     public let alias: String?
+
+    public var id: URL { url }
 
     init?(_ connection: Connection, includeToken: Bool = false) {
       url = connection.serverURL
@@ -145,23 +150,14 @@ extension DeepLinkManager {
 
 struct DeepLinkHandlerModifier: ViewModifier {
   @ObservedObject private var deepLinkManager = DeepLinkManager.shared
-  @State private var showingDeepLinkServer = false
-  @State private var pendingExportConnection: DeepLinkManager.ExportConnection?
 
   func body(content: Content) -> some View {
     content
       .onOpenURL { url in
         DeepLinkManager.shared.handleDeepLink(url)
       }
-      .sheet(isPresented: $showingDeepLinkServer) {
-        ServerListPage(model: ServerListModel(pendingExportConnection: pendingExportConnection))
-      }
-      .onChange(of: deepLinkManager.pendingExportConnection) { _, newValue in
-        if let exportConnection = newValue {
-          pendingExportConnection = exportConnection
-          showingDeepLinkServer = true
-          deepLinkManager.pendingExportConnection = nil
-        }
+      .sheet(item: $deepLinkManager.pendingExportConnection) { exportConnection in
+        ServerListPage(model: ServerListModel(pendingExportConnection: exportConnection))
       }
   }
 }

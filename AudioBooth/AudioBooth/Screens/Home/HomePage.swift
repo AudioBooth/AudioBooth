@@ -8,6 +8,7 @@ struct HomePage: View {
   @ObservedObject private var authentication = Audiobookshelf.shared.authentication
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
   @ObservedObject private var preferences = UserPreferences.shared
+  @ObservedObject private var deepLinkManager = DeepLinkManager.shared
 
   @ScaledMetric(relativeTo: .title) private var cardWidth: CGFloat = 120
   @ScaledMetric(relativeTo: .title) private var authorCardWidth: CGFloat = 80
@@ -29,6 +30,8 @@ struct HomePage: View {
   @State private var showingSettings = false
   @State private var showingServerList = false
   @State private var showingServerDetails = false
+  @State private var showingOnboarding = false
+  @State private var didEvaluateStartupPresentation = false
 
   var body: some View {
     NavigationStack {
@@ -115,32 +118,47 @@ struct HomePage: View {
       ServerListPage(model: ServerListModel())
         .displaySheetScaled()
     }
+    .fullScreenCover(isPresented: $showingOnboarding) {
+      OnboardingView(model: OnboardingViewModel())
+        .displayScaled()
+    }
     .sheet(isPresented: $showingServerDetails) {
-      if let server = authentication.server {
-        NavigationStack {
-          ServerView(model: ServerViewModel(server: server))
-            .toolbar {
-              ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                  showingServerDetails = false
-                } label: {
-                  Label("Close", systemImage: "xmark")
-                }
-                .tint(.primary)
+      NavigationStack {
+        ServerView(model: ServerViewModel(server: authentication.server))
+          .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+              Button {
+                showingServerDetails = false
+              } label: {
+                Label("Close", systemImage: "xmark")
               }
+              .tint(.primary)
             }
-        }
-        .displaySheetScaled()
+          }
+      }
+      .displaySheetScaled()
+    }
+    .onChange(of: deepLinkManager.isImportingConnection) { _, isImporting in
+      if isImporting {
+        showingOnboarding = false
+        showingServerList = false
       }
     }
     .onAppear {
-      if !authentication.isAuthenticated || libraries.current == nil {
-        showingServerList = true
+      if !didEvaluateStartupPresentation {
+        didEvaluateStartupPresentation = true
+        if authentication.servers.isEmpty {
+          showingOnboarding = true
+        } else if !authentication.isAuthenticated || libraries.current == nil {
+          showingServerList = true
+        }
       }
       model.onAppear()
     }
     .onChange(of: libraries.current) { _, new in
       showingServerList = false
+      showingServerDetails = false
+      showingOnboarding = false
       model.onReset(new != nil)
     }
     .onChange(of: preferences.homeSections) { _, _ in
@@ -156,20 +174,44 @@ struct HomePage: View {
 
   private var emptyState: some View {
     VStack(spacing: 16) {
-      Image(systemName: "headphones")
+      Image(systemName: authentication.servers.isEmpty ? "server.rack" : "headphones")
         .font(.system(size: 60))
         .foregroundColor(.gray.opacity(0.6))
 
-      Text("No Content Available")
-        .font(.title2)
-        .fontWeight(.medium)
-        .foregroundColor(.primary)
+      if authentication.servers.isEmpty {
+        Text("No Server Connected")
+          .font(.title2)
+          .fontWeight(.medium)
+          .foregroundColor(.primary)
 
-      Text("Your personalized content will appear here")
+        Text(
+          "AudioBooth plays the audiobooks and podcasts on your Audiobookshelf server. Connect one to start listening."
+        )
         .font(.body)
         .foregroundColor(.secondary)
         .multilineTextAlignment(.center)
         .padding(.horizontal, 32)
+
+        Button {
+          showingServerDetails = true
+        } label: {
+          Text("Connect a Server")
+            .font(.headline)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+      } else {
+        Text("No Content Available")
+          .font(.title2)
+          .fontWeight(.medium)
+          .foregroundColor(.primary)
+
+        Text("Your personalized content will appear here")
+          .font(.body)
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, 32)
+      }
 
       Spacer()
     }

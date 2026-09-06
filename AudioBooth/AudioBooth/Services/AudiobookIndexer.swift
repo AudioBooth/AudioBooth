@@ -13,6 +13,11 @@ enum AudiobookIndexer {
       return
     }
 
+    guard ModelContextProvider.shared.activeServerID != nil else {
+      AppLogger.player.info("Siri indexing skipped: no active server")
+      return
+    }
+
     Task {
       let books = ((try? LocalBook.fetchAll()) ?? [])
         .filter { $0.isDownloaded && $0.mediaType.contains(.audiobook) }
