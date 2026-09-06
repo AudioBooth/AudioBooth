@@ -36,6 +36,7 @@
 		3FEB781C2F059A3B00618BF9 /* Recording in Frameworks */ = {isa = PBXBuildFile; productRef = 3FEB781B2F059A3B00618BF9 /* Recording */; };
 		3FEB781E2F059A3B00618BF9 /* Reporting in Frameworks */ = {isa = PBXBuildFile; productRef = 3FEB781D2F059A3B00618BF9 /* Reporting */; };
 		3FEB78222F059BEC00618BF9 /* Installations in Frameworks */ = {isa = PBXBuildFile; productRef = 3FEB78212F059BEC00618BF9 /* Installations */; };
+		3FF3F924304D188B00FFE416 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 3FF3F923304D188B00FFE416 /* CHANGELOG.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,7 +110,7 @@
 		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = API; path = ../API; sourceTree = SOURCE_ROOT; };
 		3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBooth Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBooth.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3FF3ECCD30452F3300FFE416 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
+		3FF3F923304D188B00FFE416 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = CHANGELOG.md; path = ../CHANGELOG.md; sourceTree = SOURCE_ROOT; };
 		FFCB24C52F64F5B300F4DBE1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -270,7 +271,7 @@
 				3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */,
 				3F5A20532F6E656C00CFD89E /* AudioBoothWatchWidget */,
 				3F2D3BF82EBE711800D49AFF /* AudioBoothWidget */,
-				3FF3ECCD30452F3300FFE416 /* CHANGELOG.md */,
+				3FF3F923304D188B00FFE416 /* CHANGELOG.md */,
 				3F6E94DB2E6395A20039F187 /* Frameworks */,
 				3FC8DC822E63904C00A4B080 /* Packages */,
 				3FC8DC6F2E638F5E00A4B080 /* Products */,
@@ -504,6 +505,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FF3F924304D188B00FFE416 /* CHANGELOG.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
