@@ -23,7 +23,7 @@ nonisolated final class NarrationTranscriber: Sendable {
   private let locale: Locale
   private let source: NarrationSource
 
-  private static let maximumSecondsAheadOfPlayhead: TimeInterval = 90
+  private static let maximumSecondsAheadOfPlayhead: TimeInterval = 300
   private static let secondsBetweenPlayheadChecks: TimeInterval = 2
   private static let secondsBetweenFinalizations: TimeInterval = 15
   private static let playheadRecheckDelay = Duration.seconds(2)
@@ -58,23 +58,26 @@ nonisolated final class NarrationTranscriber: Sendable {
     reader.cancelReading()
   }
 
+  @MainActor
   func words(
     from bookTime: TimeInterval,
     playhead: @Sendable @escaping () async -> TimeInterval?
   ) -> AsyncThrowingStream<TranscribedWord, any Error> {
-    AsyncThrowingStream { continuation in
-      let reading = Task.detached(priority: .utility) {
-        do {
-          try await self.transcribe(from: bookTime, playhead: playhead) { continuation.yield($0) }
-          continuation.finish()
-        } catch is CancellationError {
-          continuation.finish()
-        } catch {
-          continuation.finish(throwing: error)
-        }
+    let (stream, continuation) = AsyncThrowingStream<TranscribedWord, any Error>.makeStream()
+
+    let session = NarrationSession.begin {
+      do {
+        try await self.transcribe(from: bookTime, playhead: playhead) { continuation.yield($0) }
+        continuation.finish()
+      } catch is CancellationError {
+        continuation.finish()
+      } catch {
+        continuation.finish(throwing: error)
       }
-      continuation.onTermination = { _ in reading.cancel() }
     }
+
+    continuation.onTermination = { _ in session.cancel() }
+    return stream
   }
 }
 
@@ -91,6 +94,8 @@ nonisolated private extension NarrationTranscriber {
     guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber]) else {
       throw Failure.unsupportedAudioFormat
     }
+
+    try Task.checkCancellation()
 
     let (audio, audioContinuation) = AsyncStream<AnalyzerInput>.makeStream()
     let analyzer = SpeechAnalyzer(modules: [transcriber])
@@ -121,6 +126,7 @@ nonisolated private extension NarrationTranscriber {
       audioContinuation.finish()
       publishing.cancel()
       await analyzer.cancelAndFinishNow()
+      _ = await publishing.result
       throw error
     }
   }
@@ -168,6 +174,7 @@ nonisolated private extension NarrationTranscriber {
     var nextPlayheadCheck: TimeInterval = 0
     var nextFinalization = track.secondsFromStartOfBook + offset + Self.secondsBetweenFinalizations
     var buffersFed = 0
+    var isBehindPlayhead = false
 
     while let sampleBuffer = reader.output.copyNextSampleBuffer() {
       try Task.checkCancellation()
@@ -175,8 +182,9 @@ nonisolated private extension NarrationTranscriber {
       let bookTime = track.secondsFromStartOfBook + sampleBuffer.presentationTimeStamp.seconds
 
       if bookTime >= nextPlayheadCheck {
-        try await waitUntilPlayheadIsNear(bookTime, playhead: playhead)
+        let lead = try await waitUntilPlayheadIsNear(bookTime, playhead: playhead)
         nextPlayheadCheck = bookTime + Self.secondsBetweenPlayheadChecks
+        report(lead: lead, wasBehind: &isBehindPlayhead)
       }
 
       guard let buffer = sampleBuffer.pcmBuffer(format: reader.readerFormat) else { continue }
@@ -200,15 +208,27 @@ nonisolated private extension NarrationTranscriber {
   func waitUntilPlayheadIsNear(
     _ bookTime: TimeInterval,
     playhead: @Sendable @escaping () async -> TimeInterval?
-  ) async throws {
+  ) async throws -> TimeInterval {
     while true {
       try Task.checkCancellation()
 
       if let current = await playhead(), current + Self.maximumSecondsAheadOfPlayhead >= bookTime {
-        return
+        return bookTime - current
       }
 
       try await Task.sleep(for: Self.playheadRecheckDelay)
+    }
+  }
+
+  func report(lead: TimeInterval, wasBehind: inout Bool) {
+    guard lead.isFinite else { return }
+
+    if lead < 0, !wasBehind {
+      wasBehind = true
+      AppLogger.readAlong.warning("Transcription is \(Int(-lead))s behind the playhead")
+    } else if lead >= 0, wasBehind {
+      wasBehind = false
+      AppLogger.readAlong.info("Transcription caught up, \(Int(lead))s ahead of the playhead")
     }
   }
 

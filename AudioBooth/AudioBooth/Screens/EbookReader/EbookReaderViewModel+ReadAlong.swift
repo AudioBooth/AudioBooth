@@ -11,7 +11,7 @@ extension EbookReaderViewModel {
   private static let readAlongDecorationGroup = "readAlong"
   private static let sentenceDecorationID = "readAlong.sentence"
   private static let wordDecorationID = "readAlong.word"
-  private static let minimumSecondsBetweenDecorations: TimeInterval = 0.2
+  private static let minimumSecondsBetweenDecorations: TimeInterval = 0.08
   private static let minimumSecondsBetweenNavigations: TimeInterval = 0.3
   private static let secondsAwaitingDecorationAfterJump: TimeInterval = 0.35
   private static let secondsSettlingAfterScroll: TimeInterval = 0.4

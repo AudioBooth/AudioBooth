@@ -78,10 +78,11 @@ final class ReadAlongCoordinator {
   private static let fastestPlaybackRate: Double = 4
   private static let secondsOfStablePlayheadBeforeResuming: TimeInterval = 1.5
   private static let secondsBeforeConsideredLost: TimeInterval = 45
-  private static let secondsOfSilenceBeforeRecovering: TimeInterval = 20
+  private static let secondsOfSilenceBeforeRecovering: TimeInterval = 6
   private static let secondsBetweenRecoveries: TimeInterval = 30
   private static let secondsOfRunUpBeforePlayhead: TimeInterval = 2
-  private static let highlightRefreshInterval = Duration.milliseconds(100)
+  private static let maximumWordsToSweep = 4
+  private static let highlightRefreshInterval = Duration.milliseconds(50)
   private static let modelDownloadShareOfPreparation = 0.5
 
   init(
@@ -294,8 +295,7 @@ private extension ReadAlongCoordinator {
         self.flushPendingWords()
       } catch {
         guard let self, !Task.isCancelled else { return }
-        AppLogger.readAlong.error("Transcription failed: \(error)")
-        self.status = .failed(error.localizedDescription)
+        self.fail(with: error)
       }
     }
   }
@@ -410,11 +410,12 @@ private extension ReadAlongCoordinator {
 
     guard bookWord != highlightedWord else { return }
 
-    highlightedWord = bookWord
+    let underlined = wordToUnderline(approaching: bookWord, in: index)
+    highlightedWord = underlined
     moveSentenceHighlight(to: bookWord, in: index)
-    wordLocator = highlightsWord ? index.wordLocator(forWord: bookWord) : nil
+    wordLocator = highlightsWord ? index.wordLocator(forWord: underlined) : nil
     onHighlightChanged?(sentenceLocator, wordLocator)
-    follow(bookWord, in: index)
+    follow(underlined, in: index)
 
     if !isAwaitingNavigation {
       markNarrationVisible()
@@ -423,6 +424,20 @@ private extension ReadAlongCoordinator {
 
   func plausibleAdvance(since: Date, now: Date) -> TimeInterval {
     now.timeIntervalSince(since) * Self.fastestPlaybackRate + Self.secondsIndicatingSeek
+  }
+
+  func wordToUnderline(approaching narratedWord: Int, in index: BookTextIndex) -> Int {
+    guard highlightsWord,
+      let underlined = highlightedWord,
+      narratedWord > underlined,
+      narratedWord - underlined <= Self.maximumWordsToSweep,
+      let sentence = index.words.entries[safe: underlined]?.sentence,
+      sentence == index.words.entries[safe: narratedWord]?.sentence
+    else {
+      return narratedWord
+    }
+
+    return underlined + 1
   }
 
   func moveSentenceHighlight(to bookWord: Int, in index: BookTextIndex) {
@@ -489,6 +504,15 @@ private extension ReadAlongCoordinator {
     timelineCoveredPlayheadAt = Date()
     status = .locating
     startTranscription(from: bookTime)
+  }
+
+  func fail(with error: any Error) {
+    AppLogger.readAlong.error("Transcription failed: \(error)")
+
+    highlightTask?.cancel()
+    highlightTask = nil
+    clearHighlight()
+    status = .failed(error.localizedDescription)
   }
 
   func stopBecausePlaybackEnded() {
