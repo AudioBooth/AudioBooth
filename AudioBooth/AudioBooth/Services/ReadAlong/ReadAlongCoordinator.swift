@@ -55,6 +55,7 @@ final class ReadAlongCoordinator {
   private var prepareTask: Task<Void, Never>?
   private var indexTask: Task<BookTextIndex, Never>?
   private var transcriptionTask: Task<Void, Never>?
+  private var retryTask: Task<Void, Never>?
   private var highlightTask: Task<Void, Never>?
 
   private var pendingWords: [TranscribedWord] = []
@@ -70,6 +71,7 @@ final class ReadAlongCoordinator {
   private var playheadStableSince: Date?
   private var timelineCoveredPlayheadAt: Date?
   private var lastRecoveryAt: Date?
+  private var transientFailures = 0
 
   private static let alignmentWindowSize = 16
   private static let alignmentWindowStride = 8
@@ -81,6 +83,8 @@ final class ReadAlongCoordinator {
   private static let secondsOfSilenceBeforeRecovering: TimeInterval = 6
   private static let secondsBetweenRecoveries: TimeInterval = 30
   private static let secondsOfRunUpBeforePlayhead: TimeInterval = 2
+  private static let secondsBeforeFirstRetry: TimeInterval = 2
+  private static let maximumTransientFailures = 4
   private static let maximumWordsToSweep = 4
   private static let highlightRefreshInterval = Duration.milliseconds(50)
   private static let modelDownloadShareOfPreparation = 0.5
@@ -118,10 +122,12 @@ final class ReadAlongCoordinator {
     prepareTask?.cancel()
     indexTask?.cancel()
     transcriptionTask?.cancel()
+    retryTask?.cancel()
     highlightTask?.cancel()
     prepareTask = nil
     indexTask = nil
     transcriptionTask = nil
+    retryTask = nil
     highlightTask = nil
 
     pendingWords.removeAll()
@@ -137,6 +143,7 @@ final class ReadAlongCoordinator {
     playheadStableSince = nil
     timelineCoveredPlayheadAt = nil
     lastRecoveryAt = nil
+    transientFailures = 0
     sentenceLocator = nil
     wordLocator = nil
     status = .off
@@ -266,6 +273,9 @@ private extension ReadAlongCoordinator {
   func startTranscription(from bookTime: TimeInterval) {
     guard let locale else { return }
 
+    retryTask?.cancel()
+    retryTask = nil
+
     let supersededRun = transcriptionTask
     supersededRun?.cancel()
 
@@ -295,8 +305,30 @@ private extension ReadAlongCoordinator {
         self.flushPendingWords()
       } catch {
         guard let self, !Task.isCancelled else { return }
-        self.fail(with: error)
+        if NarrationTranscriber.isTransient(error), self.transientFailures < Self.maximumTransientFailures {
+          self.retryTranscription(after: error)
+        } else {
+          self.fail(with: error)
+        }
       }
+    }
+  }
+
+  func retryTranscription(after error: any Error) {
+    transientFailures += 1
+    let delay = Self.secondsBeforeFirstRetry * pow(2, Double(transientFailures - 1))
+    let attempt = "\(transientFailures) of \(Self.maximumTransientFailures)"
+    AppLogger.readAlong.warning("Transcription stopped (\(error)), retry \(attempt) in \(Int(delay))s")
+
+    // Hold off the silence recovery so it doesn't start another session while this one waits.
+    lastRecoveryAt = Date()
+    clearHighlight()
+    status = .locating
+
+    retryTask = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(delay))
+      guard let self, !Task.isCancelled else { return }
+      self.relocate(from: self.playhead() ?? 0)
     }
   }
 
@@ -312,6 +344,7 @@ private extension ReadAlongCoordinator {
   }
 
   func collect(_ word: TranscribedWord) {
+    transientFailures = 0
     pendingWords.append(word)
 
     while pendingWords.count >= Self.alignmentWindowSize {

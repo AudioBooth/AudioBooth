@@ -9,6 +9,7 @@ nonisolated final class NarrationTranscriber: Sendable {
     case noAudioTrack
     case unsupportedAudioFormat
     case readFailed(any Error)
+    case analyzerStopped
 
     var errorDescription: String? {
       switch self {
@@ -16,9 +17,22 @@ nonisolated final class NarrationTranscriber: Sendable {
         String(localized: "This audiobook's audio can't be analyzed for Read Along.")
       case .readFailed:
         String(localized: "Couldn't read the audiobook's audio.")
+      case .analyzerStopped:
+        String(localized: "Speech recognition stopped unexpectedly.")
       }
     }
   }
+
+  /// Whether a failure is likely to clear on its own, so listening again is worth a try.
+  static func isTransient(_ error: any Error) -> Bool {
+    if case Failure.analyzerStopped = error { return true }
+
+    let nsError = error as NSError
+    return nsError.domain == SFSpeechErrorDomain && nsError.code == Self.tooManyConcurrentRequestsCode
+  }
+
+  /// SFSpeechErrorDomain code for "Maximum number of simultaneous requests reached".
+  private static let tooManyConcurrentRequestsCode = 16
 
   private let locale: Locale
   private let source: NarrationSource
@@ -100,35 +114,55 @@ nonisolated private extension NarrationTranscriber {
     let (audio, audioContinuation) = AsyncStream<AnalyzerInput>.makeStream()
     let analyzer = SpeechAnalyzer(modules: [transcriber])
 
-    let publishing = Task {
-      for try await result in transcriber.results {
-        let words = result.timedWords
-        for word in words {
-          yield(word)
-        }
-      }
-    }
-
     do {
       try await analyzer.start(inputSequence: audio)
-      try await feedTracks(
-        from: start,
-        into: audioContinuation,
-        analyzerFormat: analyzerFormat,
-        playhead: playhead,
-        analyzer: analyzer,
-        inputTimeline: InputTimeline(sampleRate: analyzerFormat.sampleRate)
-      )
-      audioContinuation.finish()
-      try await analyzer.finalizeAndFinishThroughEndOfInput()
-      try await publishing.value
     } catch {
       audioContinuation.finish()
-      publishing.cancel()
       await analyzer.cancelAndFinishNow()
-      _ = await publishing.result
       throw error
     }
+
+    try await withThrowingTaskGroup(of: Outcome.self) { group in
+      group.addTask {
+        try await self.feedTracks(
+          from: start,
+          into: audioContinuation,
+          analyzerFormat: analyzerFormat,
+          playhead: playhead,
+          analyzer: analyzer,
+          inputTimeline: InputTimeline(sampleRate: analyzerFormat.sampleRate)
+        )
+        return .fedAllAudio
+      }
+      group.addTask {
+        for try await result in transcriber.results {
+          for word in result.timedWords {
+            yield(word)
+          }
+        }
+        AppLogger.readAlong.info("Narration results ended")
+        return .resultsEnded
+      }
+
+      do {
+        // Results ending while audio is still being fed means the analyzer stopped on its own.
+        guard try await group.next() == .fedAllAudio else { throw Failure.analyzerStopped }
+        audioContinuation.finish()
+        try await analyzer.finalizeAndFinishThroughEndOfInput()
+      } catch {
+        group.cancelAll()
+        audioContinuation.finish()
+        await analyzer.cancelAndFinishNow()
+        throw error
+      }
+
+      try await group.waitForAll()
+    }
+  }
+
+  enum Outcome {
+    case fedAllAudio
+    case resultsEnded
   }
 
   func feedTracks(
