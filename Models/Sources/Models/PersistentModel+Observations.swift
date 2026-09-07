@@ -13,15 +13,25 @@ extension PersistentModel {
         let ctx = ModelContextProvider.shared.context
         let descriptor = FetchDescriptor<Self>()
 
-        do {
-          let items = try ctx.fetch(descriptor)
-          let model = items.first { $0[keyPath: keyPath] == value }
-          if let model {
-            nonisolated(unsafe) let model = model
-            continuation.yield(model)
+        // Reading a persisted property off a changed model faults it in, costing a separate
+        // store fetch per object. Resolve the match once, then track it by identifier so the
+        // notification loop compares identifiers instead of touching the store.
+        var targetID: PersistentIdentifier?
+
+        func locateTarget() -> Self? {
+          do {
+            let items = try ctx.fetch(descriptor)
+            return items.first { $0[keyPath: keyPath] == value }
+          } catch {
+            AppLogger.persistence.error("Failed to fetch \(entityName) for observation: \(error)")
+            return nil
           }
-        } catch {
-          AppLogger.persistence.error("Failed to fetch \(entityName) for observation: \(error)")
+        }
+
+        if let model = locateTarget() {
+          targetID = model.persistentModelID
+          nonisolated(unsafe) let model = model
+          continuation.yield(model)
         }
 
         for await notification in NotificationCenter.default.notifications(
@@ -32,23 +42,31 @@ extension PersistentModel {
             let userInfo = notification.userInfo
           else { continue }
 
-          let inserts = (userInfo[NSInsertedObjectsKey] as? [PersistentIdentifier]) ?? []
-          let updates = (userInfo[NSUpdatedObjectsKey] as? [PersistentIdentifier]) ?? []
-          let deletes = (userInfo[NSDeletedObjectsKey] as? [PersistentIdentifier]) ?? []
+          let inserts = Set((userInfo[NSInsertedObjectsKey] as? [PersistentIdentifier]) ?? [])
+          let updates = Set((userInfo[NSUpdatedObjectsKey] as? [PersistentIdentifier]) ?? [])
+          let deletes = Set((userInfo[NSDeletedObjectsKey] as? [PersistentIdentifier]) ?? [])
 
-          let allChanges = inserts + updates
+          if let identifier = targetID, deletes.contains(identifier) {
+            targetID = nil
+          }
 
-          for identifier in allChanges {
+          if let identifier = targetID {
+            guard inserts.contains(identifier) || updates.contains(identifier) else { continue }
             guard
-              identifier.entityName == entityName,
-              !deletes.contains(identifier),
-              let model = modelContext.model(for: identifier) as? Self,
-              !model.isDeleted,
-              model[keyPath: keyPath] == value
+              let matched = modelContext.model(for: identifier) as? Self,
+              !matched.isDeleted
             else { continue }
 
-            nonisolated(unsafe) let value = model
-            continuation.yield(value)
+            nonisolated(unsafe) let model = matched
+            continuation.yield(model)
+          } else if inserts.contains(where: { $0.entityName == entityName }) {
+            // Nothing is being tracked yet, so only a newly inserted row can start
+            // matching. Re-resolve once rather than per changed object.
+            if let model = locateTarget() {
+              targetID = model.persistentModelID
+              nonisolated(unsafe) let model = model
+              continuation.yield(model)
+            }
           }
         }
       }
