@@ -75,6 +75,10 @@ final class PodcastCardModel: BookCard.Model {
     }
   }
 
+  isolated deinit {
+    progressObservation?.cancel()
+  }
+
   private func setupDownloadStateObserver() {
     let episodeID = id
     downloadStateCancellable = DownloadManager.shared.$downloadStates
