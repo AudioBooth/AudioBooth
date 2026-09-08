@@ -117,8 +117,14 @@ struct EbookReaderView: View {
         EbookPlayerSheet(player: player)
       }
     }
-    .onAppear(perform: model.onAppear)
-    .onDisappear(perform: model.onDisappear)
+    .onAppear {
+      UIApplication.shared.isIdleTimerDisabled = userPreferences.keepScreenAwakeInPlayer
+      model.onAppear()
+    }
+    .onDisappear {
+      UIApplication.shared.isIdleTimerDisabled = false
+      model.onDisappear()
+    }
     .statusBarHidden(true)
     .preferredColorScheme(preferredColorScheme)
     .background {
