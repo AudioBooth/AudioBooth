@@ -25,7 +25,6 @@ nonisolated enum PageLocator {
   static let refineLookForward: TimeInterval = 40
   private static let refineOverlapFloor = 0.3
   private static let sampleReadCeiling: TimeInterval = 25
-  private static let refineReadCeiling: TimeInterval = 90
   private static let coverageForTiming = 0.8
   private static let alignedPageWords = 60
   private static let pageAlignmentScore = 0.35
@@ -216,7 +215,7 @@ nonisolated enum PageLocator {
     scorer: PageOverlapScorer,
     transcriber: NarrationTranscriber
   ) async throws -> Located? {
-    let words = try await transcribe(
+    let words = try await NarrationExcerpt.words(
       from: region.lowerBound,
       seconds: region.upperBound - region.lowerBound,
       using: transcriber
@@ -297,28 +296,6 @@ nonisolated enum PageLocator {
     guard aligned > 0, covered >= coverageForTiming, endTime > startTime else { return nil }
 
     return (endTime - startTime) * Double(page.bodyWords.count) / Double(aligned)
-  }
-
-  private static func transcribe(
-    from start: TimeInterval,
-    seconds: TimeInterval,
-    using transcriber: NarrationTranscriber
-  ) async throws -> [TranscribedWord] {
-    let deadline = start + seconds
-    let ceiling = max(refineReadCeiling, seconds)
-    let started = Date()
-    var words: [TranscribedWord] = []
-
-    let stream = await MainActor.run { transcriber.words(from: start) { .infinity } }
-
-    for try await word in stream {
-      try Task.checkCancellation()
-      if word.start > deadline { break }
-      if Date().timeIntervalSince(started) > ceiling { break }
-      words.append(word)
-    }
-
-    return words
   }
 
   private static func message(for window: AudioSearchWindow) -> String {

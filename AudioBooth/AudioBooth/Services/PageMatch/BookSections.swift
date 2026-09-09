@@ -12,6 +12,16 @@ nonisolated struct BookSections: Sendable {
 
   let sections: [Section]
 
+  func section(forHref href: String) -> Section? {
+    let wanted = Self.normalize(href)
+    guard !wanted.isEmpty else { return nil }
+
+    return sections.first { $0.href == wanted }
+      ?? sections.first {
+        !$0.href.isEmpty && ($0.href.hasSuffix(wanted) || wanted.hasSuffix($0.href))
+      }
+  }
+
   static func build(from index: BookTextIndex, publication: Publication) async -> BookSections {
     var sections: [Section] = []
     var currentHref: String?
@@ -54,7 +64,7 @@ nonisolated struct BookSections: Sendable {
     }
   }
 
-  private static func normalize(_ href: String) -> String {
+  static func normalize(_ href: String) -> String {
     var value = href
 
     if let fragment = value.firstIndex(of: "#") {

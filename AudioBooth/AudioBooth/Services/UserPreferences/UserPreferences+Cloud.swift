@@ -27,6 +27,7 @@ extension UserPreferences {
     "showBookProgressBar",
     "hideChapterSkipButtons",
     "keepScreenAwakeInPlayer",
+    "positionSyncOffers",
     "mixWithOtherAudio",
     "volumeLevel",
     "libraryDisplayMode",

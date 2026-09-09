@@ -64,6 +64,16 @@ struct PlayerPreferencesView: View {
           )
         }
         .listRowBackground(theme.colors.background.card)
+
+        Toggle(isOn: $preferences.positionSyncOffers) {
+          PreferenceRow(
+            systemImage: "book.pages",
+            tint: .orange,
+            title: "Offer to Catch Up",
+            subtitle: "Suggest skipping ahead when you've read further than you've listened"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Behavior")
       }

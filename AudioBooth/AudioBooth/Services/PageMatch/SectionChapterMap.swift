@@ -38,6 +38,35 @@ nonisolated struct SectionChapterMap: Sendable {
     return before.time + fraction * (after.time - before.time)
   }
 
+  func word(forTime time: TimeInterval) -> Int? {
+    guard let (before, after) = bracketByTime(time) else { return nil }
+
+    let span = after.time - before.time
+    guard span > 0 else { return before.word }
+
+    let fraction = (time - before.time) / span
+    return before.word + Int((Double(after.word - before.word) * fraction).rounded())
+  }
+
+  private func bracketByTime(_ time: TimeInterval) -> (Anchor, Anchor)? {
+    guard anchors.count >= 2 else { return nil }
+
+    if time <= anchors[0].time { return (anchors[0], anchors[1]) }
+    if let last = anchors.last, time >= last.time {
+      return (anchors[anchors.count - 2], last)
+    }
+
+    for position in 1..<anchors.count where time < anchors[position].time {
+      return (anchors[position - 1], anchors[position])
+    }
+
+    return nil
+  }
+
+  func matchedTime(forWord word: Int) -> TimeInterval? {
+    anchors.first { $0.isMatched && $0.word == word }?.time
+  }
+
   func confidence(forWord word: Int) -> Confidence {
     guard let (before, after) = bracket(word) else { return .low }
     guard hasMatchedChapters else { return .low }

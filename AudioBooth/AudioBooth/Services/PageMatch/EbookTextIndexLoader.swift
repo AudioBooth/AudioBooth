@@ -34,7 +34,7 @@ final class EbookTextIndexLoader {
       )
     }.value
     AppLogger.readAlong.info(
-      "Page Match: mapped the ebook onto \(map.anchors.count) audio anchor(s)"
+      "Ebook: mapped the ebook onto \(map.anchors.count) audio anchor(s)"
     )
 
     return Loaded(index: indexed.index, sections: indexed.sections, map: map)

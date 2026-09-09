@@ -40,6 +40,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   var pendingReadAlongNavigation: Locator?
   var readAlongNavigationTask: Task<Void, Never>?
 
+  private var catchUpCheck: Task<Void, Never>?
   private var cancellables = Set<AnyCancellable>()
   private var autoScrollTask: Task<Void, Never>?
   private var isAutoScrollPaused: Bool = false
@@ -78,6 +79,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     if isVisible, readAlong == nil {
       supportsReadAlong = isReadAlongSupported
+      refreshCatchUpOffer()
     }
   }
 
@@ -98,14 +100,129 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onDisappear() {
+    catchUpCheck?.cancel()
     stopAutoScroll()
     tearDownReadAlong()
     cleanupTemporaryFile()
   }
 
   override func onReadAlongTapped() {
+    catchUpMessage = nil
     toggleReadAlong()
     updateAutoScroll()
+  }
+
+  override func onCatchUpTapped() {
+    catchUpToNarration()
+  }
+
+  override func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {
+    catchUpMessage = nil
+    catchUpCheck?.cancel()
+    dismissCatchUpOffer(scope)
+  }
+
+  private func refreshCatchUpOffer() {
+    guard #available(iOS 26.0, *) else { return }
+
+    guard catchUpCheck == nil, catchUpMessage == nil, readAlong == nil,
+      UserPreferences.shared.positionSyncOffers
+    else {
+      return
+    }
+
+    guard let bookID, supportsReadAlong,
+      let progress = try? MediaProgress.fetch(bookID: bookID),
+      PositionSyncOffer.needsCheck(
+        .toEbook,
+        bookID: bookID,
+        audioTime: progress.currentTime,
+        ebookProgress: progress.ebookProgress ?? 0
+      ),
+      PositionSyncOffer.dismissal(
+        .toEbook,
+        bookID: bookID,
+        at: audioFraction(of: progress),
+        duration: progress.duration
+      ) == nil,
+      let localBook = try? LocalBook.fetch(bookID: bookID)
+    else {
+      return
+    }
+
+    let context = BookSyncContext(localBook: localBook)
+    guard context.isDownloaded, context.hasEbook else { return }
+
+    let audioTime = progress.currentTime
+    let ebookProgress = progress.ebookProgress ?? 0
+    catchUpCheck = Task { [weak self] in
+      defer { self?.catchUpCheck = nil }
+
+      await self?.verifyCatchUpOffer(context, audioTime: audioTime)
+
+      guard !Task.isCancelled else { return }
+      PositionSyncOffer.recordCheck(
+        .toEbook,
+        bookID: bookID,
+        audioTime: audioTime,
+        ebookProgress: ebookProgress
+      )
+    }
+  }
+
+  @available(iOS 26.0, *)
+  private func verifyCatchUpOffer(
+    _ context: BookSyncContext,
+    audioTime: TimeInterval
+  ) async {
+    let alignment = await PositionSyncCheck.measure(context: context, audioTime: audioTime)
+    guard !Task.isCancelled else { return }
+
+    guard let alignment else {
+      AppLogger.readAlong.info("Catch Up: the narration could not be placed in the ebook")
+      return
+    }
+
+    guard alignment.isAudioAhead else {
+      AppLogger.readAlong.info("Catch Up: the ebook is already where the narrator is")
+      return
+    }
+
+    let pages = alignment.pages(over: positions.count)
+    if pages >= 1 {
+      catchUpMessage = "The audiobook is about ^[\(pages) page](inflect: true) ahead."
+      return
+    }
+
+    let ahead: String = Duration.seconds(alignment.seconds(over: context.duration))
+      .formatted(.units(allowed: [.hours, .minutes], width: .wide))
+    catchUpMessage = "You've listened about \(ahead) further than you've read."
+  }
+
+  func recordCatchUpAccepted() {
+    guard let bookID, let progress = try? MediaProgress.fetch(bookID: bookID) else { return }
+
+    PositionSyncOffer.recordCheck(
+      .toEbook,
+      bookID: bookID,
+      audioTime: progress.currentTime,
+      ebookProgress: progress.ebookProgress ?? 0
+    )
+  }
+
+  private func dismissCatchUpOffer(_ scope: PositionSyncOffer.Dismissal) {
+    guard let bookID, let progress = try? MediaProgress.fetch(bookID: bookID) else { return }
+    PositionSyncOffer.dismiss(
+      .toEbook,
+      bookID: bookID,
+      at: audioFraction(of: progress),
+      scope: scope
+    )
+  }
+
+  private func audioFraction(of progress: MediaProgress) -> Double {
+    guard progress.duration > 0, progress.duration.isFinite else { return 0 }
+    return progress.currentTime / progress.duration
   }
 
   private func loadEbook() async {
@@ -161,6 +278,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       updateProgress()
       updateCurrentChapterIndex()
       supportsReadAlong = isReadAlongSupported
+      refreshCatchUpOffer()
 
       await setupChapters()
 

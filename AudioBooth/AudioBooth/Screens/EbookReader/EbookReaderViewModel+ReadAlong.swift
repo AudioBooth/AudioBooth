@@ -24,7 +24,20 @@ extension EbookReaderViewModel {
     return navigator is DecorableNavigator && matchingSession() != nil
   }
 
+  func catchUpToNarration() {
+    guard readAlong == nil else { return }
+
+    isCatchingUpToNarration = true
+    startReadAlong()
+
+    if readAlong == nil {
+      isCatchingUpToNarration = false
+    }
+  }
+
   func toggleReadAlong() {
+    isCatchingUpToNarration = false
+
     guard let readAlong else {
       startReadAlong()
       return
@@ -33,6 +46,7 @@ extension EbookReaderViewModel {
   }
 
   func tearDownReadAlong() {
+    isCatchingUpToNarration = false
     readAlong?.onActiveChanged = nil
     readAlong?.stop()
     readAlong = nil
@@ -47,6 +61,8 @@ extension EbookReaderViewModel {
   }
 
   func syncReadAlongPreferences() {
+    guard !isCatchingUpToNarration else { return }
+
     readAlong?.followsNarration = preferences.readAlongFollowsNarration
     readAlong?.highlightsWord = preferences.readAlongHighlightsWord
   }
@@ -78,20 +94,29 @@ extension EbookReaderViewModel {
       }
     )
 
-    coordinator.followsNarration = preferences.readAlongFollowsNarration
+    coordinator.followsNarration = isCatchingUpToNarration || preferences.readAlongFollowsNarration
     coordinator.highlightsWord = preferences.readAlongHighlightsWord
 
     coordinator.onHighlightChanged = { [weak self] sentence, word in
-      self?.readAlongHighlightChanged(sentence: sentence, word: word)
+      guard let self, !self.isCatchingUpToNarration else { return }
+      self.readAlongHighlightChanged(sentence: sentence, word: word)
     }
 
     coordinator.onFollow = { [weak self] sentence, word in
-      self?.followNarration(sentence: sentence, word: word)
+      guard let self else { return }
+
+      guard self.isCatchingUpToNarration else {
+        self.followNarration(sentence: sentence, word: word)
+        return
+      }
+
+      Task { await self.landOnNarration(sentence) }
     }
 
     coordinator.onActiveChanged = { [weak self] in
       guard let self else { return }
       if self.readAlong?.status.isActive != true {
+        self.isCatchingUpToNarration = false
         self.cancelReadAlongNavigation()
       }
       self.updateAutoScroll()
@@ -99,6 +124,17 @@ extension EbookReaderViewModel {
 
     readAlong = coordinator
     coordinator.start()
+  }
+
+  private func landOnNarration(_ sentence: Locator) async {
+    guard isCatchingUpToNarration else { return }
+
+    tearDownReadAlong()
+    updateAutoScroll()
+    catchUpMessage = nil
+    recordCatchUpAccepted()
+    await navigator?.go(to: sentence, options: NavigatorGoOptions(animated: false))
+    Haptics.impact(.medium)
   }
 
   private func matchingSession() -> PlaybackSession? {

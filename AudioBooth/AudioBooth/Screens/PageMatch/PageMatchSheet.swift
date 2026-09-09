@@ -127,7 +127,7 @@ struct PageMatchSheet: View {
             .lineLimit(2)
         }
 
-        Text(verbatim: result.formattedTime)
+        Text(Duration.seconds(result.time).formatted(.time(pattern: .hourMinuteSecond)))
           .font(.system(size: 44, weight: .medium, design: .rounded))
           .monospacedDigit()
 
@@ -193,16 +193,6 @@ extension PageMatchSheet {
       var time: TimeInterval
       var chapterTitle: String?
       var isExact: Bool
-
-      var formattedTime: String {
-        let total = Int(time)
-        let hours = total / 3600
-        let minutes = (total % 3600) / 60
-        let seconds = total % 60
-        return hours > 0
-          ? String(format: "%d:%02d:%02d", hours, minutes, seconds)
-          : String(format: "%d:%02d", minutes, seconds)
-      }
     }
 
     enum Phase {

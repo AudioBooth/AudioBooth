@@ -100,6 +100,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("keepScreenAwakeInPlayer")
   var keepScreenAwakeInPlayer: Bool = false
 
+  @AppStorage("positionSyncOffers")
+  var positionSyncOffers: Bool = true
+
   @AppStorage("mixWithOtherAudio")
   var mixWithOtherAudio: Bool = false
 

@@ -42,10 +42,27 @@ struct BookPlayer: View {
         if model.isLocked {
           unlockOverlay
         }
+
+        if let message = model.positionSyncMessage, !model.isLocked {
+          VStack {
+            PositionSyncBanner(
+              message: message,
+              onCatchUp: model.onPositionSyncOfferAccepted,
+              onDismiss: model.onPositionSyncDismissed
+            )
+
+            Spacer()
+          }
+          .transition(.move(edge: .top).combined(with: .opacity))
+        }
       }
       .animation(.easeInOut, value: model.isLocked)
+      .animation(.easeInOut, value: model.positionSyncMessage)
       .orientationLock(supportedOrientations)
-      .onAppear { UIApplication.shared.isIdleTimerDisabled = preferences.keepScreenAwakeInPlayer }
+      .onAppear {
+        UIApplication.shared.isIdleTimerDisabled = preferences.keepScreenAwakeInPlayer
+        model.onAppear()
+      }
       .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
       .onChange(of: preferences.keepScreenAwakeInPlayer) { _, newValue in
         UIApplication.shared.isIdleTimerDisabled = newValue
@@ -212,6 +229,9 @@ struct BookPlayer: View {
     }
     .sheet(item: $model.pageMatch) { pageMatch in
       PageMatchSheet(model: pageMatch)
+    }
+    .sheet(item: $model.positionSync) { positionSync in
+      PositionSyncSheet(model: positionSync)
     }
     .sheet(isPresented: $model.isSettingsPresented) {
       NavigationStack {
@@ -630,12 +650,15 @@ extension BookPlayer {
     var isLocked: Bool = false
     var supportsPageMatch: Bool = false
     var pageMatch: PageMatchSheet.Model?
+    var positionSyncMessage: LocalizedStringResource?
+    var positionSync: PositionSyncSheet.Model?
 
     var secondsFromStartOfBook: TimeInterval { 0 }
 
     func onLockTapped() { isLocked = true }
     func onUnlockTapped() { isLocked = false }
 
+    func onAppear() {}
     func onTogglePlaybackTapped() {}
     func onPauseTapped() {}
     func onPlayTapped() {}
@@ -645,6 +668,9 @@ extension BookPlayer {
     func onBookmarksTapped() {}
     func onHistoryTapped() {}
     func onPageMatchTapped() {}
+    func onPositionSyncTapped() {}
+    func onPositionSyncOfferAccepted() {}
+    func onPositionSyncDismissed(_ scope: PositionSyncOffer.Dismissal) {}
 
     init(
       id: String = UUID().uuidString,

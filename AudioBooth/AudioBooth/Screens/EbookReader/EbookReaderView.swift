@@ -75,8 +75,17 @@ struct EbookReaderView: View {
         ReadAlongStatusPill(message: message, status: readAlong.status)
           .padding(.top, 8)
           .transition(.move(edge: .top).combined(with: .opacity))
+      } else if let message = model.catchUpMessage {
+        PositionSyncBanner(
+          message: message,
+          onCatchUp: model.onCatchUpTapped,
+          onDismiss: model.onCatchUpDismissed
+        )
+        .padding(.top, 8)
+        .transition(.move(edge: .top).combined(with: .opacity))
       }
     }
+    .animation(.easeInOut(duration: 0.25), value: model.catchUpMessage)
     .animation(.easeInOut(duration: 0.25), value: model.readAlong?.status)
     .overlay {
       if showZoneEditor {
@@ -282,9 +291,13 @@ struct EbookReaderView: View {
   private func readAlongStatusMessage(_ status: ReadAlongCoordinator.Status) -> String? {
     switch status {
     case let .preparing(fraction):
-      String(localized: "Preparing Read Along… \(Int(fraction * 100))%")
+      model.isCatchingUpToNarration
+        ? String(localized: "Getting ready… \(Int(fraction * 100))%")
+        : String(localized: "Preparing Read Along… \(Int(fraction * 100))%")
     case .locating:
-      String(localized: "Listening for your place in the book…")
+      model.isCatchingUpToNarration
+        ? String(localized: "Finding where the narrator is…")
+        : String(localized: "Listening for your place in the book…")
     case let .failed(message):
       message
     case .off, .following:
@@ -433,6 +446,8 @@ extension EbookReaderView {
 
     var supportsReadAlong: Bool
     var readAlong: ReadAlongCoordinator?
+    var catchUpMessage: LocalizedStringResource?
+    var isCatchingUpToNarration: Bool = false
 
     func onAppear() {}
     func onDisappear() {}
@@ -446,6 +461,8 @@ extension EbookReaderView {
     func onAutoScrollPlayPauseTapped() {}
     func onShowControlsChanged(_ isVisible: Bool) {}
     func onReadAlongTapped() {}
+    func onCatchUpTapped() {}
+    func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {}
 
     init(
       isLoading: Bool = true,

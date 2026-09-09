@@ -28,14 +28,14 @@ final class PageMatchViewModel: PageMatchSheet.Model {
   private static let ebookAlignmentScore = 0.45
   private static let ebookAnchorScore = 0.7
 
-  private let context: PageMatchBookContext
+  private let context: BookSyncContext
   private let ebooks = EbookTextIndexLoader()
   private var search: Task<Void, Never>?
   private var reading: Task<Void, Never>?
   private var ebookWord: Int?
   private var ebookWords: NarrationWordIndex?
 
-  init(context: PageMatchBookContext) {
+  init(context: BookSyncContext) {
     self.context = context
     super.init()
 
@@ -138,7 +138,6 @@ final class PageMatchViewModel: PageMatchSheet.Model {
   }
 
   private func onPageScanned(_ lines: [String]) {
-
     let page = ScannedPage.parse(lines: lines)
     let header: String = page.header ?? "none"
     let number: String = page.pageNumber.map { "\($0)" } ?? "none"

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Catch Up - When you've read further in the ebook than you've listened, the player offers to skip the audiobook to where you stopped reading. Everything runs on device and requires iOS 26, with both the ebook and audiobook downloaded
 - Page Match - Point the camera at a page of your printed book, or pick a photo of one you took earlier, to jump to that spot in the audiobook. Everything runs on device and requires iOS 26 (thanks @andrespinones)
 - Read Along - Follow the ebook while the audiobook plays, with the narrated sentence highlighted and the page turning itself. Transcription happens entirely on device and requires iOS 26
 - Total counts - Show total item counts on the library, authors, series, and collections pages

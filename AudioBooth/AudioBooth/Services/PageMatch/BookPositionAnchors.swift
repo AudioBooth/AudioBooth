@@ -37,7 +37,7 @@ nonisolated enum BookPositionAnchors {
     UserDefaults.standard.set(encoded, forKey: storageKey)
 
     AppLogger.readAlong.info(
-      "Page Match: recorded ebook word \(anchor.word) at \(Int(anchor.time))s for \(bookID)"
+      "Book position: recorded ebook word \(anchor.word) at \(Int(anchor.time))s for \(bookID)"
     )
   }
 
