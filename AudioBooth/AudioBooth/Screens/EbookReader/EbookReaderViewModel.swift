@@ -5,7 +5,6 @@ import Logging
 import Models
 import ReadiumNavigator
 import ReadiumShared
-import ReadiumStreamer
 import SwiftUI
 import UIKit
 import WebKit
@@ -46,17 +45,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private var isAutoScrollPaused: Bool = false
   weak var currentScrollView: UIScrollView?
 
-  private lazy var assetRetriever = AssetRetriever(
-    httpClient: DefaultHTTPClient()
-  )
-
-  private lazy var publicationOpener = PublicationOpener(
-    parser: DefaultPublicationParser(
-      httpClient: DefaultHTTPClient(),
-      assetRetriever: assetRetriever,
-      pdfFactory: DefaultPDFDocumentFactory()
-    )
-  )
+  private let publicationLoader = EbookPublicationLoader()
 
   init(source: Source) {
     self.source = source
@@ -137,14 +126,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         temporaryFileURL = localURL
       }
 
-      guard let fileURL = FileURL(url: localURL) else { throw EbookError.unsupportedURL }
-
-      let asset = try await assetRetriever.retrieve(url: fileURL).get()
-
-      let publication = try await publicationOpener.open(
-        asset: asset,
-        allowUserInteraction: false
-      ).get()
+      let publication = try await publicationLoader.open(at: localURL)
 
       self.publication = publication
       self.supportsSettings = publication.conforms(to: .epub)
@@ -515,7 +497,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
 extension EbookReaderViewModel {
   enum EbookError: Error {
-    case unsupportedURL
     case unsupportedFormat
     case downloadFailed
   }

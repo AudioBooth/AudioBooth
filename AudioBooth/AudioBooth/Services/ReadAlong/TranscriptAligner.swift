@@ -26,7 +26,7 @@ nonisolated struct TranscriptAligner {
 
   let words: NarrationWordIndex
 
-  private let minimumScore = 0.55
+  var minimumScore = 0.55
   private let minimumQueryLength = 3
   private let windowPaddingWords = 12
   private let maximumContinuityBonus = 0.12

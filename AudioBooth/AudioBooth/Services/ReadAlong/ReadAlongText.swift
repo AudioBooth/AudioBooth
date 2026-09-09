@@ -20,6 +20,10 @@ nonisolated enum ReadAlongText {
     return abbreviationExpansions[stripped] ?? stripped
   }
 
+  static func normalizedWords(in text: String) -> [String] {
+    text.wordTokens.map(normalize).filter { !$0.isEmpty }
+  }
+
   static func normalizedWordsWithRanges(in text: String) -> [(word: String, range: Range<String.Index>)] {
     text.wordTokens.compactMap { token in
       let word = normalize(token)

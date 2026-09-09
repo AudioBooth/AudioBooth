@@ -6,12 +6,15 @@ enum NarrationSession {
 
   nonisolated private static let maximumWaitForPreviousSession = Duration.seconds(20)
 
-  static func begin(_ body: @Sendable @escaping () async -> Void) -> Task<Void, Never> {
+  static func begin(
+    priority: TaskPriority = .utility,
+    _ body: @Sendable @escaping () async -> Void
+  ) -> Task<Void, Never> {
     let earlier = previous
     let (finished, continuation) = AsyncStream<Void>.makeStream()
     previous = finished
 
-    return Task.detached(priority: .utility) {
+    return Task.detached(priority: priority) {
       defer { continuation.finish() }
 
       await waitForPreviousSession(earlier)

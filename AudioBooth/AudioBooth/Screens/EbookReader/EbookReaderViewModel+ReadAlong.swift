@@ -115,20 +115,7 @@ extension EbookReaderViewModel {
 
   private func narrationSource() -> NarrationSource? {
     guard let session = matchingSession() else { return nil }
-
-    let tracks = session.tracks
-      .sorted { $0.startOffset < $1.startOffset }
-      .compactMap { track -> NarrationSource.Track? in
-        guard let url = track.localPath else { return nil }
-        return NarrationSource.Track(
-          url: url,
-          secondsFromStartOfBook: track.startOffset,
-          duration: track.duration
-        )
-      }
-
-    guard tracks.count == session.tracks.count, !tracks.isEmpty else { return nil }
-    return NarrationSource(tracks: tracks)
+    return NarrationSource(downloaded: session.tracks)
   }
 
   private func readAlongHighlightChanged(sentence: Locator?, word: Locator?) {

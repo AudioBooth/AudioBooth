@@ -120,6 +120,7 @@ extension PlayerControl {
     case .volume: .green
     case .equalizer: .red
     case .lock: .gray
+    case .pageMatch: .teal
     }
   }
 }

@@ -25,6 +25,7 @@ nonisolated final class NarrationTranscriber: Sendable {
 
   private let locale: Locale
   private let source: NarrationSource
+  private let priority: TaskPriority
 
   private static let maximumSecondsAheadOfPlayhead: TimeInterval = 300
   private static let secondsBetweenPlayheadChecks: TimeInterval = 2
@@ -43,9 +44,15 @@ nonisolated final class NarrationTranscriber: Sendable {
     }
   }
 
-  init(locale: Locale, source: NarrationSource) {
+  init(locale: Locale, source: NarrationSource, priority: TaskPriority = .utility) {
     self.locale = locale
     self.source = source
+    self.priority = priority
+  }
+
+  private var analyzerOptions: SpeechAnalyzer.Options? {
+    guard priority != .utility else { return nil }
+    return SpeechAnalyzer.Options(priority: priority, modelRetention: .lingering)
   }
 
   func verifyAudioIsReadable() async throws {
@@ -79,7 +86,7 @@ nonisolated final class NarrationTranscriber: Sendable {
   ) -> AsyncThrowingStream<TranscribedWord, any Error> {
     let (stream, continuation) = AsyncThrowingStream<TranscribedWord, any Error>.makeStream()
 
-    let session = NarrationSession.begin {
+    let session = NarrationSession.begin(priority: priority) {
       do {
         try await self.transcribe(from: bookTime, playhead: playhead) { continuation.yield($0) }
         continuation.finish()
@@ -147,7 +154,7 @@ nonisolated private extension NarrationTranscriber {
     try Task.checkCancellation()
 
     let (audio, audioContinuation) = AsyncStream<AnalyzerInput>.makeStream()
-    let analyzer = SpeechAnalyzer(modules: [transcriber])
+    let analyzer = SpeechAnalyzer(modules: [transcriber], options: analyzerOptions)
 
     do {
       try await analyzer.start(inputSequence: audio)

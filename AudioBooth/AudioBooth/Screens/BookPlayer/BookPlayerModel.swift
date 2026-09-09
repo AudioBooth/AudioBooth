@@ -37,6 +37,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private var maxRecoveryAttempts = 3
   private var isRecovering = false
   private var interruptionBeganAt: Date?
+  private var positionedAt: Date?
   private var volumeObservation: NSKeyValueObservation?
   private var hasPlayedThisSession = false
   private var hasRecordedCompletion = false
@@ -78,6 +79,7 @@ final class BookPlayerModel: BookPlayer.Model {
     )
 
     setupDownloadStateBinding(bookID: book.id)
+    setupPageMatch()
     setupHistory()
 
     onLoad()
@@ -120,6 +122,7 @@ final class BookPlayerModel: BookPlayer.Model {
     )
 
     setupDownloadStateBinding(bookID: item.bookID)
+    setupPageMatch()
     setupHistory()
 
     onLoad()
@@ -355,6 +358,24 @@ final class BookPlayerModel: BookPlayer.Model {
     return Int(ceil(player.time))
   }
 
+  override func onPageMatchTapped() {
+    guard let localBook = try? LocalBook.fetch(bookID: id) else {
+      Toast(error: String(localized: "This audiobook isn't available on this device yet.")).show()
+      return
+    }
+
+    let model = PageMatchViewModel(context: PageMatchBookContext(localBook: localBook))
+    model.onFinished = { [weak self] in
+      self?.pageMatch = nil
+    }
+    pageMatch = model
+  }
+
+  private func setupPageMatch() {
+    guard #available(iOS 26.0, *), PageScannerView.isSupported else { return }
+    supportsPageMatch = true
+  }
+
   override func onHistoryTapped() {
     history?.isPresented = true
   }
@@ -390,10 +411,12 @@ extension BookPlayerModel {
   func seekToTime(_ time: TimeInterval) {
     guard let player else {
       pendingSeekTime = time
+      positionedAt = Date()
       AppLogger.player.debug("Player not ready, storing pending seek to \(time)s")
       return
     }
 
+    positionedAt = Date()
     mediaProgress.currentTime = time
 
     player.seek(to: time)
@@ -483,6 +506,7 @@ extension BookPlayerModel {
   }
 
   private static let smartRewindCeiling: TimeInterval = 3600
+  private static let deliberateSeekGrace: TimeInterval = 5
 
   private func smartRewindInterval(for reason: SmartRewindReason) -> TimeInterval {
     let prefs = UserPreferences.shared
@@ -505,6 +529,12 @@ extension BookPlayerModel {
   }
 
   private func applySmartRewind(reason: SmartRewindReason) {
+    if let positionedAt, Date().timeIntervalSince(positionedAt) < Self.deliberateSeekGrace {
+      self.positionedAt = nil
+      AppLogger.player.debug("Smart rewind not applied - the position was chosen deliberately")
+      return
+    }
+
     guard !mediaProgress.isFinished else {
       AppLogger.player.debug("Smart rewind not applied - book is completed")
       return
