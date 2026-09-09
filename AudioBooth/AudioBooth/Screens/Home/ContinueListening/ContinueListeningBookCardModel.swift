@@ -91,6 +91,10 @@ final class ContinueListeningBookCardModel: BookCard.Model {
     setupDownloadProgressObserver()
   }
 
+  isolated deinit {
+    progressObservation?.cancel()
+  }
+
   override func onAppear() {
     mediaProgress = try? MediaProgress.fetch(bookID: id)
   }

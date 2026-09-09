@@ -232,6 +232,10 @@ final class BookPlayerModel: BookPlayer.Model {
     onLoad()
   }
 
+  isolated deinit {
+    itemObservation?.cancel()
+  }
+
   override var secondsFromStartOfBook: TimeInterval {
     player?.time ?? mediaProgress.currentTime
   }

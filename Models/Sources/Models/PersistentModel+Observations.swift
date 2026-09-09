@@ -12,11 +12,12 @@ extension PersistentModel {
       let task = Task { @MainActor in
         let ctx = ModelContextProvider.shared.context
         let descriptor = FetchDescriptor<Self>()
+        var targetID: PersistentIdentifier?
 
         do {
           let items = try ctx.fetch(descriptor)
-          let model = items.first { $0[keyPath: keyPath] == value }
-          if let model {
+          if let model = items.first(where: { $0[keyPath: keyPath] == value }) {
+            targetID = model.persistentModelID
             nonisolated(unsafe) let model = model
             continuation.yield(model)
           }
@@ -36,19 +37,32 @@ extension PersistentModel {
           let updates = (userInfo[NSUpdatedObjectsKey] as? [PersistentIdentifier]) ?? []
           let deletes = (userInfo[NSDeletedObjectsKey] as? [PersistentIdentifier]) ?? []
 
-          let allChanges = inserts + updates
+          if let identifier = targetID, deletes.contains(identifier) {
+            targetID = nil
+          }
 
-          for identifier in allChanges {
+          if let identifier = targetID {
             guard
-              identifier.entityName == entityName,
-              !deletes.contains(identifier),
-              let model = modelContext.model(for: identifier) as? Self,
-              !model.isDeleted,
-              model[keyPath: keyPath] == value
+              inserts.contains(identifier) || updates.contains(identifier),
+              let matched = modelContext.model(for: identifier) as? Self,
+              !matched.isDeleted
             else { continue }
 
-            nonisolated(unsafe) let value = model
-            continuation.yield(value)
+            nonisolated(unsafe) let model = matched
+            continuation.yield(model)
+          } else {
+            for identifier in inserts where identifier.entityName == entityName {
+              guard
+                let matched = modelContext.model(for: identifier) as? Self,
+                !matched.isDeleted,
+                matched[keyPath: keyPath] == value
+              else { continue }
+
+              targetID = identifier
+              nonisolated(unsafe) let model = matched
+              continuation.yield(model)
+              break
+            }
           }
         }
       }
