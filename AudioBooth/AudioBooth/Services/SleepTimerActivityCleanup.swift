@@ -9,24 +9,26 @@ import ActivityKit
 #endif
 
 final class SleepTimerActivityCleanup {
+  enum DismissalReason: TimeInterval {
+    case expired = 300
+    case paused = 1800
+  }
+
   static let shared = SleepTimerActivityCleanup()
 
   private let taskIdentifier = "me.jgrenier.AudioBS.dismiss-sleep-timer-activity"
-  private let dismissalDelay: TimeInterval = 5 * 60
 
   private init() {
     registerBackgroundTask()
   }
 
-  func schedule() {
+  func schedule(for reason: DismissalReason) {
     let request = BGAppRefreshTaskRequest(identifier: taskIdentifier)
-    request.earliestBeginDate = Date(timeIntervalSinceNow: dismissalDelay)
+    request.earliestBeginDate = Date(timeIntervalSinceNow: reason.rawValue)
 
     do {
       try BGTaskScheduler.shared.submit(request)
-      AppLogger.player.info(
-        "Scheduled sleep timer Live Activity dismissal in \(self.dismissalDelay)s"
-      )
+      AppLogger.player.info("Scheduled sleep timer Live Activity dismissal in \(reason.rawValue)s")
     } catch let error as NSError {
       if error.code == 1 {
         AppLogger.player.warning(

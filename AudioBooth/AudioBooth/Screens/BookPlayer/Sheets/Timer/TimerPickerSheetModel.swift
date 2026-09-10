@@ -348,7 +348,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     sleepTimer = nil
 
     pauseLiveActivity(remaining: originalTimerDuration)
-    scheduleLiveActivityDismissal()
+    SleepTimerActivityCleanup.shared.schedule(for: .expired)
 
     AppLogger.player.info("Timer expired - playback paused")
   }
@@ -410,7 +410,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     current = .none
     pauseLiveActivity(remaining: 0)
-    scheduleLiveActivityDismissal()
+    SleepTimerActivityCleanup.shared.schedule(for: .expired)
     AppLogger.player.info("Chapter timer expired - playback paused")
   }
 
@@ -698,7 +698,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 extension TimerPickerSheetViewModel {
   #if !targetEnvironment(macCatalyst)
   func startLiveActivity(duration: TimeInterval) {
-    cancelLiveActivityDismissal()
+    SleepTimerActivityCleanup.shared.cancel()
 
     let endTime = Date().addingTimeInterval(duration)
     let state = SleepTimerActivityAttributes.ContentState(
@@ -739,7 +739,7 @@ extension TimerPickerSheetViewModel {
   }
 
   func endLiveActivity() {
-    cancelLiveActivityDismissal()
+    SleepTimerActivityCleanup.shared.cancel()
 
     guard let liveActivity else { return }
 
@@ -772,6 +772,7 @@ extension TimerPickerSheetViewModel {
       accentColor: preferences.accentColor
     )
     updateLiveActivity(state)
+    SleepTimerActivityCleanup.shared.schedule(for: .paused)
   }
   func resumeLiveActivityIfNeeded() {
     guard liveActivity != nil else { return }
@@ -792,6 +793,7 @@ extension TimerPickerSheetViewModel {
       accentColor: preferences.accentColor
     )
     updateLiveActivity(state)
+    SleepTimerActivityCleanup.shared.cancel()
   }
   #else
   func startLiveActivity(duration: TimeInterval) {}
@@ -800,12 +802,4 @@ extension TimerPickerSheetViewModel {
   func pauseLiveActivity(remaining: TimeInterval? = nil) {}
   func resumeLiveActivityIfNeeded() {}
   #endif
-
-  func scheduleLiveActivityDismissal() {
-    SleepTimerActivityCleanup.shared.schedule()
-  }
-
-  func cancelLiveActivityDismissal() {
-    SleepTimerActivityCleanup.shared.cancel()
-  }
 }
