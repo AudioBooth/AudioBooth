@@ -166,6 +166,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("autoTimerMode")
   var autoTimerMode: AutoTimerMode = .off
 
+  @AppStorage("autoTimerCustomMinutes")
+  var autoTimerCustomMinutes: Int = 90
+
   @AppStorage("autoTimerWindowStart")
   var autoTimerWindowStart: Int = 22 * 60
 
@@ -452,7 +455,15 @@ enum ShakeSensitivity: String, CaseIterable {
 enum AutoTimerMode: Codable, Equatable, Hashable {
   case off
   case duration(TimeInterval)
+  case custom(TimeInterval)
   case chapters(Int)
+
+  var seconds: TimeInterval? {
+    switch self {
+    case .duration(let seconds), .custom(let seconds): seconds
+    case .off, .chapters: nil
+    }
+  }
 }
 
 extension AutoTimerMode: RawRepresentable {
@@ -466,6 +477,9 @@ extension AutoTimerMode: RawRepresentable {
     case "duration":
       guard components.count == 2, let duration = TimeInterval(components[1]) else { return nil }
       self = .duration(duration)
+    case "custom":
+      guard components.count == 2, let duration = TimeInterval(components[1]) else { return nil }
+      self = .custom(duration)
     case "chapters":
       guard components.count == 2, let count = Int(components[1]) else { return nil }
       self = .chapters(count)
@@ -480,6 +494,8 @@ extension AutoTimerMode: RawRepresentable {
       return "off"
     case .duration(let duration):
       return "duration:\(duration)"
+    case .custom(let duration):
+      return "custom:\(duration)"
     case .chapters(let count):
       return "chapters:\(count)"
     }

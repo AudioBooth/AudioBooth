@@ -4,6 +4,8 @@ struct SleepPreferencesView: View {
   @Environment(\.appTheme) var theme
   @ObservedObject private var preferences = UserPreferences.shared
 
+  @State private var isEditingCustomDuration = false
+
   private let durationOptions: [TimeInterval] = [300, 600, 900, 1200, 1800, 2700, 3600]
   private let chapterOptions: [Int] = [1, 2, 3]
   private let fadeOptions: [Double] = [0, 15, 30, 60]
@@ -18,13 +20,35 @@ struct SleepPreferencesView: View {
     )
   }
 
-  private var durationSelection: Binding<AutoTimerMode> {
-    Binding(
-      get: {
-        preferences.autoTimerMode == .off ? .duration(1800) : preferences.autoTimerMode
-      },
-      set: { preferences.autoTimerMode = $0 }
-    )
+  private var isCustomDuration: Bool {
+    switch preferences.autoTimerMode {
+    case .custom: true
+    case .duration(let seconds): !durationOptions.contains(seconds)
+    case .off, .chapters: false
+    }
+  }
+
+  private var durationSelectionLabel: String {
+    switch preferences.autoTimerMode {
+    case .duration(let seconds), .custom(let seconds): durationLabel(seconds)
+    case .chapters(let count): chapterLabel(count)
+    case .off: durationLabel(1800)
+    }
+  }
+
+  /// The custom value on show: the active duration while custom is selected,
+  /// otherwise the last one the user dialed in.
+  private var customTotalMinutes: Int {
+    guard isCustomDuration, let seconds = preferences.autoTimerMode.seconds else {
+      return max(1, preferences.autoTimerCustomMinutes)
+    }
+    return max(1, Int(seconds / 60))
+  }
+
+  private func setCustomDuration(totalMinutes: Int) {
+    let totalMinutes = max(1, totalMinutes)
+    preferences.autoTimerCustomMinutes = totalMinutes
+    preferences.autoTimerMode = .custom(TimeInterval(totalMinutes * 60))
   }
 
   var body: some View {
@@ -41,17 +65,46 @@ struct SleepPreferencesView: View {
         .listRowBackground(theme.colors.background.card)
 
         if preferences.autoTimerMode != .off {
-          Picker(selection: durationSelection) {
+          Menu {
             ForEach(durationOptions, id: \.self) { seconds in
-              Text(durationLabel(seconds)).tag(AutoTimerMode.duration(seconds))
+              durationMenuButton(
+                title: durationLabel(seconds),
+                isSelected: preferences.autoTimerMode == .duration(seconds)
+              ) {
+                preferences.autoTimerMode = .duration(seconds)
+              }
             }
             ForEach(chapterOptions, id: \.self) { count in
-              Text(chapterLabel(count)).tag(AutoTimerMode.chapters(count))
+              durationMenuButton(
+                title: chapterLabel(count),
+                isSelected: preferences.autoTimerMode == .chapters(count)
+              ) {
+                preferences.autoTimerMode = .chapters(count)
+              }
+            }
+
+            Divider()
+
+            durationMenuButton(
+              title: String(localized: "Custom time"),
+              isSelected: isCustomDuration
+            ) {
+              isEditingCustomDuration = true
             }
           } label: {
-            Text("Default Duration")
-              .font(.subheadline)
-              .fontWeight(.medium)
+            HStack {
+              Text("Default Duration")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.primary)
+              Spacer()
+              Text(durationSelectionLabel)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+              Image(systemName: "chevron.up.chevron.down")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
           }
           .listRowBackground(theme.colors.background.card)
 
@@ -153,10 +206,30 @@ struct SleepPreferencesView: View {
     .scrollContentBackground(.hidden)
     .background(theme.colors.background.page)
     .navigationTitle("Sleep Timer and Alarm")
+    .sheet(isPresented: $isEditingCustomDuration) {
+      CustomDurationSheet(totalMinutes: customTotalMinutes) { totalMinutes in
+        setCustomDuration(totalMinutes: totalMinutes)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func durationMenuButton(
+    title: String,
+    isSelected: Bool,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      if isSelected {
+        Label(title, systemImage: "checkmark")
+      } else {
+        Text(title)
+      }
+    }
   }
 
   private func durationLabel(_ seconds: TimeInterval) -> String {
-    Duration.seconds(seconds).formatted(.units(allowed: [.minutes], width: .abbreviated))
+    Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
   }
 
   private func chapterLabel(_ count: Int) -> String {
@@ -225,6 +298,95 @@ private struct TimerPauseBehaviorRow: View {
         .buttonStyle(.plain)
       }
     }
+  }
+}
+
+private struct CustomDurationSheet: View {
+  @Environment(\.dismiss) private var dismiss
+  @State private var hours: Int
+  @State private var minutes: Int
+
+  private let onSet: (Int) -> Void
+
+  #if os(iOS) && !targetEnvironment(macCatalyst)
+  private let sheetHeight: CGFloat = 370
+  #else
+  private let sheetHeight: CGFloat = 260
+  #endif
+
+  init(totalMinutes: Int, onSet: @escaping (Int) -> Void) {
+    _hours = State(initialValue: totalMinutes / 60)
+    _minutes = State(initialValue: totalMinutes % 60)
+    self.onSet = onSet
+  }
+
+  var body: some View {
+    VStack(spacing: 0) {
+      Text("Custom time")
+        .font(.title3)
+        .fontWeight(.semibold)
+        .padding(.top, 28)
+
+      Spacer(minLength: 12)
+
+      HStack {
+        HStack {
+          Picker("Hours", selection: $hours) {
+            ForEach(0..<24, id: \.self) { value in
+              Text("\(value)").tag(value)
+            }
+          }
+          #if os(iOS) && !targetEnvironment(macCatalyst)
+          .pickerStyle(.wheel)
+          #else
+          .pickerStyle(.menu)
+          #endif
+
+          Text(hours == 1 ? "hour" : "hours")
+            .font(.subheadline)
+        }
+
+        HStack {
+          Picker("Minutes", selection: $minutes) {
+            let range = hours > 0 ? 0..<60 : 1..<60
+            ForEach(range, id: \.self) { value in
+              Text("\(value)").tag(value)
+            }
+          }
+          #if os(iOS) && !targetEnvironment(macCatalyst)
+          .pickerStyle(.wheel)
+          #else
+          .pickerStyle(.menu)
+          #endif
+
+          Text(minutes == 1 ? "min" : "mins")
+            .font(.subheadline)
+        }
+      }
+      .padding(.horizontal, 20)
+      #if os(iOS) && !targetEnvironment(macCatalyst)
+      .frame(height: 150)
+      #endif
+      .onChange(of: hours) { _, newValue in
+        if newValue == 0, minutes == 0 { minutes = 1 }
+      }
+
+      Spacer(minLength: 12)
+
+      Button {
+        onSet(hours * 60 + minutes)
+        dismiss()
+      } label: {
+        Text("Set").frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.borderedProminent)
+      .controlSize(.large)
+      .padding(.horizontal, 20)
+      .padding(.bottom, 24)
+    }
+    .frame(maxHeight: .infinity)
+    .presentationDetents([.height(sheetHeight)])
+    .presentationDragIndicator(.visible)
   }
 }
 
