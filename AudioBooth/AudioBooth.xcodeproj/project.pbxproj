@@ -449,11 +449,14 @@
 			knownRegions = (
 				en,
 				Base,
-				fr,
 				da,
 				de,
-				"zh-tw",
 				es,
+				fr,
+				it,
+				ru,
+				"zh-Hans",
+				"zh-TW",
 			);
 			mainGroup = 3FC8DC652E638F5E00A4B080;
 			minimizedProjectReferenceProxies = 1;
