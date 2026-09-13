@@ -10,9 +10,16 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
   private var session: WCSession?
   private var context: [String: Any] = [:]
+  private var pendingLocalSessions: [String: [String: Any]] = [:]
+  private var localSessionSyncTask: Task<Bool, Never>?
+
+  private var syncedLocalSessions: [String: Double] {
+    didSet { UserDefaults.standard.set(syncedLocalSessions, forKey: Keys.syncedLocalSessions) }
+  }
 
   private enum Keys {
     static let watchDownloadedBookIDs = "watch_downloaded_book_ids"
+    static let syncedLocalSessions = "synced_local_sessions"
   }
 
   var watchDownloadedBookIDs: [String] {
@@ -21,7 +28,11 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   private override init() {
+    syncedLocalSessions =
+      UserDefaults.standard.dictionary(forKey: Keys.syncedLocalSessions) as? [String: Double] ?? [:]
     super.init()
+
+    context["syncedLocalSessions"] = syncedLocalSessions
 
     if WCSession.isSupported() {
       session = WCSession.default
@@ -328,6 +339,18 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
   }
 
+  func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
+    guard userInfo["command"] as? String == "syncLocalSessions",
+      let sessionsData = userInfo["sessions"] as? [[String: Any]]
+    else { return }
+
+    AppLogger.watchConnectivity.info("Received \(sessionsData.count) local sessions from watch")
+
+    Task {
+      _ = await receiveLocalSessions(sessionsData)
+    }
+  }
+
   func session(
     _ session: WCSession,
     didReceiveMessage message: [String: Any],
@@ -367,7 +390,11 @@ extension WatchConnectivityManager: WCSessionDelegate {
           replyHandler(["error": "Missing sessions"])
           return
         }
-        await handleSyncLocalSessions(sessionsData, replyHandler: replyHandler)
+        if await receiveLocalSessions(sessionsData) {
+          replyHandler(["success": true])
+        } else {
+          replyHandler(["error": "Failed to sync local sessions"])
+        }
 
       default:
         replyHandler(["error": "Unknown command: \(command)"])
@@ -518,11 +545,73 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
   }
 
-  private func handleSyncLocalSessions(
-    _ sessionsData: [[String: Any]],
-    replyHandler: @escaping ([String: Any]) -> Void
-  ) async {
+  private func receiveLocalSessions(_ sessionsData: [[String: Any]]) async -> Bool {
+    let sessionIDs = Set(sessionsData.compactMap { $0["id"] as? String })
+    syncedLocalSessions = syncedLocalSessions.filter { sessionIDs.contains($0.key) }
+
+    for dict in sessionsData {
+      guard let id = dict["id"] as? String,
+        let bookID = dict["bookID"] as? String,
+        let duration = dict["duration"] as? Double,
+        let currentTime = dict["currentTime"] as? Double,
+        let updatedAt = dict["updatedAt"] as? Double,
+        updatedAt > syncedLocalSessions[id, default: 0],
+        updatedAt > (pendingLocalSessions[id]?["updatedAt"] as? Double ?? 0)
+      else { continue }
+
+      let watchUpdatedAt = Date(timeIntervalSince1970: updatedAt)
+      let existingUpdatedAt = (try? MediaProgress.fetch(bookID: bookID))?.lastUpdate ?? .distantPast
+      if watchUpdatedAt > existingUpdatedAt {
+        let safeDuration = max(duration, 1)
+        try? MediaProgress.updateProgress(
+          for: bookID,
+          currentTime: currentTime,
+          duration: safeDuration,
+          progress: min(1, max(0, currentTime / safeDuration)),
+          lastUpdate: watchUpdatedAt
+        )
+      }
+
+      pendingLocalSessions[id] = dict
+    }
+
+    if localSessionSyncTask == nil, !pendingLocalSessions.isEmpty {
+      localSessionSyncTask = Task { await drainLocalSessions() }
+    }
+
+    return await localSessionSyncTask?.value ?? true
+  }
+
+  private func drainLocalSessions() async -> Bool {
+    var attempts = 0
+    while session?.hasContentPending == true, attempts < 10 {
+      try? await Task.sleep(for: .seconds(1))
+      attempts += 1
+    }
+
+    var succeeded = true
+    while !pendingLocalSessions.isEmpty {
+      let sessionsData = pendingLocalSessions.values.filter { dict in
+        guard let id = dict["id"] as? String, let updatedAt = dict["updatedAt"] as? Double else { return false }
+        return updatedAt > syncedLocalSessions[id, default: 0]
+      }
+      pendingLocalSessions.removeAll()
+
+      let posted = await postLocalSessions(sessionsData)
+      if !posted {
+        succeeded = false
+      }
+    }
+
+    localSessionSyncTask = nil
+    context["syncedLocalSessions"] = syncedLocalSessions
+    refreshProgress()
+    return succeeded
+  }
+
+  private func postLocalSessions(_ sessionsData: [[String: Any]]) async -> Bool {
     var sessionSyncs: [SessionSync] = []
+    var syncedUpdatedAt: [String: Double] = [:]
 
     for dict in sessionsData {
       guard let id = dict["id"] as? String,
@@ -534,18 +623,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
         let startedAt = dict["startedAt"] as? Double,
         let updatedAt = dict["updatedAt"] as? Double
       else { continue }
-
-      let watchUpdatedAt = Date(timeIntervalSince1970: updatedAt)
-      let existingUpdatedAt = (try? MediaProgress.fetch(bookID: bookID))?.lastUpdate ?? .distantPast
-      if watchUpdatedAt > existingUpdatedAt {
-        let safeDuration = max(duration, 1)
-        try? MediaProgress.updateProgress(
-          for: bookID,
-          currentTime: currentTime,
-          duration: safeDuration,
-          progress: min(1, max(0, currentTime / safeDuration))
-        )
-      }
 
       sessionSyncs.append(
         SessionSync(
@@ -563,21 +640,19 @@ extension WatchConnectivityManager: WCSessionDelegate {
           )
         )
       )
+      syncedUpdatedAt[id] = updatedAt
     }
 
-    guard !sessionSyncs.isEmpty else {
-      replyHandler(["success": true])
-      return
-    }
+    guard !sessionSyncs.isEmpty else { return true }
 
     do {
       try await Audiobookshelf.shared.sessions.syncLocalSessions(sessionSyncs)
+      syncedLocalSessions.merge(syncedUpdatedAt) { max($0, $1) }
       AppLogger.watchConnectivity.info("Synced \(sessionSyncs.count) watch local sessions")
-      refreshProgress()
-      replyHandler(["success": true])
+      return true
     } catch {
       AppLogger.watchConnectivity.error("Failed to sync watch local sessions: \(error)")
-      replyHandler(["error": error.localizedDescription])
+      return false
     }
   }
 

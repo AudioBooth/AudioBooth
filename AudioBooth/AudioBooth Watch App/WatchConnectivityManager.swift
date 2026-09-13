@@ -219,12 +219,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     recordLocalProgress(bookID: bookID, currentTime: currentTime)
 
     guard let session, session.isReachable, let sessionID, !sessionID.isEmpty else {
-      WatchLocalSessionStore.shared.record(
-        bookID: bookID,
-        currentTime: currentTime,
-        timeListened: timeListened,
-        duration: duration
-      )
+      recordLocalSession(bookID: bookID, currentTime: currentTime, timeListened: timeListened, duration: duration)
       return
     }
 
@@ -239,7 +234,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     session.sendMessage(message, replyHandler: nil) { _ in
       Task { @MainActor in
-        WatchLocalSessionStore.shared.record(
+        self.recordLocalSession(
           bookID: bookID,
           currentTime: currentTime,
           timeListened: timeListened,
@@ -249,8 +244,23 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
+  private func recordLocalSession(bookID: String, currentTime: Double, timeListened: Double, duration: Double) {
+    if let session, session.activationState == .activated {
+      pruneSyncedLocalSessions(session.receivedApplicationContext)
+    }
+
+    WatchLocalSessionStore.shared.record(
+      bookID: bookID,
+      currentTime: currentTime,
+      timeListened: timeListened,
+      duration: duration
+    )
+
+    flushLocalSessions()
+  }
+
   func flushLocalSessions() {
-    guard let session, session.isReachable else { return }
+    guard let session, session.activationState == .activated else { return }
 
     let localSessions = WatchLocalSessionStore.shared.sessions
     guard !localSessions.isEmpty else { return }
@@ -275,21 +285,30 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     AppLogger.watchConnectivity.info("Flushing \(localSessions.count) local sessions to iPhone")
 
+    for transfer in session.outstandingUserInfoTransfers
+    where transfer.userInfo["command"] as? String == "syncLocalSessions" {
+      transfer.cancel()
+    }
+    session.transferUserInfo(message)
+
+    guard session.isReachable else { return }
+
     session.sendMessage(
       message,
       replyHandler: { response in
         if let error = response["error"] as? String {
           AppLogger.watchConnectivity.error("Failed to sync local sessions: \(error)")
-          return
-        }
-        Task { @MainActor in
-          WatchLocalSessionStore.shared.remove(ids: localSessions.map(\.id))
         }
       },
       errorHandler: { error in
         AppLogger.watchConnectivity.error("Failed to send local sessions: \(error)")
       }
     )
+  }
+
+  private func pruneSyncedLocalSessions(_ context: [String: Any]) {
+    guard let synced = context["syncedLocalSessions"] as? [String: Double] else { return }
+    WatchLocalSessionStore.shared.remove(synced: synced, idleFor: 3600)
   }
 
   func startSession(bookID: String, forDownload: Bool = false) async -> WatchBook? {
@@ -418,14 +437,14 @@ extension WatchConnectivityManager: WCSessionDelegate {
         let context = session.receivedApplicationContext
         Task { @MainActor in
           handleContext(context)
-        }
-
-        if session.isReachable {
-          let downloadedBookIDs = LocalBookStorage.shared.books
-            .filter { $0.isDownloaded }
-            .map { $0.id }
-          sendDownloadedBookIDs(downloadedBookIDs)
           flushLocalSessions()
+
+          if isReachable {
+            let downloadedBookIDs = LocalBookStorage.shared.books
+              .filter { $0.isDownloaded }
+              .map { $0.id }
+            sendDownloadedBookIDs(downloadedBookIDs)
+          }
         }
       }
     }
@@ -451,6 +470,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
   }
 
   private func handleContext(_ context: [String: Any]) {
+    pruneSyncedLocalSessions(context)
+
     hasCurrentBook = context["hasCurrentBook"] as? Bool ?? false
     playbackRate = context["playbackRate"] as? Float ?? 1.0
     chapterProgress = context["chapterProgress"] as? Double

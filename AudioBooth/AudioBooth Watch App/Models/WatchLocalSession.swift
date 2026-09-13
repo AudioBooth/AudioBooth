@@ -51,8 +51,15 @@ final class WatchLocalSessionStore {
     save(updatedSessions)
   }
 
-  func remove(ids: [String]) {
-    save(sessions.filter { !ids.contains($0.id) })
+  func remove(synced: [String: Double], idleFor interval: TimeInterval) {
+    let now = Date()
+    let remaining = sessions.filter { session in
+      guard let syncedUpdatedAt = synced[session.id] else { return true }
+      return session.updatedAt.timeIntervalSince1970 > syncedUpdatedAt
+        || now.timeIntervalSince(session.updatedAt) <= interval
+    }
+    guard remaining.count != sessions.count else { return }
+    save(remaining)
   }
 
   private func save(_ sessions: [WatchLocalSession]) {
