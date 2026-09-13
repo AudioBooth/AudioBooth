@@ -23,6 +23,7 @@ public struct Podcast: Codable, Sendable {
   public func coverURL(raw: Bool = false) -> URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     var url = serverURL.appendingPathComponent("api/items/\(id)/cover")
+    url.append(queryItems: [URLQueryItem(name: "ts", value: String(Int(updatedAt.timeIntervalSince1970 * 1000)))])
 
     #if os(watchOS)
     url.append(queryItems: [URLQueryItem(name: "format", value: "jpg")])

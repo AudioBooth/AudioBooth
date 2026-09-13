@@ -126,26 +126,14 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
   }
 
-  private func refreshCover() {
-    Task {
-      do {
-        let request = ImageRequest(url: coverURL, options: .reloadIgnoringCachedData)
-        let image = try await ImagePipeline.shared.image(for: request)
-        shareCoverImage = Image(uiImage: image)
-        let coverURL = self.coverURL
-        self.coverURL = nil
-        Task { @MainActor in
-          self.coverURL = coverURL
-        }
-      } catch {
-        AppLogger.viewModel.debug("Failed to refresh cover: \(error)")
-      }
+  override var shareCoverImage: Image? {
+    guard let container = ImagePipeline.shared.cache.cachedImage(for: ImageRequest(url: coverURL)) else {
+      return nil
     }
+    return Image(uiImage: container.image)
   }
 
   private func loadBookFromAPI() async {
-    refreshCover()
-
     do {
       let book = try await booksService.fetch(id: bookID)
       self.book = book
@@ -227,6 +215,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       if localBook?.isDeleted == false {
         try? LocalBook(from: book).save()
+        downloadManager.backfillMissingCovers()
       }
 
       await loadSessions()

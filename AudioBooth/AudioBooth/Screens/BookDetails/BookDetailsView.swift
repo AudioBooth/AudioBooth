@@ -667,7 +667,7 @@ extension BookDetailsView {
     var isLoading: Bool
     var isPlaying: Bool
     var shareItems: [BookShareItem] = []
-    var shareCoverImage: Image? = nil
+    var shareCoverImage: Image? { nil }
     var flags: Flags
     var error: String?
     var genres: [String]?

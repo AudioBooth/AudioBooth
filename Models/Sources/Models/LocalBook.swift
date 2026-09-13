@@ -176,6 +176,9 @@ extension LocalBook {
     existingItem.authors = authors
     existingItem.narrators = narrators
     existingItem.series = series
+    if existingItem.coverURL != coverURL {
+      existingItem.coverFile = nil
+    }
     existingItem.coverURL = coverURL
     existingItem.duration = duration
     existingItem.chapters = chapters
