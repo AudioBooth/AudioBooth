@@ -18,6 +18,41 @@ struct EbookReaderView: View {
   private let userPreferences = UserPreferences.shared
 
   var body: some View {
+    contentWithSheets
+      .onChange(of: showZoneEditor) { _, isShowing in
+        if isShowing { showControls = false }
+      }
+      .onChange(of: showControls) { _, value in
+        model.onShowControlsChanged(value)
+      }
+      .onChange(of: colorScheme) { _, _ in
+        if model.preferences.theme == .auto {
+          model.onPreferencesChanged(model.preferences)
+        }
+        preferredColorScheme = model.preferences.theme.colorScheme
+      }
+      .onAppear {
+        UIApplication.shared.isIdleTimerDisabled = userPreferences.keepScreenAwakeInPlayer
+        model.onAppear()
+      }
+      .onDisappear {
+        UIApplication.shared.isIdleTimerDisabled = false
+        model.onDisappear()
+      }
+      .statusBarHidden(true)
+      .preferredColorScheme(preferredColorScheme)
+      .background {
+        if volumeButtonsEnabled {
+          VolumeButtonObserver(
+            onVolumeUp: { model.onTapRight() },
+            onVolumeDown: { model.onTapLeft() }
+          )
+          .allowsHitTesting(false)
+        }
+      }
+  }
+
+  private var content: some View {
     ZStack {
       if model.isLoading {
         loadingView
@@ -29,122 +64,104 @@ struct EbookReaderView: View {
     }
     .navigationBarTitleDisplayMode(.inline)
     .toolbarBackground(.hidden, for: .navigationBar)
-    .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        if showControls, !model.isLoading, model.error == nil, model.supportsSearch {
-          Button {
-            model.onSearchTapped()
-          } label: {
-            Label("Search", systemImage: "magnifyingglass")
-          }
-          .transition(.opacity)
-          .tint(.primary)
-        }
-      }
+    .toolbar { toolbarContent }
+  }
 
-      ToolbarItem(placement: .topBarTrailing) {
-        if showControls || model.isLoading {
-          Button {
-            dismiss()
-          } label: {
-            Label("Close", systemImage: "xmark")
-          }
-          .transition(.opacity)
-          .tint(.primary)
-        }
-      }
-
-      ToolbarItem(placement: .bottomBar) {
-        if !model.isLoading, model.error == nil, showControls {
-          bottomControlBar
-            .tint(.primary)
-        }
-      }
-    }
-    .sheet(isPresented: $showSettings) {
-      EbookReaderPreferencesView(preferences: model.preferences) {
-        showSettings = false
-        Task {
-          try? await Task.sleep(for: .milliseconds(400))
-          showZoneEditor = true
-        }
-      }
-    }
-    .overlay(alignment: .top) {
-      if let readAlong = model.readAlong, let message = readAlongStatusMessage(readAlong.status) {
-        ReadAlongStatusPill(message: message, status: readAlong.status)
-          .padding(.top, 8)
-          .transition(.move(edge: .top).combined(with: .opacity))
-      } else if let message = model.catchUpMessage {
-        PositionSyncBanner(
-          message: message,
-          onCatchUp: model.onCatchUpTapped,
-          onDismiss: model.onCatchUpDismissed
-        )
-        .padding(.top, 8)
-        .transition(.move(edge: .top).combined(with: .opacity))
-      }
-    }
-    .animation(.easeInOut(duration: 0.25), value: model.catchUpMessage)
-    .animation(.easeInOut(duration: 0.25), value: model.readAlong?.status)
-    .overlay {
-      if showZoneEditor {
-        EbookTapZonesEditorView(preferences: model.preferences) {
-          showZoneEditor = false
+  @ToolbarContentBuilder
+  private var toolbarContent: some ToolbarContent {
+    ToolbarItem(placement: .topBarLeading) {
+      if showControls, !model.isLoading, model.error == nil, model.supportsSearch {
+        Button {
+          model.onSearchTapped()
+        } label: {
+          Label("Search", systemImage: "magnifyingglass")
         }
         .transition(.opacity)
+        .tint(.primary)
       }
     }
-    .animation(.easeInOut(duration: 0.2), value: showZoneEditor)
-    .onChange(of: showZoneEditor) { _, isShowing in
-      if isShowing { showControls = false }
-    }
-    .onChange(of: showControls) { _, value in
-      model.onShowControlsChanged(value)
-    }
-    .onChange(of: colorScheme) { _, _ in
-      if model.preferences.theme == .auto {
-        model.onPreferencesChanged(model.preferences)
-      }
-      preferredColorScheme = model.preferences.theme.colorScheme
-    }
-    .sheet(
-      isPresented: Binding(
-        get: { model.chapters?.isPresented ?? false },
-        set: { if let chapters = model.chapters { chapters.isPresented = $0 } }
-      )
-    ) {
-      if let chapters = model.chapters {
-        EbookChapterPickerSheet(model: chapters)
+
+    ToolbarItem(placement: .topBarTrailing) {
+      if showControls || model.isLoading {
+        Button {
+          dismiss()
+        } label: {
+          Label("Close", systemImage: "xmark")
+        }
+        .transition(.opacity)
+        .tint(.primary)
       }
     }
-    .sheet(item: $model.search) { searchModel in
-      EbookSearchView(model: searchModel)
-    }
-    .adaptiveSheet(isPresented: $showPlayerSheet) {
-      if let player = playerManager.current {
-        EbookPlayerSheet(player: player)
+
+    ToolbarItem(placement: .bottomBar) {
+      if !model.isLoading, model.error == nil, showControls {
+        bottomControlBar
+          .tint(.primary)
       }
     }
-    .onAppear {
-      UIApplication.shared.isIdleTimerDisabled = userPreferences.keepScreenAwakeInPlayer
-      model.onAppear()
-    }
-    .onDisappear {
-      UIApplication.shared.isIdleTimerDisabled = false
-      model.onDisappear()
-    }
-    .statusBarHidden(true)
-    .preferredColorScheme(preferredColorScheme)
-    .background {
-      if volumeButtonsEnabled {
-        VolumeButtonObserver(
-          onVolumeUp: { model.onTapRight() },
-          onVolumeDown: { model.onTapLeft() }
-        )
-        .allowsHitTesting(false)
+  }
+
+  private var contentWithOverlays: some View {
+    content
+      .overlay(alignment: .top) {
+        if let readAlong = model.readAlong, let message = readAlongStatusMessage(readAlong.status) {
+          ReadAlongStatusPill(message: message, status: readAlong.status)
+            .padding(.top, 8)
+            .transition(.move(edge: .top).combined(with: .opacity))
+        } else if let message = model.catchUpMessage {
+          PositionSyncBanner(
+            message: message,
+            onCatchUp: model.onCatchUpTapped,
+            onDismiss: model.onCatchUpDismissed
+          )
+          .padding(.top, 8)
+          .transition(.move(edge: .top).combined(with: .opacity))
+        }
       }
-    }
+      .animation(.easeInOut(duration: 0.25), value: model.catchUpMessage)
+      .animation(.easeInOut(duration: 0.25), value: model.readAlong?.status)
+      .overlay {
+        if showZoneEditor {
+          EbookTapZonesEditorView(preferences: model.preferences) {
+            showZoneEditor = false
+          }
+          .transition(.opacity)
+        }
+      }
+      .animation(.easeInOut(duration: 0.2), value: showZoneEditor)
+  }
+
+  private var contentWithSheets: some View {
+    contentWithOverlays
+      .sheet(isPresented: $showSettings) {
+        EbookReaderPreferencesView(preferences: model.preferences) {
+          showSettings = false
+          Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            showZoneEditor = true
+          }
+        }
+      }
+      .sheet(isPresented: isChaptersPresented) {
+        if let chapters = model.chapters {
+          EbookChapterPickerSheet(model: chapters)
+        }
+      }
+      .sheet(item: $model.search) { searchModel in
+        EbookSearchView(model: searchModel)
+      }
+      .adaptiveSheet(isPresented: $showPlayerSheet) {
+        if let player = playerManager.current {
+          EbookPlayerSheet(player: player)
+        }
+      }
+  }
+
+  private var isChaptersPresented: Binding<Bool> {
+    Binding(
+      get: { model.chapters?.isPresented ?? false },
+      set: { if let chapters = model.chapters { chapters.isPresented = $0 } }
+    )
   }
 
   private var volumeButtonsEnabled: Bool {
