@@ -171,6 +171,11 @@ extension LocalBook {
       return
     }
 
+    if #unavailable(iOS 18, watchOS 11, tvOS 18, macOS 15) {
+      bookID = UUID().uuidString
+      context.insert(self)
+    }
+
     existingItem.libraryID = libraryID
     existingItem.title = title
     existingItem.authors = authors
@@ -196,6 +201,10 @@ extension LocalBook {
 
     if existingItem.tracks.allSatisfy({ $0.relativePath == nil }) {
       existingItem.tracks = tracks
+    }
+
+    if #unavailable(iOS 18, watchOS 11, tvOS 18, macOS 15) {
+      context.delete(self)
     }
 
     try? context.save()

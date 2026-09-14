@@ -26,11 +26,11 @@ struct BookmarkRow: View {
             .lineLimit(1)
 
           if model.status == .pending {
-            Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")
+            Image(systemName: "arrow.triangle.2.circlepath")
               .font(.caption)
               .foregroundStyle(.secondary)
           } else if model.status == .failed {
-            Image(systemName: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+            Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
               .font(.caption)
               .foregroundStyle(.orange)
           }

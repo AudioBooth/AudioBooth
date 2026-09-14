@@ -197,14 +197,14 @@ private struct SkipPresetCard: View {
     VStack(spacing: 20) {
       HStack {
         skipBadge(
-          systemImage: "\(Int(backInterval)).arrow.trianglehead.counterclockwise",
+          systemImage: "gobackward.\(Int(backInterval))",
           label: "Back",
           accessibilityLabel: "Skip backward",
           selection: $backInterval
         )
         Spacer()
         skipBadge(
-          systemImage: "\(Int(forwardInterval)).arrow.trianglehead.clockwise",
+          systemImage: "goforward.\(Int(forwardInterval))",
           label: "Forward",
           accessibilityLabel: "Skip forward",
           selection: $forwardInterval

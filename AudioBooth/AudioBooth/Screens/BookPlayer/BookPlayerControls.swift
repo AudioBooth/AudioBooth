@@ -26,7 +26,7 @@ struct BookPlayerControls: View {
         model.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval)
       }) {
         Image(
-          systemName: "\(Int(preferences.skipBackwardInterval)).arrow.trianglehead.counterclockwise"
+          systemName: "gobackward.\(Int(preferences.skipBackwardInterval))"
         )
         .font(
           .system(
@@ -71,7 +71,7 @@ struct BookPlayerControls: View {
         Haptics.impact(.light)
         model.onSkipForwardTapped(seconds: preferences.skipForwardInterval)
       }) {
-        Image(systemName: "\(Int(preferences.skipForwardInterval)).arrow.trianglehead.clockwise")
+        Image(systemName: "goforward.\(Int(preferences.skipForwardInterval))")
           .font(
             .system(
               size: preferences.hideChapterSkipButtons ? 40 : 36,

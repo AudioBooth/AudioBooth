@@ -82,7 +82,7 @@ struct SeriesPage: View {
               }
             )
           ) {
-            Label("List View", systemImage: "rectangle.grid.1x3")
+            Label("List View", systemImage: "rectangle.grid.1x2")
           }
 
           Divider()

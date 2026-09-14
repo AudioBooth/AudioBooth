@@ -114,6 +114,11 @@ extension LocalEpisode {
     let context = ModelContextProvider.shared.context
 
     if let existing = try LocalEpisode.fetch(episodeID: self.episodeID) {
+      if #unavailable(iOS 18, watchOS 11, tvOS 18, macOS 15) {
+        episodeID = UUID().uuidString
+        context.insert(self)
+      }
+
       existing.podcast = self.podcast
       existing.title = self.title
       existing.duration = self.duration
@@ -131,6 +136,10 @@ extension LocalEpisode {
         if existingRelativePath != nil && newTrack.relativePath == nil {
           existing.track?.relativePath = existingRelativePath
         }
+      }
+
+      if #unavailable(iOS 18, watchOS 11, tvOS 18, macOS 15) {
+        context.delete(self)
       }
     } else {
       context.insert(self)
