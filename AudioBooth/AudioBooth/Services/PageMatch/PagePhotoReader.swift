@@ -107,15 +107,24 @@ nonisolated enum PagePhotoReader {
     request.recognitionLevel = .accurate
     guard let supported = try? request.supportedRecognitionLanguages() else { return [] }
 
-    return candidates.compactMap { candidate in
-      supported.first { $0.caseInsensitiveCompare(candidate) == .orderedSame }
-        ?? supported.first { $0.caseInsensitiveCompare(base(of: candidate)) == .orderedSame }
-        ?? supported.first { $0.lowercased().hasPrefix(base(of: candidate).lowercased() + "-") }
+    var languages: [String] = []
+    for candidate in candidates {
+      guard let language = match(candidate, in: supported), !languages.contains(language) else { continue }
+      languages.append(language)
     }
-    .reduce(into: [String]()) { result, language in
-      guard !result.contains(language) else { return }
-      result.append(language)
+    return languages
+  }
+
+  private static func match(_ candidate: String, in supported: [String]) -> String? {
+    let baseTag: String = base(of: candidate)
+    if let exact = supported.first(where: { $0.caseInsensitiveCompare(candidate) == .orderedSame }) {
+      return exact
     }
+    if let baseMatch = supported.first(where: { $0.caseInsensitiveCompare(baseTag) == .orderedSame }) {
+      return baseMatch
+    }
+    let prefix: String = baseTag.lowercased() + "-"
+    return supported.first(where: { $0.lowercased().hasPrefix(prefix) })
   }
 
   private static func base(of tag: String) -> String {

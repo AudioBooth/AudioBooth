@@ -137,6 +137,7 @@ struct ContentView: View {
       }
     }
     .tabBarMinimizeBehavior(.onScrollDown)
+    .tabViewSearchActivation(.searchTabSelection)
     .tabViewBottomAccessory {
       Group {
         if let currentPlayer = playerManager.current {

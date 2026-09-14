@@ -230,12 +230,14 @@ private extension ReadAlongCoordinator {
   func buildIndex() async -> BookTextIndex? {
     status = .preparing(Self.modelDownloadShareOfPreparation)
 
+    let reportProgress: @MainActor (Double) -> Void = { [weak self] fraction in
+      let remaining = 1 - Self.modelDownloadShareOfPreparation
+      self?.status = .preparing(Self.modelDownloadShareOfPreparation + fraction * remaining)
+    }
+
     let build = Task.detached(priority: .userInitiated) { [publication] in
       await BookTextIndex.build(publication: publication) { fraction in
-        Task { @MainActor [weak self] in
-          let remaining = 1 - Self.modelDownloadShareOfPreparation
-          self?.status = .preparing(Self.modelDownloadShareOfPreparation + fraction * remaining)
-        }
+        Task { await reportProgress(fraction) }
       }
     }
 

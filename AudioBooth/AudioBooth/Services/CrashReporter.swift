@@ -11,10 +11,12 @@ final class CrashReporter {
     let installation = CrashInstallationStandard.shared
     let config = KSCrashConfiguration()
 
-    config.deadlockWatchdogInterval = 5.0
-    config.enableMemoryIntrospection = true
-    config.monitors = .all
-    config.enableSigTermMonitoring = true
+    config.enableMemoryIntrospection = false
+    config.monitors = MonitorType.all.subtracting(.watchdog)
+
+    #if targetEnvironment(simulator)
+    config.enableSwapCxaThrow = false
+    #endif
 
     let storeConfig = CrashReportStoreConfiguration()
     storeConfig.maxReportCount = 10
