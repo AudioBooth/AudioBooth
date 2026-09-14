@@ -59,22 +59,17 @@ final class NowPlayingManager {
 
   private func primeNowPlaying() {
     Task {
-      do {
-        let audioSession = AVAudioSession.sharedInstance()
-        guard !audioSession.secondaryAudioShouldBeSilencedHint else { return }
+      guard !AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint else { return }
 
-        try audioSession.setCategory(.playback, mode: .spokenAudio, policy: .longFormAudio)
-        try audioSession.setActive(true)
+      AudioSession.configure()
+      await AudioSession.activate()
 
-        let url = URL(string: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=")!
-        let player = AVPlayer(url: url)
-        player.allowsExternalPlayback = false
-        player.volume = 0
-        player.play()
-        try? await Task.sleep(for: .milliseconds(500))
-      } catch {
-        AppLogger.player.debug("Failed to prime Now Playing: \(error)")
-      }
+      let url = URL(string: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=")!
+      let player = AVPlayer(url: url)
+      player.allowsExternalPlayback = false
+      player.volume = 0
+      player.play()
+      try? await Task.sleep(for: .milliseconds(500))
     }
   }
 

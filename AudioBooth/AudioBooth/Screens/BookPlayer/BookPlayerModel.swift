@@ -328,8 +328,6 @@ final class BookPlayerModel: BookPlayer.Model {
     hasPlayedThisSession = true
 
     lastSyncedTime = mediaProgress.currentTime
-    configureAudioSession()
-    try? audioSession.setActive(true)
     player.resume()
 
     if let timerViewModel = timer as? TimerPickerSheetViewModel {
@@ -598,8 +596,6 @@ extension BookPlayerModel {
     player = nil
 
     PlaybackHistory.record(itemID: id, action: .pause, position: mediaProgress.currentTime)
-
-    try? audioSession.setActive(false)
 
     volumeObservation?.invalidate()
     volumeObservation = nil
@@ -909,8 +905,6 @@ extension BookPlayerModel {
       )
     }
 
-    configureAudioSession()
-
     nowPlaying.configure(
       player: player,
       chapters: chapters,
@@ -971,8 +965,6 @@ extension BookPlayerModel {
     player.volume = Float(userPreferences.volumeLevel)
 
     if pendingPlay {
-      configureAudioSession()
-      try? audioSession.setActive(true)
       player.resume()
       pendingPlay = false
     }
@@ -1191,17 +1183,6 @@ extension BookPlayerModel {
 }
 
 extension BookPlayerModel {
-  private func configureAudioSession() {
-    do {
-      let mix = userPreferences.mixWithOtherAudio && audioSession.secondaryAudioShouldBeSilencedHint
-      let options: AVAudioSession.CategoryOptions = mix ? [.mixWithOthers] : []
-      let policy: AVAudioSession.RouteSharingPolicy = mix ? .default : .longFormAudio
-      try audioSession.setCategory(.playback, mode: .spokenAudio, policy: policy, options: options)
-    } catch {
-      AppLogger.player.error("Failed to configure audio session: \(error)")
-    }
-  }
-
   private func handleAudioInterruption(_ notification: Notification) {
     guard let userInfo = notification.userInfo,
       let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
@@ -1230,7 +1211,6 @@ extension BookPlayerModel {
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")
         interruptionBeganAt = nil
-        try? audioSession.setActive(true)
         player?.resume()
       } else if let beganAt = interruptionBeganAt,
         Date().timeIntervalSince(beganAt) < 60 * 5,
@@ -1238,7 +1218,6 @@ extension BookPlayerModel {
       {
         AppLogger.player.info("Audio interruption ended - resuming playback (within 5 minutes)")
         interruptionBeganAt = nil
-        try? audioSession.setActive(true)
         player?.resume()
       } else {
         AppLogger.player.info("Audio interruption ended - not resuming")
@@ -1266,8 +1245,6 @@ extension BookPlayerModel {
     case .newDeviceAvailable, .override:
       guard isPlaying, interruptionBeganAt == nil, sessionManager.current != nil else { return }
       AppLogger.player.info("Audio route changed (\(reason.rawValue)) - re-activating session")
-      configureAudioSession()
-      try? audioSession.setActive(true)
       player?.resume()
 
     default:
@@ -1283,7 +1260,6 @@ extension BookPlayerModel {
     let wasPlaying = isPlaying
     player?.stop()
     player = nil
-    configureAudioSession()
 
     do {
       try setupAudioPlayer()

@@ -335,18 +335,10 @@ extension PlayerManager {
   }
 
   private func setupRemoteCommandCenter() {
-    do {
-      let audioSession = AVAudioSession.sharedInstance()
-      let otherAudioPlaying = audioSession.secondaryAudioShouldBeSilencedHint
-      let mix = userPreferences.mixWithOtherAudio && otherAudioPlaying
-      let options: AVAudioSession.CategoryOptions = mix ? [.mixWithOthers] : []
-      let policy: AVAudioSession.RouteSharingPolicy = mix ? .default : .longFormAudio
-      try audioSession.setCategory(.playback, mode: .spokenAudio, policy: policy, options: options)
-      if !mix, audioSession.isCarPlayConnected || !otherAudioPlaying {
-        try audioSession.setActive(true)
-      }
-    } catch {
-      AppLogger.player.error("Failed to configure audio session: \(error)")
+    let audioSession = AVAudioSession.sharedInstance()
+    let mix = AudioSession.configure()
+    if !mix, audioSession.isCarPlayConnected || !audioSession.secondaryAudioShouldBeSilencedHint {
+      Task { await AudioSession.activate() }
     }
 
     let commandCenter = MPRemoteCommandCenter.shared()

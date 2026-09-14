@@ -35,6 +35,7 @@ struct VolumeButtonObserver: UIViewRepresentable {
     var onVolumeDown: () -> Void
     private weak var volumeView: MPVolumeView?
     private var observer: NSKeyValueObservation?
+    private var startTask: Task<Void, Never>?
     private var baseVolume: Float = 0.5
 
     private static let volumeStep: Float = 1.0 / 16.0
@@ -47,23 +48,29 @@ struct VolumeButtonObserver: UIViewRepresentable {
     func start(volumeView: MPVolumeView) {
       self.volumeView = volumeView
 
-      let session = AVAudioSession.sharedInstance()
-      try? session.setActive(true)
+      startTask?.cancel()
+      startTask = Task { [weak self] in
+        await AudioSession.activate()
+        guard let self, !Task.isCancelled else { return }
 
-      baseVolume = clampedToStep(session.outputVolume)
-      if baseVolume != session.outputVolume {
-        setSystemVolume(baseVolume)
-      }
+        let session = AVAudioSession.sharedInstance()
+        baseVolume = clampedToStep(session.outputVolume)
+        if baseVolume != session.outputVolume {
+          setSystemVolume(baseVolume)
+        }
 
-      observer = session.observe(\.outputVolume, options: [.new]) { [weak self] _, change in
-        guard let self, let newVolume = change.newValue else { return }
-        Task { @MainActor in
-          self.handleVolumeChange(newVolume)
+        observer = session.observe(\.outputVolume, options: [.new]) { [weak self] _, change in
+          guard let self, let newVolume = change.newValue else { return }
+          Task { @MainActor in
+            self.handleVolumeChange(newVolume)
+          }
         }
       }
     }
 
     func stop() {
+      startTask?.cancel()
+      startTask = nil
       observer?.invalidate()
       observer = nil
     }

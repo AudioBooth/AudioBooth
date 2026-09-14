@@ -42,6 +42,7 @@ final class AudioPlayer {
   private var decodeRetryCount = 0
   private var decodeRetryTime: TimeInterval?
   private var pendingSeekTarget: TimeInterval?
+  private var resumeTask: Task<Void, Never>?
 
   let events = PassthroughSubject<Event, Never>()
 
@@ -109,6 +110,7 @@ final class AudioPlayer {
 
   func pause() {
     wantsPlayback = false
+    resumeTask?.cancel()
     player.pause()
   }
 
@@ -120,29 +122,36 @@ final class AudioPlayer {
 
     wantsPlayback = true
 
-    if isPlaying {
-      events.send(.stateChanged(.playing))
-      return
-    }
+    AudioSession.configure()
 
-    if player.currentItem == nil || player.currentItem?.status == .failed {
-      let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
-      currentTrackIndex = trackIndex
-      loadQueue(from: trackIndex, seekTo: offset, autoPlay: true)
-    } else {
-      if pendingSeekTarget != mediaProgress.currentTime {
-        seek(to: mediaProgress.currentTime)
+    resumeTask?.cancel()
+    resumeTask = Task {
+      await AudioSession.activate()
+      guard !Task.isCancelled, wantsPlayback else { return }
+
+      if isPlaying {
+        events.send(.stateChanged(.playing))
+      } else if player.currentItem == nil || player.currentItem?.status == .failed {
+        let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
+        currentTrackIndex = trackIndex
+        loadQueue(from: trackIndex, seekTo: offset, autoPlay: true)
+      } else {
+        if pendingSeekTarget != mediaProgress.currentTime {
+          seek(to: mediaProgress.currentTime)
+        }
+        player.play()
       }
-      player.play()
     }
   }
 
   func stop() {
     wantsPlayback = false
+    resumeTask?.cancel()
     pendingSeekTarget = nil
     removeTimeObserver()
     player.pause()
     player.removeAllItems()
+    AudioSession.deactivate()
     events.send(.stateChanged(.stopped))
   }
 
