@@ -81,7 +81,7 @@ struct ContinueListeningView: View {
     }
   }
 
-  private func sectionHeader(_ title: String) -> some View {
+  private func sectionHeader(_ title: LocalizedStringKey) -> some View {
     Text(title)
       .font(.caption)
       .fontWeight(.semibold)

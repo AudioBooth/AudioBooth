@@ -914,7 +914,7 @@ extension PodcastDetailsView.Model {
   enum EpisodeFilter: String, CaseIterable {
     case all, incomplete, complete, inProgress
 
-    var title: String {
+    var title: LocalizedStringResource {
       switch self {
       case .all: "All"
       case .incomplete: "Incomplete"
@@ -927,7 +927,7 @@ extension PodcastDetailsView.Model {
   enum EpisodeSort: String, CaseIterable {
     case pubDate, title, season, episode
 
-    var title: String {
+    var title: LocalizedStringResource {
       switch self {
       case .pubDate: "Pub Date"
       case .title: "Title"

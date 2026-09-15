@@ -367,7 +367,7 @@ enum AutoDownloadMode: String, CaseIterable, Codable {
   case wifiOnly
   case wifiAndCellular
 
-  var displayName: String {
+  var displayName: LocalizedStringResource {
     switch self {
     case .off: "Off"
     case .wifiOnly: "Wi-Fi Only"

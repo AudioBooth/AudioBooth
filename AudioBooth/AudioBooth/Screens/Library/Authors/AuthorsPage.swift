@@ -236,7 +236,7 @@ extension AuthorsPage {
 }
 
 extension AuthorsService.SortBy {
-  var displayTitle: String {
+  var displayTitle: LocalizedStringResource {
     switch self {
     case .name: "First Last"
     case .lastFirst: "Last First"

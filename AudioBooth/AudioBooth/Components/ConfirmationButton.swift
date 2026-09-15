@@ -2,11 +2,15 @@ import SwiftUI
 
 struct ConfirmationButton<Label: View>: View {
   struct Confirmation {
-    let title: String
-    let message: String?
-    let action: String
+    let title: LocalizedStringResource
+    let message: LocalizedStringResource?
+    let action: LocalizedStringResource
 
-    init(title: String, message: String? = nil, action: String? = nil) {
+    init(
+      title: LocalizedStringResource,
+      message: LocalizedStringResource? = nil,
+      action: LocalizedStringResource? = nil
+    ) {
       self.title = title
       self.message = message
       self.action = action ?? title
@@ -34,8 +38,8 @@ struct ConfirmationButton<Label: View>: View {
 
   var body: some View {
     Button(role: role, action: { isPresented = true }, label: label)
-      .confirmationDialog(confirmation.title, isPresented: $isPresented, titleVisibility: .visible) {
-        Button(confirmation.action, role: .destructive, action: action)
+      .confirmationDialog(Text(confirmation.title), isPresented: $isPresented, titleVisibility: .visible) {
+        Button(role: .destructive, action: action) { Text(confirmation.action) }
         Button("Cancel", role: .cancel) {}
       } message: {
         if let message = confirmation.message { Text(message) }

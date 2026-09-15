@@ -11,12 +11,12 @@ final class SectionDetailViewModel: SectionDetailView.Model {
     state = .loading
 
     guard connectivityManager.isReachable else {
-      state = .error("iPhone not reachable.\nOpen AudioBooth on your iPhone and try again.")
+      state = .error(String(localized: "iPhone not reachable.\nOpen AudioBooth on your iPhone and try again."))
       return
     }
 
     guard let books = await connectivityManager.fetchSectionBooks(sectionID: id) else {
-      state = .error("Failed to load books.")
+      state = .error(String(localized: "Failed to load books."))
       return
     }
 

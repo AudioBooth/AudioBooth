@@ -503,7 +503,7 @@ extension TimerPickerSheet {
 
       var id: String { rawValue }
 
-      var displayName: String {
+      var displayName: LocalizedStringResource {
         switch self {
         case .timer: "Timer"
         case .alarm: "Alarm"

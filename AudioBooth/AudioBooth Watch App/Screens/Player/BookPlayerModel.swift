@@ -143,7 +143,8 @@ final class BookPlayerModel: PlayerView.Model {
         isNetworkError = false
       }
       playbackState = .error(retryable: isNetworkError)
-      errorMessage = isNetworkError ? "Network error. Tap to retry." : "Playback failed."
+      errorMessage =
+        isNetworkError ? String(localized: "Network error. Tap to retry.") : String(localized: "Playback failed.")
     }
   }
 
@@ -209,7 +210,7 @@ final class BookPlayerModel: PlayerView.Model {
     guard let info = await connectivityManager.startSession(bookID: bookID) else {
       AppLogger.player.error("Failed to start session for streaming")
       playbackState = .error(retryable: true)
-      errorMessage = "Failed to connect. Tap to retry."
+      errorMessage = String(localized: "Failed to connect. Tap to retry.")
       return
     }
 
@@ -345,7 +346,7 @@ final class BookPlayerModel: PlayerView.Model {
     self.localBook = nil
     self.isLocal = false
 
-    errorMessage = "Download was corrupted. Streaming instead."
+    errorMessage = String(localized: "Download was corrupted. Streaming instead.")
 
     await startSessionAndPlay()
   }

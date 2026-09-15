@@ -14,7 +14,7 @@ enum EbookTapAction: String, CaseIterable, Identifiable, Codable {
 
   var id: String { rawValue }
 
-  var label: String {
+  var label: LocalizedStringResource {
     switch self {
     case .previousPage: "Previous Page"
     case .nextPage: "Next Page"
@@ -157,7 +157,7 @@ class EbookReaderPreferences: ObservableObject {
 
     var id: String { rawValue }
 
-    var label: String {
+    var label: LocalizedStringResource {
       switch self {
       case .auto: "Auto"
       case .one: "1 Column"
