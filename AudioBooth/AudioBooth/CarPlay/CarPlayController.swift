@@ -13,7 +13,9 @@ class CarPlayController {
     nowPlaying = .init(interfaceController: interfaceController)
     tabBar = .init(interfaceController: interfaceController, nowPlaying: nowPlaying)
 
-    tabBar.updateTemplate()
+    tabBar.updateTemplate { [weak self] in
+      self?.showNowPlayingIfNeeded()
+    }
   }
 
   func showNowPlayingIfNeeded() {

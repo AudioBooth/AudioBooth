@@ -8,6 +8,7 @@ final class CarPlayTabBar: NSObject {
   private var tabs: [CPTemplate: CarPlayPageProtocol] = [:]
   private weak var nowPlaying: CarPlayNowPlaying?
   private var cancellables = Set<AnyCancellable>()
+  private var signature: String?
   private(set) var template: CPTemplate
 
   init(interfaceController: CPInterfaceController, nowPlaying: CarPlayNowPlaying) {
@@ -34,8 +35,20 @@ final class CarPlayTabBar: NSObject {
     return emptyTemplate
   }
 
-  func updateTemplate() {
+  func updateTemplate(completion: (() -> Void)? = nil) {
     guard let nowPlaying else { return }
+
+    let libraries = Audiobookshelf.shared.libraries
+    let newSignature = [
+      Audiobookshelf.shared.authentication.server?.id,
+      libraries.current?.id,
+      libraries.current?.mediaType.rawValue,
+      libraries.libraries.map(\.id).joined(separator: ","),
+    ]
+    .map { $0 ?? "" }
+    .joined(separator: "|")
+
+    guard newSignature != signature else { return }
 
     let newTemplate: CPTemplate
 
@@ -71,7 +84,10 @@ final class CarPlayTabBar: NSObject {
     }
 
     template = newTemplate
-    interfaceController.setRootTemplate(newTemplate, animated: false, completion: nil)
+    signature = newSignature
+    interfaceController.setRootTemplate(newTemplate, animated: false) { _, _ in
+      completion?()
+    }
   }
 }
 

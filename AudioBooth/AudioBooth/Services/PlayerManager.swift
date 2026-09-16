@@ -62,7 +62,7 @@ final class PlayerManager: ObservableObject, Sendable {
       .store(in: &cancellables)
   }
 
-  func restoreLastPlayer() async {
+  func restoreLastPlayer() {
     guard
       current == nil,
       ModelContextProvider.shared.activeServerID != nil,

@@ -36,7 +36,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private var recoveryAttempts = 0
   private var maxRecoveryAttempts = 3
   private var isRecovering = false
-  private var interruptionBeganAt: Date?
+  private var interruption: (beganAt: Date, wasRouteDisconnect: Bool)?
   private var positionedAt: Date?
   private var positionSyncCheck: Task<Void, Never>?
   private var positionSyncShownAt: TimeInterval?
@@ -260,7 +260,7 @@ final class BookPlayerModel: BookPlayer.Model {
 
   override func onPauseTapped() {
     pendingPlay = false
-    interruptionBeganAt = nil
+    interruption = nil
     player?.pause()
   }
 
@@ -1194,34 +1194,36 @@ extension BookPlayerModel {
     switch type {
     case .began:
       AppLogger.player.info("Audio interruption began")
-      interruptionBeganAt = isPlaying ? Date() : nil
+      let reasonValue = userInfo[AVAudioSessionInterruptionReasonKey] as? UInt
+      let reason = reasonValue.flatMap(AVAudioSession.InterruptionReason.init(rawValue:))
+      interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
 
     case .ended:
       guard sessionManager.current != nil else {
         AppLogger.player.info("Audio interruption ended - not resuming (no active session)")
-        interruptionBeganAt = nil
+        interruption = nil
         return
       }
 
-      applySmartRewind(reason: .onInterruption)
-
-      if interruptionBeganAt != nil,
+      if let interruption, !interruption.wasRouteDisconnect,
         let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt,
         AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")
-        interruptionBeganAt = nil
+        self.interruption = nil
+        applySmartRewind(reason: .onInterruption)
         player?.resume()
-      } else if let beganAt = interruptionBeganAt,
-        Date().timeIntervalSince(beganAt) < 60 * 5,
+      } else if let interruption, !interruption.wasRouteDisconnect,
+        Date().timeIntervalSince(interruption.beganAt) < 60 * 5,
         !audioSession.secondaryAudioShouldBeSilencedHint
       {
         AppLogger.player.info("Audio interruption ended - resuming playback (within 5 minutes)")
-        interruptionBeganAt = nil
+        self.interruption = nil
+        applySmartRewind(reason: .onInterruption)
         player?.resume()
       } else {
         AppLogger.player.info("Audio interruption ended - not resuming")
-        interruptionBeganAt = nil
+        interruption = nil
       }
 
     @unknown default:
@@ -1240,10 +1242,10 @@ extension BookPlayerModel {
     switch reason {
     case .oldDeviceUnavailable:
       AppLogger.player.info("Audio route changed (old device unavailable) - pausing")
-      player?.pause()
+      onPauseTapped()
 
     case .newDeviceAvailable, .override:
-      guard isPlaying, interruptionBeganAt == nil, sessionManager.current != nil else { return }
+      guard isPlaying, interruption == nil, sessionManager.current != nil else { return }
       AppLogger.player.info("Audio route changed (\(reason.rawValue)) - re-activating session")
       player?.resume()
 
@@ -1275,15 +1277,15 @@ extension BookPlayerModel {
   private func handleVolumeChange(from old: Float, to new: Float) {
     if new == 0 && old > 0 {
       AppLogger.player.info("Volume dropped to 0 - pausing playback")
-      interruptionBeganAt = isPlaying ? Date() : nil
+      interruption = isPlaying ? (Date(), false) : nil
       player?.pause()
-    } else if new > 0 && old == 0, let beganAt = interruptionBeganAt {
-      if Date().timeIntervalSince(beganAt) < 60 * 5, sessionManager.current != nil {
+    } else if new > 0 && old == 0, let interruption {
+      if Date().timeIntervalSince(interruption.beganAt) < 60 * 5, sessionManager.current != nil {
         AppLogger.player.info("Volume restored from 0 - resuming playback")
         applySmartRewind(reason: .onInterruption)
         player?.resume()
       }
-      interruptionBeganAt = nil
+      self.interruption = nil
     }
   }
 }

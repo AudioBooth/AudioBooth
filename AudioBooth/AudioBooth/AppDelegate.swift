@@ -69,9 +69,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     let player: PlayerManagerProtocol = PlayerManager.shared
     AppDependencyManager.shared.add(dependency: player)
 
+    PlayerManager.shared.restoreLastPlayer()
+
     Task { @MainActor in
       await DownloadManager.shared.reattachInFlightDownloads()
-      await PlayerManager.shared.restoreLastPlayer()
       await Audiobookshelf.shared.authentication.checkServersHealth()
       await StorageManager.shared.cleanupUnusedDownloads()
       DownloadManager.shared.resumeOutstandingRequests()
