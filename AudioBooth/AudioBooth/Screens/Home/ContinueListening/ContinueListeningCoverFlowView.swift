@@ -6,6 +6,7 @@ struct ContinueListeningCoverFlowView: View {
   @ObservedObject private var preferences = UserPreferences.shared
 
   @ScaledMetric(relativeTo: .title) private var baseCoverSize: CGFloat = 150
+  @State private var activePlaylistModel: CollectionSelectorSheet.Model?
 
   private let coordinateSpaceName = "coverFlowScroll"
 
@@ -21,6 +22,16 @@ struct ContinueListeningCoverFlowView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
         .animation(.smooth(duration: 0.25), value: model.focusedID)
+    }
+    .sheet(
+      isPresented: Binding(
+        get: { activePlaylistModel != nil },
+        set: { if !$0 { activePlaylistModel = nil } }
+      )
+    ) {
+      if let sheetModel = activePlaylistModel {
+        CollectionSelectorSheet(model: sheetModel)
+      }
     }
   }
 
@@ -107,6 +118,24 @@ struct ContinueListeningCoverFlowView: View {
     .menuOrder(.priority)
     .accessibilityLabel(accessibilityLabel(for: item))
     .bookCardAccessibilityActions(model: item)
+    .sheet(
+      item: Binding(
+        get: { item.contextMenu?.collectionSelector },
+        set: { item.contextMenu?.collectionSelector = $0 }
+      )
+    ) { sheetModel in
+      CollectionSelectorSheet(model: sheetModel)
+    }
+    .onChange(of: item.episodeContextMenu?.showingPlaylistSheet) { _, showing in
+      guard showing == true else { return }
+      item.episodeContextMenu?.showingPlaylistSheet = false
+      guard let podcastID = item.podcastID else { return }
+      activePlaylistModel = CollectionSelectorSheetModel(
+        bookID: podcastID,
+        episodeID: item.id,
+        mode: .playlists
+      )
+    }
     .onAppear(perform: item.onAppear)
   }
 
