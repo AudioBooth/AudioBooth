@@ -154,7 +154,11 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
   }
 
   override func onAddToPlaylistTapped() {
-    showingPlaylistSheet = true
+    collectionSelector = CollectionSelectorSheetModel(
+      bookID: podcastID,
+      episodeID: episodeID,
+      mode: .playlists
+    )
   }
 
   override func onResetProgressTapped() {

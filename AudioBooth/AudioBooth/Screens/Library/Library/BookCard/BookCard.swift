@@ -25,14 +25,7 @@ struct BookCard: View {
     }
     .menuOrder(.priority)
     .bookCardAccessibilityActions(model: model)
-    .sheet(
-      item: Binding(
-        get: { model.contextMenu?.collectionSelector },
-        set: { model.contextMenu?.collectionSelector = $0 }
-      )
-    ) { sheetModel in
-      CollectionSelectorSheet(model: sheetModel)
-    }
+    .bookCardCollectionSelector(model: model)
     .onAppear(perform: model.onAppear)
   }
 
@@ -71,14 +64,7 @@ struct BookListCard: View {
       }
       .menuOrder(.priority)
       .bookCardAccessibilityActions(model: model)
-      .sheet(
-        item: Binding(
-          get: { model.contextMenu?.collectionSelector },
-          set: { model.contextMenu?.collectionSelector = $0 }
-        )
-      ) { sheetModel in
-        CollectionSelectorSheet(model: sheetModel)
-      }
+      .bookCardCollectionSelector(model: model)
       .onAppear(perform: model.onAppear)
   }
 

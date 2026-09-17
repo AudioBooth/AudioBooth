@@ -85,7 +85,7 @@ extension PodcastEpisodeContextMenu {
 
     var downloadState: DownloadManager.DownloadState
     var actions: Actions
-    var showingPlaylistSheet = false
+    var collectionSelector: CollectionSelectorSheet.Model?
 
     func onAppear() {}
     func onPlayTapped() {}
