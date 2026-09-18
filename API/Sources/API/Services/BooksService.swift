@@ -83,27 +83,4 @@ public final class BooksService {
       throw error
     }
   }
-
-  public func updateEbookProgress(bookID: String, progress: Double, location: String?) async throws {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
-    struct ProgressUpdate: Encodable {
-      let ebookProgress: Double
-      let ebookLocation: String?
-    }
-
-    let body = ProgressUpdate(ebookProgress: progress, ebookLocation: location)
-
-    let request = NetworkRequest<Data>(
-      path: "/api/me/progress/\(bookID)",
-      method: .patch,
-      body: body
-    )
-
-    _ = try await networkService.send(request)
-  }
 }

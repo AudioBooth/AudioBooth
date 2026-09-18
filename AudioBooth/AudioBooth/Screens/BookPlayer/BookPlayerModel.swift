@@ -1392,7 +1392,7 @@ extension BookPlayerModel {
       Task {
         try? MediaProgress.markAsFinished(for: episodeID)
         let episodeProgressID = "\(podcastID)/\(episodeID)"
-        try? await audiobookshelf.libraries.markAsFinished(bookID: episodeProgressID)
+        try? await audiobookshelf.progress.markAsFinished(bookID: episodeProgressID)
       }
     }
 

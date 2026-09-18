@@ -373,7 +373,7 @@ extension OfflineListViewModel {
           let podcastID = episode.podcast?.podcastID ?? ""
           let episodeProgressID = "\(podcastID)/\(episode.episodeID)"
           try MediaProgress.markAsFinished(for: episode.episodeID)
-          try await audiobookshelf.libraries.markAsFinished(bookID: episodeProgressID)
+          try await audiobookshelf.progress.markAsFinished(bookID: episodeProgressID)
         } catch {
           AppLogger.viewModel.error("Failed to mark episode \(id) as finished: \(error)")
         }
@@ -406,13 +406,13 @@ extension OfflineListViewModel {
           if let progress, let progressIDValue = progress.id {
             progressID = progressIDValue
           } else {
-            let apiProgress = try await audiobookshelf.libraries.fetchMediaProgress(
+            let apiProgress = try await audiobookshelf.progress.fetch(
               bookID: episodeProgressID
             )
             progressID = apiProgress.id
           }
 
-          try await audiobookshelf.libraries.resetBookProgress(progressID: progressID)
+          try await audiobookshelf.progress.reset(progressID: progressID)
 
           if let progress {
             try progress.delete()

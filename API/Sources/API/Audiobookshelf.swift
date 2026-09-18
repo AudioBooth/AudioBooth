@@ -13,6 +13,7 @@ public final class Audiobookshelf {
   public lazy var filterData = FilterDataService(audiobookshelf: self)
   public lazy var sessions = SessionService(audiobookshelf: self)
   public lazy var books = BooksService(audiobookshelf: self)
+  public lazy var progress = ProgressService(audiobookshelf: self)
   public lazy var podcasts = PodcastsService(audiobookshelf: self)
   public lazy var series = SeriesService(audiobookshelf: self)
   public lazy var authors = AuthorsService(audiobookshelf: self)

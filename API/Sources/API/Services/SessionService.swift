@@ -178,29 +178,6 @@ public final class SessionService {
     }
   }
 
-  public func removeFromContinueListening(_ progressID: String) async throws {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
-    struct Response: Codable {}
-
-    let request = NetworkRequest<Response>(
-      path: "/api/me/progress/\(progressID)/remove-from-continue-listening",
-      method: .get
-    )
-
-    do {
-      _ = try await networkService.send(request)
-    } catch {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to remove from continue listening: \(error.localizedDescription)"
-      )
-    }
-  }
-
   public func syncLocalSession(_ session: SessionSync) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(

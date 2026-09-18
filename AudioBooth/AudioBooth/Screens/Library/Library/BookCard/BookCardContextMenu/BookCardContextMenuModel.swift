@@ -298,7 +298,7 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
     else { return }
 
     Task {
-      try? await Audiobookshelf.shared.sessions.removeFromContinueListening(id)
+      try? await Audiobookshelf.shared.progress.removeFromContinueListening(id)
       onRemoveFromContinueListening()
     }
   }

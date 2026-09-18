@@ -14,7 +14,7 @@ extension BookActionable {
   public func markAsFinished() async throws {
     try MediaProgress.markAsFinished(for: bookID)
 
-    try await Audiobookshelf.shared.libraries.markAsFinished(bookID: bookID)
+    try await Audiobookshelf.shared.progress.markAsFinished(bookID: bookID)
 
     if UserPreferences.shared.removeDownloadOnCompletion {
       if DownloadManager.shared.downloadStates[bookID] == .downloaded, PlayerManager.shared.current?.id != bookID {
@@ -32,13 +32,13 @@ extension BookActionable {
     if let progress, let id = progress.id {
       progressID = id
     } else {
-      let apiProgress = try await Audiobookshelf.shared.libraries.fetchMediaProgress(
+      let apiProgress = try await Audiobookshelf.shared.progress.fetch(
         bookID: bookID
       )
       progressID = apiProgress.id
     }
 
-    try await Audiobookshelf.shared.libraries.resetBookProgress(progressID: progressID)
+    try await Audiobookshelf.shared.progress.reset(progressID: progressID)
 
     if let progress {
       try progress.delete()

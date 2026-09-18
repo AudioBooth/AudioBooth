@@ -9,7 +9,30 @@ struct SessionsContent: View {
     VStack(alignment: .leading, spacing: 0) {
       ForEach(Array(model.sessions.enumerated()), id: \.element.id) { index, session in
         let showDate = index == 0 || model.sessions[index - 1].dateKey != session.dateKey
-        sessionRow(session, showDate: showDate, isLast: index == model.sessions.count - 1)
+        Button(action: { model.onSessionTapped(session) }) {
+          sessionRow(session, showDate: showDate, isLast: index == model.sessions.count - 1)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Restores your progress to this position")
+        .confirmationDialog(
+          "Restore Progress",
+          isPresented: Binding(
+            get: { model.pendingRestore?.id == session.id },
+            set: { if !$0 { model.onRestoreCancelled() } }
+          ),
+          titleVisibility: .visible
+        ) {
+          Button("Restore Progress") {
+            model.onRestoreConfirmed(session)
+          }
+          Button("Cancel", role: .cancel) {
+            model.onRestoreCancelled()
+          }
+        } message: {
+          Text("Your progress for this book will be set to \(session.positionText) (\(session.progressText)).")
+        }
       }
 
       if model.hasMorePages {
@@ -81,7 +104,7 @@ struct SessionsContent: View {
           ProgressView(value: session.progress)
             .tint(.accentColor)
 
-          Text(session.progress.formatted(.percent.precision(.fractionLength(0))))
+          Text(verbatim: session.progressText)
             .font(.caption)
             .monospacedDigit()
         }
@@ -111,6 +134,12 @@ extension SessionsContent {
     let timeRange: String
     let durationText: String
     let progress: Double
+    let currentTime: TimeInterval
+    let positionText: String
+
+    var progressText: String {
+      progress.formatted(.percent.precision(.fractionLength(0)))
+    }
   }
 
   @Observable
@@ -118,8 +147,12 @@ extension SessionsContent {
     var sessions: [Session]
     var hasMorePages: Bool
     var isLoadingMore: Bool
+    var pendingRestore: Session?
 
     func onLoadMore() {}
+    func onSessionTapped(_ session: Session) { pendingRestore = session }
+    func onRestoreConfirmed(_ session: Session) {}
+    func onRestoreCancelled() { pendingRestore = nil }
 
     init(
       sessions: [Session] = [],

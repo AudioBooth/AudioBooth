@@ -1,6 +1,7 @@
 import API
 import Foundation
 import Logging
+import Models
 
 final class SessionsContentModel: SessionsContent.Model {
   private let bookID: String
@@ -25,6 +26,37 @@ final class SessionsContentModel: SessionsContent.Model {
       sessions: Self.mapSessions(sessions, bookDuration: bookDuration),
       hasMorePages: currentPage < numPages - 1
     )
+  }
+
+  override func onRestoreConfirmed(_ session: SessionsContent.Session) {
+    pendingRestore = nil
+
+    let sessionDuration = allSessions.first(where: { $0.id == session.id })?.duration ?? 0
+    let duration = bookDuration > 0 ? bookDuration : sessionDuration
+    let progress = duration > 0 ? min(1, session.currentTime / duration) : 0
+
+    Task {
+      do {
+        try await Audiobookshelf.shared.progress.update(
+          bookID: bookID,
+          currentTime: session.currentTime,
+          duration: duration
+        )
+
+        try MediaProgress.updateProgress(
+          for: bookID,
+          currentTime: session.currentTime,
+          duration: duration,
+          progress: progress
+        )
+
+        if let player = PlayerManager.shared.current as? BookPlayerModel, player.id == bookID {
+          player.seekToTime(session.currentTime)
+        }
+      } catch {
+        AppLogger.viewModel.error("Failed to restore progress from session: \(error)")
+      }
+    }
   }
 
   override func onLoadMore() {
@@ -96,7 +128,9 @@ final class SessionsContentModel: SessionsContent.Model {
           year: year,
           timeRange: "\(timeFormatter.string(from: startDate)) – \(timeFormatter.string(from: endDate))",
           durationText: formatDuration(timeListening),
-          progress: progress
+          progress: progress,
+          currentTime: session.currentTime,
+          positionText: formatDuration(session.currentTime)
         )
       }
   }

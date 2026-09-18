@@ -70,12 +70,12 @@ final class PodcastEpisodeDetailViewModel: PodcastEpisodeDetailView.Model {
           if let progress, let id = progress.id {
             progressID = id
           } else {
-            let apiProgress = try await Audiobookshelf.shared.libraries.fetchMediaProgress(
+            let apiProgress = try await Audiobookshelf.shared.progress.fetch(
               bookID: episodeProgressID
             )
             progressID = apiProgress.id
           }
-          try await Audiobookshelf.shared.libraries.resetBookProgress(progressID: progressID)
+          try await Audiobookshelf.shared.progress.reset(progressID: progressID)
           if let progress {
             try progress.delete()
           }
@@ -83,7 +83,7 @@ final class PodcastEpisodeDetailViewModel: PodcastEpisodeDetailView.Model {
           self.progress = 0
         } else {
           try MediaProgress.markAsFinished(for: episodeID)
-          try await Audiobookshelf.shared.libraries.markAsFinished(bookID: episodeProgressID)
+          try await Audiobookshelf.shared.progress.markAsFinished(bookID: episodeProgressID)
           isCompleted = true
           self.progress = 1.0
         }

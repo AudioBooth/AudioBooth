@@ -468,7 +468,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     do {
       try MediaProgress.markAsFinished(for: bookID)
-      try await audiobookshelf.libraries.markAsFinished(bookID: bookID)
+      try await audiobookshelf.progress.markAsFinished(bookID: bookID)
     } catch {
       AppLogger.viewModel.error("Failed to mark ebook as finished: \(error)")
     }
@@ -600,10 +600,10 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     Task {
       do {
-        try await audiobookshelf.books.updateEbookProgress(
+        try await audiobookshelf.progress.update(
           bookID: bookID,
-          progress: progress,
-          location: ebookLocation
+          ebookProgress: progress,
+          ebookLocation: ebookLocation
         )
         AppLogger.viewModel.debug("Synced ebook progress: \(progress)")
       } catch {

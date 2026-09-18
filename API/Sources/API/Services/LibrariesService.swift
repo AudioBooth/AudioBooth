@@ -193,54 +193,6 @@ public final class LibrariesService: ObservableObject {
     }
   }
 
-  public func markAsFinished(bookID: String) async throws {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
-    struct UpdateFinishedStatusRequest: Codable {
-      let isFinished: Bool
-    }
-
-    let request = NetworkRequest<Data>(
-      path: "/api/me/progress/\(bookID)",
-      method: .patch,
-      body: UpdateFinishedStatusRequest(isFinished: true)
-    )
-
-    do {
-      _ = try await networkService.send(request)
-    } catch {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to update book finished status: \(error.localizedDescription)"
-      )
-    }
-  }
-
-  public func fetchMediaProgress(bookID: String) async throws -> User.MediaProgress {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
-    let request = NetworkRequest<User.MediaProgress>(
-      path: "/api/me/progress/\(bookID)",
-      method: .get
-    )
-
-    do {
-      let response = try await networkService.send(request)
-      return response.value
-    } catch {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to fetch media progress: \(error.localizedDescription)"
-      )
-    }
-  }
-
   public func fetchRecentEpisodes(
     libraryID: String? = nil,
     limit: Int = 50,
@@ -277,27 +229,6 @@ public final class LibrariesService: ObservableObject {
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Failed to fetch recent episodes: \(error.localizedDescription)"
-      )
-    }
-  }
-
-  public func resetBookProgress(progressID: String) async throws {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
-    let request = NetworkRequest<Data>(
-      path: "/api/me/progress/\(progressID)",
-      method: .delete
-    )
-
-    do {
-      _ = try await networkService.send(request)
-    } catch {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to reset book progress: \(error.localizedDescription)"
       )
     }
   }
