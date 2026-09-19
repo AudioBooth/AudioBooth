@@ -16,9 +16,13 @@ final class PlayerManager: ObservableObject, Sendable {
   @Published var current: BookPlayer.Model? {
     didSet {
       if let current {
-        UserDefaults.standard.set(current.id, forKey: Self.currentIDKey)
-      } else {
-        UserDefaults.standard.removeObject(forKey: Self.currentIDKey)
+        guard
+          let library = Audiobookshelf.shared.libraries.current,
+          library.mediaType == (current.podcastID == nil ? .book : .podcast)
+        else { return }
+        currentIDsByLibrary[library.id] = current.id
+      } else if let oldID = oldValue?.id {
+        currentIDsByLibrary = currentIDsByLibrary.filter { $0.value != oldID }
       }
     }
   }
@@ -37,6 +41,16 @@ final class PlayerManager: ObservableObject, Sendable {
 
   private var cancellables = Set<AnyCancellable>()
   private var serverID: String?
+
+  private var currentIDsByLibrary: [String: String] {
+    get {
+      let storage = Audiobookshelf.shared.authentication.server?.storage
+      return storage?.dictionary(forKey: Self.currentIDKey) as? [String: String] ?? [:]
+    }
+    set {
+      Audiobookshelf.shared.authentication.server?.storage.set(newValue, forKey: Self.currentIDKey)
+    }
+  }
 
   private init() {
     loadQueue()
@@ -66,14 +80,49 @@ final class PlayerManager: ObservableObject, Sendable {
     guard
       current == nil,
       ModelContextProvider.shared.activeServerID != nil,
-      let savedID = UserDefaults.standard.string(forKey: Self.currentIDKey)
+      let libraryID = Audiobookshelf.shared.libraries.current?.id
     else {
       return
     }
 
-    if let book = try? LocalBook.fetch(bookID: savedID) {
+    if let legacyID = UserDefaults.standard.string(forKey: Self.currentIDKey) {
+      UserDefaults.standard.removeObject(forKey: Self.currentIDKey)
+      restore(legacyID)
+    } else if let savedID = currentIDsByLibrary[libraryID] {
+      restore(savedID)
+    }
+  }
+
+  func resumeLastPlayed(in libraryID: String) async throws {
+    guard ModelContextProvider.shared.activeServerID != nil else {
+      throw ResumePlaybackError.couldNotStart
+    }
+
+    guard let itemID = currentIDsByLibrary[libraryID] else {
+      throw ResumePlaybackError.nothingPlayed
+    }
+
+    if Audiobookshelf.shared.libraries.current?.id != libraryID,
+      let library = Audiobookshelf.shared.libraries.libraries.first(where: { $0.id == libraryID })
+    {
+      Audiobookshelf.shared.libraries.current = library
+    }
+
+    if current?.id != itemID {
+      restore(itemID)
+    }
+
+    guard current?.id == itemID else {
+      throw ResumePlaybackError.couldNotStart
+    }
+
+    play()
+  }
+
+  private func restore(_ itemID: String) {
+    if let book = try? LocalBook.fetch(bookID: itemID) {
       setCurrent(book)
-    } else if let episode = try? LocalEpisode.fetch(episodeID: savedID) {
+    } else if let episode = try? LocalEpisode.fetch(episodeID: itemID) {
       setCurrent(episode)
     }
   }

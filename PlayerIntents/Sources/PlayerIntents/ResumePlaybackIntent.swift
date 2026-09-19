@@ -2,8 +2,8 @@ import AppIntents
 import Foundation
 
 public struct ResumePlaybackIntent: AudioPlaybackIntent {
-  public static let title: LocalizedStringResource = "Resume last played audiobook"
-  public static let description = IntentDescription("Resumes the last played audiobook.")
+  public static let title: LocalizedStringResource = "Resume last played"
+  public static let description = IntentDescription("Resumes the last played audiobook or podcast episode.")
   public static let openAppWhenRun = false
 
   @Dependency

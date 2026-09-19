@@ -2502,483 +2502,6 @@
         }
       }
     },
-    "Attributes" : {
-      "comment" : "A section header for book attribute filters such as Explicit and Abridged.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egenskaber"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eigenschaften"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atributos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attributs"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attributi"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Атрибуты"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "属性"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "屬性"
-          }
-        }
-      }
-    },
-    "Filter By" : {
-      "comment" : "A section header above the list of filter categories to choose from.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtrer efter"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtern nach"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtrar por"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtrer par"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtra per"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Фильтровать по"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "筛选方式"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "篩選方式"
-          }
-        }
-      }
-    },
-    "Has Ebook" : {
-      "comment" : "A filter option for books that include an ebook file.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Har e-bog"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Buch verfügbar"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiene libro-e"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A un livre numérique"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ha un ebook"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Есть электронная книга"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有电子书"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有電子書"
-          }
-        }
-      }
-    },
-    "Has Supplementary Ebook" : {
-      "comment" : "A filter option for books that include a supplementary ebook file.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Har supplerende e-bog"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ergänzendes E-Buch verfügbar"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiene un libro-e suplementario"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A un livre numérique supplémentaire"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ha un ebook supplementare"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Есть дополнительная электронная книга"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有补充电子书"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有補充電子書"
-          }
-        }
-      }
-    },
-    "Missing Ebook" : {
-      "comment" : "A filter option for books that do not include an ebook file.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Har ingen e-bog"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Buch fehlt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No tiene libro-e"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ne possède aucun livre numérique"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non ha un ebook"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет электронной книги"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有电子书"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "沒有電子書"
-          }
-        }
-      }
-    },
-    "Missing Supplementary Ebook" : {
-      "comment" : "A filter option for books that do not include a supplementary ebook file.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Har ingen supplerende e-bog"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ergänzendes E-Buch fehlt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No tiene libro-e suplementario"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ne possède aucun livre numérique supplémentaire"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non ha un ebook supplementare"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет дополнительной электронной книги"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有补充电子书"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "沒有補充電子書"
-          }
-        }
-      }
-    },
-    "Multi Track" : {
-      "comment" : "A filter option for books that have more than one audio track.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flerspors"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mehrfachdatei"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varias pistas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Piste multiple"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Multi-traccia"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Мультитрек"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "多轨"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "多軌"
-          }
-        }
-      }
-    },
-    "No Tracks" : {
-      "comment" : "A filter option for books that have no audio tracks.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ingen spor"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Dateien"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ninguna pista"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune piste"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessuna traccia"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет треков"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有音轨"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "沒有音軌"
-          }
-        }
-      }
-    },
-    "Single Track" : {
-      "comment" : "A filter option for books that have exactly one audio track.",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enkeltspors"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einzeldatei"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Una pista"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Piste simple"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Traccia singola"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Один трек"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "单轨"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "單軌"
-          }
-        }
-      }
-    },
     "→ %.1fs rewind" : {
       "comment" : "A text label indicating the amount of time to rewind for a given pause duration. The argument is the pause duration in seconds.",
       "isCommentAutoGenerated" : true,
@@ -5954,6 +5477,59 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "指定時間"
+          }
+        }
+      }
+    },
+    "Attributes" : {
+      "comment" : "A section header for book attribute filters such as Explicit and Abridged.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egenskaber"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigenschaften"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atributos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attributs"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attributi"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Атрибуты"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "属性"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屬性"
           }
         }
       }
@@ -11652,6 +11228,10 @@
         }
       }
     },
+    "Couldn't start playback." : {
+      "comment" : "Error message when playback cannot be started.",
+      "isCommentAutoGenerated" : true
+    },
     "Couldn't tell where you stopped reading. Open the ebook first." : {
       "localizations" : {
         "da" : {
@@ -17162,6 +16742,59 @@
         }
       }
     },
+    "Filter By" : {
+      "comment" : "A section header above the list of filter categories to choose from.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrer efter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtern nach"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar por"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrer par"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtra per"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фильтровать по"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选方式"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "篩選方式"
+          }
+        }
+      }
+    },
     "Filter downloads" : {
       "comment" : "A prompt for filtering items in a list.",
       "isCommentAutoGenerated" : true,
@@ -18760,6 +18393,112 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "觸覺回饋"
+          }
+        }
+      }
+    },
+    "Has Ebook" : {
+      "comment" : "A filter option for books that include an ebook file.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Har e-bog"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Buch verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiene libro-e"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A un livre numérique"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ha un ebook"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Есть электронная книга"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有电子书"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有電子書"
+          }
+        }
+      }
+    },
+    "Has Supplementary Ebook" : {
+      "comment" : "A filter option for books that include a supplementary ebook file.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Har supplerende e-bog"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergänzendes E-Buch verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiene un libro-e suplementario"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A un livre numérique supplémentaire"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ha un ebook supplementare"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Есть дополнительная электронная книга"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有补充电子书"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有補充電子書"
           }
         }
       }
@@ -25659,6 +25398,112 @@
         }
       }
     },
+    "Missing Ebook" : {
+      "comment" : "A filter option for books that do not include an ebook file.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Har ingen e-bog"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Buch fehlt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tiene libro-e"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne possède aucun livre numérique"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non ha un ebook"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет электронной книги"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有电子书"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有電子書"
+          }
+        }
+      }
+    },
+    "Missing Supplementary Ebook" : {
+      "comment" : "A filter option for books that do not include a supplementary ebook file.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Har ingen supplerende e-bog"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergänzendes E-Buch fehlt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tiene libro-e suplementario"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne possède aucun livre numérique supplémentaire"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non ha un ebook supplementare"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет дополнительной электронной книги"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有补充电子书"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有補充電子書"
+          }
+        }
+      }
+    },
     "Mix with Other Audio" : {
       "comment" : "A toggle that allows the app's audio to mix with audio from other apps.",
       "localizations" : {
@@ -25870,6 +25715,59 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收聽最多"
+          }
+        }
+      }
+    },
+    "Multi Track" : {
+      "comment" : "A filter option for books that have more than one audio track.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flerspors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehrfachdatei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varias pistas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piste multiple"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multi-traccia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мультитрек"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多轨"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多軌"
           }
         }
       }
@@ -28300,6 +28198,59 @@
         }
       }
     },
+    "No Tracks" : {
+      "comment" : "A filter option for books that have no audio tracks.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen spor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Dateien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna pista"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune piste"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna traccia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет треков"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有音轨"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有音軌"
+          }
+        }
+      }
+    },
     "None" : {
       "comment" : "A non-selected option in the \"Progress\" picker view.",
       "isCommentAutoGenerated" : true,
@@ -28569,6 +28520,10 @@
           }
         }
       }
+    },
+    "Nothing played in this library yet." : {
+      "comment" : "Error message when there is nothing to resume playback from.",
+      "isCommentAutoGenerated" : true
     },
     "Now Playing" : {
       "comment" : "A section header indicating the currently playing item in the player queue.",
@@ -35608,6 +35563,13 @@
         }
       }
     },
+    "Resume last played in ${library}" : {
+
+    },
+    "Resume last played in library" : {
+      "comment" : "Title of the intent to resume the last played item in a library.",
+      "isCommentAutoGenerated" : true
+    },
     "Resume playback" : {
       "comment" : "Short title for the \"Resume playback\" app shortcut.",
       "isCommentAutoGenerated" : true,
@@ -35661,6 +35623,10 @@
           }
         }
       }
+    },
+    "Resumes the last item played in a specific library." : {
+      "comment" : "Intent description for resuming the last played item in a specific library.",
+      "isCommentAutoGenerated" : true
     },
     "Rewind %llds when starting a new session" : {
       "comment" : "A description of a preference that can be toggled on or off.",
@@ -39548,6 +39514,59 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隨機播放"
+          }
+        }
+      }
+    },
+    "Single Track" : {
+      "comment" : "A filter option for books that have exactly one audio track.",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enkeltspors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einzeldatei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una pista"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piste simple"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traccia singola"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Один трек"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单轨"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "單軌"
           }
         }
       }
