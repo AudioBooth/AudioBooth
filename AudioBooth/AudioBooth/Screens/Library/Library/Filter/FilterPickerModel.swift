@@ -21,7 +21,7 @@ final class FilterPickerModel: FilterPicker.Model {
 
   override func onFilterChanged(_ filter: FilterPicker.Model.Filter?) {
     selectedFilter = filter
-    if source == .library {
+    if source != .series {
       UserPreferences.shared.libraryFilter = filter ?? .all
     }
     onFilterSelected?(filter)

@@ -26,7 +26,7 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
     )
 
     kind = .podcasts
-    self.filters = FilterPickerModel(currentFilter: filter, source: .library)
+    self.filters = FilterPickerModel(currentFilter: filter, source: .podcasts)
   }
 
   init(destination: NavigationDestination) {
@@ -156,6 +156,8 @@ final class PodcastLibraryPageModel: LibraryPage.Model {
         let id = name.lowercased().replacingOccurrences(of: " ", with: "-")
         let encoded = Data(id.utf8).base64EncodedString()
         filterString = "progress.\(encoded)"
+      case .explicit:
+        filterString = "explicit"
       case .all, nil:
         filterString = nil
       default:

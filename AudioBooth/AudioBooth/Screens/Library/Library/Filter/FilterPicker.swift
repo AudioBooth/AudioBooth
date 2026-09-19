@@ -201,6 +201,44 @@ struct FilterPicker: View {
       }
 
       if model.source == .library {
+        CollapsibleSection(
+          title: String(localized: "Tracks"),
+          isExpanded: expandedSection == .tracks,
+          isActive: isCategoryActive(.tracks),
+          toggle: { toggleSection(.tracks) }
+        ) {
+          ForEach(FilterPicker.Model.Filter.Tracks.allCases, id: \.self) { tracks in
+            FilterRow(
+              title: tracks.title,
+              isSelected: isSelected(.tracks(tracks)),
+              action: {
+                model.onFilterChanged(.tracks(tracks))
+                dismiss()
+              }
+            )
+          }
+        }
+
+        CollapsibleSection(
+          title: String(localized: "Ebooks"),
+          isExpanded: expandedSection == .ebooks,
+          isActive: isCategoryActive(.ebooks),
+          toggle: { toggleSection(.ebooks) }
+        ) {
+          ForEach(FilterPicker.Model.Filter.Ebooks.allCases, id: \.self) { ebooks in
+            FilterRow(
+              title: ebooks.title,
+              isSelected: isSelected(.ebooks(ebooks)),
+              action: {
+                model.onFilterChanged(.ebooks(ebooks))
+                dismiss()
+              }
+            )
+          }
+        }
+      }
+
+      if model.source != .series {
         Section {
           FilterRow(
             title: String(localized: "Explicit"),
@@ -211,7 +249,9 @@ struct FilterPicker: View {
             }
           )
         }
+      }
 
+      if model.source == .library {
         Section {
           FilterRow(
             title: String(localized: "Abridged"),
@@ -254,6 +294,8 @@ struct FilterPicker: View {
     case (.languages, .languages): return true
     case (.publishers, .publishers): return true
     case (.publishedDecades, .publishedDecades): return true
+    case (.tracks, .tracks): return true
+    case (.ebooks, .ebooks): return true
     default: return false
     }
   }
@@ -293,6 +335,7 @@ extension FilterPicker {
               .font(.caption)
               .foregroundStyle(.secondary)
           }
+          .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
       }
@@ -330,6 +373,8 @@ enum FilterCategory: Hashable {
   case languages
   case publishers
   case publishedDecades
+  case tracks
+  case ebooks
 }
 
 extension FilterPicker {
@@ -337,6 +382,7 @@ extension FilterPicker {
   class Model: ObservableObject {
     enum Source {
       case library
+      case podcasts
       case series
     }
 

@@ -14,6 +14,40 @@ extension FilterPicker.Model {
     case languages(String)
     case publishers(String)
     case publishedDecades(String)
+    case tracks(Tracks)
+    case ebooks(Ebooks)
+  }
+}
+
+extension FilterPicker.Model.Filter {
+  enum Tracks: String, CaseIterable {
+    case noTracks = "none"
+    case single
+    case multi
+
+    var title: String {
+      switch self {
+      case .noTracks: String(localized: "No Tracks")
+      case .single: String(localized: "Single Track")
+      case .multi: String(localized: "Multi Track")
+      }
+    }
+  }
+
+  enum Ebooks: String, CaseIterable {
+    case ebook
+    case noEbook = "no-ebook"
+    case supplementary
+    case noSupplementary = "no-supplementary"
+
+    var title: String {
+      switch self {
+      case .ebook: String(localized: "Has Ebook")
+      case .noEbook: String(localized: "Missing Ebook")
+      case .supplementary: String(localized: "Has Supplementary Ebook")
+      case .noSupplementary: String(localized: "Missing Supplementary Ebook")
+      }
+    }
   }
 }
 
@@ -32,6 +66,8 @@ extension FilterPicker.Model.Filter {
     case .languages(let name): name
     case .publishers(let name): name
     case .publishedDecades(let decade): decade
+    case .tracks(let tracks): tracks.title
+    case .ebooks(let ebooks): ebooks.title
     }
   }
 
@@ -62,6 +98,10 @@ extension FilterPicker.Model.Filter {
       return "publishers.\(Data(name.utf8).base64EncodedString())"
     case .publishedDecades(let decade):
       return "publishedDecades.\(Data(decade.utf8).base64EncodedString())"
+    case .tracks(let tracks):
+      return "tracks.\(Data(tracks.rawValue.utf8).base64EncodedString())"
+    case .ebooks(let ebooks):
+      return "ebooks.\(Data(ebooks.rawValue.utf8).base64EncodedString())"
     }
   }
 }
@@ -113,6 +153,26 @@ extension FilterPicker.Model.Filter: RawRepresentable, Codable {
     case "publishedDecades":
       let value = try container.decode(String.self, forKey: .value1)
       self = .publishedDecades(value)
+    case "tracks":
+      let value = try container.decode(String.self, forKey: .value1)
+      guard let tracks = Tracks(rawValue: value) else {
+        throw DecodingError.dataCorruptedError(
+          forKey: .value1,
+          in: container,
+          debugDescription: "Unknown tracks filter value"
+        )
+      }
+      self = .tracks(tracks)
+    case "ebooks":
+      let value = try container.decode(String.self, forKey: .value1)
+      guard let ebooks = Ebooks(rawValue: value) else {
+        throw DecodingError.dataCorruptedError(
+          forKey: .value1,
+          in: container,
+          debugDescription: "Unknown ebooks filter value"
+        )
+      }
+      self = .ebooks(ebooks)
     default:
       throw DecodingError.dataCorrupted(
         DecodingError.Context(
@@ -162,6 +222,12 @@ extension FilterPicker.Model.Filter: RawRepresentable, Codable {
     case .publishedDecades(let value):
       try container.encode("publishedDecades", forKey: .type)
       try container.encode(value, forKey: .value1)
+    case .tracks(let value):
+      try container.encode("tracks", forKey: .type)
+      try container.encode(value.rawValue, forKey: .value1)
+    case .ebooks(let value):
+      try container.encode("ebooks", forKey: .type)
+      try container.encode(value.rawValue, forKey: .value1)
     }
   }
 
