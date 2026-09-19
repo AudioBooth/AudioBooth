@@ -4,266 +4,58 @@ import SwiftUI
 
 struct FilterPicker: View {
   @ObservedObject var model: Model
+  @Environment(\.appTheme) private var theme
   @Environment(\.dismiss) private var dismiss
-  @State private var expandedSection: FilterCategory?
 
   var body: some View {
     List {
       Section {
-        FilterRow(
-          title: String(localized: "All"),
-          isSelected: model.selectedFilter == nil,
-          action: {
-            model.onFilterChanged(nil)
-            dismiss()
-          }
-        )
-      }
-
-      if !model.progressOptions.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Progress"),
-          isExpanded: expandedSection == .progress,
-          isActive: isCategoryActive(.progress),
-          toggle: { toggleSection(.progress) }
-        ) {
-          ForEach(model.progressOptions, id: \.self) { option in
-            FilterRow(
-              title: option,
-              isSelected: isSelected(.progress(option)),
-              action: {
-                model.onFilterChanged(.progress(option))
-                dismiss()
-              }
-            )
+        Button {
+          model.onFilterChanged(nil)
+          dismiss()
+        } label: {
+          HStack {
+            Text("All")
+              .foregroundStyle(.primary)
+            Spacer()
+            if model.selectedFilter == nil {
+              Image(systemName: "checkmark")
+                .foregroundStyle(.tint)
+            }
           }
         }
+        .listRowBackground(theme.colors.background.card)
       }
 
-      if !model.authors.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Authors"),
-          isExpanded: expandedSection == .authors,
-          isActive: isCategoryActive(.authors),
-          toggle: { toggleSection(.authors) }
-        ) {
-          ForEach(model.authors) { author in
-            FilterRow(
-              title: author.name,
-              isSelected: isSelected(.authors(author.id, author.name)),
-              action: {
-                model.onFilterChanged(.authors(author.id, author.name))
-                dismiss()
-              }
-            )
+      if !model.availableCategories.isEmpty {
+        Section {
+          ForEach(model.availableCategories) { category in
+            NavigationLink {
+              FilterOptionsPage(model: model, category: category, onSelect: { dismiss() })
+            } label: {
+              categoryRow(category)
+            }
+            .listRowBackground(theme.colors.background.card)
           }
-        }
-      }
-
-      if !model.genres.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Genres"),
-          isExpanded: expandedSection == .genres,
-          isActive: isCategoryActive(.genres),
-          toggle: { toggleSection(.genres) }
-        ) {
-          ForEach(model.genres, id: \.self) { genre in
-            FilterRow(
-              title: genre,
-              isSelected: isSelected(.genres(genre)),
-              action: {
-                model.onFilterChanged(.genres(genre))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if !model.narrators.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Narrators"),
-          isExpanded: expandedSection == .narrators,
-          isActive: isCategoryActive(.narrators),
-          toggle: { toggleSection(.narrators) }
-        ) {
-          ForEach(model.narrators, id: \.self) { narrator in
-            FilterRow(
-              title: narrator,
-              isSelected: isSelected(.narrators(narrator)),
-              action: {
-                model.onFilterChanged(.narrators(narrator))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if model.source == .library, !model.series.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Series"),
-          isExpanded: expandedSection == .series,
-          isActive: isCategoryActive(.series),
-          toggle: { toggleSection(.series) }
-        ) {
-          ForEach(model.series) { series in
-            FilterRow(
-              title: series.name,
-              isSelected: isSelected(.series(series.id, series.name)),
-              action: {
-                model.onFilterChanged(.series(series.id, series.name))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if !model.tags.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Tags"),
-          isExpanded: expandedSection == .tags,
-          isActive: isCategoryActive(.tags),
-          toggle: { toggleSection(.tags) }
-        ) {
-          ForEach(model.tags, id: \.self) { tag in
-            FilterRow(
-              title: tag,
-              isSelected: isSelected(.tags(tag)),
-              action: {
-                model.onFilterChanged(.tags(tag))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if !model.languages.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Languages"),
-          isExpanded: expandedSection == .languages,
-          isActive: isCategoryActive(.languages),
-          toggle: { toggleSection(.languages) }
-        ) {
-          ForEach(model.languages, id: \.self) { language in
-            FilterRow(
-              title: language,
-              isSelected: isSelected(.languages(language)),
-              action: {
-                model.onFilterChanged(.languages(language))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if !model.publishers.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Publishers"),
-          isExpanded: expandedSection == .publishers,
-          isActive: isCategoryActive(.publishers),
-          toggle: { toggleSection(.publishers) }
-        ) {
-          ForEach(model.publishers, id: \.self) { publisher in
-            FilterRow(
-              title: publisher,
-              isSelected: isSelected(.publishers(publisher)),
-              action: {
-                model.onFilterChanged(.publishers(publisher))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if model.source == .library, !model.publishedDecades.isEmpty {
-        CollapsibleSection(
-          title: String(localized: "Published Decades"),
-          isExpanded: expandedSection == .publishedDecades,
-          isActive: isCategoryActive(.publishedDecades),
-          toggle: { toggleSection(.publishedDecades) }
-        ) {
-          ForEach(model.publishedDecades, id: \.self) { decade in
-            FilterRow(
-              title: decade,
-              isSelected: isSelected(.publishedDecades(decade)),
-              action: {
-                model.onFilterChanged(.publishedDecades(decade))
-                dismiss()
-              }
-            )
-          }
-        }
-      }
-
-      if model.source == .library {
-        CollapsibleSection(
-          title: String(localized: "Tracks"),
-          isExpanded: expandedSection == .tracks,
-          isActive: isCategoryActive(.tracks),
-          toggle: { toggleSection(.tracks) }
-        ) {
-          ForEach(FilterPicker.Model.Filter.Tracks.allCases, id: \.self) { tracks in
-            FilterRow(
-              title: tracks.title,
-              isSelected: isSelected(.tracks(tracks)),
-              action: {
-                model.onFilterChanged(.tracks(tracks))
-                dismiss()
-              }
-            )
-          }
-        }
-
-        CollapsibleSection(
-          title: String(localized: "Ebooks"),
-          isExpanded: expandedSection == .ebooks,
-          isActive: isCategoryActive(.ebooks),
-          toggle: { toggleSection(.ebooks) }
-        ) {
-          ForEach(FilterPicker.Model.Filter.Ebooks.allCases, id: \.self) { ebooks in
-            FilterRow(
-              title: ebooks.title,
-              isSelected: isSelected(.ebooks(ebooks)),
-              action: {
-                model.onFilterChanged(.ebooks(ebooks))
-                dismiss()
-              }
-            )
-          }
+        } header: {
+          Text("Filter By")
         }
       }
 
       if model.source != .series {
         Section {
-          FilterRow(
-            title: String(localized: "Explicit"),
-            isSelected: model.selectedFilter == .explicit,
-            action: {
-              model.onFilterChanged(.explicit)
-              dismiss()
-            }
-          )
-        }
-      }
+          attributeRow(title: String(localized: "Explicit"), filter: .explicit)
 
-      if model.source == .library {
-        Section {
-          FilterRow(
-            title: String(localized: "Abridged"),
-            isSelected: model.selectedFilter == .abridged,
-            action: {
-              model.onFilterChanged(.abridged)
-              dismiss()
-            }
-          )
+          if model.source == .library {
+            attributeRow(title: String(localized: "Abridged"), filter: .abridged)
+          }
+        } header: {
+          Text("Attributes")
         }
       }
     }
+    .scrollContentBackground(.hidden)
+    .background(theme.colors.background.page)
     .listSectionSpacing(.compact)
     .navigationTitle("Filter Library")
     .navigationBarTitleDisplayMode(.inline)
@@ -277,93 +69,44 @@ struct FilterPicker: View {
     }
   }
 
-  func isSelected(_ filter: FilterPicker.Model.Filter) -> Bool {
-    model.selectedFilter == filter
-  }
+  private func categoryRow(_ category: FilterCategory) -> some View {
+    HStack(spacing: 12) {
+      Image(systemName: category.icon)
+        .foregroundStyle(.tint)
+        .frame(width: 24)
 
-  func isCategoryActive(_ category: FilterCategory) -> Bool {
-    guard let selectedFilter = model.selectedFilter else { return false }
+      Text(verbatim: category.title)
 
-    switch (category, selectedFilter) {
-    case (.progress, .progress): return true
-    case (.authors, .authors): return true
-    case (.genres, .genres): return true
-    case (.narrators, .narrators): return true
-    case (.series, .series): return true
-    case (.tags, .tags): return true
-    case (.languages, .languages): return true
-    case (.publishers, .publishers): return true
-    case (.publishedDecades, .publishedDecades): return true
-    case (.tracks, .tracks): return true
-    case (.ebooks, .ebooks): return true
-    default: return false
-    }
-  }
+      Spacer(minLength: 12)
 
-  func toggleSection(_ category: FilterCategory) {
-    if expandedSection == category {
-      expandedSection = nil
-    } else {
-      expandedSection = category
-    }
-  }
-}
-
-extension FilterPicker {
-  struct CollapsibleSection<Content: View>: View {
-    let title: String
-    let isExpanded: Bool
-    let isActive: Bool
-    let toggle: () -> Void
-    let content: () -> Content
-
-    var body: some View {
-      Section {
-        if isExpanded {
-          content()
-        }
-      } header: {
-        Button(action: toggle) {
-          HStack {
-            Text(title)
-            Spacer()
-            if isActive {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.tint)
-            }
-            Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+      if let selection = model.selectedTitle(for: category) {
+        Text(verbatim: selection)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
       }
     }
   }
 
-  struct FilterRow: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-      Button(action: action) {
-        HStack {
-          Text(title)
-            .foregroundStyle(.primary)
-          Spacer()
-          if isSelected {
-            Image(systemName: "checkmark")
-              .foregroundStyle(.tint)
-          }
+  private func attributeRow(title: String, filter: Model.Filter) -> some View {
+    Button {
+      model.onFilterChanged(filter)
+      dismiss()
+    } label: {
+      HStack {
+        Text(verbatim: title)
+          .foregroundStyle(.primary)
+        Spacer()
+        if model.selectedFilter == filter {
+          Image(systemName: "checkmark")
+            .foregroundStyle(.tint)
         }
       }
     }
+    .listRowBackground(theme.colors.background.card)
   }
 }
 
-enum FilterCategory: Hashable {
+enum FilterCategory: Hashable, Identifiable {
   case progress
   case authors
   case genres
@@ -375,6 +118,48 @@ enum FilterCategory: Hashable {
   case publishedDecades
   case tracks
   case ebooks
+
+  var id: Self { self }
+
+  var title: String {
+    switch self {
+    case .progress: String(localized: "Progress")
+    case .authors: String(localized: "Authors")
+    case .genres: String(localized: "Genres")
+    case .narrators: String(localized: "Narrators")
+    case .series: String(localized: "Series")
+    case .tags: String(localized: "Tags")
+    case .languages: String(localized: "Languages")
+    case .publishers: String(localized: "Publishers")
+    case .publishedDecades: String(localized: "Published Decades")
+    case .tracks: String(localized: "Tracks")
+    case .ebooks: String(localized: "Ebooks")
+    }
+  }
+
+  var icon: String {
+    switch self {
+    case .progress: "chart.bar.fill"
+    case .authors: "person.2.fill"
+    case .genres: "theatermasks.fill"
+    case .narrators: "mic.fill"
+    case .series: "books.vertical.fill"
+    case .tags: "tag.fill"
+    case .languages: "globe"
+    case .publishers: "building.columns.fill"
+    case .publishedDecades: "calendar"
+    case .tracks: "waveform"
+    case .ebooks: "book.fill"
+    }
+  }
+}
+
+extension FilterPicker {
+  struct FilterOption: Identifiable {
+    let id: String
+    let title: String
+    let filter: FilterPicker.Model.Filter
+  }
 }
 
 extension FilterPicker {
@@ -399,6 +184,71 @@ extension FilterPicker {
     var publishedDecades: [String]
 
     var selectedFilter: FilterPicker.Model.Filter?
+
+    var availableCategories: [FilterCategory] {
+      var categories: [FilterCategory] = []
+      if !progressOptions.isEmpty { categories.append(.progress) }
+      if !authors.isEmpty { categories.append(.authors) }
+      if !genres.isEmpty { categories.append(.genres) }
+      if !narrators.isEmpty { categories.append(.narrators) }
+      if source == .library, !series.isEmpty { categories.append(.series) }
+      if !tags.isEmpty { categories.append(.tags) }
+      if !languages.isEmpty { categories.append(.languages) }
+      if !publishers.isEmpty { categories.append(.publishers) }
+      if source == .library, !publishedDecades.isEmpty { categories.append(.publishedDecades) }
+      if source == .library { categories.append(contentsOf: [.tracks, .ebooks]) }
+      return categories
+    }
+
+    var selectedCategory: FilterCategory? {
+      guard let selectedFilter else { return nil }
+      return switch selectedFilter {
+      case .progress: .progress
+      case .authors: .authors
+      case .genres: .genres
+      case .narrators: .narrators
+      case .series: .series
+      case .tags: .tags
+      case .languages: .languages
+      case .publishers: .publishers
+      case .publishedDecades: .publishedDecades
+      case .tracks: .tracks
+      case .ebooks: .ebooks
+      case .all, .explicit, .abridged: nil
+      }
+    }
+
+    func options(for category: FilterCategory) -> [FilterPicker.FilterOption] {
+      switch category {
+      case .progress:
+        progressOptions.map { .init(id: $0, title: $0, filter: .progress($0)) }
+      case .authors:
+        authors.map { .init(id: $0.id, title: $0.name, filter: .authors($0.id, $0.name)) }
+      case .genres:
+        genres.map { .init(id: $0, title: $0, filter: .genres($0)) }
+      case .narrators:
+        narrators.map { .init(id: $0, title: $0, filter: .narrators($0)) }
+      case .series:
+        series.map { .init(id: $0.id, title: $0.name, filter: .series($0.id, $0.name)) }
+      case .tags:
+        tags.map { .init(id: $0, title: $0, filter: .tags($0)) }
+      case .languages:
+        languages.map { .init(id: $0, title: $0, filter: .languages($0)) }
+      case .publishers:
+        publishers.map { .init(id: $0, title: $0, filter: .publishers($0)) }
+      case .publishedDecades:
+        publishedDecades.map { .init(id: $0, title: $0, filter: .publishedDecades($0)) }
+      case .tracks:
+        Filter.Tracks.allCases.map { .init(id: $0.rawValue, title: $0.title, filter: .tracks($0)) }
+      case .ebooks:
+        Filter.Ebooks.allCases.map { .init(id: $0.rawValue, title: $0.title, filter: .ebooks($0)) }
+      }
+    }
+
+    func selectedTitle(for category: FilterCategory) -> String? {
+      guard selectedCategory == category else { return nil }
+      return selectedFilter?.title
+    }
 
     func onFilterChanged(_ filter: FilterPicker.Model.Filter?) {}
     func refresh() async {}
@@ -428,5 +278,23 @@ extension FilterPicker {
       self.publishedDecades = publishedDecades
       self.selectedFilter = selectedFilter
     }
+  }
+}
+
+#Preview("FilterPicker") {
+  NavigationStack {
+    FilterPicker(
+      model: .init(
+        source: .library,
+        progressOptions: ["Finished", "In Progress", "Not Started", "Not Finished"],
+        authors: [
+          FilterData.Author(id: "1", name: "Brandon Sanderson"),
+          FilterData.Author(id: "2", name: "J.K. Rowling"),
+        ],
+        genres: ["Fantasy", "Science Fiction", "Mystery"],
+        narrators: ["Michael Kramer", "Kate Reading"],
+        selectedFilter: .genres("Fantasy")
+      )
+    )
   }
 }
