@@ -18,6 +18,7 @@ extension EbookReaderViewModel {
   private static let secondsBetweenDecorationChecks: TimeInterval = 0.1
   private static let decorationChecksAwaitingClear = 20
   private static let secondsBetweenDecorationAudits: TimeInterval = 2
+  private static let maximumSecondsSuspendedBeforeRestarting: TimeInterval = 300
 
   var isReadAlongSupported: Bool {
     guard #available(iOS 26.0, *), SpeechTranscriber.isAvailable else { return false }
@@ -45,8 +46,39 @@ extension EbookReaderViewModel {
     readAlong.toggle()
   }
 
+  func suspendReadAlong() {
+    guard readAlong != nil, readerSuspendedAt == nil else { return }
+
+    readerSuspendedAt = Date()
+    cancelReadAlongNavigation()
+    readAlongDecorationTask?.cancel()
+    readAlongDecorationTask = nil
+    pendingReadAlongDecorations = nil
+  }
+
+  func resumeReadAlong() {
+    guard let suspendedAt = readerSuspendedAt else { return }
+
+    readerSuspendedAt = nil
+    lastDecoratedHREF = nil
+
+    guard let readAlong, !isCatchingUpToNarration else { return }
+
+    let suspendedFor = Date().timeIntervalSince(suspendedAt)
+    guard suspendedFor < Self.maximumSecondsSuspendedBeforeRestarting else {
+      AppLogger.readAlong.info("Restarting Read Along after \(Int(suspendedFor))s in the background")
+      readAlong.stop()
+      readAlong.start()
+      return
+    }
+
+    applyReadAlongDecorations(sentence: readAlong.sentenceLocator, word: readAlong.wordLocator)
+    flushReadAlongNavigation()
+  }
+
   func tearDownReadAlong() {
     isCatchingUpToNarration = false
+    readerSuspendedAt = nil
     readAlong?.onActiveChanged = nil
     readAlong?.stop()
     readAlong = nil
@@ -176,7 +208,7 @@ extension EbookReaderViewModel {
   }
 
   private func flushReadAlongDecorations() {
-    guard readAlongDecorationTask == nil else { return }
+    guard readerSuspendedAt == nil, readAlongDecorationTask == nil else { return }
 
     readAlongDecorationTask = Task { [weak self] in
       while let self, let decorations = self.pendingReadAlongDecorations {
@@ -268,7 +300,7 @@ extension EbookReaderViewModel {
   }
 
   private func flushReadAlongNavigation() {
-    guard readAlongNavigationTask == nil else { return }
+    guard readerSuspendedAt == nil, readAlongNavigationTask == nil else { return }
 
     readAlongNavigationTask = Task { [weak self] in
       while let self, !Task.isCancelled, let destination = self.pendingReadAlongNavigation {

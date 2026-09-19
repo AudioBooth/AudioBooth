@@ -39,6 +39,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   var pendingReadAlongNavigation: Locator?
   var readAlongNavigationTask: Task<Void, Never>?
+  var readerSuspendedAt: Date?
 
   private var catchUpCheck: Task<Void, Never>?
   private var cancellables = Set<AnyCancellable>()
@@ -71,6 +72,17 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       }
       .store(in: &cancellables)
 
+    NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+      .sink { [weak self] _ in
+        self?.suspendReadAlong()
+      }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+      .sink { [weak self] _ in
+        self?.resumeReadAlong()
+      }
+      .store(in: &cancellables)
   }
 
   override func onShowControlsChanged(_ isVisible: Bool) {
