@@ -25,6 +25,7 @@ public final class LocalBook {
   public var language: String?
   public var displayOrder: Int = 0
   public var createdAt: Date = Date()
+  public var downloadedAt: Date?
   public var ebookFile: URL?
   public var coverFile: URL?
 
@@ -113,6 +114,7 @@ public final class LocalBook {
     language: String? = nil,
     displayOrder: Int = Int(Date().timeIntervalSince1970 * 1000),
     createdAt: Date = Date(),
+    downloadedAt: Date? = nil,
     ebookFile: URL? = nil
   ) {
     self.bookID = bookID
@@ -136,6 +138,7 @@ public final class LocalBook {
     self.language = language
     self.displayOrder = displayOrder
     self.createdAt = createdAt
+    self.downloadedAt = downloadedAt
     self.ebookFile = ebookFile
   }
 }
@@ -196,6 +199,7 @@ extension LocalBook {
     existingItem.isAbridged = isAbridged
     existingItem.publisher = publisher
     existingItem.language = language
+    existingItem.downloadedAt = downloadedAt ?? existingItem.downloadedAt
     existingItem.ebookFile = ebookFile ?? existingItem.ebookFile
     existingItem.coverFile = coverFile ?? existingItem.coverFile
 

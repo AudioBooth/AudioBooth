@@ -286,24 +286,27 @@ final class DownloadManager: NSObject, ObservableObject {
     if let books = try? LocalBook.fetchAll() {
       for book in books {
         if case .downloading = downloadStates[book.bookID] { continue }
-        downloadStates[book.bookID] = book.isDownloaded ? .downloaded : .notDownloaded
+        downloadStates[book.bookID] = persistedState(for: book.bookID)
       }
     }
 
     if let episodes = try? LocalEpisode.fetchAll() {
       for episode in episodes {
         if case .downloading = downloadStates[episode.episodeID] { continue }
-        downloadStates[episode.episodeID] = episode.isDownloaded ? .downloaded : .notDownloaded
+        downloadStates[episode.episodeID] = persistedState(for: episode.episodeID)
       }
     }
   }
 
   private func persistedState(for id: String) -> DownloadState {
-    if let book = try? LocalBook.fetch(bookID: id) {
-      return book.isDownloaded ? .downloaded : .notDownloaded
+    if let book = try? LocalBook.fetch(bookID: id), book.isDownloaded {
+      return .downloaded
     }
-    if let episode = try? LocalEpisode.fetch(episodeID: id) {
-      return episode.isDownloaded ? .downloaded : .notDownloaded
+    if let episode = try? LocalEpisode.fetch(episodeID: id), episode.isDownloaded {
+      return .downloaded
+    }
+    if let request = try? DownloadRequest.fetch(itemID: id), !request.hasFailed {
+      return .downloading(progress: 0)
     }
     return .notDownloaded
   }
@@ -357,6 +360,7 @@ final class DownloadManager: NSObject, ObservableObject {
       let request = try? DownloadRequest.fetch(itemID: itemID),
       isRequestSatisfied(itemID: itemID, kind: request.kind)
     else { return }
+    stampDownloadDate(for: itemID)
     try? request.delete()
   }
 
@@ -464,6 +468,8 @@ final class DownloadManager: NSObject, ObservableObject {
       request.failureCount = 0
       try? request.save()
     }
+
+    downloadStates[itemID] = .downloading(progress: 0)
 
     startNextIfIdle()
   }
@@ -663,6 +669,7 @@ final class DownloadManager: NSObject, ObservableObject {
     let currentKind = request?.kind ?? kind
 
     if isRequestSatisfied(itemID: itemID, kind: currentKind) {
+      stampDownloadDate(for: itemID)
       storeCover(itemID: itemID, fallbackURL: request?.coverURL)
       deleteRequest(for: itemID)
       Toast(success: "Download completed").show()
@@ -675,6 +682,16 @@ final class DownloadManager: NSObject, ObservableObject {
 
     downloadStates[itemID] = persistedState(for: itemID)
     startNextIfIdle()
+  }
+
+  private func stampDownloadDate(for itemID: String) {
+    if let book = try? LocalBook.fetch(bookID: itemID) {
+      book.downloadedAt = Date()
+      try? book.save()
+    } else if let episode = try? LocalEpisode.fetch(episodeID: itemID) {
+      episode.downloadedAt = Date()
+      try? episode.save()
+    }
   }
 
   private func storeCover(itemID: String, fallbackURL: URL?) {
@@ -744,6 +761,35 @@ final class DownloadManager: NSObject, ObservableObject {
     for episode in episodes {
       storeCover(itemID: episode.episodeID, fallbackURL: nil)
     }
+  }
+
+  func backfillDownloadDates() {
+    guard ModelContextProvider.shared.activeServerID != nil else { return }
+
+    let books = ((try? LocalBook.fetchAll()) ?? [])
+      .filter { $0.downloadedAt == nil && ($0.isDownloaded || $0.mediaType.contains(.ebook)) }
+    let episodes = ((try? LocalEpisode.fetchAll()) ?? [])
+      .filter { $0.downloadedAt == nil && $0.isDownloaded }
+
+    for book in books {
+      guard
+        let fileURL = book.orderedTracks.first?.localPath ?? book.ebookLocalPath,
+        let date = try? fileURL.resourceValues(forKeys: [.creationDateKey]).creationDate
+      else { continue }
+
+      book.downloadedAt = date
+    }
+
+    for episode in episodes {
+      guard
+        let fileURL = episode.track?.localPath,
+        let date = try? fileURL.resourceValues(forKeys: [.creationDateKey]).creationDate
+      else { continue }
+
+      episode.downloadedAt = date
+    }
+
+    try? ModelContextProvider.shared.context.save()
   }
 
   private func fail(itemID: String, error: Error) {

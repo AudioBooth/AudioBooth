@@ -145,6 +145,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("groupSeriesInOffline")
   var groupSeriesInOffline: Bool = false
 
+  @AppStorage("offlineSortOrder")
+  var offlineSortOrder: OfflineListView.Model.SortOrder = .manual
+
   @AppStorage("librarySortBy")
   var librarySortBy: SortBy = .title
 

@@ -42,10 +42,28 @@ struct OfflineListView: View {
     .searchable(text: $model.searchText, prompt: "Filter downloads")
     .toolbar {
       ToolbarItem(placement: .topBarLeading) {
-        Button {
-          model.onGroupSeriesToggled()
+        Menu {
+          Toggle(
+            isOn: Binding(get: { model.isGroupedBySeries }, set: { _ in model.onGroupSeriesToggled() })
+          ) {
+            Label("Collapse Series", systemImage: "rectangle.stack")
+          }
+
+          Section("Sort By") {
+            ForEach(Model.SortOrder.allCases, id: \.self) { order in
+              Button {
+                model.onSortOrderTapped(order)
+              } label: {
+                if model.sortOrder == order {
+                  Label(order.title, systemImage: "checkmark")
+                } else {
+                  Text(order.title)
+                }
+              }
+            }
+          }
         } label: {
-          Image(systemName: model.isGroupedBySeries ? "rectangle.stack.fill" : "rectangle.stack")
+          Image(systemName: "arrow.up.arrow.down.circle")
         }
         .tint(.primary)
       }
@@ -156,11 +174,11 @@ struct OfflineListView: View {
         }
       }
       .onMove(
-        perform: model.isGroupedBySeries || !model.searchText.isEmpty
-          ? nil
-          : { from, to in
+        perform: model.isReorderEnabled
+          ? { from, to in
             model.onReorder(from: from, to: to)
           }
+          : nil
       )
       .onDelete(
         perform: model.editMode == .active || model.isGroupedBySeries
@@ -318,6 +336,11 @@ extension OfflineListView {
     var selectedIDs: Set<String>
     var searchText: String
     var isGroupedBySeries: Bool
+    var sortOrder: SortOrder
+
+    var isReorderEnabled: Bool {
+      sortOrder == .manual && !isGroupedBySeries && searchText.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
     func onAppear() {}
     func onEditModeTapped() {}
@@ -330,6 +353,7 @@ extension OfflineListView {
     func onDelete(at: IndexSet) {}
     func onGroupSeriesToggled() {}
     func onSearchChanged() {}
+    func onSortOrderTapped(_ order: SortOrder) {}
 
     init(
       items: [OfflineListItem] = [],
@@ -339,7 +363,8 @@ extension OfflineListView {
       editMode: EditMode = .inactive,
       selectedIDs: Set<String> = [],
       searchText: String = "",
-      isGroupedBySeries: Bool = false
+      isGroupedBySeries: Bool = false,
+      sortOrder: SortOrder = .manual
     ) {
       self.items = items
       self.selectableCount = selectableCount
@@ -349,6 +374,21 @@ extension OfflineListView {
       self.selectedIDs = selectedIDs
       self.searchText = searchText
       self.isGroupedBySeries = isGroupedBySeries
+      self.sortOrder = sortOrder
+    }
+
+    enum SortOrder: String, CaseIterable {
+      case manual
+      case newest
+      case oldest
+
+      var title: LocalizedStringResource {
+        switch self {
+        case .manual: "Manual"
+        case .newest: "Newest"
+        case .oldest: "Oldest"
+        }
+      }
     }
   }
 }

@@ -77,6 +77,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
       await StorageManager.shared.cleanupUnusedDownloads()
       DownloadManager.shared.resumeOutstandingRequests()
       DownloadManager.shared.backfillMissingCovers()
+      DownloadManager.shared.backfillDownloadDates()
     }
 
     #if !targetEnvironment(macCatalyst)
