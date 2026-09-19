@@ -29,15 +29,17 @@ nonisolated enum AudioSession {
     return mixWithOthers
   }
 
-  static func activate() async {
+  @discardableResult
+  static func activate() async -> Bool {
     await withCheckedContinuation { continuation in
       queue.async {
         do {
           try AVAudioSession.sharedInstance().setActive(true)
+          continuation.resume(returning: true)
         } catch {
           AppLogger.player.error("Failed to activate audio session: \(error)")
+          continuation.resume(returning: false)
         }
-        continuation.resume()
       }
     }
   }

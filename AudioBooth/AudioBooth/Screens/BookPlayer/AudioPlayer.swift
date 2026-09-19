@@ -126,8 +126,12 @@ final class AudioPlayer {
 
     resumeTask?.cancel()
     resumeTask = Task {
-      await AudioSession.activate()
-      guard !Task.isCancelled, wantsPlayback else { return }
+      let activated = await AudioSession.activate()
+
+      guard !Task.isCancelled, wantsPlayback else {
+        events.send(.stateChanged(isPlaying ? .playing : .paused))
+        return
+      }
 
       if isPlaying {
         events.send(.stateChanged(.playing))
@@ -140,6 +144,10 @@ final class AudioPlayer {
           seek(to: mediaProgress.currentTime)
         }
         player.play()
+
+        if !activated {
+          events.send(.stateChanged(isPlaying ? .playing : .paused))
+        }
       }
     }
   }
