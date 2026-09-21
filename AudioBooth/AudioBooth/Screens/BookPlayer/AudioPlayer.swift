@@ -101,6 +101,8 @@ final class AudioPlayer {
       return
     }
 
+    AppLogger.player.info("Playing from \(self.isUsingRemoteURLs ? "remote" : "local") files")
+
     addTimeObserver()
 
     let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
@@ -694,11 +696,10 @@ extension LevelingStrength {
 
 extension AVPlayerItem {
   convenience init(url: URL, headers: [String: String]?) {
+    var options: [String: Any] = [AVURLAssetPreferPreciseDurationAndTimingKey: true]
     if !url.isFileURL, let headers, !headers.isEmpty {
-      let asset = AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
-      self.init(asset: asset)
-    } else {
-      self.init(asset: AVURLAsset(url: url))
+      options["AVURLAssetHTTPHeaderFieldsKey"] = headers
     }
+    self.init(asset: AVURLAsset(url: url, options: options))
   }
 }
