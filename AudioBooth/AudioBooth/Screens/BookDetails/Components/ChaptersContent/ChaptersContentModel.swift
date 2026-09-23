@@ -1,4 +1,5 @@
 import API
+import Foundation
 import Models
 
 final class ChaptersContentModel: ChaptersContent.Model {
