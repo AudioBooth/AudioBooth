@@ -5,20 +5,13 @@ import SwiftUI
 @available(iOS 26.0, *)
 struct SearchPage: View {
   @StateObject var model: SearchView.Model
-  @FocusState private var fieldFocused: Bool
 
   var body: some View {
     NavigationStack {
       SearchView(model: model)
-        .searchable(text: $model.searchText)
-        .searchFocused($fieldFocused)
         .navigationDestinations()
-        .onAppear {
-          if model.searchText.isEmpty {
-            fieldFocused = true
-          }
-        }
     }
+    .searchable(text: $model.searchText)
   }
 }
 
