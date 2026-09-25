@@ -169,7 +169,7 @@ extension StatsPageView {
     }
   }
 
-  private func periodCard(label: String, seconds: Double) -> some View {
+  private func periodCard(label: LocalizedStringResource, seconds: Double) -> some View {
     VStack(alignment: .center, spacing: 6) {
       Text(label)
         .font(.caption2)
@@ -243,10 +243,10 @@ extension StatsPageView {
   private func streakItem(
     icon: String,
     iconColor: Color,
-    title: String,
+    title: LocalizedStringResource,
     value: Int,
     valueColor: Color,
-    caption: String
+    caption: LocalizedStringResource
   ) -> some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 6) {
@@ -322,7 +322,7 @@ extension StatsPageView {
     return average > 0 ? average : 60
   }
 
-  private func statCard(icon: String, iconColor: Color, value: String, label: String) -> some View {
+  private func statCard(icon: String, iconColor: Color, value: String, label: LocalizedStringResource) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       Image(systemName: icon)
         .font(.subheadline)

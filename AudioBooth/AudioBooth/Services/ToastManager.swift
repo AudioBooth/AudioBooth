@@ -16,18 +16,33 @@ public struct Toast {
   private static var model: ToastPage.Model?
   private static var dismissTask: Task<Void, Never>?
 
-  public init(error message: String) {
-    self.message = message
+  public init(error message: LocalizedStringResource) {
+    self.init(error: String(localized: message))
+  }
+
+  @_disfavoredOverload
+  public init<S: StringProtocol>(error message: S) {
+    self.message = String(message)
     self.type = .error
   }
 
-  public init(success message: String) {
-    self.message = message
+  public init(success message: LocalizedStringResource) {
+    self.init(success: String(localized: message))
+  }
+
+  @_disfavoredOverload
+  public init<S: StringProtocol>(success message: S) {
+    self.message = String(message)
     self.type = .success
   }
 
-  public init(message: String) {
-    self.message = message
+  public init(message: LocalizedStringResource) {
+    self.init(message: String(localized: message))
+  }
+
+  @_disfavoredOverload
+  public init<S: StringProtocol>(message: S) {
+    self.message = String(message)
     self.type = .info
   }
 
@@ -255,8 +270,8 @@ struct ToastView: View {
 
 #Preview {
   VStack(spacing: 20) {
-    ToastView(toast: Toast(error: "Something went wrong!")) {}
-    ToastView(toast: Toast(success: "Success!")) {}
+    ToastView(toast: Toast(error: String("Something went wrong!"))) {}
+    ToastView(toast: Toast(success: String("Success!"))) {}
   }
   .padding()
 }

@@ -2,7 +2,7 @@ import SwiftUI
 
 extension View {
   @ViewBuilder
-  func conditionalSearchable(text: Binding<String>, prompt: String) -> some View {
+  func conditionalSearchable(text: Binding<String>, prompt: LocalizedStringResource) -> some View {
     if #available(iOS 26.0, *) {
       self
     } else {

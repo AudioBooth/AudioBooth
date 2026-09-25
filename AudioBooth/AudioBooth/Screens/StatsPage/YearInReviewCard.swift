@@ -127,7 +127,7 @@ struct YearInReviewCard: View {
     }
   }
 
-  private func statCard(value: String, label: String) -> some View {
+  private func statCard(value: String, label: LocalizedStringResource) -> some View {
     HStack(spacing: 12) {
       VStack(alignment: .center, spacing: 2) {
         Text(value)
@@ -147,7 +147,7 @@ struct YearInReviewCard: View {
     .clipShape(RoundedRectangle(cornerRadius: 8))
   }
 
-  private func topStatItem(title: String, name: String, time: Double) -> some View {
+  private func topStatItem(title: LocalizedStringResource, name: String, time: Double) -> some View {
     VStack(alignment: .leading, spacing: 4) {
       Text(title)
         .font(.caption)
