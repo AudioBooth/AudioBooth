@@ -38,6 +38,7 @@ nonisolated enum PageLocator {
     windows: [AudioSearchWindow],
     duration: TimeInterval,
     guide: Guide? = nil,
+    sampleInterval: TimeInterval = PageLocator.sampleInterval,
     source: NarrationSource,
     locale: Locale,
     onProgress: @Sendable @escaping (String) -> Void
@@ -87,6 +88,7 @@ nonisolated enum PageLocator {
 
       if let hit = try await screen(
         window: window,
+        sampleInterval: sampleInterval,
         scorer: scorer,
         transcriber: transcriber
       ) {
@@ -99,7 +101,8 @@ nonisolated enum PageLocator {
           anchoredAt: hit,
           page: page,
           scorer: scorer,
-          transcriber: transcriber
+          transcriber: transcriber,
+          requiresOverlap: false
         ) {
           return located
         }
@@ -142,7 +145,8 @@ nonisolated enum PageLocator {
           anchoredAt: time,
           page: page,
           scorer: scorer,
-          transcriber: transcriber
+          transcriber: transcriber,
+          requiresOverlap: false
         )
       }
 
@@ -181,6 +185,7 @@ nonisolated enum PageLocator {
 
   private static func screen(
     window: AudioSearchWindow,
+    sampleInterval: TimeInterval,
     scorer: PageOverlapScorer,
     transcriber: NarrationTranscriber
   ) async throws -> TimeInterval? {
@@ -213,7 +218,8 @@ nonisolated enum PageLocator {
     anchoredAt anchor: TimeInterval,
     page: ScannedPage,
     scorer: PageOverlapScorer,
-    transcriber: NarrationTranscriber
+    transcriber: NarrationTranscriber,
+    requiresOverlap: Bool = true
   ) async throws -> Located? {
     let words = try await NarrationExcerpt.words(
       from: region.lowerBound,
@@ -225,7 +231,13 @@ nonisolated enum PageLocator {
     guard !transcript.isEmpty else { return nil }
 
     let score = scorer.score(against: words.map(\.normalized))
-    guard score >= refineOverlapFloor else { return nil }
+    guard !requiresOverlap || score >= refineOverlapFloor else {
+      let formatted: String = String(format: "%.2f", score)
+      AppLogger.readAlong.info(
+        "Page Match: region \(Int(region.lowerBound))s to \(Int(region.upperBound))s scored \(formatted) over \(words.count) heard words, below the overlap floor"
+      )
+      return nil
+    }
 
     let query = Array(page.bodyWords.prefix(alignedPageWords))
     var aligner = TranscriptAligner(words: transcript.index)

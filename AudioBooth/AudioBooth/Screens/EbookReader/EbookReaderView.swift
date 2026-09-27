@@ -9,7 +9,6 @@ struct EbookReaderView: View {
 
   @State private var showControls = false
   @State private var showSettings = false
-  @State private var showPlayerSheet = false
   @State private var showZoneEditor = false
 
   @State var preferredColorScheme: ColorScheme?
@@ -150,10 +149,26 @@ struct EbookReaderView: View {
       .sheet(item: $model.search) { searchModel in
         EbookSearchView(model: searchModel)
       }
-      .adaptiveSheet(isPresented: $showPlayerSheet) {
-        if let player = playerManager.current {
-          EbookPlayerSheet(player: player)
+      .sheet(item: $model.positionSync) { positionSync in
+        PositionSyncSheet(model: positionSync)
+      }
+      .adaptiveSheet(
+        isPresented: Binding(
+          get: { model.playerSheet?.isPresented ?? false },
+          set: { newValue in model.playerSheet?.isPresented = newValue }
+        )
+      ) {
+        if let playerSheet = model.playerSheet {
+          EbookPlayerSheet(model: playerSheet)
         }
+      }
+      .sheet(
+        item: Binding(
+          get: { model.playerSheet?.player.positionSync },
+          set: { newValue in model.playerSheet?.player.positionSync = newValue }
+        )
+      ) { positionSync in
+        PositionSyncSheet(model: positionSync)
       }
   }
 
@@ -382,7 +397,7 @@ struct EbookReaderView: View {
       }
 
       if playerManager.current != nil {
-        Button(action: { showPlayerSheet = true }) {
+        Button(action: model.onNowPlayingTapped) {
           VStack(spacing: 6) {
             Image(systemName: "playpause.circle")
               .font(.system(size: 20))
@@ -465,6 +480,8 @@ extension EbookReaderView {
     var readAlong: ReadAlongCoordinator?
     var catchUpMessage: LocalizedStringResource?
     var isCatchingUpToNarration: Bool = false
+    var positionSync: PositionSyncSheet.Model?
+    var playerSheet: EbookPlayerSheet.Model?
 
     func onAppear() {}
     func onDisappear() {}
@@ -480,6 +497,7 @@ extension EbookReaderView {
     func onReadAlongTapped() {}
     func onCatchUpTapped() {}
     func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {}
+    func onNowPlayingTapped() {}
 
     init(
       isLoading: Bool = true,

@@ -18,7 +18,7 @@ nonisolated struct BookSyncContext: Sendable {
   var hasEbook: Bool { ebookURL != nil }
 
   @MainActor
-  init(localBook: LocalBook) {
+  init(localBook: LocalBook, ebookLocation: String? = nil) {
     let progress = try? MediaProgress.fetch(bookID: localBook.bookID)
 
     bookID = localBook.bookID
@@ -31,7 +31,7 @@ nonisolated struct BookSyncContext: Sendable {
     languageCode = BookLanguage.code(for: localBook.language)
     locale = languageCode.map { Locale(identifier: $0) } ?? Locale.current
     ebookURL = localBook.ebookLocalPath
-    ebookLocation = progress?.ebookLocation
+    self.ebookLocation = ebookLocation ?? progress?.ebookLocation
     ebookProgress = progress?.ebookProgress
   }
 }
