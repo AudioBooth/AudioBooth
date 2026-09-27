@@ -1383,16 +1383,31 @@ extension BookPlayerModel {
     }
 
     hasRecordedCompletion = true
+    mediaProgress.currentTime = mediaProgress.duration
+    if let session = sessionManager.current {
+      session.currentTime = mediaProgress.duration
+      session.updatedAt = Date()
+      session.pendingListeningTime = max(session.pendingListeningTime, 1)
+      try? session.save()
+    }
 
     if let localBook = item as? LocalBook {
       Task {
-        try? await localBook.markAsFinished()
+        do {
+          try await localBook.markAsFinished()
+        } catch {
+          AppLogger.player.error("Failed to mark book as finished: \(error)")
+        }
       }
     } else if let episodeID, let podcastID {
       Task {
-        try? MediaProgress.markAsFinished(for: episodeID)
-        let episodeProgressID = "\(podcastID)/\(episodeID)"
-        try? await audiobookshelf.progress.markAsFinished(bookID: episodeProgressID)
+        do {
+          try MediaProgress.markAsFinished(for: episodeID)
+          let episodeProgressID = "\(podcastID)/\(episodeID)"
+          try await audiobookshelf.progress.markAsFinished(bookID: episodeProgressID)
+        } catch {
+          AppLogger.player.error("Failed to mark episode as finished: \(error)")
+        }
       }
     }
 
