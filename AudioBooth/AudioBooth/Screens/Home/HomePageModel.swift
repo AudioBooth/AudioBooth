@@ -18,7 +18,7 @@ final class HomePageModel: HomePage.Model {
   private var continueListeningEpisodes: [Podcast] = []
   private var personalizedSections: [Personalized.Section] = []
   private var pinnedPlaylist: Playlist?
-  private var isFetching = false
+  private var fetchingLibraryID: String?
   private var discoverBooks: [Book] = []
 
   private var continueListening: ContinueListeningCoverFlowView.Model?
@@ -83,6 +83,7 @@ final class HomePageModel: HomePage.Model {
     isLoading = false
 
     if shouldRefresh {
+      loadCachedContent()
       onAppear()
     }
   }
@@ -128,6 +129,8 @@ extension HomePageModel {
 extension HomePageModel {
   private func processSections(_ personalized: [Personalized.Section]) {
     personalizedSections = personalized
+    continueListeningBooks = []
+    continueListeningEpisodes = []
 
     for section in personalized {
       if section.id == "continue-listening" {
@@ -456,13 +459,15 @@ extension HomePageModel {
   }
 
   private func fetchRemoteContent() async {
-    guard Audiobookshelf.shared.libraries.current != nil, !isFetching else { return }
+    guard let libraryID = Audiobookshelf.shared.libraries.current?.id, fetchingLibraryID != libraryID else { return }
 
-    isFetching = true
+    fetchingLibraryID = libraryID
 
     defer {
-      isFetching = false
-      isLoading = false
+      if fetchingLibraryID == libraryID {
+        fetchingLibraryID = nil
+        isLoading = false
+      }
     }
 
     if sections.isEmpty {
@@ -487,6 +492,7 @@ extension HomePageModel {
       }
 
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
+      guard personalized.libraryID == Audiobookshelf.shared.libraries.current?.id else { return }
       processSections(personalized.sections)
     } catch {
       AppLogger.viewModel.error("Failed to fetch personalized content: \(error)")
