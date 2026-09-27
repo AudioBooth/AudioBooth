@@ -128,6 +128,11 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     catchUpToNarration()
   }
 
+  override func onNowPlayingTapped() {
+    guard let player = PlayerManager.shared.current else { return }
+    playerSheet = EbookPlayerSheetModel(player: player, isPresented: true)
+  }
+
   override func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {
     catchUpMessage = nil
     catchUpCheck?.cancel()
@@ -313,6 +318,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         initialLocation: initialLocation,
         config: EPUBNavigatorViewController.Configuration(
           preferences: preferences.toEPUBPreferences(colorScheme: systemColorScheme),
+          editingActions: editingActions,
           contentInset: [
             .compact: (top: 40, bottom: 0),
             .regular: (top: 40, bottom: 0),
@@ -333,6 +339,42 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     } else {
       throw EbookError.unsupportedFormat
     }
+  }
+
+  private var editingActions: [EditingAction] {
+    guard #available(iOS 26.0, *), let bookID,
+      let localBook = try? LocalBook.fetch(bookID: bookID)
+    else {
+      return EditingAction.defaultActions
+    }
+
+    let context = BookSyncContext(localBook: localBook)
+    guard context.isDownloaded, context.hasEbook else { return EditingAction.defaultActions }
+
+    let playFromHere = EditingAction(
+      title: String(localized: "Play From Here"),
+      action: #selector(EPUBNavigatorViewController.playFromHere(_:))
+    )
+    return EditingAction.defaultActions + [playFromHere]
+  }
+
+  func playFromHere() {
+    guard let selectable = navigator as? SelectableNavigator,
+      let locator = selectable.currentSelection?.locator,
+      let bookID,
+      let localBook = try? LocalBook.fetch(bookID: bookID)
+    else {
+      return
+    }
+
+    selectable.clearSelection()
+
+    let context = BookSyncContext(localBook: localBook, ebookLocation: try? locator.jsonString())
+    let model = PositionSyncViewModel(context: context, playsFromHere: true)
+    model.onFinished = { [weak self] in
+      self?.positionSync = nil
+    }
+    positionSync = model
   }
 
   private func updateProgress() {
@@ -695,5 +737,11 @@ extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
 
   func navigator(_ navigator: Navigator, presentError error: NavigatorError) {
     AppLogger.viewModel.error("Navigator error: \(error)")
+  }
+}
+
+extension EPUBNavigatorViewController {
+  @objc func playFromHere(_ sender: Any?) {
+    (delegate as? EbookReaderViewModel)?.playFromHere()
   }
 }

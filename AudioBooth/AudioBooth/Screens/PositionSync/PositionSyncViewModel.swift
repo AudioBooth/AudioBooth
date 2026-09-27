@@ -24,17 +24,21 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
   }
 
   private let context: BookSyncContext
+  private let playsFromHere: Bool
   private let ebooks = EbookTextIndexLoader()
   private var search: Task<Void, Never>?
   private var ebookWord: Int?
+  private var ebookWords: NarrationWordIndex?
   private var isAtSectionStart = false
   private var expectedChapter: String?
 
   private static let chapterSnapWindow: TimeInterval = 60
   private static let wholeSecondNudge: TimeInterval = 0.1
+  private static let sampleInterval: TimeInterval = 30
 
-  init(context: BookSyncContext) {
+  init(context: BookSyncContext, playsFromHere: Bool = false) {
     self.context = context
+    self.playsFromHere = playsFromHere
     super.init()
   }
 
@@ -66,6 +70,12 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
   override func onSkipTapped() {
     guard case .result(let result) = phase else { return }
 
+    if playsFromHere, PlayerManager.shared.current?.id != context.bookID,
+      let localBook = try? LocalBook.fetch(bookID: context.bookID)
+    {
+      PlayerManager.shared.setCurrent(localBook)
+    }
+
     guard let player = PlayerManager.shared.current as? BookPlayerModel,
       player.id == context.bookID
     else {
@@ -74,6 +84,9 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
     }
 
     player.seekToTime(result.time)
+    if playsFromHere {
+      player.onPlayTapped()
+    }
     if let ebookProgress = (try? MediaProgress.fetch(bookID: context.bookID))?.ebookProgress {
       PositionSyncOffer.recordCheck(
         .toAudiobook,
@@ -104,6 +117,7 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
 
     search?.cancel()
     ebookWord = nil
+    ebookWords = nil
     isAtSectionStart = false
     expectedChapter = nil
     phase = .searching(String(localized: "Finding where you stopped reading…"))
@@ -135,13 +149,16 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
       let locale = try await ReadAlongAvailability.prepare(preferred: context.locale)
       try Task.checkCancellation()
 
-      let windows = PageSearchPlan.windows(
-        for: placed.excerpt.page,
-        chapters: context.chapters,
-        duration: context.duration,
-        playhead: playhead,
-        ebookEstimates: placed.estimates
-      )
+      let windows =
+        playsFromHere
+        ? selectionWindows(for: placed.estimates)
+        : PageSearchPlan.windows(
+          for: placed.excerpt.page,
+          chapters: context.chapters,
+          duration: context.duration,
+          playhead: playhead,
+          ebookEstimates: placed.estimates
+        )
 
       guard !windows.isEmpty else {
         phase = .failed(SyncError.notFound.localizedDescription)
@@ -158,6 +175,8 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
         page: placed.excerpt.page,
         windows: windows,
         duration: context.duration,
+        guide: homingGuide(),
+        sampleInterval: Self.sampleInterval,
         source: source,
         locale: locale,
         onProgress: progressHandler()
@@ -203,6 +222,7 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
     }
 
     ebookWord = excerpt.word
+    ebookWords = ebook.index.words
     isAtSectionStart = excerpt.isSectionStart
 
     let estimates = AudioPositionEstimator.estimates(
@@ -228,6 +248,45 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
       excerpt.isSectionStart ? ebook.map.matchedTime(forWord: excerpt.word) : nil
 
     return (excerpt, estimates, chapterStart)
+  }
+
+  private func selectionWindows(for estimates: [AudioPositionEstimator.Estimate]) -> [AudioSearchWindow] {
+    guard let best = estimates.first(where: { $0.confidence != .low }) ?? estimates.first,
+      let chapter = context.chapters.first(where: { $0.contains(best.time) })
+    else {
+      return []
+    }
+
+    expectedChapter = chapter.title
+
+    let radius = best.confidence.searchRadius
+    return [
+      AudioSearchWindow(
+        range: (best.time - radius)...(best.time + radius),
+        chapterTitle: chapter.title,
+        origin: .ebook
+      )
+      .clamped(to: context.duration),
+      AudioSearchWindow(
+        range: chapter.start...max(chapter.start, chapter.end),
+        chapterTitle: chapter.title,
+        origin: .currentChapter
+      )
+      .clamped(to: context.duration),
+    ]
+  }
+
+  @available(iOS 26.0, *)
+  private func homingGuide() -> PageLocator.Guide? {
+    guard let ebookWord, let ebookWords, !ebookWords.isEmpty, context.duration > 0 else {
+      return nil
+    }
+
+    return PageLocator.Guide(
+      ebookWords: ebookWords,
+      targetWord: ebookWord,
+      wordsPerSecond: Double(ebookWords.count) / context.duration
+    )
   }
 
   private func progressHandler() -> @Sendable (String) -> Void {
@@ -263,6 +322,10 @@ final class PositionSyncViewModel: PositionSyncSheet.Model {
 
   private var notFound: String {
     guard let expectedChapter else { return SyncError.notFound.localizedDescription }
+
+    if playsFromHere {
+      return String(localized: "Couldn't find the selected text in \(expectedChapter).")
+    }
 
     return String(
       localized:
