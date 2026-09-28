@@ -77,6 +77,11 @@ extension SessionManager {
     }
 
     if let item, item.isDownloaded {
+      await refreshProgressFromServer(
+        itemID: itemID,
+        episodeID: episodeID,
+        mediaProgress: mediaProgress
+      )
       startLocalSession(
         libraryItemID: itemID,
         episodeID: episodeID,
@@ -206,6 +211,28 @@ extension SessionManager {
 
     AppLogger.session.info("Session setup completed successfully")
     return (session, updatedItem)
+  }
+
+  private func refreshProgressFromServer(
+    itemID: String,
+    episodeID: String?,
+    mediaProgress: MediaProgress
+  ) async {
+    guard NetworkMonitor.shared.isConnected else { return }
+
+    let progressID = episodeID.map { "\(itemID)/\($0)" } ?? itemID
+    do {
+      let apiProgress = try await audiobookshelf.progress.fetch(bookID: progressID, timeout: 3)
+      let localTime = mediaProgress.currentTime
+      mediaProgress.update(from: apiProgress)
+      if mediaProgress.currentTime != localTime {
+        AppLogger.session.info(
+          "Using newer server progress for local session: \(mediaProgress.currentTime)s (local was: \(localTime)s)"
+        )
+      }
+    } catch {
+      AppLogger.session.debug("Could not refresh progress before local session: \(error)")
+    }
   }
 
   private func startLocalSession(

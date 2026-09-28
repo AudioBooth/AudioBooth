@@ -7,10 +7,11 @@ public final class ProgressService {
     self.audiobookshelf = audiobookshelf
   }
 
-  public func fetch(bookID: String) async throws -> User.MediaProgress {
+  public func fetch(bookID: String, timeout: TimeInterval? = nil) async throws -> User.MediaProgress {
     let request = NetworkRequest<User.MediaProgress>(
       path: "/api/me/progress/\(bookID)",
-      method: .get
+      method: .get,
+      timeout: timeout
     )
 
     return try await send(request, failure: "Failed to fetch media progress")
