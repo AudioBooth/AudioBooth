@@ -13,15 +13,15 @@ actor CredentialsActor {
 
   var freshCredentials: Credentials {
     get async throws {
-      if let refreshTask {
-        return try await refreshTask.value
-      }
-
       guard let server else {
         throw Audiobookshelf.AudiobookshelfError.networkError("No server")
       }
 
       let currentToken = await server.token
+
+      if let refreshTask {
+        return try await refreshTask.value
+      }
 
       guard case .bearer(_, let refreshToken, let expiresAt, _) = currentToken else {
         return currentToken
