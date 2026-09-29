@@ -160,7 +160,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
 
     if !preferences.showFullBookDuration, let chapter = chapters?.current {
       let duration = chapter.end - chapter.start
-      let currentTime = chapter.start + (duration * progress)
+      let currentTime = min(max(chapter.start + (duration * progress), chapter.start + 0.1), chapter.end - 0.1)
       player.seek(to: currentTime)
       PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     } else {
@@ -169,6 +169,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     }
 
+    mediaProgress.lastPlayedAt = Date()
     updateProgress()
   }
 

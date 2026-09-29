@@ -7,6 +7,7 @@ struct MiniBookPlayer: View, Equatable {
   @Environment(\.tabViewBottomAccessoryPlacement) var placement
 
   @ObservedObject var player: BookPlayer.Model
+  var namespace: Namespace.ID
 
   static func == (lhs: MiniBookPlayer, rhs: MiniBookPlayer) -> Bool {
     lhs.player.id == rhs.player.id
@@ -60,6 +61,7 @@ struct MiniBookPlayer: View, Equatable {
 
   private var cover: some View {
     Cover(url: player.coverURL)
+      .playerZoomSource(in: namespace)
   }
 
   @ViewBuilder
@@ -106,6 +108,7 @@ struct LegacyMiniBookPlayer: View {
   private var playerManager: PlayerManager { .shared }
 
   var player: BookPlayer.Model
+  var namespace: Namespace.ID
 
   var body: some View {
     VStack(spacing: 0.0) {
@@ -183,14 +186,17 @@ struct LegacyMiniBookPlayer: View {
 
   private var cover: some View {
     Cover(url: player.coverURL)
+      .playerZoomSource(in: namespace)
   }
 }
 
 #Preview {
+  @Previewable @Namespace var namespace
+
   TabView {
     VStack(spacing: 0.0) {
       Spacer()
-      LegacyMiniBookPlayer(player: .mock)
+      LegacyMiniBookPlayer(player: .mock, namespace: namespace)
     }
     .tabItem {
       Image(systemName: "house")

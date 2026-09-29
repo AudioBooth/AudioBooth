@@ -9,7 +9,6 @@ struct BookPlayer: View {
 
   @Environment(\.dismiss) private var dismiss
 
-  @Environment(\.verticalSizeClass) private var verticalSizeClass
   @ObservedObject private var playerManager = PlayerManager.shared
   @ObservedObject private var preferences = UserPreferences.shared
 
@@ -33,8 +32,8 @@ struct BookPlayer: View {
 
         GeometryReader { proxy in
           Group {
-            if verticalSizeClass == .compact {
-              landscapeLayout
+            if proxy.size.width > proxy.size.height {
+              landscapeLayout(artworkWidth: proxy.leadingPanelWidth.map { $0 - 24 })
             } else {
               portraitLayout(artworkHeight: proxy.topPanelHeight)
             }
@@ -301,11 +300,11 @@ struct BookPlayer: View {
     }
   }
 
-  private var landscapeLayout: some View {
+  private func landscapeLayout(artworkWidth: CGFloat?) -> some View {
     HStack(spacing: 24) {
       Artwork(model: model)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .containerRelativeFrame(.horizontal) { width, _ in width * 0.4 }
+        .containerRelativeFrame(.horizontal) { width, _ in artworkWidth ?? width * 0.4 }
 
       VStack(spacing: 24) {
         Spacer()

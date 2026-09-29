@@ -669,6 +669,7 @@ extension BookPlayerModel {
 
   private static let smartRewindCeiling: TimeInterval = 3600
   private static let deliberateSeekGrace: TimeInterval = 5
+  private static let sessionStartMinimumPause: TimeInterval = 60
 
   private func smartRewindInterval(for reason: SmartRewindReason) -> TimeInterval {
     let prefs = UserPreferences.shared
@@ -686,6 +687,8 @@ extension BookPlayerModel {
     case .onInterruption:
       return prefs.smartRewindOnInterruptionInterval
     case .sessionStart:
+      let pause = Date().timeIntervalSince(mediaProgress.lastPlayedAt)
+      guard pause >= Swift.min(prefs.smartRewindAfterPauseThreshold, Self.sessionStartMinimumPause) else { return 0 }
       return prefs.smartRewindMaxInterval
     }
   }

@@ -10,6 +10,7 @@ struct ContentView: View {
   @Environment(\.colorScheme) private var colorScheme
   @Environment(\.scenePhase) private var scenePhase
 
+  @Namespace private var playerNamespace
   @State private var isKeyboardVisible = false
   @State private var selectedTab: TabSelection = .home
   @StateObject private var libraryModel = LibraryRootPage.Model()
@@ -47,14 +48,11 @@ struct ContentView: View {
   var body: some View {
     content
       .observesHinge()
-      .adaptivePresentation(isPresented: $playerManager.isShowingFullPlayer) {
+      .fullScreenCover(isPresented: $playerManager.isShowingFullPlayer) {
         if let currentPlayer = playerManager.current {
           BookPlayer(model: currentPlayer)
             .displayScaled()
-            .presentationDetents([.large])
-            .presentationDragIndicator(
-              (UIAccessibility.isVoiceOverRunning || currentPlayer.isLocked) ? .hidden : .visible
-            )
+            .playerZoomTransition(in: playerNamespace)
             .interactiveDismissDisabled(currentPlayer.isLocked)
         }
       }
@@ -142,7 +140,7 @@ struct ContentView: View {
     .tabViewBottomAccessory {
       Group {
         if let currentPlayer = playerManager.current {
-          MiniBookPlayer(player: currentPlayer)
+          MiniBookPlayer(player: currentPlayer, namespace: playerNamespace)
             .equatable()
         } else {
           HStack(spacing: 12) {
@@ -220,7 +218,7 @@ struct ContentView: View {
   @ViewBuilder
   private var miniPlayer: some View {
     if let currentPlayer = playerManager.current, !isKeyboardVisible {
-      LegacyMiniBookPlayer(player: currentPlayer)
+      LegacyMiniBookPlayer(player: currentPlayer, namespace: playerNamespace)
         .id(currentPlayer.id)
         .transition(.move(edge: .bottom))
         .animation(.easeInOut(duration: 0.3), value: playerManager.hasActivePlayer)
