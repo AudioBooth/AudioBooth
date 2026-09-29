@@ -1,11 +1,13 @@
 import API
 import AVFoundation
 import BackgroundTasks
+import Combine
 import Foundation
 import Logging
 import MediaPlayer
 import Models
 import PlayerIntents
+import UIKit
 
 #if !targetEnvironment(macCatalyst)
 import ActivityKit
@@ -26,9 +28,21 @@ final class SessionManager {
   private var unsyncedSyncTask: Task<Void, Never>?
   private var lastUnsyncedSyncAt = Date.distantPast
   private var unsyncedSyncDelay: TimeInterval = 0
+  private var cancellables = Set<AnyCancellable>()
 
   private init() {
     registerBackgroundTask()
+
+    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+      .sink { [weak self] _ in
+        guard let player = PlayerManager.shared.current else { return }
+        if let podcastID = player.podcastID {
+          self?.refreshProgress(itemID: podcastID, episodeID: player.id)
+        } else {
+          self?.refreshProgress(itemID: player.id)
+        }
+      }
+      .store(in: &cancellables)
   }
 
   func clearSession() {
@@ -84,6 +98,7 @@ extension SessionManager {
         mediaProgress: mediaProgress
       )
       AppLogger.session.info("Created local session for offline stats tracking")
+      refreshProgress(itemID: itemID, episodeID: episodeID)
       return item
     }
 
@@ -206,6 +221,20 @@ extension SessionManager {
 
     AppLogger.session.info("Session setup completed successfully")
     return (session, updatedItem)
+  }
+
+  private func refreshProgress(itemID: String, episodeID: String? = nil) {
+    Task {
+      do {
+        let progressID = episodeID.map { "\(itemID)/\($0)" } ?? itemID
+        let apiProgress = try await audiobookshelf.progress.fetch(bookID: progressID)
+        guard let mediaProgress = try MediaProgress.fetch(bookID: episodeID ?? itemID) else { return }
+        mediaProgress.update(from: apiProgress)
+        try mediaProgress.save()
+      } catch {
+        AppLogger.session.debug("Failed to refresh progress: \(error)")
+      }
+    }
   }
 
   private func startLocalSession(
