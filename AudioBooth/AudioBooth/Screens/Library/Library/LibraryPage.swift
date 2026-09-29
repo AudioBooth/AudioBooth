@@ -49,7 +49,7 @@ struct LibraryPage: View {
       }
     }
     .background(theme.colors.background.page)
-    .navigationTitle(model.isSelecting ? selectionTitle : model.title)
+    .navigationTitle(navigationTitle)
     .sheet(isPresented: $model.showingFilterSelection) {
       if let filters = model.filters {
         NavigationStack {
@@ -309,6 +309,16 @@ struct LibraryPage: View {
 
   var showsPlayAction: Bool {
     model.actions.contains(.playAll) && !model.items.isEmpty && (!model.isSelecting || hasSelection)
+  }
+
+  var navigationTitle: String {
+    if model.isRoot {
+      ""
+    } else if model.isSelecting {
+      selectionTitle
+    } else {
+      model.title
+    }
   }
 
   var selectionTitle: String {

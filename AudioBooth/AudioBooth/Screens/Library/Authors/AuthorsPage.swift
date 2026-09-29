@@ -13,7 +13,6 @@ struct AuthorsPage: View {
   var body: some View {
     content
       .background(theme.colors.background.page)
-      .navigationTitle("Authors")
       .refreshable {
         await model.refresh()
       }

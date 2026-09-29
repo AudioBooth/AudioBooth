@@ -31,12 +31,15 @@ struct BookPlayer: View {
           .accessibilityHidden(true)
           .ignoresSafeArea()
 
-        Group {
-          if verticalSizeClass == .compact {
-            landscapeLayout
-          } else {
-            portraitLayout
+        GeometryReader { proxy in
+          Group {
+            if verticalSizeClass == .compact {
+              landscapeLayout
+            } else {
+              portraitLayout(artworkHeight: proxy.topPanelHeight)
+            }
           }
+          .frame(width: proxy.size.width, height: proxy.size.height)
         }
 
         if model.isLocked {
@@ -274,10 +277,11 @@ struct BookPlayer: View {
     }
   }
 
-  private var portraitLayout: some View {
+  private func portraitLayout(artworkHeight: CGFloat?) -> some View {
     VStack(spacing: 0) {
       VStack(spacing: 0) {
         Artwork(model: model)
+          .frame(height: artworkHeight)
 
         Spacer(minLength: 24)
 

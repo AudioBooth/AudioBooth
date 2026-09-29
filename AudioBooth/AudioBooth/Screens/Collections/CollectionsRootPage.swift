@@ -4,6 +4,8 @@ import SwiftUI
 
 struct CollectionsRootPage: View {
   @Environment(\.appTheme) var theme
+  @Environment(\.isPartiallyFolded) private var isPartiallyFolded
+
   enum CollectionType: CaseIterable {
     case series
     case collections
@@ -26,7 +28,7 @@ struct CollectionsRootPage: View {
         .background(theme.colors.background.page)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          ToolbarItem(placement: .principal) {
+          ToolbarItem(placement: isPartiallyFolded ? .topBarLeading : .principal) {
             Picker("Collection Type", selection: $model.selected) {
               Text("Series").tag(CollectionType.series)
               Text("Collections").tag(CollectionType.collections)
@@ -37,6 +39,7 @@ struct CollectionsRootPage: View {
             .tint(.primary)
             .fixedSize(horizontal: true, vertical: true)
           }
+          .sharedBackgroundHidden()
         }
         .navigationDestinations()
     }

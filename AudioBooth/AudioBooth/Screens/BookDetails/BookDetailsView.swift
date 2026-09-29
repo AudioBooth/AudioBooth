@@ -7,7 +7,6 @@ import SwiftUI
 
 struct BookDetailsView: View {
   @Environment(\.appTheme) var theme
-  @Environment(\.verticalSizeClass) private var verticalSizeClass
 
   @StateObject var model: Model
 
@@ -21,9 +20,9 @@ struct BookDetailsView: View {
   }
 
   var body: some View {
-    Group {
-      if verticalSizeClass == .compact {
-        landscapeLayout
+    GeometryReader { proxy in
+      if proxy.size.width > proxy.size.height {
+        landscapeLayout(coverWidth: proxy.leadingPanelWidth ?? 300)
       } else {
         portraitLayout
       }
@@ -187,10 +186,9 @@ struct BookDetailsView: View {
     }
   }
 
-  private var landscapeLayout: some View {
+  private func landscapeLayout(coverWidth: CGFloat) -> some View {
     HStack(spacing: 0) {
-      simpleCover
-        .frame(width: 300)
+      simpleCover(width: coverWidth)
 
       ScrollView {
         contentSections
@@ -340,7 +338,7 @@ struct BookDetailsView: View {
     }
   }
 
-  private var simpleCover: some View {
+  private func simpleCover(width: CGFloat) -> some View {
     VStack {
       Cover(
         model: Cover.Model(
@@ -352,7 +350,7 @@ struct BookDetailsView: View {
         ),
         style: .plain
       )
-      .frame(width: 200, height: 200)
+      .frame(width: width * 2 / 3, height: width * 2 / 3)
       .shadow(radius: 4)
       .padding()
       .onTapGesture {
@@ -360,6 +358,7 @@ struct BookDetailsView: View {
         isShowingFullScreenCover = true
       }
     }
+    .frame(width: width)
     .frame(maxHeight: .infinity)
     .background {
       LazyImage(url: model.coverURL) { state in

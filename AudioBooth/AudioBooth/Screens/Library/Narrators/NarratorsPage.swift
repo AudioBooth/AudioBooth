@@ -32,7 +32,6 @@ struct NarratorsPage: View {
       }
     }
     .background(theme.colors.background.page)
-    .navigationTitle("Narrators")
     .navigationBarTitleDisplayMode(.inline)
     .refreshable {
       await model.refresh()

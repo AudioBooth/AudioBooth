@@ -46,6 +46,7 @@ struct ContentView: View {
 
   var body: some View {
     content
+      .observesHinge()
       .adaptivePresentation(isPresented: $playerManager.isShowingFullPlayer) {
         if let currentPlayer = playerManager.current {
           BookPlayer(model: currentPlayer)

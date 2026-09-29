@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct DownloadsRootPage: View {
+  @Environment(\.isPartiallyFolded) private var isPartiallyFolded
+
   enum DownloadTab: Hashable {
     case downloaded
     case downloading
@@ -27,7 +29,7 @@ struct DownloadsRootPage: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         if hasDownloadingBooks {
-          ToolbarItem(placement: .principal) {
+          ToolbarItem(placement: isPartiallyFolded ? .topBarLeading : .principal) {
             Picker("Download Tab", selection: $selectedTab) {
               Text("Downloaded").tag(DownloadTab.downloaded)
               Text("Downloading").tag(DownloadTab.downloading)
@@ -36,6 +38,7 @@ struct DownloadsRootPage: View {
             .controlSize(.large)
             .tint(.primary)
           }
+          .sharedBackgroundHidden()
         }
       }
       .navigationDestinations()

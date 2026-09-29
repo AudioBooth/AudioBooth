@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PodcastsRootPage: View {
   @Environment(\.appTheme) var theme
+  @Environment(\.isPartiallyFolded) private var isPartiallyFolded
   enum SectionType: CaseIterable {
     case podcasts
     case playlists
@@ -25,7 +26,7 @@ struct PodcastsRootPage: View {
         .background(theme.colors.background.page)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          ToolbarItem(placement: .principal) {
+          ToolbarItem(placement: isPartiallyFolded ? .topBarLeading : .principal) {
             Picker("Section", selection: $model.selected) {
               Text("Podcasts").tag(SectionType.podcasts)
               Text("Playlists").tag(SectionType.playlists)
@@ -35,6 +36,7 @@ struct PodcastsRootPage: View {
             .tint(.primary)
             .fixedSize(horizontal: true, vertical: true)
           }
+          .sharedBackgroundHidden()
         }
         .navigationDestinations { destination in
           switch destination {
