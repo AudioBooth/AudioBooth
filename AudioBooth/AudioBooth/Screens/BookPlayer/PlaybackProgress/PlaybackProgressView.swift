@@ -19,7 +19,7 @@ struct PlaybackProgressView: View {
                 .frame(height: 3)
 
               RoundedRectangle(cornerRadius: 1.5)
-                .fill(Color.accentColor.opacity(0.7))
+                .fill(.tint.opacity(0.7))
                 .frame(width: max(0, geometry.size.width * supplementary.progress), height: 3)
             }
           }
@@ -45,7 +45,7 @@ struct PlaybackProgressView: View {
             .fill(Color.white.opacity(0.3))
 
           Rectangle()
-            .fill(Color.accentColor)
+            .fill(.tint)
             .frame(width: max(0, geometry.size.width * model.progress))
         }
         .frame(height: 5)

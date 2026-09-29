@@ -26,6 +26,7 @@ extension UserPreferences {
     "showFullBookDuration",
     "showBookProgressBar",
     "hideChapterSkipButtons",
+    "coverColorProgressBar",
     "keepScreenAwakeInPlayer",
     "positionSyncOffers",
     "mixWithOtherAudio",

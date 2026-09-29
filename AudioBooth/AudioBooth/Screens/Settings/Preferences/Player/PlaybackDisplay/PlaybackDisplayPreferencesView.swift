@@ -36,6 +36,16 @@ struct PlaybackDisplayPreferencesView: View {
           )
         }
         .listRowBackground(theme.colors.background.card)
+
+        Toggle(isOn: $preferences.coverColorProgressBar) {
+          PreferenceRow(
+            systemImage: "paintpalette",
+            tint: .pink,
+            title: "Cover Color Progress Bar",
+            subtitle: "Tint the progress bar with the book cover color"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Time & Progress")
       }

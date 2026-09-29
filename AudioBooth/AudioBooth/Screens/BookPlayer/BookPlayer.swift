@@ -646,6 +646,7 @@ extension BookPlayer {
 
     var downloadState: DownloadManager.DownloadState
     var backgroundColor: Color = .black
+    var progressTint: Color?
 
     var isPresented: Bool = true
     var isSettingsPresented: Bool = false

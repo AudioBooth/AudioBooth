@@ -784,8 +784,10 @@ extension BookPlayerModel {
       guard let image = try? await ImagePipeline.shared.image(for: request),
         let uiColor = image.averageColor
       else { return }
+      let vibrantColor = image.vibrantColor
       withAnimation(.easeIn(duration: 0.5)) {
         self.backgroundColor = Color(uiColor)
+        self.progressTint = vibrantColor.map(Color.init)
       }
     }
   }
