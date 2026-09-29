@@ -59,6 +59,7 @@ struct CircularComplicationView: View {
       EmptyView()
     }
     .progressViewStyle(.circular)
+    .tint(.orange)
     .widgetAccentable()
   }
 
@@ -84,6 +85,7 @@ struct CircularComplicationView: View {
         .font(.caption)
     }
     .gaugeStyle(.accessoryCircular)
+    .tint(.orange)
   }
 
   private func progressRing(progress: Double) -> some View {
@@ -97,6 +99,7 @@ struct CircularComplicationView: View {
         .stroke(style: StrokeStyle(lineWidth: ringWidth, lineCap: .round))
         .rotationEffect(.degrees(-90))
     }
+    .foregroundStyle(.orange)
     .widgetAccentable()
   }
 
