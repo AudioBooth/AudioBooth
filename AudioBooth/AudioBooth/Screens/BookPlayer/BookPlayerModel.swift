@@ -965,8 +965,7 @@ extension BookPlayerModel {
     player.volume = Float(userPreferences.volumeLevel)
 
     if pendingPlay {
-      player.resume()
-      pendingPlay = false
+      resumePlayback()
     }
 
     AppLogger.player.info("Restored playback position and state after reload")
