@@ -12,17 +12,8 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
   init(playerModel: BookPlayerModel, hasChapters: Bool) {
     self.playerModel = playerModel
 
-    let initialState: DownloadManager.DownloadState
-    if let localBook = localStorage.books.first(where: { $0.id == playerModel.bookID }),
-      localBook.isDownloaded
-    {
-      initialState = .downloaded
-      self.hasSwitchedToLocal = true
-    } else if downloadManager.isDownloading(for: playerModel.bookID) {
-      initialState = .downloading(progress: 0)
-    } else {
-      initialState = .notDownloaded
-    }
+    let initialState = DownloadManager.shared.downloadState(for: playerModel.bookID)
+    self.hasSwitchedToLocal = initialState == .downloaded
 
     let savedSpeed = BookSpeedPickerModel.savedSpeed
     super.init(hasChapters: hasChapters, downloadState: initialState, speed: savedSpeed)
@@ -37,40 +28,24 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
   private func observeDownloadProgress() {
     guard let bookID = playerModel?.bookID else { return }
 
-    downloadManager.$currentProgress
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] progressMap in
-        guard let self else { return }
-        if let progress = progressMap[bookID] {
-          self.downloadState = .downloading(progress: progress)
-        } else if case .downloading = self.downloadState,
-          !self.downloadManager.isDownloading(for: bookID)
-        {
-          let isDownloaded =
-            self.localStorage.books.first(where: { $0.id == bookID })?.isDownloaded ?? false
-          self.downloadState = isDownloaded ? .downloaded : .notDownloaded
-        }
-      }
-      .store(in: &cancellables)
+    Publishers.CombineLatest3(
+      downloadManager.$currentProgress,
+      downloadManager.$activeBookIDs,
+      localStorage.$books
+    )
+    .receive(on: DispatchQueue.main)
+    .sink { [weak self] _, _, books in
+      guard let self else { return }
+      self.downloadState = self.downloadManager.downloadState(for: bookID)
 
-    localStorage.$books
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] books in
-        guard let self else { return }
-        if let localBook = books.first(where: { $0.id == bookID }),
-          localBook.isDownloaded
-        {
-          self.downloadState = .downloaded
-          if !self.hasSwitchedToLocal {
-            self.hasSwitchedToLocal = true
-            self.playerModel?.switchToLocalPlayback(localBook)
-          }
-        } else if case .downloading = self.downloadState {
-        } else {
-          self.downloadState = .notDownloaded
-        }
+      if self.downloadState == .downloaded, !self.hasSwitchedToLocal,
+        let localBook = books.first(where: { $0.id == bookID })
+      {
+        self.hasSwitchedToLocal = true
+        self.playerModel?.switchToLocalPlayback(localBook)
       }
-      .store(in: &cancellables)
+    }
+    .store(in: &cancellables)
   }
 
   override func onChaptersTapped() {
@@ -81,17 +56,26 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
     guard let playerModel else { return }
 
     switch downloadState {
-    case .notDownloaded:
-      downloadState = .downloading(progress: 0)
+    case .notDownloaded, .paused:
       downloadManager.startDownload(for: playerModel.book)
     case .downloading:
-      downloadManager.cancelDownload(for: playerModel.bookID)
-      downloadState = .notDownloaded
-    case .downloaded:
       downloadManager.deleteDownload(for: playerModel.bookID)
-      playerModel.clearLocalPlayback()
-      hasSwitchedToLocal = false
-      downloadState = .notDownloaded
+    case .downloaded:
+      removeDownload()
     }
+
+    downloadState = downloadManager.downloadState(for: playerModel.bookID)
+  }
+
+  override func onRemoveDownloadTapped() {
+    removeDownload()
+  }
+
+  private func removeDownload() {
+    guard let playerModel else { return }
+    downloadManager.deleteDownload(for: playerModel.bookID)
+    playerModel.clearLocalPlayback()
+    hasSwitchedToLocal = false
+    downloadState = .notDownloaded
   }
 }

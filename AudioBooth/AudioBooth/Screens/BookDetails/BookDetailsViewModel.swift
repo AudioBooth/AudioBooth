@@ -14,6 +14,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   private var downloadManager: DownloadManager { .shared }
   private var playerManager: PlayerManager { .shared }
   private var authenticationService: AuthenticationService { Audiobookshelf.shared.authentication }
+  private var watchConnectivityManager: WatchConnectivityManager { .shared }
 
   private var cancellables = Set<AnyCancellable>()
   private var progressObservation: Task<Void, Never>?
@@ -62,6 +63,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     setupItemObservation()
     setupPlayerStateObservation()
     setupQueueObservation()
+    setupWatchObservation()
   }
 
   private func loadLocalBook() async {
@@ -418,6 +420,20 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       .store(in: &cancellables)
   }
 
+  private func setupWatchObservation() {
+    watchConnectivityManager.$watchDownloadedBookIDs
+      .combineLatest(watchConnectivityManager.$canDownloadToWatch)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.updateActions()
+      }
+      .store(in: &cancellables)
+  }
+
+  override func onDownloadToWatchTapped() {
+    watchConnectivityManager.requestWatchDownload(bookID: bookID)
+  }
+
   private func setupQueueObservation() {
     playerManager.$queue
       .receive(on: DispatchQueue.main)
@@ -457,6 +473,14 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
     if metadata.isEbook, !ereaderDevices.isEmpty {
       updatedActions.insert(.sendToEbook)
+    }
+
+    if metadata.hasAudio,
+      authenticationService.server?.permissions?.download == true,
+      watchConnectivityManager.canDownloadToWatch,
+      !watchConnectivityManager.watchDownloadedBookIDs.contains(bookID)
+    {
+      updatedActions.insert(.downloadToWatch)
     }
 
     var shareItems: [BookShareItem] = []

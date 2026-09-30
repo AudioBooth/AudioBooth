@@ -8,8 +8,8 @@ struct AudioBoothWatch: App {
 
   init() {
     configureImagePipeline()
-    DownloadManager.shared.cleanupOrphanedDownloads()
     _ = WatchConnectivityManager.shared
+    DownloadManager.shared.start()
   }
 
   var body: some Scene {
@@ -56,6 +56,10 @@ struct AudioBoothWatch: App {
 }
 
 final class AppDelegate: NSObject, WKApplicationDelegate {
+  func applicationDidBecomeActive() {
+    DownloadManager.shared.applicationDidBecomeActive()
+  }
+
   func handle(_ backgroundTasks: Set<WKRefreshBackgroundTask>) {
     for task in backgroundTasks {
       switch task {
@@ -65,6 +69,9 @@ final class AppDelegate: NSObject, WKApplicationDelegate {
         ) {
           urlSessionTask.setTaskCompletedWithSnapshot(false)
         }
+
+      case let connectivityTask as WKWatchConnectivityRefreshBackgroundTask:
+        WatchConnectivityManager.shared.handleBackgroundTask(connectivityTask)
 
       default:
         task.setTaskCompletedWithSnapshot(false)

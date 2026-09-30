@@ -35,11 +35,21 @@ struct ContinueListeningRow: View {
               .lineLimit(1)
           }
 
-          if let timeRemaining = model.timeRemaining {
-            Text(timeRemaining)
-              .font(.footnote)
-              .foregroundStyle(.orange)
-              .lineLimit(1)
+          let status = model.downloadStatus ?? model.timeRemaining
+          if model.isDownloaded || status != nil {
+            HStack(spacing: 4) {
+              if model.isDownloaded {
+                Image(systemName: "arrow.down.circle.fill")
+                  .accessibilityLabel("Downloaded")
+              }
+
+              if let status {
+                Text(status)
+                  .lineLimit(1)
+              }
+            }
+            .font(.footnote)
+            .foregroundStyle(.orange)
           }
         }
 
@@ -64,6 +74,8 @@ extension ContinueListeningRow {
     var author: String?
     var coverURL: URL?
     var timeRemaining: String?
+    var downloadStatus: String?
+    var isDownloaded: Bool
 
     func onTapped() {}
 
@@ -72,13 +84,17 @@ extension ContinueListeningRow {
       title: String,
       author: String? = nil,
       coverURL: URL? = nil,
-      timeRemaining: String? = nil
+      timeRemaining: String? = nil,
+      downloadStatus: String? = nil,
+      isDownloaded: Bool = false
     ) {
       self.id = id
       self.title = title
       self.author = author
       self.coverURL = coverURL
       self.timeRemaining = timeRemaining
+      self.downloadStatus = downloadStatus
+      self.isDownloaded = isDownloaded
     }
   }
 }

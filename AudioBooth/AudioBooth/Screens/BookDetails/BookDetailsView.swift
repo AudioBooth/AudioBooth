@@ -111,6 +111,12 @@ struct BookDetailsView: View {
             }
           }
 
+          if model.actions.contains(.downloadToWatch) {
+            Button(action: model.onDownloadToWatchTapped) {
+              Label("Download to Apple Watch", systemImage: "applewatch")
+            }
+          }
+
           if model.actions.contains(.addToQueue) {
             Button(action: model.onAddToQueueTapped) {
               Label("Add to Queue", systemImage: "text.badge.plus")
@@ -651,6 +657,7 @@ extension BookDetailsView {
       static let resetProgress = Actions(rawValue: 1 << 5)
       static let writeNFCTag = Actions(rawValue: 1 << 6)
       static let sendToEbook = Actions(rawValue: 1 << 8)
+      static let downloadToWatch = Actions(rawValue: 1 << 9)
     }
 
     let bookID: String
@@ -691,6 +698,7 @@ extension BookDetailsView {
     func onSendToEbookTapped(_ device: String) {}
     func onAddToQueueTapped() {}
     func onRemoveFromQueueTapped() {}
+    func onDownloadToWatchTapped() {}
 
     init(
       bookID: String,

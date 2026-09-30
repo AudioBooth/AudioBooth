@@ -34,6 +34,13 @@ final class LocalBookStorage: ObservableObject {
     saveBooks(updatedBooks)
   }
 
+  func updateBook(_ id: String, _ update: (inout WatchBook) -> Void) {
+    var updatedBooks = books
+    guard let index = updatedBooks.firstIndex(where: { $0.id == id }) else { return }
+    update(&updatedBooks[index])
+    saveBooks(updatedBooks)
+  }
+
   func deleteBook(_ id: String) {
     var updatedBooks = books
     updatedBooks.removeAll { $0.id == id }

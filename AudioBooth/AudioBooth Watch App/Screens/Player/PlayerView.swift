@@ -24,7 +24,7 @@ struct PlayerView: View {
         )
       }
       .buttonStyle(.plain)
-      .allowsHitTesting(model.options.downloadState == .notDownloaded)
+      .allowsHitTesting(model.options.isCoverDownloadEnabled)
 
       content
 

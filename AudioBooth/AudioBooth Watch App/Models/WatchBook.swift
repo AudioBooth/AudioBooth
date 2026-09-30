@@ -24,6 +24,16 @@ struct WatchBook: Codable, Identifiable {
     !tracks.isEmpty && tracks.allSatisfy { $0.relativePath != nil }
   }
 
+  var downloadProgress: Double {
+    let totalBytes = tracks.reduce(Int64(0)) { $0 + ($1.size ?? 0) }
+    guard totalBytes > 0 else {
+      guard !tracks.isEmpty else { return 0 }
+      return Double(tracks.filter { $0.relativePath != nil }.count) / Double(tracks.count)
+    }
+    let downloadedBytes = tracks.filter { $0.relativePath != nil }.reduce(Int64(0)) { $0 + ($1.size ?? 0) }
+    return Double(downloadedBytes) / Double(totalBytes)
+  }
+
   func localURL(for track: WatchTrack) -> URL? {
     guard let relativePath = track.relativePath else { return nil }
     return URL.documentsDirectory.appendingPathComponent(relativePath)

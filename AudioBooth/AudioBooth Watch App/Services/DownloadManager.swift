@@ -8,148 +8,449 @@ final class DownloadManager: NSObject, ObservableObject {
   enum DownloadState: Equatable {
     case notDownloaded
     case downloading(progress: Double)
+    case paused(progress: Double)
     case downloaded
   }
 
-  private let operationQueue: OperationQueue = {
-    let queue = OperationQueue()
-    queue.maxConcurrentOperationCount = 1
-    queue.name = "me.jgrenier.AudioBS.watch.downloadQueue"
-    return queue
-  }()
+  private struct TaskInfo {
+    let bookID: String
+    let index: Int
+    let ext: String
+
+    init?(_ task: URLSessionTask) {
+      let parts = task.taskDescription?.split(separator: "|", maxSplits: 2, omittingEmptySubsequences: false) ?? []
+      guard parts.count == 3, let index = Int(parts[1]) else { return nil }
+      self.bookID = String(parts[0])
+      self.index = index
+      self.ext = String(parts[2])
+    }
+  }
+
+  private static let sessionIdentifier = "me.jgrenier.AudioBS.watch.downloads"
+  private static let legacySessionPrefix = "me.jgrenier.AudioBS.watch.download."
+  private static let migrationKey = "downloads_migrated_to_shared_session"
+  private static let autoResumeInterval: TimeInterval = 300
+  private static let freshPayloadInterval: TimeInterval = 600
 
   private let localStorage = LocalBookStorage.shared
   private let connectivityManager = WatchConnectivityManager.shared
 
-  private var activeOperations: [String: DownloadOperation] = [:]
-  private var progressTasks: [String: Task<Void, Never>] = [:]
   @Published private(set) var currentProgress: [String: Double] = [:]
+  @Published private(set) var activeBookIDs: Set<String> = []
 
-  func isDownloading(for bookID: String) -> Bool {
-    activeOperations[bookID] != nil
+  private var enqueueTokens: [String: UUID] = [:]
+  private var pendingArmedCallbacks: [String: [() -> Void]] = [:]
+  private var inFlight: [String: Set<Int>] = [:]
+  private var trackedTaskIDs: Set<Int> = []
+  private var completedTaskIDs: Set<Int> = []
+  private var bytesWritten: [String: [Int: Int64]] = [:]
+  private var resumedTaskIDs: Set<Int> = []
+  private var retriedTracks: Set<String> = []
+  private var pendingCancellations: [String: Task<Void, Never>] = [:]
+  private var lastAutoAttempt: [String: Date] = [:]
+  private var backgroundCompletions: [() -> Void] = []
+  private var hasDeliveredBackgroundEvents = false
+  private var pendingRetries = 0
+
+  private lazy var session: URLSession = {
+    let config = URLSessionConfiguration.background(withIdentifier: Self.sessionIdentifier)
+    config.isDiscretionary = false
+    config.sessionSendsLaunchEvents = true
+    config.timeoutIntervalForRequest = 60
+    config.allowsCellularAccess = true
+    config.waitsForConnectivity = true
+    config.allowsExpensiveNetworkAccess = true
+    config.allowsConstrainedNetworkAccess = true
+    config.httpMaximumConnectionsPerHost = 1
+    return URLSession(configuration: config, delegate: self, delegateQueue: .main)
+  }()
+
+  func start() {
+    migrateIfNeeded()
+    cleanupOrphanedDownloads()
+    _ = session
   }
 
-  func startDownload(for book: WatchBook) {
-    guard activeOperations[book.id] == nil else { return }
+  func downloadState(for bookID: String) -> DownloadState {
+    let stored = storedBook(bookID)
+    if let stored, stored.isDownloaded {
+      return .downloaded
+    }
+    if activeBookIDs.contains(bookID) {
+      return .downloading(progress: currentProgress[bookID] ?? stored?.downloadProgress ?? 0)
+    }
+    if let stored {
+      return .paused(progress: stored.downloadProgress)
+    }
+    return .notDownloaded
+  }
 
-    Task {
-      guard
-        let localBook = await connectivityManager.startSession(bookID: book.id, forDownload: true)
-      else {
-        AppLogger.download.error("Failed to get download info")
+  func startDownload(
+    for book: WatchBook,
+    downloadTracks: [WatchTrack]? = nil,
+    payloadSentAt: Date? = nil,
+    refreshOnly: Bool = false,
+    onArmed: (() -> Void)? = nil
+  ) {
+    let armed = onArmed.map(makeOnce)
+
+    if storedBook(book.id) == nil {
+      guard !refreshOnly else {
+        armed?()
         return
       }
+      localStorage.saveBook(
+        WatchBook(
+          id: book.id,
+          title: book.title,
+          authorName: book.authorName,
+          coverURL: book.coverURL,
+          duration: book.duration,
+          chapters: book.chapters,
+          currentTime: book.currentTime
+        )
+      )
+    }
 
-      var bookToSave = localBook
-      bookToSave.currentTime = book.currentTime
-      if bookToSave.coverURL == nil {
-        bookToSave.coverURL = book.coverURL
+    if let downloadTracks {
+      localStorage.updateBook(book.id) { stored in
+        stored.tracks = Self.merge(downloadTracks, into: stored.tracks, bookID: book.id)
       }
-      localStorage.saveBook(bookToSave)
+    }
 
-      await MainActor.run {
-        startDownloadOperation(for: bookToSave)
-      }
+    if let armed {
+      pendingArmedCallbacks[book.id, default: []].append(armed)
+    }
+
+    guard enqueueTokens[book.id] == nil else { return }
+
+    let token = UUID()
+    enqueueTokens[book.id] = token
+    updateActiveBookIDs()
+
+    let skipRefetch = payloadSentAt.map { Date().timeIntervalSince($0) < Self.freshPayloadInterval } ?? false
+    Task {
+      await enqueue(bookID: book.id, token: token, skipRefetch: skipRefetch)
     }
   }
 
-  private func startDownloadOperation(
-    for book: WatchBook,
-    reconnecting: Bool = false,
-    onBackgroundEventsDelivered: (() -> Void)? = nil
-  ) {
-    let operation = DownloadOperation(
-      book: book,
-      localStorage: localStorage,
-      reconnecting: reconnecting
-    )
-    operation.onBackgroundEventsDelivered = onBackgroundEventsDelivered
-    activeOperations[book.id] = operation
-    currentProgress.removeValue(forKey: book.id)
-
-    let progressTask = Task { @MainActor [weak self] in
-      for await progress in operation.progress {
-        guard !Task.isCancelled else { break }
-        self?.currentProgress[book.id] = progress
-      }
-    }
-    progressTasks[book.id] = progressTask
-
-    operation.completionBlock = { @MainActor [weak self] in
-      self?.progressTasks[book.id]?.cancel()
-      self?.progressTasks.removeValue(forKey: book.id)
-      self?.activeOperations.removeValue(forKey: book.id)
-      self?.currentProgress.removeValue(forKey: book.id)
-    }
-
-    operationQueue.addOperation(operation)
+  func applicationDidBecomeActive() {
+    hasDeliveredBackgroundEvents = false
+    resumeIncompleteDownloads()
   }
 
-  func cancelDownload(for bookID: String) {
-    activeOperations[bookID]?.cancel()
-    currentProgress.removeValue(forKey: bookID)
+  func resumeIncompleteDownloads(bypassThrottle: Bool = false) {
+    let now = Date()
+    for book in localStorage.books where !book.isDownloaded && !activeBookIDs.contains(book.id) {
+      if !bypassThrottle, let last = lastAutoAttempt[book.id],
+        now.timeIntervalSince(last) < Self.autoResumeInterval
+      {
+        continue
+      }
+      lastAutoAttempt[book.id] = now
+      startDownload(for: book)
+    }
   }
 
   func reconnectBackgroundSession(withIdentifier identifier: String, completion: @escaping () -> Void) {
-    guard identifier.hasPrefix("me.jgrenier.AudioBS.watch.download.") else {
-      completion()
-      return
-    }
-    let bookID = String(identifier.dropFirst("me.jgrenier.AudioBS.watch.download.".count))
-
-    guard activeOperations[bookID] == nil else {
-      AppLogger.download.debug("Session already active for book: \(bookID)")
-      completion()
+    if identifier == Self.sessionIdentifier {
+      _ = session
+      backgroundCompletions.append(makeOnce(completion))
+      completeBackgroundEventsIfPossible()
       return
     }
 
-    guard let book = localStorage.books.first(where: { $0.id == bookID }) else {
-      AppLogger.download.warning("Cannot reconnect session for unknown book: \(bookID)")
+    if identifier.hasPrefix(Self.legacySessionPrefix) {
+      AppLogger.download.info("Discarding legacy background session: \(identifier)")
       let config = URLSessionConfiguration.background(withIdentifier: identifier)
-      let session = URLSession(configuration: config)
-      session.invalidateAndCancel()
-      completion()
+      URLSession(configuration: config).invalidateAndCancel()
+    }
+    completion()
+  }
+
+  private func enqueue(bookID: String, token: UUID, skipRefetch: Bool) async {
+    defer {
+      if enqueueTokens[bookID] == token {
+        enqueueTokens.removeValue(forKey: bookID)
+        updateActiveBookIDs()
+        updateProgress(for: bookID)
+      }
+      for callback in pendingArmedCallbacks.removeValue(forKey: bookID) ?? [] {
+        callback()
+      }
+    }
+
+    clearRetries(for: bookID)
+    await pendingCancellations[bookID]?.value
+
+    if !skipRefetch {
+      let refreshed = await refreshTracks(for: bookID)
+      if !refreshed {
+        AppLogger.download.warning("Could not refresh download info for \(bookID), using stored tracks")
+      }
+    }
+
+    let existingTasks = await session.allTasks.filter { task in
+      (task.state == .running || task.state == .suspended)
+        && !completedTaskIDs.contains(task.taskIdentifier)
+        && TaskInfo(task)?.bookID == bookID
+    }
+
+    guard enqueueTokens[bookID] == token, let book = storedBook(bookID) else { return }
+
+    guard !book.tracks.isEmpty else {
+      AppLogger.download.error("No tracks available to download for \(bookID)")
+      deleteDownload(for: bookID)
       return
     }
 
-    AppLogger.download.info("Reconnecting background session for book: \(bookID)")
-    startDownloadOperation(for: book, reconnecting: true, onBackgroundEventsDelivered: completion)
+    let busyIndices = Set(existingTasks.compactMap { TaskInfo($0)?.index }).union(inFlight[bookID] ?? [])
+    trackedTaskIDs.formUnion(existingTasks.map(\.taskIdentifier))
+
+    for track in book.tracks.sorted(by: { $0.index < $1.index }) {
+      guard let ext = track.ext, !ext.isEmpty else {
+        AppLogger.download.error("Track \(track.index) missing file extension, cannot download")
+        continue
+      }
+
+      let relativePath = Self.relativePath(bookID: bookID, index: track.index, ext: ext)
+      if FileManager.default.fileExists(atPath: URL.documentsDirectory.appendingPathComponent(relativePath).path) {
+        if track.relativePath != relativePath {
+          setTrackPath(relativePath, bookID: bookID, index: track.index)
+        }
+        continue
+      }
+
+      if busyIndices.contains(track.index) {
+        inFlight[bookID, default: []].insert(track.index)
+        continue
+      }
+
+      createTask(bookID: bookID, track: track)
+    }
+
+    AppLogger.download.info("Queued \(self.inFlight[bookID]?.count ?? 0) tracks for \(bookID)")
+  }
+
+  @discardableResult
+  private func refreshTracks(for bookID: String) async -> Bool {
+    guard let info = await connectivityManager.startSession(bookID: bookID, forDownload: true) else {
+      return false
+    }
+
+    guard storedBook(bookID) != nil else { return false }
+
+    localStorage.updateBook(bookID) { stored in
+      stored = WatchBook(
+        id: stored.id,
+        title: info.title,
+        authorName: info.authorName,
+        coverURL: info.coverURL ?? stored.coverURL,
+        duration: info.duration,
+        chapters: info.chapters,
+        tracks: Self.merge(info.tracks, into: stored.tracks, bookID: bookID),
+        currentTime: stored.currentTime
+      )
+    }
+    return true
+  }
+
+  private func createTask(bookID: String, track: WatchTrack, fresh: Bool = false) {
+    guard let ext = track.ext, !ext.isEmpty else { return }
+
+    let task: URLSessionDownloadTask
+    if !fresh, let resumeData = loadResumeData(bookID: bookID, index: track.index) {
+      AppLogger.download.info("Resuming track \(track.index) for \(bookID)")
+      task = session.downloadTask(withResumeData: resumeData)
+      resumedTaskIDs.insert(task.taskIdentifier)
+    } else {
+      guard let url = track.url else {
+        AppLogger.download.error("Track \(track.index) missing download URL")
+        return
+      }
+      var request = URLRequest(url: url)
+      for (key, value) in connectivityManager.customHeaders {
+        request.setValue(value, forHTTPHeaderField: key)
+      }
+      task = session.downloadTask(with: request)
+    }
+
+    task.taskDescription = "\(bookID)|\(track.index)|\(ext)"
+    task.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
+    trackedTaskIDs.insert(task.taskIdentifier)
+    inFlight[bookID, default: []].insert(track.index)
+    task.resume()
+  }
+
+  private func retry(_ info: TaskInfo, refreshingURLs: Bool) {
+    inFlight[info.bookID, default: []].insert(info.index)
+    pendingRetries += 1
+
+    Task {
+      defer {
+        pendingRetries -= 1
+        completeBackgroundEventsIfPossible()
+      }
+
+      if refreshingURLs {
+        await refreshTracks(for: info.bookID)
+      }
+
+      inFlight[info.bookID]?.remove(info.index)
+      if let track = storedBook(info.bookID)?.tracks.first(where: { $0.index == info.index }) {
+        createTask(bookID: info.bookID, track: track, fresh: true)
+      }
+      finishIfIdle(info.bookID)
+    }
+  }
+
+  private func finishIfIdle(_ bookID: String) {
+    if inFlight[bookID]?.isEmpty ?? true {
+      inFlight.removeValue(forKey: bookID)
+      bytesWritten.removeValue(forKey: bookID)
+      currentProgress.removeValue(forKey: bookID)
+      updateActiveBookIDs()
+    } else {
+      updateProgress(for: bookID)
+    }
+  }
+
+  private func updateActiveBookIDs() {
+    let active = Set(enqueueTokens.keys).union(inFlight.filter { !$0.value.isEmpty }.keys)
+    if active != activeBookIDs {
+      activeBookIDs = active
+    }
+  }
+
+  private func updateProgress(for bookID: String) {
+    guard activeBookIDs.contains(bookID), let book = storedBook(bookID) else { return }
+
+    let totalBytes = book.tracks.reduce(Int64(0)) { $0 + ($1.size ?? 0) }
+    guard totalBytes > 0 else { return }
+
+    let completedBytes = book.tracks.filter { $0.relativePath != nil }.reduce(Int64(0)) { $0 + ($1.size ?? 0) }
+    let pendingIndices = Set(book.tracks.filter { $0.relativePath == nil }.map(\.index))
+    let partialBytes = (bytesWritten[bookID] ?? [:])
+      .filter { pendingIndices.contains($0.key) }
+      .reduce(Int64(0)) { $0 + $1.value }
+
+    let progress = min(1, Double(completedBytes + partialBytes) / Double(totalBytes))
+    if let current = currentProgress[bookID], abs(current - progress) < 0.01 { return }
+    currentProgress[bookID] = progress
+  }
+
+  private func setTrackPath(_ relativePath: String, bookID: String, index: Int) {
+    localStorage.updateBook(bookID) { stored in
+      if let trackIndex = stored.tracks.firstIndex(where: { $0.index == index }) {
+        stored.tracks[trackIndex].relativePath = relativePath
+      }
+    }
+  }
+
+  private func clearRetries(for bookID: String) {
+    retriedTracks = retriedTracks.filter { !$0.hasPrefix("\(bookID)|") }
+  }
+
+  private func storedBook(_ bookID: String) -> WatchBook? {
+    localStorage.books.first { $0.id == bookID }
+  }
+
+  private func makeOnce(_ callback: @escaping () -> Void) -> () -> Void {
+    var hasCalled = false
+    let once = {
+      guard !hasCalled else { return }
+      hasCalled = true
+      callback()
+    }
+    Task {
+      try? await Task.sleep(for: .seconds(20))
+      once()
+    }
+    return once
+  }
+
+  private func migrateIfNeeded() {
+    guard !UserDefaults.standard.bool(forKey: Self.migrationKey) else { return }
+    UserDefaults.standard.set(true, forKey: Self.migrationKey)
+
+    for book in localStorage.books where !book.isDownloaded {
+      let config = URLSessionConfiguration.background(withIdentifier: Self.legacySessionPrefix + book.id)
+      URLSession(configuration: config).invalidateAndCancel()
+      deleteDownload(for: book.id)
+    }
+  }
+
+  private static func relativePath(bookID: String, index: Int, ext: String) -> String {
+    "audiobooks/\(bookID)/\(index)\(ext)"
+  }
+
+  private static func merge(_ newTracks: [WatchTrack], into existing: [WatchTrack], bookID: String) -> [WatchTrack] {
+    newTracks.map { track in
+      var track = track
+      let expectedPath = track.ext.map { relativePath(bookID: bookID, index: track.index, ext: $0) }
+      let existingPath = existing.first { $0.index == track.index }?.relativePath
+      track.relativePath = existingPath == expectedPath ? existingPath : nil
+      return track
+    }
+  }
+}
+
+extension DownloadManager {
+  private func resumeDataURL(bookID: String, index: Int) -> URL {
+    URL.documentsDirectory.appendingPathComponent("audiobooks/\(bookID)/.resume-\(index).dat")
+  }
+
+  private func loadResumeData(bookID: String, index: Int) -> Data? {
+    try? Data(contentsOf: resumeDataURL(bookID: bookID, index: index))
+  }
+
+  private func saveResumeData(_ data: Data, bookID: String, index: Int) {
+    let url = resumeDataURL(bookID: bookID, index: index)
+    try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try? data.write(to: url, options: .atomic)
+  }
+
+  private func clearResumeData(bookID: String, index: Int) {
+    try? FileManager.default.removeItem(at: resumeDataURL(bookID: bookID, index: index))
   }
 }
 
 extension DownloadManager {
   func deleteDownload(for bookID: String) {
-    guard
-      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first
-    else {
-      return
+    enqueueTokens.removeValue(forKey: bookID)
+    for callback in pendingArmedCallbacks.removeValue(forKey: bookID) ?? [] {
+      callback()
     }
+    inFlight.removeValue(forKey: bookID)
+    bytesWritten.removeValue(forKey: bookID)
+    currentProgress.removeValue(forKey: bookID)
+    clearRetries(for: bookID)
+    updateActiveBookIDs()
 
-    let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
-      bookID
-    )
+    let bookDirectory = URL.documentsDirectory.appendingPathComponent("audiobooks").appendingPathComponent(bookID)
 
     do {
       if FileManager.default.fileExists(atPath: bookDirectory.path) {
         try FileManager.default.removeItem(at: bookDirectory)
       }
-
-      localStorage.deleteBook(bookID)
     } catch {
       AppLogger.download.error("Failed to delete download: \(error.localizedDescription)")
+    }
+
+    localStorage.deleteBook(bookID)
+
+    let previousCancellation = pendingCancellations[bookID]
+    pendingCancellations[bookID] = Task {
+      await previousCancellation?.value
+      for task in await session.allTasks where TaskInfo(task)?.bookID == bookID {
+        trackedTaskIDs.remove(task.taskIdentifier)
+        task.cancel()
+      }
     }
   }
 
   func cleanupOrphanedDownloads() {
-    guard
-      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first
-    else {
-      return
-    }
-
-    let audiobooksDirectory = documentsPath.appendingPathComponent("audiobooks")
+    let audiobooksDirectory = URL.documentsDirectory.appendingPathComponent("audiobooks")
 
     guard FileManager.default.fileExists(atPath: audiobooksDirectory.path) else {
       AppLogger.download.debug("Audiobooks directory does not exist, nothing to cleanup")
@@ -162,8 +463,7 @@ extension DownloadManager {
         includingPropertiesForKeys: [.isDirectoryKey]
       )
 
-      let localBooks = localStorage.books
-      let localBookIDs = Set(localBooks.map { $0.id })
+      let localBookIDs = Set(localStorage.books.map { $0.id })
 
       for directory in downloadDirectories {
         var isDirectory: ObjCBool = false
@@ -184,244 +484,7 @@ extension DownloadManager {
   }
 }
 
-private final class DownloadOperation: Operation, @unchecked Sendable {
-  let bookID: String
-  let progress: AsyncStream<Double>
-
-  var onBackgroundEventsDelivered: (() -> Void)?
-
-  private let progressContinuation: AsyncStream<Double>.Continuation
-  private let localStorage: LocalBookStorage
-
-  private var book: WatchBook
-  private var totalBytes: Int64 = 0
-  private var bytesDownloadedSoFar: Int64 = 0
-
-  private var currentTrack: URLSessionDownloadTask?
-  private var continuation: CheckedContinuation<Void, Error>?
-
-  private lazy var downloadSession: URLSession = {
-    let config = URLSessionConfiguration.background(
-      withIdentifier: "me.jgrenier.AudioBS.watch.download.\(bookID)"
-    )
-    config.isDiscretionary = false
-    config.sessionSendsLaunchEvents = true
-    config.timeoutIntervalForRequest = 60
-    config.timeoutIntervalForResource = 14400
-    config.allowsCellularAccess = true
-    config.waitsForConnectivity = true
-    config.allowsExpensiveNetworkAccess = true
-    config.allowsConstrainedNetworkAccess = true
-    return URLSession(configuration: config, delegate: self, delegateQueue: nil)
-  }()
-
-  private var _executing = false {
-    willSet { willChangeValue(forKey: "isExecuting") }
-    didSet { didChangeValue(forKey: "isExecuting") }
-  }
-
-  private var _finished = false {
-    willSet { willChangeValue(forKey: "isFinished") }
-    didSet { didChangeValue(forKey: "isFinished") }
-  }
-
-  override var isAsynchronous: Bool { true }
-  override var isExecuting: Bool { _executing }
-  override var isFinished: Bool { _finished }
-
-  private let isReconnecting: Bool
-  private var hasResumedDownload = false
-
-  init(
-    book: WatchBook,
-    localStorage: LocalBookStorage,
-    reconnecting: Bool = false
-  ) {
-    self.book = book
-    self.bookID = book.id
-    self.localStorage = localStorage
-    self.isReconnecting = reconnecting
-
-    let (stream, continuation) = AsyncStream.makeStream(
-      of: Double.self,
-      bufferingPolicy: .bufferingNewest(1)
-    )
-    self.progress = stream
-    self.progressContinuation = continuation
-
-    super.init()
-  }
-
-  override func start() {
-    guard !isCancelled else {
-      finish(success: false, error: CancellationError())
-      return
-    }
-
-    _executing = true
-
-    if isReconnecting {
-      _ = downloadSession
-      AppLogger.download.info("Reconnected to background session for \(self.bookID)")
-    } else {
-      Task {
-        await executeDownload()
-      }
-    }
-  }
-
-  override func cancel() {
-    super.cancel()
-    currentTrack?.cancel()
-    progressContinuation.finish()
-
-    cleanupPartialDownload()
-  }
-
-  private func cleanupPartialDownload() {
-    guard
-      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first
-    else {
-      return
-    }
-
-    let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
-      bookID
-    )
-    try? FileManager.default.removeItem(at: bookDirectory)
-  }
-
-  private func executeDownload() async {
-    do {
-      totalBytes = book.tracks.reduce(0) { $0 + ($1.size ?? 0) }
-
-      try await downloadTracks()
-
-      if let stored = localStorage.books.first(where: { $0.id == bookID }) {
-        book.currentTime = stored.currentTime
-      }
-      localStorage.saveBook(book)
-      finish(success: true, error: nil)
-    } catch {
-      finish(success: false, error: error)
-    }
-  }
-
-  private func downloadTracks() async throws {
-    let tracks = book.tracks.sorted { $0.index < $1.index }
-    guard !tracks.isEmpty else { throw URLError(.badURL) }
-
-    guard
-      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first
-    else {
-      throw URLError(.cannotCreateFile)
-    }
-
-    let bookDirectory = documentsPath.appendingPathComponent("audiobooks/\(bookID)")
-    try FileManager.default.createDirectory(at: bookDirectory, withIntermediateDirectories: true)
-
-    for track in tracks {
-      guard !isCancelled else { throw CancellationError() }
-
-      if let relativePath = book.tracks.first(where: { $0.index == track.index })?.relativePath,
-        FileManager.default.fileExists(
-          atPath: documentsPath.appendingPathComponent(relativePath).path
-        )
-      {
-        if let size = track.size {
-          bytesDownloadedSoFar += size
-        }
-        continue
-      }
-
-      guard let downloadURL = track.url else {
-        AppLogger.download.error("Track \(track.index) missing download URL")
-        throw URLError(.badURL)
-      }
-
-      guard let fileExtension = track.ext, !fileExtension.isEmpty else {
-        AppLogger.download.error("Track \(track.index) missing file extension, cannot download")
-        throw URLError(.cannotDecodeContentData)
-      }
-
-      try await withCheckedThrowingContinuation { continuation in
-        var request = URLRequest(url: downloadURL)
-        for (key, value) in WatchConnectivityManager.shared.customHeaders {
-          request.setValue(value, forHTTPHeaderField: key)
-        }
-        let downloadTask = downloadSession.downloadTask(with: request)
-        downloadTask.taskDescription = "\(track.index)|\(fileExtension)"
-        downloadTask.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
-
-        self.currentTrack = downloadTask
-        self.continuation = continuation
-
-        downloadTask.resume()
-      }
-
-      if let size = track.size {
-        bytesDownloadedSoFar += size
-      }
-    }
-  }
-
-  private func finish(success: Bool, error: Error?) {
-    _executing = false
-    _finished = true
-
-    progressContinuation.finish()
-    downloadSession.invalidateAndCancel()
-
-    if success {
-      AppLogger.download.info("Download completed for \(self.bookID)")
-    } else if let error {
-      let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
-      if !isCancelled {
-        AppLogger.download.error("Download failed: \(error.localizedDescription)")
-      }
-    }
-  }
-
-  private func updateProgress(totalBytesWritten: Int64) {
-    guard totalBytes > 0 else { return }
-    let totalBytesDownloaded = bytesDownloadedSoFar + totalBytesWritten
-    let newProgress = Double(totalBytesDownloaded) / Double(totalBytes)
-    progressContinuation.yield(newProgress)
-  }
-
-  private func saveCompletedDownload(_ downloadTask: URLSessionDownloadTask, location: URL) throws {
-    guard
-      let description = downloadTask.taskDescription,
-      let separatorIndex = description.firstIndex(of: "|"),
-      let trackIndex = Int(description[..<separatorIndex]),
-      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first
-    else {
-      throw URLError(.cannotCreateFile)
-    }
-
-    let fileExtension = String(description[description.index(after: separatorIndex)...])
-    let relativePath = "audiobooks/\(bookID)/\(trackIndex)\(fileExtension)"
-    let destination = documentsPath.appendingPathComponent(relativePath)
-
-    try FileManager.default.createDirectory(
-      at: destination.deletingLastPathComponent(),
-      withIntermediateDirectories: true
-    )
-    if FileManager.default.fileExists(atPath: destination.path) {
-      try FileManager.default.removeItem(at: destination)
-    }
-    try FileManager.default.moveItem(at: location, to: destination)
-
-    if let trackArrayIndex = book.tracks.firstIndex(where: { $0.index == trackIndex }) {
-      book.tracks[trackArrayIndex].relativePath = relativePath
-    }
-  }
-}
-
-extension DownloadOperation: URLSessionDownloadDelegate {
+extension DownloadManager: URLSessionDownloadDelegate {
   func urlSession(
     _ session: URLSession,
     downloadTask: URLSessionDownloadTask,
@@ -429,14 +492,9 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     totalBytesWritten: Int64,
     totalBytesExpectedToWrite: Int64
   ) {
-    guard currentTrack == downloadTask else { return }
-    updateProgress(totalBytesWritten: totalBytesWritten)
-  }
-
-  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-    guard let error else { return }
-    continuation?.resume(throwing: error)
-    continuation = nil
+    guard trackedTaskIDs.contains(downloadTask.taskIdentifier), let info = TaskInfo(downloadTask) else { return }
+    self.bytesWritten[info.bookID, default: [:]][info.index] = totalBytesWritten
+    updateProgress(for: info.bookID)
   }
 
   func urlSession(
@@ -444,43 +502,99 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     downloadTask: URLSessionDownloadTask,
     didFinishDownloadingTo location: URL
   ) {
+    guard let info = TaskInfo(downloadTask), storedBook(info.bookID) != nil else { return }
+
     if let httpResponse = downloadTask.response as? HTTPURLResponse,
       !(200...299).contains(httpResponse.statusCode)
     {
-      let statusDescription = HTTPURLResponse.localizedString(
-        forStatusCode: httpResponse.statusCode
-      ).capitalized
-      let error = URLError(
-        .badServerResponse,
-        userInfo: [NSLocalizedDescriptionKey: statusDescription]
-      )
-      continuation?.resume(throwing: error)
-      continuation = nil
       return
     }
 
+    let relativePath = Self.relativePath(bookID: info.bookID, index: info.index, ext: info.ext)
+    let destination = URL.documentsDirectory.appendingPathComponent(relativePath)
+
     do {
-      try saveCompletedDownload(downloadTask, location: location)
-      continuation?.resume()
+      try FileManager.default.createDirectory(
+        at: destination.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+      )
+      if FileManager.default.fileExists(atPath: destination.path) {
+        try FileManager.default.removeItem(at: destination)
+      }
+      try FileManager.default.moveItem(at: location, to: destination)
     } catch {
-      continuation?.resume(throwing: error)
+      AppLogger.download.error("Failed to save track \(info.index) for \(info.bookID): \(error)")
+      return
     }
-    continuation = nil
+
+    clearResumeData(bookID: info.bookID, index: info.index)
+    retriedTracks.remove("\(info.bookID)|\(info.index)")
+    setTrackPath(relativePath, bookID: info.bookID, index: info.index)
+
+    if storedBook(info.bookID)?.isDownloaded == true {
+      AppLogger.download.info("Download completed for \(info.bookID)")
+    }
+  }
+
+  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    let wasResumed = resumedTaskIDs.remove(task.taskIdentifier) != nil
+
+    let isTracked = trackedTaskIDs.remove(task.taskIdentifier) != nil
+    completedTaskIDs.insert(task.taskIdentifier)
+
+    guard let info = TaskInfo(task), storedBook(info.bookID) != nil else { return }
+
+    let resumeData = (error as NSError?)?.userInfo[NSURLSessionDownloadTaskResumeData] as? Data
+    if let resumeData {
+      saveResumeData(resumeData, bookID: info.bookID, index: info.index)
+    }
+
+    guard isTracked else { return }
+
+    inFlight[info.bookID]?.remove(info.index)
+    bytesWritten[info.bookID]?.removeValue(forKey: info.index)
+    defer { finishIfIdle(info.bookID) }
+
+    let statusCode = (task.response as? HTTPURLResponse)?.statusCode
+    let isHTTPError = statusCode.map { !(200...299).contains($0) } ?? false
+
+    guard error != nil || isHTTPError else { return }
+
+    if (error as? URLError)?.code == .cancelled {
+      return
+    }
+
+    AppLogger.download.warning(
+      "Track \(info.index) for \(info.bookID) failed (status: \(statusCode ?? 0)): \(error?.localizedDescription ?? "")"
+    )
+
+    let retryKey = "\(info.bookID)|\(info.index)"
+    guard !retriedTracks.contains(retryKey) else { return }
+
+    if statusCode == 401 || statusCode == 403 {
+      retriedTracks.insert(retryKey)
+      clearResumeData(bookID: info.bookID, index: info.index)
+      retry(info, refreshingURLs: true)
+    } else if wasResumed && (resumeData == nil || isHTTPError) {
+      retriedTracks.insert(retryKey)
+      clearResumeData(bookID: info.bookID, index: info.index)
+      retry(info, refreshingURLs: false)
+    }
   }
 
   func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-    if let onBackgroundEventsDelivered {
-      self.onBackgroundEventsDelivered = nil
-      Task { @MainActor in
-        onBackgroundEventsDelivered()
-      }
-    }
+    hasDeliveredBackgroundEvents = true
+    completeBackgroundEventsIfPossible()
+  }
 
-    guard isReconnecting, !hasResumedDownload else { return }
-    hasResumedDownload = true
-    AppLogger.download.info("Background events delivered, resuming download for \(self.bookID)")
-    Task {
-      await executeDownload()
+  private func completeBackgroundEventsIfPossible() {
+    guard hasDeliveredBackgroundEvents, pendingRetries == 0, !backgroundCompletions.isEmpty else { return }
+
+    hasDeliveredBackgroundEvents = false
+    let completions = backgroundCompletions
+    backgroundCompletions.removeAll()
+    for completion in completions {
+      completion()
     }
   }
 }

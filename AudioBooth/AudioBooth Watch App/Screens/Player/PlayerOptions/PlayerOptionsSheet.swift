@@ -36,10 +36,21 @@ struct PlayerOptionsSheet: View {
         switch model.downloadState {
         case .downloading:
           Label("Cancel Download", systemImage: "stop.circle")
+        case .paused:
+          Label("Resume Download", systemImage: "arrow.clockwise.icloud")
         case .downloaded:
           Label("Remove from Watch", systemImage: "trash")
         case .notDownloaded:
           Label("Download to Watch", systemImage: "icloud.and.arrow.down")
+        }
+      }
+
+      if case .paused = model.downloadState {
+        Button(action: {
+          model.onRemoveDownloadTapped()
+          dismiss()
+        }) {
+          Label("Remove from Watch", systemImage: "trash")
         }
       }
 
@@ -72,6 +83,13 @@ extension PlayerOptionsSheet {
     var speed: Float
     var speedPicker: SpeedPickerSheet.Model
 
+    var isCoverDownloadEnabled: Bool {
+      switch downloadState {
+      case .notDownloaded, .paused: true
+      case .downloading, .downloaded: false
+      }
+    }
+
     init(
       isHidden: Bool = false,
       hasChapters: Bool = false,
@@ -87,6 +105,7 @@ extension PlayerOptionsSheet {
 
     func onChaptersTapped() {}
     func onDownloadTapped() {}
+    func onRemoveDownloadTapped() {}
     func onSpeedTapped() {
       speedPicker.isPresented = true
     }

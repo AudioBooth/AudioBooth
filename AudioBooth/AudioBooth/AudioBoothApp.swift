@@ -45,6 +45,7 @@ struct AudioBoothApp: App {
         SessionManager.shared.syncUnsyncedSessions()
         PodcastAutoQueueManager.shared.refresh()
         KeepOfflineManager.shared.reconcile()
+        WatchConnectivityManager.shared.refreshQueuedWatchDownloads()
 
         if let server = Audiobookshelf.shared.authentication.server, server.status != .connected {
           Task { _ = try? await Audiobookshelf.shared.libraries.fetch() }

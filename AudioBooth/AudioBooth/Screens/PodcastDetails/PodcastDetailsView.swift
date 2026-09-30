@@ -13,6 +13,7 @@ struct PodcastDetailsView: View {
 
   @State private var isDescriptionExpanded = false
   @State private var isShowingFullScreenCover = false
+  @State private var layoutSize: CGSize?
 
   private enum CoordinateSpaces {
     case scrollView
@@ -20,11 +21,21 @@ struct PodcastDetailsView: View {
 
   var body: some View {
     GeometryReader { proxy in
-      if proxy.size.width > proxy.size.height {
+      let size = layoutSize ?? proxy.size
+      if size.width > size.height {
         landscapeLayout(coverWidth: proxy.leadingPanelWidth ?? 300)
       } else {
         portraitLayout
       }
+    }
+    .background {
+      GeometryReader { proxy in
+        Color.clear
+          .onChange(of: proxy.size, initial: true) { _, size in
+            layoutSize = size
+          }
+      }
+      .ignoresSafeArea(.keyboard)
     }
     .background(theme.colors.background.page)
     .fullScreenCover(isPresented: $isShowingFullScreenCover) {

@@ -28,7 +28,7 @@ struct Cover: View {
     switch state {
     case .downloaded:
       EmptyView()
-    case .downloading(let value):
+    case .downloading(let value), .paused(let value):
       progress(value)
         //        .padding(2)
         .frame(width: 14, height: 14)

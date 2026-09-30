@@ -6,7 +6,9 @@ struct ContinueListeningView: View {
 
   var body: some View {
     Group {
-      if model.continueListeningRows.isEmpty && model.availableOfflineRows.isEmpty && model.homeSections.isEmpty {
+      if model.continueListeningRows.isEmpty && model.downloadingRows.isEmpty && model.availableOfflineRows.isEmpty
+        && model.homeSections.isEmpty
+      {
         ProgressView()
       } else {
         content
@@ -21,6 +23,13 @@ struct ContinueListeningView: View {
   private var content: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
+        if !model.downloadingRows.isEmpty {
+          sectionHeader("Downloading")
+          ForEach(model.downloadingRows) { rowModel in
+            ContinueListeningRow(model: rowModel)
+          }
+        }
+
         if !model.continueListeningRows.isEmpty {
           sectionHeader("Continue Listening")
           ForEach(model.continueListeningRows) { rowModel in
@@ -96,6 +105,7 @@ extension ContinueListeningView {
   @Observable
   class Model: ObservableObject {
     var continueListeningRows: [ContinueListeningRow.Model]
+    var downloadingRows: [ContinueListeningRow.Model]
     var availableOfflineRows: [ContinueListeningRow.Model]
     var homeSections: [WatchHomeSection]
     var isRefreshing: Bool = false
@@ -104,10 +114,12 @@ extension ContinueListeningView {
 
     init(
       continueListeningRows: [ContinueListeningRow.Model] = [],
+      downloadingRows: [ContinueListeningRow.Model] = [],
       availableOfflineRows: [ContinueListeningRow.Model] = [],
       homeSections: [WatchHomeSection] = []
     ) {
       self.continueListeningRows = continueListeningRows
+      self.downloadingRows = downloadingRows
       self.availableOfflineRows = availableOfflineRows
       self.homeSections = homeSections
     }

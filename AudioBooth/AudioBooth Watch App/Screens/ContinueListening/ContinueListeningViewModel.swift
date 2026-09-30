@@ -66,6 +66,10 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
       return ContinueListeningRowModel(book: updatedBook)
     }
 
+    downloadingRows = localBooks.filter { !$0.isDownloaded }.map { book in
+      ContinueListeningRowModel(book: book, showsDownloadStatus: true)
+    }
+
     availableOfflineRows = downloadedBooks.map { book in
       ContinueListeningRowModel(book: book)
     }
