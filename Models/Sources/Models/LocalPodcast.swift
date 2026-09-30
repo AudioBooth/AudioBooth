@@ -20,7 +20,7 @@ public final class LocalPodcast {
     guard var url = coverURL else { return nil }
 
     #if os(watchOS)
-    url.append(queryItems: [URLQueryItem(name: "format", value: "jpg")])
+    url.append(queryItems: [URLQueryItem(name: "format", value: "jpeg")])
     #else
     if raw {
       url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])

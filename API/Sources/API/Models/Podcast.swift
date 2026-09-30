@@ -26,7 +26,7 @@ public struct Podcast: Codable, Sendable {
     url.append(queryItems: [URLQueryItem(name: "ts", value: String(Int(updatedAt.timeIntervalSince1970 * 1000)))])
 
     #if os(watchOS)
-    url.append(queryItems: [URLQueryItem(name: "format", value: "jpg")])
+    url.append(queryItems: [URLQueryItem(name: "format", value: "jpeg")])
     #else
     if raw {
       url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])
