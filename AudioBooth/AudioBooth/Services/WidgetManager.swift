@@ -38,6 +38,7 @@ final class WidgetManager {
     self.chapters = chapters
     self.mediaProgress = mediaProgress
     self.playbackProgress = playbackProgress
+    self.lastSyncedTime = mediaProgress.currentTime
 
     player.events
       .sink { [weak self] event in
@@ -52,6 +53,13 @@ final class WidgetManager {
     observeProgressChanges()
     observeChapterChanges()
 
+    watchConnectivity.sendCurrentBook(
+      id: id,
+      title: title,
+      author: author,
+      coverURL: coverURL,
+      duration: mediaProgress.duration
+    )
     update()
     watchConnectivity.sendPlaybackRate(player.rate)
   }

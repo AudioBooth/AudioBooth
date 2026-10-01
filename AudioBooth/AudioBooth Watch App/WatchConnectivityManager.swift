@@ -20,6 +20,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var playbackRate: Float = 1.0
   @Published var homeSections: [WatchHomeSection] = []
   private var chapterProgress: Double?
+  private var currentBook: WatchBook?
 
   var customHeaders: [String: String] {
     get {
@@ -475,6 +476,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
     hasCurrentBook = context["hasCurrentBook"] as? Bool ?? false
     playbackRate = context["playbackRate"] as? Float ?? 1.0
     chapterProgress = context["chapterProgress"] as? Double
+    currentBook = (context["currentBook"] as? [String: Any]).flatMap { WatchBook(dictionary: $0) }
 
     let continueListeningData = context["continueListening"] as? [[String: Any]] ?? []
     handleContinueListening(continueListeningData)
@@ -554,7 +556,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
       return
     }
 
-    if let book = continueListeningBooks.first {
+    if var book = currentBook ?? continueListeningBooks.first {
+      book.currentTime = progress[book.id] ?? book.currentTime
       let state = WatchComplicationState(
         bookTitle: book.title,
         progress: book.progress,

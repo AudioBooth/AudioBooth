@@ -207,8 +207,20 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       context.removeValue(forKey: "playbackRate")
       context.removeValue(forKey: "hasCurrentBook")
       context.removeValue(forKey: "chapterProgress")
+      context.removeValue(forKey: "currentBook")
     }
 
+    updateContext()
+  }
+
+  func sendCurrentBook(id: String, title: String, author: String?, coverURL: URL?, duration: TimeInterval) {
+    context["currentBook"] = [
+      "id": id,
+      "title": title,
+      "author": author as Any,
+      "coverURL": watchCompatibleCoverURL(from: coverURL) as Any,
+      "duration": duration,
+    ]
     updateContext()
   }
 

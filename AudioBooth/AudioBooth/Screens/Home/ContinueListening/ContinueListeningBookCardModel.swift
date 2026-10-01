@@ -95,11 +95,9 @@ final class ContinueListeningBookCardModel: BookCard.Model {
     progressObservation?.cancel()
   }
 
-  override func onAppear() {
-    mediaProgress = try? MediaProgress.fetch(bookID: id)
-  }
-
   private func observeMediaProgress() {
+    mediaProgress = try? MediaProgress.fetch(bookID: id)
+
     let bookID = id
     progressObservation = Task { [weak self] in
       for await mediaProgress in MediaProgress.observe(where: \.bookID, equals: bookID) {
