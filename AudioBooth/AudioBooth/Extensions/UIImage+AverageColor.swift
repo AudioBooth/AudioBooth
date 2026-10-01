@@ -41,7 +41,7 @@ extension UIImage {
     )
   }
 
-  var vibrantColor: UIColor? {
+  func vibrantColor(contrasting background: UIColor) -> UIColor? {
     guard let ciImage = CIImage(image: self), !ciImage.extent.isEmpty else { return nil }
 
     let scale = 100 / max(ciImage.extent.width, ciImage.extent.height)
@@ -73,7 +73,21 @@ extension UIImage {
       colorSpace: nil
     )
 
-    var bestColor: UIColor?
+    var backgroundHue: CGFloat = 0
+    var backgroundSaturation: CGFloat = 0
+    var backgroundBrightness: CGFloat = 0
+    background.getHue(
+      &backgroundHue,
+      saturation: &backgroundSaturation,
+      brightness: &backgroundBrightness,
+      alpha: nil
+    )
+
+    let minimumHueDistance: CGFloat = 0.2
+    let minimumBrightnessDistance: CGFloat = 0.4
+    let minimumBrightness: CGFloat = 0.75
+
+    var best: (hue: CGFloat, saturation: CGFloat, brightness: CGFloat)?
     var bestScore: CGFloat = 0
 
     for index in 0..<count {
@@ -87,19 +101,35 @@ extension UIImage {
         alpha: 1
       )
 
+      var hue: CGFloat = 0
       var saturation: CGFloat = 0
       var brightness: CGFloat = 0
-      guard color.getHue(nil, saturation: &saturation, brightness: &brightness, alpha: nil),
+      guard color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil),
         saturation >= 0.25
       else { continue }
 
-      let score = saturation * brightness
+      let rawHueDistance = abs(hue - backgroundHue)
+      let hueDistance = backgroundSaturation < 0.15 ? 1 : min(rawHueDistance, 1 - rawHueDistance) * 2
+      let brightnessDistance = abs(brightness - backgroundBrightness)
+
+      guard hueDistance >= minimumHueDistance || brightnessDistance >= minimumBrightnessDistance else {
+        continue
+      }
+
+      let score = saturation * brightness * max(hueDistance, brightnessDistance)
       if score > bestScore {
         bestScore = score
-        bestColor = color
+        best = (hue, saturation, brightness)
       }
     }
 
-    return bestColor
+    guard let best else { return nil }
+
+    return UIColor(
+      hue: best.hue,
+      saturation: best.saturation,
+      brightness: max(best.brightness, minimumBrightness),
+      alpha: 1
+    )
   }
 }
