@@ -298,7 +298,10 @@ final class BookPlayerModel: BookPlayer.Model {
 
           if isPlayerUsingRemoteURL() {
             AppLogger.player.info("Player using remote URLs, reloading with new session")
+            pendingPlay = false
             reloadPlayer()
+            isLoading = false
+            resumePlayback()
           } else {
             AppLogger.player.info("Player using local files, no reload needed")
             isLoading = false
