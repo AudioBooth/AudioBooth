@@ -61,7 +61,8 @@ final class LatestViewModel: LatestView.Model {
           coverURL: recent.coverURL(),
           publishedAt: recent.episode.publishedAt.map { Date(timeIntervalSince1970: Double($0) / 1000) },
           duration: recent.episode.duration,
-          progress: MediaProgress.progress(for: recent.episode.id)
+          progress: MediaProgress.progress(for: recent.episode.id),
+          summary: recent.episode.description?.htmlStripped
         )
       }
       hasFetched = true

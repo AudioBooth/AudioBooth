@@ -71,26 +71,6 @@ final class ContinueListeningBookCardModel: BookCard.Model {
     setupDownloadProgressObserver()
   }
 
-  init(localEpisode episode: LocalEpisode) {
-    super.init(
-      id: episode.episodeID,
-      podcastID: episode.podcast?.podcastID,
-      title: episode.title,
-      details: nil,
-      cover: Cover.Model(
-        url: episode.coverURL,
-        title: episode.title,
-        author: episode.podcast?.author,
-        progress: MediaProgress.progress(for: episode.episodeID)
-      ),
-      author: episode.podcast?.author,
-      timeRemaining: episode.duration
-    )
-
-    observeMediaProgress()
-    setupDownloadProgressObserver()
-  }
-
   isolated deinit {
     progressObservation?.cancel()
   }

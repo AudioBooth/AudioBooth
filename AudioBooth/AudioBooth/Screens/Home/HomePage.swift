@@ -249,8 +249,13 @@ struct HomePage: View {
 
         ScrollView(.horizontal, showsIndicators: false) {
           HStack(alignment: .top, spacing: 16) {
-            ForEach(items, id: \.id) { book in
-              BookCard(model: book)
+            ForEach(items) { item in
+              switch item {
+              case .book(let model):
+                BookCard(model: model)
+              case .episode(let model):
+                EpisodeCard(model: model)
+              }
             }
           }
           .padding(.horizontal)
@@ -298,6 +303,23 @@ struct HomePage: View {
           .padding(.horizontal)
         }
         .environment(\.coverSize, cardWidth)
+
+      case .episodes(let items):
+        Text(section.title)
+          .font(.title2)
+          .fontWeight(.semibold)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal)
+          .accessibilityAddTraits(.isHeader)
+
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(alignment: .top, spacing: 16) {
+            ForEach(items) { episode in
+              EpisodeCard(model: episode)
+            }
+          }
+          .padding(.horizontal)
+        }
 
       case .series(let items):
         Text(section.title)
@@ -454,12 +476,25 @@ extension HomePage {
       enum Items {
         case stats
         case continueBooks(ContinueListeningCoverFlowView.Model)
-        case playlist(id: String, items: [BookCard.Model])
+        case playlist(id: String, items: [PlaylistItem])
         case books([BookCard.Model])
+        case episodes([EpisodeCard.Model])
         case series([SeriesCard.Model])
         case authors([AuthorCard.Model])
       }
       let items: Items
+
+      enum PlaylistItem: Identifiable {
+        case book(BookCard.Model)
+        case episode(EpisodeCard.Model)
+
+        var id: String {
+          switch self {
+          case .book(let model): model.id
+          case .episode(let model): model.id
+          }
+        }
+      }
 
       init(id: String, title: String, items: Items) {
         self.id = id

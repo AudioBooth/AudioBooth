@@ -23,6 +23,7 @@ final class HomePageModel: HomePage.Model {
 
   private var continueListening: ContinueListeningCoverFlowView.Model?
   private var continueReading: ContinueListeningCoverFlowView.Model?
+  private var continueListeningEpisodeCards: [EpisodeCard.Model] = []
 
   init() {
     super.init()
@@ -79,6 +80,7 @@ final class HomePageModel: HomePage.Model {
     discoverBooks = []
     continueListening = nil
     continueReading = nil
+    continueListeningEpisodeCards = []
     sections = []
     isLoading = false
 
@@ -227,16 +229,16 @@ extension HomePageModel {
         )
 
       case .episodes(let items):
-        let podcasts = items.map { PodcastCardModel($0, sortBy: nil) }
-        if section.id == "continue-listening" {
-          continue
-        } else {
-          sectionsByID[section.id] = .init(
-            id: section.id,
-            title: title,
-            items: .books(podcasts)
-          )
+        guard section.id != "continue-listening" else { continue }
+        let episodes = items.compactMap { podcast in
+          podcast.recentEpisode.map { EpisodeCardModel(podcast: podcast, episode: $0) }
         }
+        guard !episodes.isEmpty else { continue }
+        sectionsByID[section.id] = .init(
+          id: section.id,
+          title: title,
+          items: .episodes(episodes)
+        )
 
       case .unknown:
         continue
@@ -354,47 +356,38 @@ extension HomePageModel {
   }
 
   private func buildEpisodesContinueListeningSection() -> Section? {
-    let existingModels: [String: BookCard.Model]
-    if let continueListening {
-      existingModels = Dictionary(
-        continueListening.items.map { ($0.id, $0) },
-        uniquingKeysWith: { first, _ in first }
-      )
-    } else {
-      existingModels = [:]
-    }
+    let existingModels = Dictionary(
+      continueListeningEpisodeCards.map { ($0.id, $0) },
+      uniquingKeysWith: { first, _ in first }
+    )
 
-    var models: [BookCard.Model] = []
+    var models: [EpisodeCard.Model] = []
 
     if let currentPlayerID = playerManager.current?.id,
-      !continueListeningEpisodes.contains(where: { ($0.recentEpisode?.id ?? $0.id) == currentPlayerID })
+      !continueListeningEpisodes.contains(where: { $0.recentEpisode?.id == currentPlayerID })
     {
       if let existingModel = existingModels[currentPlayerID] {
         models.append(existingModel)
-      } else if let episode = try? LocalEpisode.fetch(episodeID: currentPlayerID) {
-        models.append(ContinueListeningBookCardModel(localEpisode: episode))
+      } else if let episode = try? LocalEpisode.fetch(episodeID: currentPlayerID),
+        let model = EpisodeCardModel(localEpisode: episode)
+      {
+        models.append(model)
       }
     }
 
     for podcast in continueListeningEpisodes {
-      let id = podcast.recentEpisode?.id ?? podcast.id
-      if let existingModel = existingModels[id] {
-        models.append(existingModel)
-      } else {
-        models.append(PodcastCardModel(podcast, sortBy: nil))
-      }
+      guard let episode = podcast.recentEpisode else { continue }
+      models.append(existingModels[episode.id] ?? EpisodeCardModel(podcast: podcast, episode: episode))
     }
 
-    guard !models.isEmpty else { return nil }
+    continueListeningEpisodeCards = models
 
-    let model = continueListening ?? .init(items: models)
-    model.items = models
-    continueListening = model
+    guard !models.isEmpty else { return nil }
 
     return Section(
       id: "continue-listening",
       title: String(localized: "Continue Listening"),
-      items: .continueBooks(model)
+      items: .episodes(models)
     )
   }
 
@@ -402,32 +395,21 @@ extension HomePageModel {
     guard let playlist = pinnedPlaylist else { return nil }
     guard !playlist.items.isEmpty else { return nil }
 
-    let models: [BookCard.Model] = playlist.items.map { item in
+    let models: [Section.PlaylistItem] = playlist.items.map { item in
       switch item.libraryItem {
       case .book(let book):
-        return BookCardModel(book, sortBy: .title)
+        return .book(BookCardModel(book, sortBy: .title))
       case .podcast(let podcast):
         if let episode = item.episode {
-          let durationText = episode.duration.map {
-            Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
-          }
-          return BookCard.Model(
-            id: episode.id,
-            podcastID: item.libraryItemID,
-            title: episode.title,
-            details: durationText,
-            cover: Cover.Model(
-              url: podcast.coverURL(raw: true),
-              progress: MediaProgress.progress(for: episode.id)
-            ),
-            author: podcast.title
-          )
+          return .episode(EpisodeCardModel(podcast: podcast, episode: episode))
         } else {
-          return BookCard.Model(
-            id: podcast.id,
-            title: podcast.title,
-            cover: Cover.Model(url: podcast.coverURL(raw: true)),
-            author: podcast.author
+          return .book(
+            BookCard.Model(
+              id: podcast.id,
+              title: podcast.title,
+              cover: Cover.Model(url: podcast.coverURL(raw: true)),
+              author: podcast.author
+            )
           )
         }
       }

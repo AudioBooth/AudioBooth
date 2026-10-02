@@ -86,6 +86,14 @@ struct LatestView: View {
           }
         }
 
+        if let summary = episode.summary, !summary.isEmpty {
+          Text(summary)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
+        }
+
         if episode.progress > 0 {
           ProgressView(value: min(episode.progress, 1.0))
             .tint(.accentColor)
@@ -132,6 +140,7 @@ extension LatestView.Model {
     let publishedAt: Date?
     let duration: Double?
     let progress: Double
+    let summary: String?
 
     var durationText: String? {
       guard let duration, duration > 0 else { return nil }

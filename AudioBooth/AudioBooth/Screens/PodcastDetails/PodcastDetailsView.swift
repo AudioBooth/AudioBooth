@@ -598,6 +598,14 @@ struct PodcastDetailsView: View {
             .foregroundStyle(.secondary)
         }
 
+        if let summary = episode.summary, !summary.isEmpty {
+          Text(summary)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
+        }
+
         HStack(spacing: 8) {
           episodePlayButton(episode)
 
@@ -853,6 +861,7 @@ extension PodcastDetailsView.Model {
     let duration: Double?
     let size: Int64?
     let description: String?
+    var summary: String? = nil
     var isCompleted: Bool
     var progress: Double
     let chapters: [Chapter]

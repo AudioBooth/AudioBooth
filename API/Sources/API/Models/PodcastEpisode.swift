@@ -12,6 +12,11 @@ public struct PodcastEpisode: Codable, Sendable {
   public let size: Int64?
   public let chapters: [Chapter]?
   public let audioTrack: AudioTrack?
+  public let audioFile: AudioFile?
+
+  public struct AudioFile: Codable, Sendable {
+    public let duration: Double?
+  }
 
   public struct Chapter: Codable, Sendable {
     public let id: Int
