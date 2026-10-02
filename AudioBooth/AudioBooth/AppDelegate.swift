@@ -30,6 +30,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     UISegmentedControl.appearance().apportionsSegmentWidthsByContent = true
+    UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = .label
 
     AppLogger.bootstrap()
 
