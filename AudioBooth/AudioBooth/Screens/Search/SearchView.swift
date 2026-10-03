@@ -24,7 +24,7 @@ struct SearchView: View {
       content
     }
     .frame(maxWidth: .infinity)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .scrollDismissesKeyboard(.interactively)
     .onAppear {
       model.onSearchChanged(model.searchText)
