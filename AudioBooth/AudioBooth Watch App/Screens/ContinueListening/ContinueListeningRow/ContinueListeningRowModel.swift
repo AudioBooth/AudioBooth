@@ -61,7 +61,6 @@ final class ContinueListeningRowModel: ContinueListeningRow.Model {
   }
 
   override func onTapped() {
-    playerManager.setCurrent(book)
-    playerManager.isShowingFullPlayer = true
+    playerManager.open(book)
   }
 }

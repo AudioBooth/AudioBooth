@@ -20,6 +20,13 @@ struct PlayerOptionsSheet: View {
       }
 
       Button(action: {
+        model.onPlayOnPhoneTapped()
+        dismiss()
+      }) {
+        Label("Play on iPhone", systemImage: "iphone")
+      }
+
+      Button(action: {
         model.onSpeedTapped()
         dismiss()
       }) {
@@ -41,7 +48,7 @@ struct PlayerOptionsSheet: View {
         case .downloaded:
           Label("Remove from Watch", systemImage: "trash")
         case .notDownloaded:
-          Label("Download to Watch", systemImage: "icloud.and.arrow.down")
+          Label("Download", systemImage: "icloud.and.arrow.down")
         }
       }
 
@@ -106,6 +113,7 @@ extension PlayerOptionsSheet {
     func onChaptersTapped() {}
     func onDownloadTapped() {}
     func onRemoveDownloadTapped() {}
+    func onPlayOnPhoneTapped() {}
     func onSpeedTapped() {
       speedPicker.isPresented = true
     }

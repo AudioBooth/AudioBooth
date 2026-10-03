@@ -390,7 +390,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
       switch command {
       case "play":
         if let bookID = message["bookID"] as? String {
-          handlePlayCommand(bookID: bookID)
+          handlePlayCommand(bookID: bookID, currentTime: message["currentTime"] as? Double)
         } else {
           PlayerManager.shared.current?.onPlayTapped()
         }
@@ -812,11 +812,14 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
   }
 
-  private func handlePlayCommand(bookID: String) {
+  private func handlePlayCommand(bookID: String, currentTime: Double? = nil) {
     Task { @MainActor in
       do {
         if let book = try LocalBook.fetch(bookID: bookID) {
           PlayerManager.shared.setCurrent(book)
+          if let currentTime, let player = PlayerManager.shared.current as? BookPlayerModel {
+            player.seekToTime(currentTime)
+          }
           PlayerManager.shared.current?.onPlayTapped()
           PlayerManager.shared.showFullPlayer()
         } else {
@@ -829,6 +832,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
           if case .book(let book) = session.libraryItem {
             PlayerManager.shared.setCurrent(book)
+          }
+          if let currentTime, let player = PlayerManager.shared.current as? BookPlayerModel {
+            player.seekToTime(currentTime)
           }
           PlayerManager.shared.current?.onPlayTapped()
           PlayerManager.shared.showFullPlayer()

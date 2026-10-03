@@ -169,6 +169,22 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
+  func playOnPhone(bookID: String, currentTime: Double) {
+    guard let session, session.isReachable else {
+      AppLogger.watchConnectivity.warning("Cannot play on iPhone - session not reachable")
+      return
+    }
+
+    let message: [String: Any] = [
+      "command": "play",
+      "bookID": bookID,
+      "currentTime": currentTime,
+    ]
+    session.sendMessage(message, replyHandler: nil) { error in
+      AppLogger.watchConnectivity.error("Failed to send play command to iOS: \(error)")
+    }
+  }
+
   func refreshContinueListening() async {
     guard let session = session, session.isReachable else {
       AppLogger.watchConnectivity.warning("Cannot refresh - session not reachable")

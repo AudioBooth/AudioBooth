@@ -4,7 +4,14 @@ import WidgetKit
 
 final class PlayerManager: ObservableObject {
   @Published var current: PlayerView.Model?
-  @Published var isShowingFullPlayer = false
+  @Published private(set) var presented: PlayerView.Model?
+  @Published var isShowingFullPlayer = false {
+    didSet {
+      if !isShowingFullPlayer {
+        presented = nil
+      }
+    }
+  }
 
   static let shared = PlayerManager()
 
@@ -15,15 +22,28 @@ final class PlayerManager: ObservableObject {
     return current is BookPlayerModel && current.isPlaying
   }
 
-  func setCurrent(_ book: WatchBook) {
+  func open(_ book: WatchBook) {
     if let player = current as? BookPlayerModel, book.id == player.bookID {
-      return
+      presented = player
+    } else if isPlayingOnWatch {
+      presented = BookPlayerModel(book: book)
+    } else {
+      clearCurrent()
+      let player = BookPlayerModel(book: book)
+      current = player
+      presented = player
+      UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
     }
 
+    isShowingFullPlayer = true
+  }
+
+  func activate(_ player: BookPlayerModel) {
+    guard current !== player else { return }
+
     clearCurrent()
-    let playerModel = BookPlayerModel(book: book)
-    current = playerModel
-    UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
+    current = player
+    UserDefaults.standard.set(player.bookID, forKey: Self.currentBookIDKey)
   }
 
   func clearCurrent() {

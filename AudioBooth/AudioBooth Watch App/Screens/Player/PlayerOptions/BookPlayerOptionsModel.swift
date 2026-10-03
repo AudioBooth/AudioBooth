@@ -67,6 +67,10 @@ final class BookPlayerOptionsModel: PlayerOptionsSheet.Model {
     downloadState = downloadManager.downloadState(for: playerModel.bookID)
   }
 
+  override func onPlayOnPhoneTapped() {
+    playerModel?.playOnPhone()
+  }
+
   override func onRemoveDownloadTapped() {
     removeDownload()
   }
