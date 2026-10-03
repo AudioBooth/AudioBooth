@@ -146,6 +146,7 @@ extension BookCardContextMenu {
     var downloadState: DownloadManager.DownloadState
     var actions: Actions
     var collectionSelector: CollectionSelectorSheet.Model?
+    var isConfirmingRemoveFromContinueListening = false
     let authorInfo: BookCard.Author?
     let narratorInfo: BookCard.Narrator?
     let seriesInfo: BookCard.Series?
@@ -160,6 +161,7 @@ extension BookCardContextMenu {
     func onMarkAsFinishedTapped() {}
     func onResetProgressTapped() {}
     func onRemoveFromContinueListeningTapped() {}
+    func onRemoveFromContinueListeningConfirmed() {}
     func onAddToCollectionTapped() {}
     func onAddToPlaylistTapped() {}
 

@@ -282,18 +282,23 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
   }
 
   override func onRemoveFromContinueListeningTapped() {
+    if playerManager.current?.id == item.bookID {
+      isConfirmingRemoveFromContinueListening = true
+    } else {
+      removeFromContinueListening()
+    }
+  }
+
+  override func onRemoveFromContinueListeningConfirmed() {
+    playerManager.clearCurrent()
+    removeFromContinueListening()
+  }
+
+  private func removeFromContinueListening() {
     guard let onRemoveFromContinueListening else { return }
 
-    let bookID: String
-    switch item {
-    case .local(let localBook):
-      bookID = localBook.bookID
-    case .remote(let book):
-      bookID = book.id
-    }
-
     guard
-      let progress = try? MediaProgress.fetch(bookID: bookID),
+      let progress = try? MediaProgress.fetch(bookID: item.bookID),
       let id = progress.id
     else { return }
 

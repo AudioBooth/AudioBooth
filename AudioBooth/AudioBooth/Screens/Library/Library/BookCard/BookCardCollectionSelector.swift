@@ -6,21 +6,38 @@ struct BookCardCollectionSelector: ViewModifier {
 
   func body(content: Content) -> some View {
     let selector = model.contextMenu?.collectionSelector ?? model.episodeContextMenu?.collectionSelector
+    let isConfirmingRemoval = model.contextMenu?.isConfirmingRemoveFromContinueListening ?? false
 
-    content.sheet(
-      item: Binding(
-        get: { selector },
-        set: { newValue in
-          if model.contextMenu != nil {
-            model.contextMenu?.collectionSelector = newValue
-          } else {
-            model.episodeContextMenu?.collectionSelector = newValue
+    content
+      .sheet(
+        item: Binding(
+          get: { selector },
+          set: { newValue in
+            if model.contextMenu != nil {
+              model.contextMenu?.collectionSelector = newValue
+            } else {
+              model.episodeContextMenu?.collectionSelector = newValue
+            }
           }
+        )
+      ) { sheetModel in
+        CollectionSelectorSheet(model: sheetModel)
+      }
+      .confirmationDialog(
+        "This book is currently playing",
+        isPresented: Binding(
+          get: { isConfirmingRemoval },
+          set: { model.contextMenu?.isConfirmingRemoveFromContinueListening = $0 }
+        ),
+        titleVisibility: .visible
+      ) {
+        Button("Remove and Stop", role: .destructive) {
+          model.contextMenu?.onRemoveFromContinueListeningConfirmed()
         }
-      )
-    ) { sheetModel in
-      CollectionSelectorSheet(model: sheetModel)
-    }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text("Removing it from Continue Listening will stop playback.")
+      }
   }
 }
 
