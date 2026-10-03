@@ -12,7 +12,7 @@ struct BookPlayerControls: View {
           chapters.onPreviousChapterTapped()
         }) {
           Image(systemName: "backward.end")
-            .font(.system(size: 30, weight: .thin))
+            .font(.system(size: 22, weight: .regular))
             .foregroundColor((model.isLoading || !chapters.canGoPreviousChapter) ? .white.opacity(0.3) : .white)
         }
         .disabled(!chapters.canGoPreviousChapter)
@@ -30,14 +30,13 @@ struct BookPlayerControls: View {
         )
         .font(
           .system(
-            size: preferences.hideChapterSkipButtons ? 40 : 36,
-            weight: .thin
+            size: preferences.hideChapterSkipButtons ? 32 : 28,
+            weight: .regular
           )
         )
         .minimumScaleFactor(0.5)
         .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
-      .fontWeight(.light)
       .accessibilityLabel("Skip backward \(Int(preferences.skipBackwardInterval)) seconds")
 
       Spacer(minLength: 8)
@@ -47,20 +46,17 @@ struct BookPlayerControls: View {
         model.onTogglePlaybackTapped()
       }) {
         ZStack {
-          Circle()
-            .fill(model.isLoading ? Color.white.opacity(0.3) : Color.white)
-
           if model.isLoading {
             ProgressView()
-              .progressViewStyle(CircularProgressViewStyle(tint: .black))
-              .scaleEffect(0.8)
+              .progressViewStyle(CircularProgressViewStyle(tint: .white))
           } else {
             Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
-              .font(.system(size: 32))
-              .foregroundColor(.black)
-              .padding()
+              .font(.system(size: 48))
+              .foregroundColor(.white)
           }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
       }
       .frame(maxWidth: 80, maxHeight: 80)
       .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
@@ -74,14 +70,13 @@ struct BookPlayerControls: View {
         Image(systemName: "goforward.\(Int(preferences.skipForwardInterval))")
           .font(
             .system(
-              size: preferences.hideChapterSkipButtons ? 40 : 36,
-              weight: .thin
+              size: preferences.hideChapterSkipButtons ? 32 : 28,
+              weight: .regular
             )
           )
           .minimumScaleFactor(0.5)
           .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
-      .fontWeight(.light)
       .accessibilityLabel("Skip forward \(Int(preferences.skipForwardInterval)) seconds")
 
       Spacer(minLength: 8)
@@ -92,7 +87,7 @@ struct BookPlayerControls: View {
           chapters.onNextChapterTapped()
         }) {
           Image(systemName: "forward.end")
-            .font(.system(size: 30, weight: .thin))
+            .font(.system(size: 22, weight: .regular))
             .foregroundColor((model.isLoading || !chapters.canGoNextChapter) ? .white.opacity(0.3) : .white)
         }
         .disabled(!chapters.canGoNextChapter)
@@ -101,5 +96,6 @@ struct BookPlayerControls: View {
     }
     .buttonStyle(.borderless)
     .opacity(model.isLocked ? 0.4 : 1)
+    .padding(.horizontal)
   }
 }
