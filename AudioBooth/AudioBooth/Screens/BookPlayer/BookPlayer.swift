@@ -545,7 +545,7 @@ extension BookPlayer {
           : NavigationDestination.book(id: model.id)
       ) {
         Cover(url: model.coverURL, style: .plain)
-          .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
+          .frame(minWidth: 200, maxWidth: 600, minHeight: 200, maxHeight: 600)
           .aspectRatio(1, contentMode: .fit)
           .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
       }
