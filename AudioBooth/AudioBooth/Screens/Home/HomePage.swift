@@ -71,7 +71,7 @@ struct HomePage: View {
       }
       .padding(.bottom)
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle(title)
     .toolbar {
       serverMenuToolbarItem

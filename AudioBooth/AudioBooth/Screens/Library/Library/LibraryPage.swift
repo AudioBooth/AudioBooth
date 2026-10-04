@@ -48,7 +48,7 @@ struct LibraryPage: View {
         }
       }
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle(navigationTitle)
     .sheet(isPresented: $model.showingFilterSelection) {
       if let filters = model.filters {

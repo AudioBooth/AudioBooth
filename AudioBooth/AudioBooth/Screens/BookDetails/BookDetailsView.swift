@@ -27,7 +27,7 @@ struct BookDetailsView: View {
         portraitLayout
       }
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .fullScreenCover(item: $model.ebookReader) { model in
       NavigationStack {
         EbookReaderView(model: model)
@@ -42,7 +42,7 @@ struct BookDetailsView: View {
       if model.isLoading {
         ProgressView("Loading book details...")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(theme.colors.background.page)
+          .background(theme.colors.background.page.ignoresSafeArea())
       } else if let error = model.error {
         ContentUnavailableView {
           Label("Unable to Load Book", systemImage: "exclamationmark.triangle")
@@ -54,7 +54,7 @@ struct BookDetailsView: View {
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.colors.background.page)
+        .background(theme.colors.background.page.ignoresSafeArea())
       }
     }
     .toolbar {
@@ -183,7 +183,7 @@ struct BookDetailsView: View {
 
           contentSections
             .padding()
-            .background(theme.colors.background.page)
+            .background(theme.colors.background.page.ignoresSafeArea())
         }
         .padding(.vertical)
       }
@@ -200,7 +200,7 @@ struct BookDetailsView: View {
         contentSections
           .padding()
       }
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
     }
   }
 

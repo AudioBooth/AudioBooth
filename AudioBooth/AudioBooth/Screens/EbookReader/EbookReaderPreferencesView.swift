@@ -166,7 +166,7 @@ struct EbookReaderPreferencesView: View {
         .listRowBackground(theme.colors.background.card)
       }
       .scrollContentBackground(.hidden)
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .navigationTitle("Reader Settings")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

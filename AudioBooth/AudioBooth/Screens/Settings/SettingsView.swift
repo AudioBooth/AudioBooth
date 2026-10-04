@@ -128,7 +128,7 @@ struct SettingsView: View {
         }
       }
       .scrollContentBackground(.hidden)
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .navigationTitle("Settings")
       .onAppear { model.storagePreferences?.onAppear() }
       .navigationDestination(for: String.self) { destination in

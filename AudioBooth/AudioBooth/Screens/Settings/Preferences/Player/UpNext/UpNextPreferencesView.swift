@@ -61,7 +61,7 @@ struct UpNextPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Up Next")
   }
 }

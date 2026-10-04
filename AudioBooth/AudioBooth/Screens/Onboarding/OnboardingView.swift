@@ -19,7 +19,7 @@ struct OnboardingView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 32)
       }
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .safeAreaInset(edge: .bottom) { actions }
       .navigationDestination(item: $model.serverModel) { serverModel in
         ServerView(model: serverModel)
@@ -106,7 +106,7 @@ struct OnboardingView: View {
     .frame(maxWidth: .infinity)
     .padding(.horizontal, 24)
     .padding(.top, 12)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
   }
 }
 

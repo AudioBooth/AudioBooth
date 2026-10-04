@@ -71,7 +71,7 @@ struct LockScreenPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Lock Screen")
   }
 }

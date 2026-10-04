@@ -43,7 +43,7 @@ struct ControlsLayoutPreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Controls & Layout")
     .environment(\.editMode, .constant(.active))
     .onAppear(perform: load)

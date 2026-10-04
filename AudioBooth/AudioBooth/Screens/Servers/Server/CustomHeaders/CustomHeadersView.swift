@@ -37,7 +37,7 @@ struct CustomHeadersView: View {
       .listRowBackground(theme.colors.background.card)
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Custom Headers")
     .navigationBarTitleDisplayMode(.inline)
     .sheet(isPresented: $model.showAddSheet) {
@@ -78,7 +78,7 @@ struct AddHeaderView: View {
         .listRowBackground(theme.colors.background.card)
       }
       .scrollContentBackground(.hidden)
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .navigationTitle("Add Header")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

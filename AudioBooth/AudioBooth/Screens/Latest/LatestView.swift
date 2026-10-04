@@ -9,7 +9,7 @@ struct LatestView: View {
   var body: some View {
     NavigationStack {
       content
-        .background(theme.colors.background.page)
+        .background(theme.colors.background.page.ignoresSafeArea())
         .navigationTitle("Latest")
         .navigationDestinations()
         .refreshable {

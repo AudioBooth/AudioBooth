@@ -23,7 +23,7 @@ struct PodcastsRootPage: View {
     NavigationStack(path: $model.path) {
       PodcastsRootContent(selected: $model.selected)
         .id(libraries.current?.id)
-        .background(theme.colors.background.page)
+        .background(theme.colors.background.page.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: isPartiallyFolded ? .topBarLeading : .principal) {

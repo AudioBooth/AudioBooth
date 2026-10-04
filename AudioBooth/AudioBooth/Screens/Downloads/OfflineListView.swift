@@ -8,14 +8,9 @@ struct OfflineListView: View {
   @ScaledMetric(relativeTo: .title) private var rowCoverSize: CGFloat = 60
 
   var body: some View {
-    content
-  }
-
-  var content: some View {
     Group {
       if model.isLoading && model.items.isEmpty {
         ProgressView("Loading downloads...")
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else if model.items.isEmpty {
         ContentUnavailableView(
           "No Downloads",
@@ -26,6 +21,7 @@ struct OfflineListView: View {
         list
       }
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .overlay {
       if model.isPerformingBatchAction {
         Color.black.opacity(0.3)
@@ -37,7 +33,7 @@ struct OfflineListView: View {
           }
       }
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Downloaded")
     .searchable(text: $model.searchText, prompt: "Filter downloads")
     .toolbar {

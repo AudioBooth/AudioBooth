@@ -17,7 +17,7 @@ struct AudiobookshelfInfoView: View {
       .padding(.horizontal, 24)
       .padding(.vertical, 24)
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .safeAreaInset(edge: .bottom) { actions }
     .navigationTitle("What is Audiobookshelf?")
     .navigationBarTitleDisplayMode(.inline)
@@ -106,7 +106,7 @@ struct AudiobookshelfInfoView: View {
     .frame(maxWidth: .infinity)
     .padding(.horizontal, 24)
     .padding(.top, 12)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
   }
 }
 

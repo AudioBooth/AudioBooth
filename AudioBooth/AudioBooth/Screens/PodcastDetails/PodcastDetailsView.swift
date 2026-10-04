@@ -37,7 +37,7 @@ struct PodcastDetailsView: View {
       }
       .ignoresSafeArea(.keyboard)
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .fullScreenCover(isPresented: $isShowingFullScreenCover) {
       if let coverURL = model.coverURL {
         FullScreenCoverView(coverURL: coverURL)
@@ -47,7 +47,7 @@ struct PodcastDetailsView: View {
       if model.isLoading {
         ProgressView("Loading podcast details...")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(theme.colors.background.page)
+          .background(theme.colors.background.page.ignoresSafeArea())
       } else if let error = model.error {
         ContentUnavailableView {
           Label("Unable to Load Podcast", systemImage: "exclamationmark.triangle")
@@ -59,7 +59,7 @@ struct PodcastDetailsView: View {
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.colors.background.page)
+        .background(theme.colors.background.page.ignoresSafeArea())
       }
     }
     .toolbar {
@@ -189,7 +189,7 @@ struct PodcastDetailsView: View {
 
             contentSections
               .padding(.vertical)
-              .background(theme.colors.background.page)
+              .background(theme.colors.background.page.ignoresSafeArea())
           }
           .padding(.vertical)
         }
@@ -211,7 +211,7 @@ struct PodcastDetailsView: View {
           contentSections
             .padding(.vertical)
         }
-        .background(theme.colors.background.page)
+        .background(theme.colors.background.page.ignoresSafeArea())
         .onChange(of: model.scrollToEpisodeID) { _, id in
           scrollToEpisode(id: id, proxy: scrollProxy)
         }

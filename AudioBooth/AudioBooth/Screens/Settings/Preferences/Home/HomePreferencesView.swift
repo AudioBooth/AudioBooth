@@ -59,7 +59,7 @@ struct HomePreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Home")
     .environment(\.editMode, .constant(.active))
     .onAppear {

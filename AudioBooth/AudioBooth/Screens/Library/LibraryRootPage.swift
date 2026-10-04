@@ -25,7 +25,8 @@ struct LibraryRootPage: View {
     NavigationStack(path: $model.path) {
       LibraryRootContent(selected: $model.selected)
         .id(libraries.current?.id)
-        .background(theme.colors.background.page)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme.colors.background.page.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: isPartiallyFolded ? .topBarLeading : .principal) {

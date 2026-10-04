@@ -50,7 +50,7 @@ struct EbookChapterPickerSheet: View {
           }
         }
         .scrollContentBackground(.hidden)
-        .background(theme.colors.background.page)
+        .background(theme.colors.background.page.ignoresSafeArea())
         .onAppear {
           if let current = model.current {
             proxy.scrollTo(current.id, anchor: .center)

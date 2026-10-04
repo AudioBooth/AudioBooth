@@ -39,7 +39,7 @@ struct FilterOptionsPage: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .overlay {
       if visibleOptions.isEmpty, !searchText.isEmpty {
         ContentUnavailableView.search(text: searchText)

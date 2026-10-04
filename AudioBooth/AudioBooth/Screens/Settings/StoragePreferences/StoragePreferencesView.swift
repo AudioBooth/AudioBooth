@@ -264,7 +264,7 @@ struct StoragePreferencesView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Storage")
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)
@@ -554,7 +554,7 @@ private struct DownloadedBooksView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Downloaded Books")
     .navigationBarTitleDisplayMode(.inline)
   }

@@ -12,7 +12,7 @@ struct AuthorsPage: View {
 
   var body: some View {
     content
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .refreshable {
         await model.refresh()
       }
@@ -183,7 +183,7 @@ struct AuthorsPage: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.horizontal)
       .padding(.vertical, 8)
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
   }
 }
 

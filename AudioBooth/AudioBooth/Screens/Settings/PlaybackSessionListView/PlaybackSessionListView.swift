@@ -112,7 +112,7 @@ struct PlaybackSessionListView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Playback Sessions")
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)

@@ -25,7 +25,7 @@ struct PodcastEpisodeDetailView: View {
       }
       .padding()
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle(model.title)
     .navigationBarTitleDisplayMode(.inline)
     .sheet(

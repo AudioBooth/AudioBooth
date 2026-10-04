@@ -29,7 +29,7 @@ struct PodcastFeedView: View {
         content
       }
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Find Episodes")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {

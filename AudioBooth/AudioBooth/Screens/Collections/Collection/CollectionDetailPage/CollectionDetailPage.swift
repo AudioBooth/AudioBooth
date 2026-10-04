@@ -34,7 +34,7 @@ struct CollectionDetailPage: View {
         listView
       }
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if model.mode == .playlists {

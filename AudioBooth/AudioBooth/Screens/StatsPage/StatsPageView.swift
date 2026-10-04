@@ -38,7 +38,7 @@ struct StatsPageView: View {
       .padding(.horizontal, 12)
       .padding(.vertical, 16)
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Your Stats")
     .navigationBarTitleDisplayMode(.large)
     .onAppear(perform: model.onAppear)

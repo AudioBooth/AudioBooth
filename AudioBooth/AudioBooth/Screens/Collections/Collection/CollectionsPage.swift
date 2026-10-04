@@ -89,7 +89,7 @@ struct CollectionsPage: View {
     .listRowSpacing(0.0)
     .listStyle(.plain)
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
   }
 }
 

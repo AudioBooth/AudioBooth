@@ -24,7 +24,7 @@ struct EbookSearchView: View {
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .navigationTitle("Search")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

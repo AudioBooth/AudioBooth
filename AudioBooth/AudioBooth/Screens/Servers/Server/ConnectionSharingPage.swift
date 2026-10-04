@@ -73,7 +73,7 @@ struct ConnectionSharingPage: View {
     }
     .padding()
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)
   }

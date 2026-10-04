@@ -20,7 +20,7 @@ struct DownloadingListView: View {
         }
       }
     }
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Downloading")
     .onAppear(perform: model.onAppear)
   }

@@ -73,7 +73,7 @@ struct ServerListPage: View {
         }
       }
       .scrollContentBackground(.hidden)
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .navigationTitle("Servers")
       .navigationDestination(item: $model.selected) { model in
         ServerView(model: model)

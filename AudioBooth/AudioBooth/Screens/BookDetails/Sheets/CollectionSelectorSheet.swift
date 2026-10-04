@@ -23,7 +23,7 @@ struct CollectionSelectorSheet: View {
           createFieldView
         }
       }
-      .background(theme.colors.background.page)
+      .background(theme.colors.background.page.ignoresSafeArea())
       .navigationTitle(navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

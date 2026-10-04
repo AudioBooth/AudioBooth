@@ -51,7 +51,7 @@ struct AlternativeURLView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .navigationTitle("Alternative URL")
     .navigationBarTitleDisplayMode(.inline)
   }

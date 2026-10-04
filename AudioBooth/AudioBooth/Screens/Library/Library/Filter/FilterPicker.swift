@@ -55,7 +55,7 @@ struct FilterPicker: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .background(theme.colors.background.page)
+    .background(theme.colors.background.page.ignoresSafeArea())
     .listSectionSpacing(.compact)
     .navigationTitle("Filter Library")
     .navigationBarTitleDisplayMode(.inline)
