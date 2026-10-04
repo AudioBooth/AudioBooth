@@ -428,15 +428,16 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   private func updateCurrentChapterIndex() {
-    guard let chapters, let navigator else { return }
+    guard let chapters, let navigator, let publication else { return }
     guard let current = navigator.currentLocation?.href else { return }
 
-    let currentPath = current.string
+    let readingOrder = publication.readingOrder
+    guard let currentResourceIndex = readingOrder.firstIndexWithHREF(current) else { return }
+
     let index =
       chapters.chapters.lastIndex(where: { chapter in
-        guard chapter.level == 0 else { return false }
-        let chapterPath = chapter.id.split(separator: "#", maxSplits: 1).first.map(String.init) ?? chapter.id
-        return chapterPath == currentPath
+        guard let chapterResourceIndex = readingOrder.firstIndexWithHREF(chapter.link.url()) else { return false }
+        return chapterResourceIndex <= currentResourceIndex
       }) ?? 0
     chapters.currentIndex = index
   }
