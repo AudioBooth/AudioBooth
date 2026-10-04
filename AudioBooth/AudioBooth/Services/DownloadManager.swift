@@ -452,6 +452,12 @@ final class DownloadManager: NSObject, ObservableObject {
       return
     }
 
+    if kind != .ebook, !hasEnoughSpace(for: size) {
+      AppLogger.download.error("Not enough storage for book: \(itemID)")
+      Toast(error: "Not enough storage on device").show()
+      return
+    }
+
     AppLogger.download.info("Queueing \(kind.rawValue) download for book: \(itemID)")
 
     try? DownloadRequest(
@@ -550,6 +556,14 @@ final class DownloadManager: NSObject, ObservableObject {
       return false
     }
 
+    guard hasEnoughSpace(for: plan.totalBytes - bytesCompleted) else {
+      AppLogger.download.error("Not enough storage for book: \(itemID)")
+      Toast(error: "Not enough storage on device").show()
+      request?.failureCount = DownloadRequest.maxFailures
+      try? request?.save()
+      throw CancellationError()
+    }
+
     let isStreaming =
       PlayerManager.shared.current?.isPlaying == true
       && PlayerManager.shared.current?.downloadState == .notDownloaded
@@ -642,7 +656,12 @@ final class DownloadManager: NSObject, ObservableObject {
     let wasCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
     file.attempt += 1
 
-    guard retryable, !wasCancelled, file.attempt < Self.maxRetryAttempts else {
+    guard
+      retryable,
+      !wasCancelled,
+      file.attempt < Self.maxRetryAttempts,
+      hasEnoughSpace(for: download.totalBytes - download.bytesCompleted)
+    else {
       fail(itemID: download.itemID, error: error)
       return
     }
@@ -1308,6 +1327,14 @@ extension DownloadManager {
     var values = URLResourceValues()
     values.isExcludedFromBackup = true
     try? parent.setResourceValues(values)
+  }
+
+  private func hasEnoughSpace(for bytes: Int64) -> Bool {
+    let values = try? Self.appGroupContainer.resourceValues(
+      forKeys: [.volumeAvailableCapacityForImportantUsageKey]
+    )
+    guard let available = values?.volumeAvailableCapacityForImportantUsage else { return true }
+    return bytes <= available
   }
 
   func diskSize(of url: URL) -> Int64 {
