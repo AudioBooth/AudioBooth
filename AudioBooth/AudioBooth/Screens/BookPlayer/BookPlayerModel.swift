@@ -36,6 +36,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private var recoveryAttempts = 0
   private var maxRecoveryAttempts = 3
   private var isRecovering = false
+  private var recoveredPosition: TimeInterval = 0
   private var interruption: (beganAt: Date, wasRouteDisconnect: Bool)?
   private var positionedAt: Date?
   private var positionSyncCheck: Task<Void, Never>?
@@ -1090,7 +1091,7 @@ extension BookPlayerModel {
       .store(in: &cancellables)
 
     NotificationCenter.default.publisher(for: AVAudioSession.mediaServicesWereResetNotification)
-      .receive(on: DispatchQueue.main)
+      .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
       .sink { [weak self] _ in
         self?.handleMediaServicesReset()
       }
@@ -1110,7 +1111,7 @@ extension BookPlayerModel {
   }
 
   private func onTimeChanged(_ globalTime: TimeInterval) {
-    if recoveryAttempts > 0, !isRecovering {
+    if recoveryAttempts > 0, !isRecovering, globalTime - recoveredPosition > 60 {
       recoveryAttempts = 0
     }
 
@@ -1532,6 +1533,7 @@ extension BookPlayerModel {
         AppLogger.player.debug("Session recreated for downloaded book (for progress sync)")
       }
 
+      recoveredPosition = mediaProgress.currentTime
       isLoading = false
       isRecovering = false
     } catch {

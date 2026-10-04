@@ -696,7 +696,7 @@ extension LevelingStrength {
 
 extension AVPlayerItem {
   convenience init(url: URL, headers: [String: String]?) {
-    var options: [String: Any] = [AVURLAssetPreferPreciseDurationAndTimingKey: true]
+    var options: [String: Any] = [:]
     if !url.isFileURL, let headers, !headers.isEmpty {
       options["AVURLAssetHTTPHeaderFieldsKey"] = headers
     }
