@@ -15,6 +15,9 @@ private struct HingeStatusModifier: ViewModifier {
   @State private var isPartiallyFolded = false
 
   func body(content: Content) -> some View {
+    #if targetEnvironment(macCatalyst)
+    content
+    #else
     if #available(iOS 27.1, *) {
       content
         .onHingeChange { _, newContext in
@@ -28,5 +31,6 @@ private struct HingeStatusModifier: ViewModifier {
     } else {
       content
     }
+    #endif
   }
 }
