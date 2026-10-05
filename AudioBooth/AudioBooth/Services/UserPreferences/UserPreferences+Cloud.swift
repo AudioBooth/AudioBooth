@@ -43,6 +43,7 @@ extension UserPreferences {
     "iCloudSyncEnabled",
     "accentColor",
     "autoTimerMode",
+    "autoTimerCustomMinutes",
     "autoTimerWindowStart",
     "autoTimerWindowEnd",
     "autoTimerTrigger",
