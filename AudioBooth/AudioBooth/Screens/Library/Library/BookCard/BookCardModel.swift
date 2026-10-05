@@ -91,45 +91,7 @@ final class BookCardModel: BookCard.Model {
     let publishedYear = item.publishedYear
 
     let time: Date.FormatStyle.TimeStyle = UserPreferences.shared.libraryDisplayMode == .row ? .shortened : .omitted
-
-    let details: String?
-    switch sortBy {
-    case .publishedYear:
-      details = item.publishedYear.map({ "Published \($0)" })
-    case .title, .authorName, .authorNameLF:
-      details = nil
-    case .addedAt:
-      details = "Added \(item.addedAt.formatted(date: .numeric, time: time))"
-    case .updatedAt:
-      details = "Updated \(item.updatedAt.formatted(date: .numeric, time: time))"
-    case .size:
-      details = item.size.map { "Size \($0.formatted(.byteCount(style: .file)))" }
-    case .duration:
-      details = Duration.seconds(item.duration).formatted(
-        .units(allowed: [.hours, .minutes, .seconds], width: .narrow)
-      )
-    case .progress:
-      if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
-        details = "Progress: \(mediaProgress.lastUpdate.formatted(date: .numeric, time: time))"
-      } else {
-        details = nil
-      }
-    case .progressFinishedAt:
-      if let mediaProgress = try? MediaProgress.fetch(bookID: item.id), mediaProgress.isFinished {
-        let date = mediaProgress.finishedAt ?? mediaProgress.lastUpdate
-        details = "Finished \(date.formatted(date: .numeric, time: time))"
-      } else {
-        details = nil
-      }
-    case .progressCreatedAt:
-      if let mediaProgress = try? MediaProgress.fetch(bookID: item.id) {
-        details = "Started \(mediaProgress.lastPlayedAt.formatted(date: .numeric, time: time))"
-      } else {
-        details = nil
-      }
-    default:
-      details = nil
-    }
+    let details = item.sortDetails(for: sortBy, time: time)
 
     let cover = Cover.Model(
       url: item.coverURL(),

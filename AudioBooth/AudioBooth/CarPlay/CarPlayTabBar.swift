@@ -64,9 +64,9 @@ final class CarPlayTabBar: NSObject {
         tabs[podcastLibrary.template] = podcastLibrary
         templates.append(podcastLibrary.template)
       } else {
-        let collections = CarPlayCollections(interfaceController: interfaceController, nowPlaying: nowPlaying)
-        tabs[collections.template] = collections
-        templates.append(collections.template)
+        let library = CarPlayLibraryTab(interfaceController: interfaceController, nowPlaying: nowPlaying)
+        tabs[library.template] = library
+        templates.append(library.template)
       }
 
       templates.append(offline.template)

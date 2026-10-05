@@ -47,9 +47,11 @@ final class AudioPlayer {
   let events = PassthroughSubject<Event, Never>()
 
   var time: TimeInterval {
-    guard !tracks.isEmpty else { return player.currentSeconds }
+    let seconds = player.currentSeconds
+    guard seconds >= 0 else { return mediaProgress.currentTime }
+    guard !tracks.isEmpty else { return seconds }
     let track = tracks[currentTrackIndex]
-    return track.startOffset + min(player.currentSeconds, track.duration)
+    return track.startOffset + min(seconds, track.duration)
   }
 
   var isPlaying: Bool {

@@ -234,7 +234,7 @@ extension CarPlayHome {
       let elements = zip(items, images).map { book, image in
         var subtitle = book.authorName
         if isContinueListening, let progress = try? MediaProgress.fetch(bookID: book.id) {
-          subtitle = progress.remaining.formattedTimeLeft
+          subtitle = timeLeft(for: book.id, progress: progress)
         }
         return CPListImageRowItemRowElement(
           image: image ?? UIImage(),
@@ -274,7 +274,7 @@ extension CarPlayHome {
           let progress = try? MediaProgress.fetch(bookID: episodeID)
         {
           title = podcast.recentEpisode?.title ?? podcast.title
-          subtitle = progress.remaining.formattedTimeLeft
+          subtitle = timeLeft(for: episodeID, progress: progress)
         }
         return CPListImageRowItemRowElement(
           image: image ?? UIImage(),
@@ -346,10 +346,11 @@ extension CarPlayHome {
 
   private func buildImageRowSection(header: String, items: [API.Author]) async -> CPListSection? {
     if #available(iOS 26.0, *) {
-      let elements = items.map { author in
+      let images = await loadImages(items.map(\.imageURL))
+      let elements = zip(items, images).map { author, image in
         let bookCount = author.numBooks ?? 0
         return CPListImageRowItemRowElement(
-          image: UIImage(),
+          image: image ?? UIImage(),
           title: author.name,
           subtitle: "\(bookCount) book\(bookCount == 1 ? "" : "s")"
         )
@@ -370,6 +371,13 @@ extension CarPlayHome {
       let listItems = items.map { author in createListItem(for: author) }
       return CPListSection(items: listItems, header: header, sectionIndexTitle: nil)
     }
+  }
+
+  private func timeLeft(for id: String, progress: MediaProgress) -> String {
+    if let current = PlayerManager.shared.current, current.id == id {
+      return current.playbackProgress.totalTimeRemaining.formattedTimeLeft
+    }
+    return progress.remaining.formattedTimeLeft
   }
 
   private func loadImages(_ urls: [URL?]) async -> [UIImage?] {
@@ -485,6 +493,14 @@ extension CarPlayHome {
       text: author.name,
       detailText: "\(bookCount) book\(bookCount == 1 ? "" : "s")"
     )
+
+    if let imageURL = author.imageURL {
+      Task {
+        if let image = await loadImage(from: imageURL) {
+          item.setImage(image)
+        }
+      }
+    }
 
     item.handler = { [weak self] (_: CPSelectableListItem, completion: @escaping () -> Void) in
       self?.showLibrary(filterType: .author(author))

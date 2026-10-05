@@ -8,6 +8,7 @@ final class CarPlayLibrary {
   private weak var nowPlaying: CarPlayNowPlaying?
 
   enum FilterType {
+    case all
     case series(Series)
     case author(Author)
   }
@@ -22,6 +23,8 @@ final class CarPlayLibrary {
 
     let title: String
     switch filterType {
+    case .all:
+      title = String(localized: "Books")
     case .series(let series):
       title = series.name
     case .author(let author):
@@ -36,26 +39,39 @@ final class CarPlayLibrary {
   }
 
   private func loadBooks() async {
-    let filter: String
-
-    switch filterType {
-    case .series(let series):
-      let base64SeriesID = Data(series.id.utf8).base64EncodedString()
-      filter = "series.\(base64SeriesID)"
-    case .author(let author):
-      let base64AuthorID = Data(author.id.utf8).base64EncodedString()
-      filter = "authors.\(base64AuthorID)"
-    }
-
     do {
-      let page = try await Audiobookshelf.shared.books.fetch(filter: filter)
+      let page = try await fetchBooks()
       let items = page.results.map { book in
         createListItem(for: book)
       }
-      let section = CPListSection(items: items)
-      template.updateSections([section])
+      template.updateSections(makeSections(items: items, total: page.total))
     } catch {
       template.updateSections([])
+    }
+  }
+
+  private func makeSections(items: [CPListItem], total: Int) -> [CPListSection] {
+    guard case .all = filterType else { return [CPListSection(items: items)] }
+
+    let header = "\(total) book\(total == 1 ? "" : "s")"
+    return [CPListSection(items: items, header: header, sectionIndexTitle: nil)]
+  }
+
+  private func fetchBooks() async throws -> Page<Book> {
+    switch filterType {
+    case .all:
+      let preferences = UserPreferences.shared
+      return try await Audiobookshelf.shared.books.fetch(
+        limit: 100,
+        sortBy: preferences.librarySortBy,
+        ascending: preferences.librarySortAscending
+      )
+    case .series(let series):
+      let base64SeriesID = Data(series.id.utf8).base64EncodedString()
+      return try await Audiobookshelf.shared.books.fetch(filter: "series.\(base64SeriesID)")
+    case .author(let author):
+      let base64AuthorID = Data(author.id.utf8).base64EncodedString()
+      return try await Audiobookshelf.shared.books.fetch(filter: "authors.\(base64AuthorID)")
     }
   }
 
@@ -73,13 +89,26 @@ final class CarPlayLibrary {
   private func createListItem(for book: Book) -> CPListItem {
     var details = [String]()
 
-    if case .series(let series) = filterType, let sequence = book.series?.first(where: { $0.id == series.id })?.sequence
-    {
-      details.append("#\(sequence)")
-    }
-
-    if let publishedYear = book.publishedYear {
-      details.append(publishedYear)
+    switch filterType {
+    case .all:
+      if let authorName = book.authorName {
+        details.append(authorName)
+      }
+      let sortBy = UserPreferences.shared.librarySortBy
+      if let sortDetails = book.sortDetails(for: sortBy, time: .omitted) {
+        details.append(sortDetails)
+      }
+    case .series(let series):
+      if let sequence = book.series?.first(where: { $0.id == series.id })?.sequence {
+        details.append("#\(sequence)")
+      }
+      if let publishedYear = book.publishedYear {
+        details.append(publishedYear)
+      }
+    case .author:
+      if let publishedYear = book.publishedYear {
+        details.append(publishedYear)
+      }
     }
 
     let detailText: String? = details.isEmpty ? nil : details.joined(separator: " • ")
