@@ -86,7 +86,9 @@ final class BookPlayerModel: PlayerView.Model {
       guard hasStartedPlayback else { return }
 
       progressSaveCounter += 1
-      reportProgressIfNeeded(currentTime: globalTime)
+      if isPlaying {
+        reportProgressIfNeeded(currentTime: globalTime)
+      }
 
       if isLocal && progressSaveCounter % 60 == 0 {
         saveProgress(currentTime: globalTime)
