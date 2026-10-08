@@ -6,7 +6,7 @@ struct StoragePreferencesView: View {
   @ObservedObject var model: Model
   @ObservedObject private var preferences = UserPreferences.shared
 
-  private let storageOptions: [Int] = [1, 2, 5, 10, 20, 50, 0]
+  private let storageOptions: [Int] = [1, 2, 5, 10, 20, 50, 100, 200, 500, 0]
   private let removeAfterOptions: [RemoveAfterUnused] = [
     .oneDay, .fiveDays, .sevenDays, .fourteenDays, .thirtyDays, .ninetyDays, .oneHundredEightyDays, .never,
   ]
