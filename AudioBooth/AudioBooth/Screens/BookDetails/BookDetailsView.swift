@@ -356,7 +356,8 @@ struct BookDetailsView: View {
         ),
         style: .plain
       )
-      .frame(width: width * 2 / 3, height: width * 2 / 3)
+      .aspectRatio(1, contentMode: .fit)
+      .frame(maxWidth: width * 2 / 3, maxHeight: width * 2 / 3)
       .shadow(radius: 4)
       .padding()
       .onTapGesture {
