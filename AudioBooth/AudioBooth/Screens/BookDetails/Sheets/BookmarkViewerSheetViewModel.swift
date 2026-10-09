@@ -193,21 +193,13 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
 
     Task {
       do {
-        let bookmark = try await BookmarkSyncQueue.shared.create(
+        _ = try await BookmarkSyncQueue.shared.create(
           bookID: bookID,
           title: title,
           time: time
         )
 
-        let bookmarkRowModel = BookmarkRow.Model(
-          title: bookmark.title,
-          time: bookmark.time,
-          createdAt: bookmark.createdAt,
-          status: bookmark.status
-        )
-
-        bookmarks.append(bookmarkRowModel)
-        bookmarks.sort { $0.createdAt > $1.createdAt }
+        refreshBookmarks()
 
         newBookmarkTitle = ""
 
