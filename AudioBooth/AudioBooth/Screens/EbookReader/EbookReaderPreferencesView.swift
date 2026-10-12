@@ -59,6 +59,8 @@ struct EbookReaderPreferencesView: View {
               }
             }
           }
+          Toggle("Progress Header", isOn: $preferences.showProgressHeader)
+
           Toggle("Tap to Navigate", isOn: $preferences.tapToNavigate)
 
           Toggle("Volume to Navigate", isOn: $preferences.useVolumeButtonsForPageTurn)

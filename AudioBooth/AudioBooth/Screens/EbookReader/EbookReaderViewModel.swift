@@ -67,6 +67,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       .sink { [weak self] _ in
         guard let self else { return }
         self.applyPreferences(self.preferences)
+        self.updateProgressHeaderInset()
         self.updateAutoScroll()
         self.syncReadAlongPreferences()
       }
@@ -292,12 +293,26 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       self.navigator = navigator
       self.readerViewController = navigator as? UIViewController
 
+      if publication.conforms(to: .epub), publication.metadata.layout != .fixed,
+        let epubNavigator = navigator as? EPUBNavigatorViewController
+      {
+        chapterProgress = ChapterProgressViewModel(
+          navigator: epubNavigator,
+          publication: publication,
+          positions: positions,
+          preferences: preferences,
+          backgroundColor: themeBackgroundColor
+        )
+      }
+      updateProgressHeaderInset()
+
       updateProgress()
       updateCurrentChapterIndex()
       supportsReadAlong = isReadAlongSupported
       refreshCatchUpOffer()
 
       await setupChapters()
+      (chapterProgress as? ChapterProgressViewModel)?.chapters = chapters
 
       isLoading = false
       updateAutoScroll()
@@ -387,6 +402,17 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     } else {
       page = nil
     }
+  }
+
+  private func updateProgressHeaderInset() {
+    let isVisible = chapterProgress != nil && preferences.showProgressHeader
+    let top = isVisible ? ChapterProgressView.height : 0
+    guard let readerViewController, readerViewController.additionalSafeAreaInsets.top != top else { return }
+    readerViewController.additionalSafeAreaInsets.top = top
+  }
+
+  private var themeBackgroundColor: SwiftUI.Color {
+    SwiftUI.Color(uiColor: preferences.theme.toReadiumTheme(colorScheme: systemColorScheme).backgroundColor.uiColor)
   }
 
   private func setupChapters() async {
@@ -587,6 +613,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     let epubPrefs = preferences.toEPUBPreferences(colorScheme: systemColorScheme)
     epubNavigator.submitPreferences(epubPrefs)
+    chapterProgress?.backgroundColor = themeBackgroundColor
   }
 
   private var systemColorScheme: ColorScheme {
@@ -734,10 +761,23 @@ extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
     if let vc = navigator as? UIViewController {
       updateCurrentScrollView(in: vc.view)
     }
+    (chapterProgress as? ChapterProgressViewModel)?.onLocationChanged()
   }
 
   func navigator(_ navigator: Navigator, presentError error: NavigatorError) {
     AppLogger.viewModel.error("Navigator error: \(error)")
+  }
+
+  func navigatorContentInset(_ navigator: VisualNavigator) -> UIEdgeInsets? {
+    guard chapterProgress != nil, let viewController = navigator as? UIViewController,
+      viewController.additionalSafeAreaInsets.top > 0
+    else {
+      return nil
+    }
+
+    var insets = viewController.view.window?.safeAreaInsets ?? .zero
+    insets.top += viewController.additionalSafeAreaInsets.top
+    return insets
   }
 }
 

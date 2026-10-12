@@ -115,8 +115,14 @@ struct EbookReaderView: View {
           )
           .padding(.top, 8)
           .transition(.move(edge: .top).combined(with: .opacity))
+        } else if let chapterProgress = model.chapterProgress, model.preferences.showProgressHeader,
+          !showControls, !model.isLoading
+        {
+          ChapterProgressView(model: chapterProgress)
+            .transition(.opacity)
         }
       }
+      .animation(.easeInOut(duration: 0.2), value: showControls)
       .animation(.easeInOut(duration: 0.25), value: model.catchUpMessage)
       .animation(.easeInOut(duration: 0.25), value: model.readAlong?.status)
       .overlay {
@@ -471,6 +477,7 @@ extension EbookReaderView {
     var progress: Double
     var page: (current: Int, total: Int)?
     var chapters: EbookChapterPickerSheet.Model?
+    var chapterProgress: ChapterProgressView.Model?
     var preferences: EbookReaderPreferences
     var supportsSettings: Bool
     var search: EbookSearchView.Model?

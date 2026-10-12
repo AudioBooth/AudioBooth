@@ -72,6 +72,7 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.useVolumeButtonsForPageTurn") var useVolumeButtonsForPageTurn: Bool = false
   @AppStorage("ebookReader.autoScrollSpeed") var autoScrollSpeed: Double = 0.0
   @AppStorage("ebookReader.progressDisplay") var progressDisplay: EbookProgressDisplay = .percent
+  @AppStorage("ebookReader.showProgressHeader") var showProgressHeader: Bool = true
 
   @AppStorage("ebookReader.readAlongFollows") var readAlongFollowsNarration: Bool = true
   @AppStorage("ebookReader.readAlongHighlightsWord") var readAlongHighlightsWord: Bool = true
