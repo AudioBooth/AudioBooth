@@ -293,6 +293,10 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       self.navigator = navigator
       self.readerViewController = navigator as? UIViewController
 
+      if navigator is EPUBNavigatorViewController {
+        backgroundColor = themeBackgroundColor
+      }
+
       if publication.conforms(to: .epub), publication.metadata.layout != .fixed,
         let epubNavigator = navigator as? EPUBNavigatorViewController
       {
@@ -300,8 +304,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
           navigator: epubNavigator,
           publication: publication,
           positions: positions,
-          preferences: preferences,
-          backgroundColor: themeBackgroundColor
+          preferences: preferences
         )
       }
       updateProgressHeaderInset()
@@ -406,7 +409,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   private func updateProgressHeaderInset() {
     let isVisible = chapterProgress != nil && preferences.showProgressHeader
-    let top = isVisible ? ChapterProgressView.height : 0
+    let bottomPadding = preferences.scroll ? 0 : ChapterProgressView.pagedBottomPadding
+    let top = isVisible ? ChapterProgressView.height + bottomPadding : 0
     guard let readerViewController, readerViewController.additionalSafeAreaInsets.top != top else { return }
     readerViewController.additionalSafeAreaInsets.top = top
   }
@@ -613,7 +617,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     let epubPrefs = preferences.toEPUBPreferences(colorScheme: systemColorScheme)
     epubNavigator.submitPreferences(epubPrefs)
-    chapterProgress?.backgroundColor = themeBackgroundColor
+    backgroundColor = themeBackgroundColor
   }
 
   private var systemColorScheme: ColorScheme {
@@ -769,15 +773,12 @@ extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
   }
 
   func navigatorContentInset(_ navigator: VisualNavigator) -> UIEdgeInsets? {
-    guard chapterProgress != nil, let viewController = navigator as? UIViewController,
-      viewController.additionalSafeAreaInsets.top > 0
-    else {
-      return nil
-    }
+    guard chapterProgress != nil, let viewController = navigator as? UIViewController else { return nil }
 
-    var insets = viewController.view.window?.safeAreaInsets ?? .zero
-    insets.top += viewController.additionalSafeAreaInsets.top
-    return insets
+    let windowInsets = viewController.view.window?.safeAreaInsets ?? .zero
+    let headerHeight = viewController.additionalSafeAreaInsets.top
+    let top = headerHeight > 0 ? windowInsets.top + headerHeight : max(windowInsets.top, 40)
+    return UIEdgeInsets(top: top, left: 0, bottom: windowInsets.bottom, right: 0)
   }
 }
 

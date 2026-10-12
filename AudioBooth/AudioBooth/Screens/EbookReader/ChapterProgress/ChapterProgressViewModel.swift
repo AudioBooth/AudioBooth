@@ -28,15 +28,14 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
     navigator: EPUBNavigatorViewController,
     publication: Publication,
     positions: [Locator],
-    preferences: EbookReaderPreferences,
-    backgroundColor: SwiftUI.Color
+    preferences: EbookReaderPreferences
   ) {
     self.navigator = navigator
     self.publication = publication
     self.positions = positions
     self.preferences = preferences
 
-    super.init(backgroundColor: backgroundColor)
+    super.init()
   }
 
   func onLocationChanged() {
@@ -136,7 +135,7 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
       return
     }
 
-    showsPages = !preferences.scroll
+    isScrollMode = preferences.scroll
     page = screens.current
     visiblePageCount = preferences.scroll ? 1 : columnCount
     pageCount = screens.total

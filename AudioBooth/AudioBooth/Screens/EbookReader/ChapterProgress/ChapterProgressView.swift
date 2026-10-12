@@ -2,7 +2,8 @@ import Combine
 import SwiftUI
 
 struct ChapterProgressView: View {
-  static let height: CGFloat = 56
+  static let height: CGFloat = 40
+  static let pagedBottomPadding: CGFloat = 16
 
   @ObservedObject var model: Model
 
@@ -22,7 +23,7 @@ struct ChapterProgressView: View {
 
       ZStack {
         HStack {
-          if !model.showsPages {
+          if model.isScrollMode {
             Text(model.chapterFraction.formatted(.percent.precision(.fractionLength(0))))
           } else if model.pageCount > 0 {
             Text(verbatim: "\(pageLabel) / \(model.pageCount)")
@@ -42,11 +43,9 @@ struct ChapterProgressView: View {
       .foregroundStyle(.secondary)
     }
     .padding(.horizontal, 16)
-    .padding(.bottom, 16)
     .frame(height: Self.height)
+    .padding(.bottom, model.isScrollMode ? 0 : Self.pagedBottomPadding)
     .frame(maxWidth: .infinity)
-    .background(model.backgroundColor.ignoresSafeArea(edges: .top))
-    .allowsHitTesting(false)
   }
 
   private var pageLabel: String {
@@ -59,32 +58,29 @@ extension ChapterProgressView {
   @Observable
   class Model: ObservableObject {
     var chapterTitle: String?
-    var showsPages: Bool
+    var isScrollMode: Bool
     var page: Int
     var visiblePageCount: Int
     var pageCount: Int
     var chapterFraction: Double
     var bookFraction: Double
-    var backgroundColor: Color
 
     init(
       chapterTitle: String? = nil,
-      showsPages: Bool = true,
+      isScrollMode: Bool = false,
       page: Int = 0,
       visiblePageCount: Int = 1,
       pageCount: Int = 0,
       chapterFraction: Double = 0,
-      bookFraction: Double = 0,
-      backgroundColor: Color = .clear
+      bookFraction: Double = 0
     ) {
       self.chapterTitle = chapterTitle
-      self.showsPages = showsPages
+      self.isScrollMode = isScrollMode
       self.page = page
       self.visiblePageCount = visiblePageCount
       self.pageCount = pageCount
       self.chapterFraction = chapterFraction
       self.bookFraction = bookFraction
-      self.backgroundColor = backgroundColor
     }
   }
 }
