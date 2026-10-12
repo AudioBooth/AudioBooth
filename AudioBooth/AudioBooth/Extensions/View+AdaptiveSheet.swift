@@ -18,6 +18,7 @@ struct AdaptiveSheetModifier<SheetContent: View>: ViewModifier {
     content
       .background(
         sheetContent()
+          .fixedSize(horizontal: false, vertical: true)
           .background(
             GeometryReader { proxy in
               Color.clear
