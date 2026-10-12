@@ -38,6 +38,8 @@ extension UserPreferences {
     "offlineSortOrder",
     "librarySortBy",
     "librarySortAscending",
+    "bookmarkSortBy",
+    "bookmarkSortAscending",
     "libraryFilter",
     "showNFCTagWriting",
     "iCloudSyncEnabled",
