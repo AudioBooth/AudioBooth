@@ -45,7 +45,9 @@ final class TimerCompletedAlertViewModel: TimerCompletedAlertView.Model {
     ShakeDetector.shared.shakePublisher
       .sink { [weak self] in
         guard let self else { return }
-        if UserPreferences.shared.shakeSensitivity.isEnabled {
+        if self.isExpired {
+          self.onResetTapped()
+        } else if UserPreferences.shared.shakeSensitivity.isEnabled {
           self.onExtendTapped()
         }
       }
