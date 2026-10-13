@@ -18,6 +18,7 @@ final class StoragePreferencesViewModel: StoragePreferencesView.Model {
 
   override func onKeepOfflineChanged() {
     KeepOfflineManager.shared.reconcile()
+    KeepOfflineManager.shared.downloadQueuedBooks()
   }
 
   override func onClearCacheTapped() {

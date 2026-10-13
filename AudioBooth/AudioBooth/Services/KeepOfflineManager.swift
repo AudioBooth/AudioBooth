@@ -23,8 +23,31 @@ final class KeepOfflineManager {
         self?.reconcile()
       }
       .store(in: &cancellables)
+
+    PlayerManager.shared.$queue
+      .map { $0.filter { $0.podcastID == nil }.map(\.bookID) }
+      .removeDuplicates()
+      .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.downloadQueuedBooks()
+      }
+      .store(in: &cancellables)
   }
 
+  private func downloadBook(_ book: Book) async {
+    guard await StorageManager.shared.canDownload(additionalBytes: book.size ?? 0) else { return }
+
+    downloadManager.startDownload(book)
+  }
+
+  private func downloadEpisode(_ episode: PodcastEpisode, podcast: Podcast) async {
+    guard await StorageManager.shared.canDownload(additionalBytes: episode.size ?? 0) else { return }
+
+    downloadManager.startDownload(episode, podcastID: podcast.id, coverURL: podcast.coverURL())
+  }
+}
+
+extension KeepOfflineManager {
   func reconcile() {
     guard Audiobookshelf.shared.authentication.isAuthenticated, !isReconciling else { return }
 
@@ -166,19 +189,42 @@ final class KeepOfflineManager {
     }
   }
 
-  private func downloadBook(_ book: Book) async {
-    guard await StorageManager.shared.canDownload(additionalBytes: book.size ?? 0) else { return }
-
-    downloadManager.startDownload(book)
-  }
-
-  private func downloadEpisode(_ episode: PodcastEpisode, podcast: Podcast) async {
-    guard await StorageManager.shared.canDownload(additionalBytes: episode.size ?? 0) else { return }
-
-    downloadManager.startDownload(episode, podcastID: podcast.id, coverURL: podcast.coverURL())
-  }
-
   private var isNetworkAllowed: Bool {
     preferences.keepOfflineMode.isNetworkAllowed
+  }
+}
+
+extension KeepOfflineManager {
+  func downloadQueuedBooks() {
+    guard Audiobookshelf.shared.authentication.isAuthenticated,
+      preferences.autoDownloadBooks.isNetworkAllowed,
+      preferences.autoDownloadDelay == .none,
+      Audiobookshelf.shared.authentication.server?.permissions?.download == true
+    else { return }
+
+    let bookIDs = PlayerManager.shared.queue
+      .filter { $0.podcastID == nil }
+      .map(\.bookID)
+      .filter { bookID in
+        switch downloadManager.downloadStates[bookID] {
+        case .downloaded, .downloading: false
+        default: (try? DownloadRequest.fetch(itemID: bookID)) == nil
+        }
+      }
+
+    guard !bookIDs.isEmpty else { return }
+
+    AppLogger.download.info("Auto-downloading \(bookIDs.count) queued book(s)")
+
+    Task {
+      for bookID in bookIDs {
+        do {
+          let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
+          await downloadBook(book)
+        } catch {
+          AppLogger.download.error("Failed to fetch queued book \(bookID): \(error)")
+        }
+      }
+    }
   }
 }
