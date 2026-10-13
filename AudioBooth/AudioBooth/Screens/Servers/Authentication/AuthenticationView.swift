@@ -38,7 +38,7 @@ struct AuthenticationView: View {
       }
 
       if model.authenticationMethod == .usernamePassword {
-        Section("Credentials") {
+        Section {
           TextField("Username", text: $model.username)
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
@@ -54,6 +54,8 @@ struct AuthenticationView: View {
             .onSubmit {
               model.onLoginTapped()
             }
+        } header: {
+          Text("Credentials")
         } footer: {
           Text("Leave the password blank if your account has no password.")
         }
