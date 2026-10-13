@@ -15,7 +15,7 @@ final class AuthenticationViewModel: AuthenticationView.Model {
 
   override func onLoginTapped() {
     guard !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-      !password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      !isLoading
     else {
       return
     }

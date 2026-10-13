@@ -54,6 +54,8 @@ struct AuthenticationView: View {
             .onSubmit {
               model.onLoginTapped()
             }
+        } footer: {
+          Text("Leave the password blank if your account has no password.")
         }
 
         Section {
@@ -69,7 +71,7 @@ struct AuthenticationView: View {
             }
           }
           .disabled(
-            model.username.isEmpty || model.password.isEmpty || model.isLoading
+            model.username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.isLoading
           )
         }
       } else if model.authenticationMethod == .apiKey {

@@ -208,7 +208,7 @@ final class ServerViewModel: ServerView.Model {
   ) {
     guard !serverURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
       !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-      !password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      !authModel.isLoading
     else {
       return
     }
