@@ -76,6 +76,7 @@ class EbookReaderPreferences: ObservableObject {
 
   @AppStorage("ebookReader.readAlongFollows") var readAlongFollowsNarration: Bool = true
   @AppStorage("ebookReader.readAlongHighlightsWord") var readAlongHighlightsWord: Bool = true
+  @AppStorage("ebookReader.readAlongHighlightsSentence") var readAlongHighlightsSentence: Bool = true
 
   @AppStorage("ebookReader.tapZonesData") private var tapZonesData: Data = Data()
 

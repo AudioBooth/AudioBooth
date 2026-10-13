@@ -196,8 +196,10 @@ extension EbookReaderViewModel {
 
   private func applyReadAlongDecorations(sentence: Locator?, word: Locator?) {
     pendingReadAlongDecorations = [
-      sentence.map {
-        Decoration(id: Self.sentenceDecorationID, locator: $0, style: .highlight(tint: .systemYellow))
+      sentence.flatMap { sentence in
+        preferences.readAlongHighlightsSentence
+          ? Decoration(id: Self.sentenceDecorationID, locator: sentence, style: .highlight(tint: .systemYellow))
+          : nil
       },
       word.map {
         Decoration(id: Self.wordDecorationID, locator: $0, style: .underline(tint: .tintColor))

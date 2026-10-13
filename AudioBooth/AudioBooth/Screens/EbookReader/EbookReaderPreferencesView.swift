@@ -97,6 +97,7 @@ struct EbookReaderPreferencesView: View {
         Section {
           Toggle("Follow the Narrator", isOn: $preferences.readAlongFollowsNarration)
           Toggle("Highlight Each Word", isOn: $preferences.readAlongHighlightsWord)
+          Toggle("Highlight Sentence", isOn: $preferences.readAlongHighlightsSentence)
         } header: {
           Text("Read Along")
         } footer: {
