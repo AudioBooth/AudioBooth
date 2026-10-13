@@ -762,7 +762,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
           updatedAt: Int(updatedAt * 1000),
           deviceInfo: SessionSync.DeviceInfo(
             deviceID: Self.watchDeviceID,
-            clientName: "AudioBooth Watch"
+            clientName: "AudioBooth Watch",
+            model: nil
           )
         )
       )

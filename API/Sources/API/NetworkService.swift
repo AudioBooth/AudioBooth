@@ -84,6 +84,8 @@ final class NetworkService: @unchecked Sendable {
     config.timeoutIntervalForRequest = 30
     config.timeoutIntervalForResource = 120
 
+    config.httpAdditionalHeaders = ["User-Agent": userAgent]
+
     #if os(watchOS)
     config.timeoutIntervalForResource = 300
     config.allowsExpensiveNetworkAccess = true
@@ -98,6 +100,8 @@ final class NetworkService: @unchecked Sendable {
     let discretionaryConfig = URLSessionConfiguration.default
     discretionaryConfig.timeoutIntervalForRequest = 30
     discretionaryConfig.timeoutIntervalForResource = 60
+
+    discretionaryConfig.httpAdditionalHeaders = ["User-Agent": userAgent]
 
     #if os(watchOS)
     discretionaryConfig.timeoutIntervalForResource = 300
@@ -114,6 +118,26 @@ final class NetworkService: @unchecked Sendable {
     #endif
 
     return URLSessionProxy(configuration: discretionaryConfig)
+  }()
+
+  private static let userAgent: String = {
+    let os = ProcessInfo.processInfo.operatingSystemVersion
+    let osVersion = "\(os.majorVersion)_\(os.minorVersion)_\(os.patchVersion)"
+
+    #if targetEnvironment(macCatalyst)
+    let platform = "Macintosh; Mac OS X \(osVersion)"
+    #elseif os(watchOS)
+    let platform = "Apple Watch; watchOS/\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)"
+    #else
+    let platform =
+      Device.identifier.hasPrefix("iPad")
+      ? "iPad; CPU OS \(osVersion) like Mac OS X"
+      : "iPhone; CPU iPhone OS \(osVersion) like Mac OS X"
+    #endif
+
+    let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+
+    return "AudioBooth/\(appVersion) (\(platform))"
   }()
 
   private let decoder: JSONDecoder = {

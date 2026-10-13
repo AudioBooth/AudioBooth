@@ -68,6 +68,8 @@ public final class SessionService {
         let clientName: String
         let clientVersion: String?
         let deviceId: String
+        let manufacturer: String
+        let model: String
       }
 
       init(forceDirectPlay: Bool, forceTranscode: Bool, sessionType: SessionType) {
@@ -90,7 +92,9 @@ public final class SessionService {
         self.deviceInfo = DeviceInfo(
           clientName: sessionType.clientName,
           clientVersion: clientVersion,
-          deviceId: sessionType.deviceID
+          deviceId: sessionType.deviceID,
+          manufacturer: "Apple",
+          model: Device.model
         )
       }
     }
