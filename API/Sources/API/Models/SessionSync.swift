@@ -19,10 +19,13 @@ public struct SessionSync: Codable, Sendable {
     public let deviceId: String?
     public let clientVersion: String?
     public let clientName: String?
+    public let manufacturer: String?
+    public let model: String?
 
     public init(
       deviceID: String,
-      clientName: String
+      clientName: String,
+      model: String?
     ) {
       self.deviceId = deviceID
 
@@ -35,6 +38,8 @@ public struct SessionSync: Codable, Sendable {
         self.clientVersion = nil
       }
       self.clientName = clientName
+      self.manufacturer = "Apple"
+      self.model = model
     }
   }
 

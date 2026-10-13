@@ -697,7 +697,8 @@ extension SessionSync {
       updatedAt: Int(session.updatedAt.timeIntervalSince1970 * 1000),
       deviceInfo: SessionSync.DeviceInfo(
         deviceID: SessionService.deviceID,
-        clientName: "AudioBooth iOS"
+        clientName: "AudioBooth iOS",
+        model: Device.model
       )
     )
   }
