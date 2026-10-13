@@ -197,6 +197,7 @@ private struct ActivityGridView: View {
 
     var labels: [Int: String] = [:]
     var lastMonth = -1
+    var lastLabelColumn: Int?
 
     for col in 0..<columns {
       let cell = gridData[col * rows]
@@ -204,8 +205,12 @@ private struct ActivityGridView: View {
 
       let month = Calendar.current.component(.month, from: date)
       if month != lastMonth {
+        if let lastLabelColumn, col - lastLabelColumn < 2 {
+          labels[lastLabelColumn] = nil
+        }
         labels[col] = monthFormatter.string(from: date)
         lastMonth = month
+        lastLabelColumn = col
       }
     }
 
