@@ -492,7 +492,7 @@ extension AudioPlayer {
   }
 
   final class EQContext {
-    static let bandFrequencies: [Float] = [60, 150, 400, 1000, 2400, 15000]
+    static let bandFrequencies: [Float] = [60, 150, 400, 1000, 2400, 6000, 15000]
 
     private(set) var engine: AVAudioEngine?
     private(set) var eq: AVAudioUnitEQ?
