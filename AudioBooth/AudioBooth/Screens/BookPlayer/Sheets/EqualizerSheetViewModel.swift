@@ -1,6 +1,8 @@
 import SwiftUI
 
 final class EqualizerSheetViewModel: EqualizerSheet.Model {
+  private static let presetsKey = "equalizerPresets"
+
   private let player: AudioPlayer
   private let preferences = UserPreferences.shared
   private var saveTask: Task<Void, Never>?
@@ -23,7 +25,7 @@ final class EqualizerSheetViewModel: EqualizerSheet.Model {
       levelingStrength: leveling,
       preamp: settings.preamp,
       bandGains: settings.bandGains,
-      presets: EqualizerSheet.defaultPresets
+      presets: Self.loadCustomPresets() + EqualizerSheet.defaultPresets
     )
   }
 
@@ -52,11 +54,53 @@ final class EqualizerSheetViewModel: EqualizerSheet.Model {
   }
 
   override func onPresetSelected(_ preset: EqualizerSheet.Preset) {
-    for (i, gain) in preset.gains.enumerated() {
+    preamp = preset.preamp
+    player.setEQPreamp(preset.preamp)
+    for (i, gain) in preset.gains.enumerated() where bandGains.indices.contains(i) {
       bandGains[i] = gain
       player.setEQBand(i, gain: gain)
     }
+    if let leveling = preset.levelingStrength {
+      onLevelingStrengthChanged(leveling)
+    }
     saveSettings()
+  }
+
+  override func onSavePreset(named name: String) {
+    guard isValidPresetName(name) else { return }
+
+    let preset = EqualizerSheet.Preset(
+      name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+      preamp: preamp,
+      gains: bandGains,
+      levelingStrength: levelingStrength,
+      isCustom: true
+    )
+
+    var customPresets = presets.filter(\.isCustom)
+    if let index = customPresets.firstIndex(where: { $0.name == preset.name }) {
+      customPresets[index] = preset
+    } else {
+      customPresets.append(preset)
+    }
+    updateCustomPresets(customPresets)
+  }
+
+  override func onDeletePreset(_ preset: EqualizerSheet.Preset) {
+    updateCustomPresets(presets.filter { $0.isCustom && $0.name != preset.name })
+  }
+
+  private func updateCustomPresets(_ customPresets: [EqualizerSheet.Preset]) {
+    presets = customPresets + EqualizerSheet.defaultPresets
+    guard let data = try? JSONEncoder().encode(customPresets) else { return }
+    UserDefaults.standard.set(data, forKey: Self.presetsKey)
+  }
+
+  private static func loadCustomPresets() -> [EqualizerSheet.Preset] {
+    guard let data = UserDefaults.standard.data(forKey: presetsKey),
+      let presets = try? JSONDecoder().decode([EqualizerSheet.Preset].self, from: data)
+    else { return [] }
+    return presets
   }
 
   private func saveSettings() {

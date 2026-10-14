@@ -86,6 +86,7 @@ extension UserPreferences {
     "speedPresets",
     "volumePresets",
     "equalizerSettings",
+    "equalizerPresets",
     "levelingStrength",
   ]
 
