@@ -45,6 +45,16 @@ struct PlayerPreferencesView: View {
         }
         .listRowBackground(theme.colors.background.card)
 
+        Toggle(isOn: $preferences.assistedPlayer) {
+          PreferenceRow(
+            systemImage: "hand.tap",
+            tint: .mint,
+            title: "Assisted Player",
+            subtitle: "Large play and skip buttons only"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
+
         Toggle(isOn: $preferences.keepScreenAwakeInPlayer) {
           PreferenceRow(
             systemImage: "sun.max",

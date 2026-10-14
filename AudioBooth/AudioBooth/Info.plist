@@ -83,6 +83,8 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UISupportsAssistiveAccess</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

@@ -33,6 +33,7 @@ struct MiniBookPlayer: View, Equatable {
           Label("Stop", systemImage: "xmark.circle")
         }
       }
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
   }
 
   @ViewBuilder
@@ -125,6 +126,7 @@ struct LegacyMiniBookPlayer: View {
       playerManager.showFullPlayer()
     }
     .frame(maxHeight: 56)
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
   }
 
   @ViewBuilder

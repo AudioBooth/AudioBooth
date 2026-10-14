@@ -66,6 +66,12 @@ struct AudioBoothApp: App {
     .commands {
       PlaybackCommands()
     }
+
+    if #available(iOS 26.0, *) {
+      AssistiveAccess {
+        AssistiveAccessView(model: AssistiveAccessViewModel())
+      }
+    }
   }
 
   private func syncAccentColorToWidget(_ color: Color?) {

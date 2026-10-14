@@ -250,6 +250,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("openPlayerOnLaunch")
   var openPlayerOnLaunch: Bool = false
 
+  @AppStorage("assistedPlayer")
+  var assistedPlayer: Bool = false
+
   @AppStorage("hapticsEnabled")
   var hapticsEnabled: Bool = true
 

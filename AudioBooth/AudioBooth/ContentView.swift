@@ -50,10 +50,16 @@ struct ContentView: View {
       .observesHinge()
       .fullScreenCover(isPresented: $playerManager.isShowingFullPlayer) {
         if let currentPlayer = playerManager.current {
-          BookPlayer(model: currentPlayer)
-            .displayScaled()
-            .playerZoomTransition(in: playerNamespace)
-            .interactiveDismissDisabled(currentPlayer.isLocked)
+          if preferences.assistedPlayer {
+            AssistedPlayer(model: currentPlayer)
+              .displayScaled()
+              .interactiveDismissDisabled()
+          } else {
+            BookPlayer(model: currentPlayer)
+              .displayScaled()
+              .playerZoomTransition(in: playerNamespace)
+              .interactiveDismissDisabled(currentPlayer.isLocked)
+          }
         }
       }
       .fullScreenCover(item: $playerManager.reader) { reader in
