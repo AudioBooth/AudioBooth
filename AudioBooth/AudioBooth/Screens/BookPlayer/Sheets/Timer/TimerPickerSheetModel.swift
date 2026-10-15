@@ -24,6 +24,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private var originalTimerDuration: TimeInterval = 0
   private var lastObservedChapterIndex: Int = 0
   private var cancellables = Set<AnyCancellable>()
+  private var outputVolumeObservation: NSKeyValueObservation?
   #if !targetEnvironment(macCatalyst)
   private var liveActivity: Activity<SleepTimerActivityAttributes>?
   #endif
@@ -47,6 +48,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     ShakeDetector.shared.stopMonitoring()
     setupShakeObserver()
+    setupVolumeObserver()
     observeChapterChanges()
   }
 
@@ -56,6 +58,25 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
         self?.onShakeDetected()
       }
       .store(in: &cancellables)
+  }
+
+  private func setupVolumeObserver() {
+    outputVolumeObservation = AVAudioSession.sharedInstance().observe(
+      \.outputVolume,
+      options: [.old, .new]
+    ) { [weak self] _, change in
+      guard let self, let oldValue = change.oldValue, let newValue = change.newValue, newValue > oldValue else {
+        return
+      }
+      Task { @MainActor in
+        self.onVolumeUp()
+      }
+    }
+  }
+
+  private func onVolumeUp() {
+    guard isFading else { return }
+    restartTimer(source: "volume up during fade")
   }
 
   private func observeChapterChanges() {
@@ -538,7 +559,40 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   func onShakeDetected() {
-    guard preferences.shakeSensitivity.isEnabled, originalTimerDuration > 0 else { return }
+    guard preferences.shakeSensitivity.isEnabled else { return }
+    restartTimer(source: "shake")
+  }
+
+  override func extendIfNeeded() -> Bool {
+    if let completedAlert {
+      if completedAlert.isExpired {
+        completedAlert.onResetTapped()
+      } else if preferences.shakeSensitivity.isEnabled {
+        completedAlert.onExtendTapped()
+        return true
+      }
+      return false
+    }
+
+    guard isFading else { return false }
+    restartTimer(source: "remote command during fade")
+    return true
+  }
+
+  private var isFading: Bool {
+    let fadeOut = preferences.timerFadeOut
+    guard player.isPlaying, fadeOut > 0 else { return false }
+
+    switch current {
+    case .preset(let seconds), .custom(let seconds):
+      return seconds < fadeOut
+    case .chapters, .atTime, .duration, .none:
+      return false
+    }
+  }
+
+  private func restartTimer(source: String) {
+    guard originalTimerDuration > 0 else { return }
 
     player.volume = Float(preferences.volumeLevel)
 
@@ -546,15 +600,15 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     case .preset:
       current = .preset(originalTimerDuration)
       startSleepTimer(duration: originalTimerDuration)
-      AppLogger.player.info("Preset timer reset to \(originalTimerDuration) seconds via shake")
+      AppLogger.player.info("Preset timer reset to \(originalTimerDuration) seconds via \(source)")
 
     case .custom:
       current = .custom(originalTimerDuration)
       startSleepTimer(duration: originalTimerDuration)
-      AppLogger.player.info("Custom timer reset to \(originalTimerDuration) seconds via shake")
+      AppLogger.player.info("Custom timer reset to \(originalTimerDuration) seconds via \(source)")
 
     case .chapters:
-      AppLogger.player.debug("Shake detected during chapter timer - no reset action")
+      AppLogger.player.debug("Reset via \(source) during chapter timer - no reset action")
 
     case .atTime, .duration, .none:
       break

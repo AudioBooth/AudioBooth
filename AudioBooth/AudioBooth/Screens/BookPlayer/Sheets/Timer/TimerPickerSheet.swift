@@ -546,6 +546,7 @@ extension TimerPickerSheet {
     func onStartTimerTapped() {}
     func onAlarmStartTapped() {}
     func onAlarmOffTapped() {}
+    func extendIfNeeded() -> Bool { false }
   }
 }
 
