@@ -60,7 +60,7 @@ extension EbookReaderViewModel {
     guard let suspendedAt = readerSuspendedAt else { return }
 
     readerSuspendedAt = nil
-    lastDecoratedHREF = nil
+    lastLeadingDecorationKey = nil
 
     guard let readAlong, !isCatchingUpToNarration else { return }
 
@@ -86,7 +86,7 @@ extension EbookReaderViewModel {
     readAlongDecorationTask = nil
     pendingReadAlongDecorations = nil
     lastReadAlongDecorationAt = nil
-    lastDecoratedHREF = nil
+    lastLeadingDecorationKey = nil
     lastDecorationAuditAt = nil
     cancelReadAlongNavigation()
     (navigator as? DecorableNavigator)?.apply(decorations: [], in: Self.readAlongDecorationGroup)
@@ -234,10 +234,10 @@ extension EbookReaderViewModel {
   private func applyDecorations(_ decorations: [Decoration]) async {
     guard let decorable = navigator as? DecorableNavigator else { return }
 
-    let href = decorations.first?.locator.href.string
-    if href != lastDecoratedHREF {
+    let leading = decorations.first.map { "\($0.id) \($0.locator.href.string)" }
+    if leading != lastLeadingDecorationKey {
       await clearDecorations(using: decorable)
-      lastDecoratedHREF = href
+      lastLeadingDecorationKey = leading
     }
 
     decorable.apply(decorations: decorations, in: Self.readAlongDecorationGroup)

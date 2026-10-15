@@ -33,7 +33,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   var pendingReadAlongDecorations: [Decoration]?
   var lastReadAlongDecorationAt: Date?
-  var lastDecoratedHREF: String?
+  var lastLeadingDecorationKey: String?
   var lastDecorationAuditAt: Date?
   var readAlongDecorationTask: Task<Void, Never>?
 
