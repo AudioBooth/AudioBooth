@@ -28,6 +28,10 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
 
     self.item = item
 
+    let preferences = UserPreferences.shared
+    let sortBy = preferences.bookmarkSortBy
+    let ascending = preferences.bookmarkSortAscending
+
     do {
       let localBookmarks = try Models.Bookmark.fetch(bookID: bookID)
 
@@ -43,7 +47,12 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
       if bookmarks.isEmpty, initialTime == nil {
         return nil
       } else {
-        super.init(bookmarks: bookmarks, currentTime: initialTime)
+        super.init(
+          bookmarks: sortBy.sort(bookmarks, ascending: ascending),
+          currentTime: initialTime,
+          sortBy: sortBy,
+          ascending: ascending
+        )
       }
     } catch {
       return nil
@@ -54,11 +63,26 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
     refreshBookmarks()
   }
 
+  override func onSortOptionTapped(_ sortBy: BookmarkViewerSheet.Model.SortBy) {
+    if self.sortBy == sortBy {
+      ascending.toggle()
+    } else {
+      self.sortBy = sortBy
+      ascending = true
+    }
+
+    let preferences = UserPreferences.shared
+    preferences.bookmarkSortBy = sortBy
+    preferences.bookmarkSortAscending = ascending
+
+    bookmarks = sortBy.sort(bookmarks, ascending: ascending)
+  }
+
   private func refreshBookmarks() {
     do {
       let localBookmarks = try Models.Bookmark.fetch(bookID: bookID)
 
-      bookmarks = localBookmarks.map { bookmark in
+      let bookmarks = localBookmarks.map { bookmark in
         BookmarkRow.Model(
           title: bookmark.title,
           time: bookmark.time,
@@ -66,6 +90,8 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
           status: bookmark.status
         )
       }
+
+      self.bookmarks = sortBy.sort(bookmarks, ascending: ascending)
     } catch {
       AppLogger.player.error("Failed to refresh bookmarks: \(error)")
     }
@@ -221,5 +247,17 @@ extension BookmarkViewerSheetViewModel {
     case .local(let book): book.bookID
     case .remote(let book): book.id
     }
+  }
+}
+
+extension BookmarkViewerSheet.Model.SortBy {
+  func sort(_ bookmarks: [BookmarkRow.Model], ascending: Bool) -> [BookmarkRow.Model] {
+    let sorted =
+      switch self {
+      case .time: bookmarks.sorted { $0.time < $1.time }
+      case .createdAt: bookmarks.sorted { $0.createdAt < $1.createdAt }
+      }
+
+    return ascending ? sorted : sorted.reversed()
   }
 }

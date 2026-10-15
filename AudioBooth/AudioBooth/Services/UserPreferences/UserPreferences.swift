@@ -157,6 +157,12 @@ final class UserPreferences: ObservableObject {
   @AppStorage("librarySortAscending")
   var librarySortAscending: Bool = true
 
+  @AppStorage("bookmarkSortBy")
+  var bookmarkSortBy: BookmarkViewerSheet.Model.SortBy = .time
+
+  @AppStorage("bookmarkSortAscending")
+  var bookmarkSortAscending: Bool = true
+
   @AppStorage("libraryFilter")
   var libraryFilter: FilterPicker.Model.Filter = .all
 

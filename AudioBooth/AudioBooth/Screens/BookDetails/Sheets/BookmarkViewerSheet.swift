@@ -25,6 +25,27 @@ struct BookmarkViewerSheet: View {
       .navigationTitle("Your Bookmarks")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          Menu {
+            Section("Sort By") {
+              ForEach(Model.SortBy.allCases, id: \.self) { sortBy in
+                if model.sortBy == sortBy {
+                  Button(
+                    sortBy.title,
+                    systemImage: model.ascending ? "chevron.up" : "chevron.down",
+                    action: { model.onSortOptionTapped(sortBy) }
+                  )
+                } else {
+                  Button(sortBy.title, action: { model.onSortOptionTapped(sortBy) })
+                }
+              }
+            }
+          } label: {
+            Image(systemName: "arrow.up.arrow.down.circle")
+          }
+          .tint(.primary)
+        }
+
         ToolbarItem(placement: .topBarTrailing) {
           Button(action: { dismiss() }) {
             Label("Close", systemImage: "xmark")
@@ -164,23 +185,42 @@ extension BookmarkViewerSheet {
     var bookmarks: [BookmarkRow.Model]
     var newBookmarkTitle: String
     var currentTime: Int?
+    var sortBy: SortBy
+    var ascending: Bool
 
     func onAppear() {}
     func onSelectBookmark(_ bookmark: BookmarkRow.Model) {}
     func onEditBookmark(_ bookmark: BookmarkRow.Model) {}
     func onDeleteBookmark(_ bookmark: BookmarkRow.Model) {}
     func onCreateBookmark() {}
+    func onSortOptionTapped(_ sortBy: SortBy) {}
 
     init(
       isPresented: Bool = false,
       bookmarks: [BookmarkRow.Model] = [],
       newBookmarkTitle: String = "",
-      currentTime: Int? = nil
+      currentTime: Int? = nil,
+      sortBy: SortBy = .time,
+      ascending: Bool = true
     ) {
       self.isPresented = isPresented
       self.bookmarks = bookmarks
       self.newBookmarkTitle = newBookmarkTitle
       self.currentTime = currentTime
+      self.sortBy = sortBy
+      self.ascending = ascending
+    }
+
+    enum SortBy: String, CaseIterable {
+      case time
+      case createdAt
+
+      var title: LocalizedStringResource {
+        switch self {
+        case .time: "Position"
+        case .createdAt: "Date Added"
+        }
+      }
     }
   }
 }
