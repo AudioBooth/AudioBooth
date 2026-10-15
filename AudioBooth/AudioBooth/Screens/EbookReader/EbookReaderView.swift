@@ -12,6 +12,7 @@ struct EbookReaderView: View {
   @State private var showZoneEditor = false
   @State private var sideInsets: EdgeInsets?
   @State private var headerCornerInsets = EdgeInsets()
+  @State private var headerTop: CGFloat = 0
 
   @State var preferredColorScheme: ColorScheme?
 
@@ -25,6 +26,9 @@ struct EbookReaderView: View {
       }
       .onChange(of: showControls) { _, value in
         model.onShowControlsChanged(value)
+      }
+      .onChange(of: model.preferences.theme, initial: true) { _, theme in
+        preferredColorScheme = theme.colorScheme
       }
       .onChange(of: colorScheme) { _, _ in
         if model.preferences.theme == .auto {
@@ -121,10 +125,15 @@ struct EbookReaderView: View {
           !showControls, !model.isLoading
         {
           ChapterProgressView(model: chapterProgress)
+            .onGeometryChange(for: CGFloat.self) { proxy in
+              proxy.frame(in: .global).minY
+            } action: { top in
+              headerTop = top
+            }
             .padding(.leading, max(sideInsets?.leading ?? 0, headerCornerInsets.leading))
             .padding(.trailing, max(sideInsets?.trailing ?? 0, headerCornerInsets.trailing))
             .background(model.backgroundColor.ignoresSafeArea(edges: .top))
-            .ignoresSafeArea(edges: .horizontal)
+            .ignoresHorizontalSafeAreaWhenReservedRegionsAvailable()
             .allowsHitTesting(false)
             .transition(.opacity)
         }
@@ -235,7 +244,7 @@ struct EbookReaderView: View {
     .background(model.backgroundColor)
     .background {
       GeometryReader { proxy in
-        let insets = occlusionInsets(in: proxy)
+        let insets = proxy.sideOcclusionInsets(below: headerTop)
         Color.clear
           .onChange(of: insets, initial: true) {
             if !showControls || sideInsets == nil { sideInsets = insets }
@@ -243,7 +252,7 @@ struct EbookReaderView: View {
           .onChange(of: proxy.size) {
             sideInsets = insets
           }
-          .onChange(of: cornerInsets(in: proxy), initial: true) { _, corners in
+          .onChange(of: proxy.topCornerInsets(at: headerTop), initial: true) { _, corners in
             headerCornerInsets = corners
           }
       }
@@ -265,42 +274,6 @@ struct EbookReaderView: View {
         }
       }
     }
-  }
-
-  private func occlusionInsets(in proxy: GeometryProxy) -> EdgeInsets {
-    #if !targetEnvironment(macCatalyst)
-    if #available(iOS 27.1, *) {
-      var insets = EdgeInsets()
-      for region in proxy.reservedRegions(kind: .occlusion) {
-        if region.frame.minX <= 0 {
-          insets.leading = max(insets.leading, region.frame.maxX)
-        } else if region.frame.maxX >= proxy.size.width {
-          insets.trailing = max(insets.trailing, proxy.size.width - region.frame.minX)
-        }
-      }
-      return insets
-    }
-    #endif
-
-    return EdgeInsets(
-      top: 0,
-      leading: proxy.safeAreaInsets.leading,
-      bottom: 0,
-      trailing: proxy.safeAreaInsets.trailing
-    )
-  }
-
-  private func cornerInsets(in proxy: GeometryProxy) -> EdgeInsets {
-    guard #available(iOS 26.0, *) else { return EdgeInsets() }
-
-    let corners = proxy.containerCornerInsets
-    let headerTop = proxy.safeAreaInsets.top
-    return EdgeInsets(
-      top: 0,
-      leading: headerTop < corners.topLeading.height ? corners.topLeading.width : 0,
-      bottom: 0,
-      trailing: headerTop < corners.topTrailing.height ? corners.topTrailing.width : 0
-    )
   }
 
   private func handleTap(at point: CGPoint) {
@@ -476,6 +449,17 @@ struct EbookReaderView: View {
       }
     }
     .padding(.vertical, 8)
+  }
+}
+
+extension View {
+  @ViewBuilder
+  fileprivate func ignoresHorizontalSafeAreaWhenReservedRegionsAvailable() -> some View {
+    if #available(iOS 27.1, *) {
+      ignoresSafeArea(edges: .horizontal)
+    } else {
+      self
+    }
   }
 }
 

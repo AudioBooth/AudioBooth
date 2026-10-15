@@ -148,6 +148,7 @@ class EbookReaderPreferences: ObservableObject {
     case light = "Light"
     case dark = "Dark"
     case sepia = "Sepia"
+    case gray = "Gray"
 
     var id: String { rawValue }
   }
@@ -202,6 +203,10 @@ extension EbookReaderPreferences {
     prefs.textNormalization = textNormalization
     prefs.fontFamily = fontFamily.readiumFontFamily
     prefs.theme = theme.toReadiumTheme(colorScheme: colorScheme)
+    if theme == .gray {
+      prefs.backgroundColor = ReadiumNavigator.Color(rawValue: 0x323336)
+      prefs.textColor = ReadiumNavigator.Color(rawValue: 0xD8D8D8)
+    }
     prefs.pageMargins = pageMargins.value
     prefs.scroll = scroll
     prefs.columnCount = columnCount.readiumColumnCount
@@ -224,7 +229,7 @@ extension EbookReaderPreferences.Theme {
     switch self {
     case .auto: return nil
     case .light, .sepia: return .light
-    case .dark: return .dark
+    case .dark, .gray: return .dark
     }
   }
 
@@ -232,7 +237,7 @@ extension EbookReaderPreferences.Theme {
     switch self {
     case .auto: return colorScheme == .dark ? .dark : .light
     case .light: return .light
-    case .dark: return .dark
+    case .dark, .gray: return .dark
     case .sepia: return .sepia
     }
   }

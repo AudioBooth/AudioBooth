@@ -416,7 +416,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   private var themeBackgroundColor: SwiftUI.Color {
-    SwiftUI.Color(uiColor: preferences.theme.toReadiumTheme(colorScheme: systemColorScheme).backgroundColor.uiColor)
+    guard let epubNavigator = navigator as? EPUBNavigatorViewController else { return .clear }
+    return SwiftUI.Color(uiColor: epubNavigator.settings.effectiveBackgroundColor.uiColor)
   }
 
   private func setupChapters() async {
