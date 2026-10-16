@@ -602,6 +602,7 @@ extension BookPlayerModel {
 
     nowPlaying.clear()
     widgetManager.clear()
+    (timer as? TimerPickerSheetViewModel)?.endLiveActivity()
   }
 }
 
@@ -1264,6 +1265,7 @@ extension BookPlayerModel {
     let wasPlaying = isPlaying
     player?.stop()
     player = nil
+    (timer as? TimerPickerSheetViewModel)?.endLiveActivity()
 
     do {
       try setupAudioPlayer()
