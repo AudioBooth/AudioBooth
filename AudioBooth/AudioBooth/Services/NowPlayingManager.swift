@@ -189,7 +189,20 @@ final class NowPlayingManager {
 }
 
 extension NowPlayingManager {
-  private static func aspectFilled(image: UIImage, into targetSize: CGSize) -> UIImage {
+  nonisolated private static func aspectFitted(image: UIImage, into targetSize: CGSize) -> UIImage {
+    guard targetSize.width > 0, targetSize.height > 0 else { return image }
+    let scale = min(targetSize.width / image.size.width, targetSize.height / image.size.height)
+    guard scale < 1 else { return image }
+    let scaledSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    format.opaque = true
+    return UIGraphicsImageRenderer(size: scaledSize, format: format).image { _ in
+      image.draw(in: CGRect(origin: .zero, size: scaledSize))
+    }
+  }
+
+  nonisolated private static func aspectFilled(image: UIImage, into targetSize: CGSize) -> UIImage {
     guard targetSize.width > 0, targetSize.height > 0 else { return image }
     let format = UIGraphicsImageRendererFormat()
     format.scale = 1
@@ -213,16 +226,18 @@ extension NowPlayingManager {
 
         artwork = MPMediaItemArtwork(
           boundsSize: image.size,
-          requestHandler: { _ in image }
+          requestHandler: { @Sendable size in
+            Self.aspectFitted(image: image, into: size)
+          }
         )
 
         if #available(iOS 26.0, *) {
           animatedArtwork = MPMediaItemAnimatedArtwork(
             artworkID: "\(id)-\(url.absoluteString)",
-            previewImageRequestHandler: { size in
+            previewImageRequestHandler: { @Sendable size in
               Self.aspectFilled(image: image, into: size)
             },
-            videoAssetFileURLRequestHandler: { _ in
+            videoAssetFileURLRequestHandler: { @Sendable _ in
               nil
             }
           )
