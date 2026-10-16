@@ -453,20 +453,8 @@ struct BookDetailsView: View {
 
   private var actionButtons: some View {
     VStack(spacing: 12) {
-      if model.metadata.hasAudio {
-        Button(action: model.onPlayTapped) {
-          Label(
-            playButtonText,
-            systemImage: model.isPlaying ? "pause.fill" : "play.fill"
-          )
-          .frame(maxWidth: .infinity)
-          .padding()
-          .background {
-            actionBackground(progress: model.progress.audio)
-          }
-          .foregroundColor(.white)
-          .cornerRadius(12)
-        }
+      if model.metadata.hasAudio && !model.isNarrated {
+        playButton
       }
 
       if model.metadata.isEbook {
@@ -481,6 +469,61 @@ struct BookDetailsView: View {
             .cornerRadius(12)
         }
       }
+
+      if isNarrationButtonVisible {
+        Button(action: model.onDownloadTapped) {
+          narrationButtonLabel
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background {
+              actionBackground(progress: coverDownloadProgress)
+            }
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+        .disabled(model.isPreparingNarration)
+      }
+
+      if model.metadata.hasAudio && model.isNarrated {
+        playButton
+      }
+    }
+  }
+
+  private var playButton: some View {
+    Button(action: model.onPlayTapped) {
+      Label(
+        playButtonText,
+        systemImage: model.isPlaying ? "pause.fill" : "play.fill"
+      )
+      .frame(maxWidth: .infinity)
+      .padding()
+      .background {
+        actionBackground(progress: model.progress.audio)
+      }
+      .foregroundColor(.white)
+      .cornerRadius(12)
+    }
+  }
+
+  private var isNarrationButtonVisible: Bool {
+    model.metadata.narrationSize != nil && !model.metadata.hasAudio
+      && (model.downloadState != .downloaded || model.isPreparingNarration)
+  }
+
+  @ViewBuilder
+  private var narrationButtonLabel: some View {
+    if model.isPreparingNarration {
+      Label {
+        Text("Preparing Narration…")
+      } icon: {
+        ProgressView()
+          .tint(.white)
+      }
+    } else if case .downloading = model.downloadState {
+      Label("Downloading…", systemImage: "arrow.down.circle")
+    } else {
+      Label("Download to Listen", systemImage: "arrow.down.circle")
     }
   }
 
@@ -684,6 +727,8 @@ extension BookDetailsView {
     var bookmarks: BookmarkViewerSheet.Model?
     var ereaderDevices: [String]
     var ebookReader: EbookReaderView.Model?
+    var isPreparingNarration = false
+    var isNarrated = false
 
     var tabs: [ContentTab]
     var metadata: MetadataSection.Model

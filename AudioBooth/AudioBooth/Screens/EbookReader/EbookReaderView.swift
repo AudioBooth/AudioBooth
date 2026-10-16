@@ -341,6 +341,13 @@ struct EbookReaderView: View {
     model.preferences.progressDisplay == .page ? model.page : nil
   }
 
+  private var isReadAlongActive: Bool {
+    if model.isFollowingMediaOverlay {
+      return playerManager.isPlaying
+    }
+    return model.readAlong?.status.isActive == true
+  }
+
   @ViewBuilder
   private var readAlongIcon: some View {
     switch model.readAlong?.status {
@@ -432,7 +439,7 @@ struct EbookReaderView: View {
           }
         }
         .frame(maxWidth: .infinity)
-        .tint(model.readAlong?.status.isActive == true ? .accentColor : .primary)
+        .tint(isReadAlongActive ? .accentColor : .primary)
       }
 
       if playerManager.current != nil {
@@ -534,6 +541,7 @@ extension EbookReaderView {
     var isCatchingUpToNarration: Bool = false
     var positionSync: PositionSyncSheet.Model?
     var playerSheet: EbookPlayerSheet.Model?
+    var isFollowingMediaOverlay: Bool = false
 
     func onAppear() {}
     func onDisappear() {}

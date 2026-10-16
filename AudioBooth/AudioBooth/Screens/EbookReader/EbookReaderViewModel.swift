@@ -40,6 +40,11 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   var pendingReadAlongNavigation: Locator?
   var readAlongNavigationTask: Task<Void, Never>?
   var readerSuspendedAt: Date?
+  var mediaOverlayTimeline: MediaOverlayTimeline?
+  var mediaOverlayClipIndex: Int?
+  var mediaOverlayFollowTask: Task<Void, Never>?
+  var mediaOverlayRetargetTask: Task<Void, Never>?
+  var hasPositionedReader = false
 
   private var catchUpCheck: Task<Void, Never>?
   private var cancellables = Set<AnyCancellable>()
@@ -98,7 +103,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   func updateAutoScroll() {
     if preferences.autoScrollSpeed > 0 && preferences.scroll && !isAutoScrollPaused
-      && readAlong?.status.isActive != true
+      && readAlong?.status.isActive != true && !isFollowingMediaOverlay
     {
       startAutoScroll()
     } else {
@@ -114,12 +119,19 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
   override func onDisappear() {
     catchUpCheck?.cancel()
+    mediaOverlayRetargetTask?.cancel()
+    stopFollowingMediaOverlay()
     stopAutoScroll()
-    tearDownReadAlong()
+    NarrationProgressSync.openReaderBookID = nil
     cleanupTemporaryFile()
   }
 
   override func onReadAlongTapped() {
+    guard mediaOverlayTimeline == nil else {
+      toggleMediaOverlayReadAlong()
+      return
+    }
+
     catchUpMessage = nil
     toggleReadAlong()
     updateAutoScroll()
@@ -143,7 +155,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private func refreshCatchUpOffer() {
     guard #available(iOS 26.0, *) else { return }
 
-    guard catchUpCheck == nil, catchUpMessage == nil, readAlong == nil,
+    guard catchUpCheck == nil, catchUpMessage == nil, readAlong == nil, mediaOverlayTimeline == nil,
       UserPreferences.shared.positionSyncOffers
     else {
       return
@@ -250,8 +262,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       let localURL: URL
       switch source {
-      case .local(let url, _):
+      case .local(let url, let bookID):
         localURL = url
+        NarrationImporter.shared.importIfNeeded(bookID: bookID)
 
       case .book(let book):
         localURL = try await downloadEbook(book)
@@ -262,6 +275,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       }
 
       let publication = try await publicationLoader.open(at: localURL)
+      NarrationProgressSync.openReaderBookID = bookID
 
       self.publication = publication
       self.supportsSettings = publication.conforms(to: .epub)
@@ -319,6 +333,9 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       isLoading = false
       updateAutoScroll()
+
+      await setupMediaOverlay(for: publication)
+      supportsReadAlong = isReadAlongSupported
     } catch {
       AppLogger.viewModel.error("Failed to load ebook: \(error)")
       self.error = "Failed to load ebook. Please try again."
@@ -659,7 +676,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   private var minimumSecondsBetweenProgressSyncs: TimeInterval {
-    readAlong?.status == .following ? 15 : 1
+    readAlong?.status == .following || isFollowingMediaOverlay ? 15 : 1
   }
 
   private func syncProgressToServer(_ progress: Double) {
@@ -767,6 +784,7 @@ extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
       updateCurrentScrollView(in: vc.view)
     }
     (chapterProgress as? ChapterProgressViewModel)?.onLocationChanged()
+    mediaOverlayLocationChanged()
   }
 
   func navigator(_ navigator: Navigator, presentError error: NavigatorError) {

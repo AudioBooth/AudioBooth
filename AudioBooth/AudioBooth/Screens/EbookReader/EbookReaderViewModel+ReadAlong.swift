@@ -21,6 +21,9 @@ extension EbookReaderViewModel {
   private static let maximumSecondsSuspendedBeforeRestarting: TimeInterval = 300
 
   var isReadAlongSupported: Bool {
+    if let bookID, (try? LocalBook.fetch(bookID: bookID))?.hasImportedNarration == true {
+      return mediaOverlayTimeline != nil
+    }
     guard #available(iOS 26.0, *), SpeechTranscriber.isAvailable else { return false }
     return navigator is DecorableNavigator && matchingSession() != nil
   }
@@ -47,7 +50,7 @@ extension EbookReaderViewModel {
   }
 
   func suspendReadAlong() {
-    guard readAlong != nil, readerSuspendedAt == nil else { return }
+    guard readAlong != nil || isFollowingMediaOverlay, readerSuspendedAt == nil else { return }
 
     readerSuspendedAt = Date()
     cancelReadAlongNavigation()
@@ -61,6 +64,11 @@ extension EbookReaderViewModel {
 
     readerSuspendedAt = nil
     lastLeadingDecorationKey = nil
+
+    if isFollowingMediaOverlay {
+      mediaOverlayClipIndex = nil
+      return
+    }
 
     guard let readAlong, !isCatchingUpToNarration else { return }
 
@@ -194,7 +202,7 @@ extension EbookReaderViewModel {
     applyReadAlongDecorations(sentence: sentence, word: word)
   }
 
-  private func applyReadAlongDecorations(sentence: Locator?, word: Locator?) {
+  func applyReadAlongDecorations(sentence: Locator?, word: Locator?) {
     pendingReadAlongDecorations = [
       sentence.flatMap { sentence in
         preferences.readAlongHighlightsSentence
@@ -285,7 +293,7 @@ extension EbookReaderViewModel {
     return (value as? NSNumber)?.intValue
   }
 
-  private func followNarration(sentence: Locator, word: Locator?) {
+  func followNarration(sentence: Locator, word: Locator?) {
     guard navigator != nil else {
       readAlong?.narrationDidLand()
       return

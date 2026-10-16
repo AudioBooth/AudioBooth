@@ -132,12 +132,18 @@ extension MediaProgress {
   }
 
   public func update(from apiProgress: User.MediaProgress) {
+    let remoteDuration = apiProgress.duration ?? 0
+    let keepsLocalDuration = remoteDuration <= 0 && duration > 0 && duration.isFinite
+    let resolvedDuration = keepsLocalDuration ? duration : remoteDuration
+
     var remoteProgress = apiProgress.progress
     var remoteCurrentTime = apiProgress.currentTime
 
     if apiProgress.isFinished {
       remoteProgress = 1.0
-      remoteCurrentTime = apiProgress.duration ?? 0
+      remoteCurrentTime = resolvedDuration
+    } else if keepsLocalDuration {
+      remoteProgress = min(1, remoteCurrentTime / resolvedDuration)
     }
 
     let remoteLastUpdate = Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
@@ -145,7 +151,7 @@ extension MediaProgress {
     let remoteFinishedAt = apiProgress.finishedAt.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) }
 
     id = apiProgress.id
-    duration = apiProgress.duration ?? 0
+    duration = resolvedDuration
     startedAt = remoteStartedAt
 
     if finishedAt == nil {

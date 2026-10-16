@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ebook reader Play from Here - Select a passage in the ebook to start the audiobook from that spot, with Catch Up now offered directly in the reader's player
 - Dynamic progress bar color - New player preference to tint the progress bar with the book cover color
 - Podcast library improvements - Home sections now show episode cards for the latest episodes, and the latest episodes page adds swipe actions to queue or mark as finished, a context menu, and a play button on each episode
+- EPUB 3 narration - EPUBs with built-in narration (Media Overlays) can now be downloaded to listen like an audiobook, with the full player, chapters, and progress sync. Read Along highlights the narrated sentence in the reader, and turning pages while paused moves the narration to your page
 
 ### Changed
 - CarPlay improvements - Author images now display, downloads follow your offline sort order, and time left reflects the currently playing book

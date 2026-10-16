@@ -59,6 +59,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
 
     setupDownloadStateBinding()
+    setupNarrationObservation()
     setupProgressObservation()
     setupItemObservation()
     setupPlayerStateObservation()
@@ -180,14 +181,10 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         flags.insert(.abridged)
       }
 
+      let narrationBook = localBook?.hasImportedNarration == true ? localBook : nil
       let currentTime = mediaProgress?.currentTime ?? 0
-      let chapters: [ChaptersContent.Chapter]?
-      if let apiChapters = book.chapters {
-        let modelChapters = apiChapters.map(Models.Chapter.init(from:))
-        chapters = convertChapters(modelChapters, currentTime: currentTime)
-      } else {
-        chapters = nil
-      }
+      let modelChapters = narrationBook?.chapters ?? book.chapters?.map(Models.Chapter.init(from:))
+      let chapters = modelChapters.map { convertChapters($0, currentTime: currentTime) }
 
       updateUI(
         title: book.title,
@@ -196,9 +193,9 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         narrators: narrators,
         series: series,
         coverURL: book.coverURL(raw: true),
-        duration: book.duration,
+        duration: narrationBook?.duration ?? book.duration,
         size: book.size,
-        mediaType: book.mediaType,
+        mediaType: narrationBook == nil ? book.mediaType : book.mediaType.union(.audiobook),
         publisher: book.publisher,
         publishedYear: book.publishedYear,
         language: book.media.metadata.language,
@@ -207,13 +204,15 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         description: book.description ?? book.descriptionPlain,
         flags: flags,
         chapters: chapters,
-        tracks: book.tracks?.map(Track.init(from:)),
+        tracks: narrationBook?.tracks ?? book.tracks?.map(Track.init(from:)),
         ebooks: ebooks
       )
 
       libraryID = book.libraryID
       error = nil
       isLoading = false
+
+      Task { await loadNarration(for: book) }
 
       if localBook?.isDeleted == false {
         try? LocalBook(from: book).save()
@@ -227,6 +226,32 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         self.error = "Failed to load book details. Please check your connection and try again."
       }
     }
+  }
+
+  private func loadNarration(for book: Book) async {
+    guard let audioSize = await NarrationProbe.shared.audioSize(of: book) else { return }
+    metadata.narrationSize = audioSize.formatted(.byteCount(style: .file))
+    NarrationImporter.shared.importIfNeeded(bookID: bookID)
+  }
+
+  private func setupNarrationObservation() {
+    NarrationImporter.shared.$tasks
+      .map { [bookID] in $0[bookID] != nil }
+      .removeDuplicates()
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] isImporting in
+        guard let self else { return }
+        let didFinish = self.isPreparingNarration && !isImporting
+        self.isPreparingNarration = isImporting
+
+        if didFinish {
+          Task {
+            await self.loadLocalBook()
+            await self.loadBookFromAPI()
+          }
+        }
+      }
+      .store(in: &cancellables)
   }
 
   private func loadSessions() async {
@@ -308,6 +333,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     metadata.size = size.map { $0.formatted(.byteCount(style: .file)) }
     metadata.hasAudio = hasAudio
     metadata.isEbook = isEbook
+    isNarrated = localBook?.hasImportedNarration == true
 
     if let book {
       self.bookmarks = BookmarkViewerSheetViewModel(item: .remote(book))
@@ -476,6 +502,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
 
     if metadata.hasAudio,
+      localBook?.hasImportedNarration != true,
       authenticationService.server?.permissions?.download == true,
       watchConnectivityManager.canDownloadToWatch,
       !watchConnectivityManager.watchDownloadedBookIDs.contains(bookID)

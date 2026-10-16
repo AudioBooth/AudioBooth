@@ -53,6 +53,15 @@ struct MetadataSection: View {
           }
           .font(.subheadline)
         }
+
+        if let narrationSize = model.narrationSize {
+          HStack {
+            Image(systemName: "waveform")
+              .accessibilityHidden(true)
+            Text("**Narration:** Included (\(narrationSize))")
+          }
+          .font(.subheadline)
+        }
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,6 +75,7 @@ extension MetadataSection {
     var language: String?
     var durationText: String?
     var size: String?
+    var narrationSize: String?
     var hasAudio: Bool
     var isEbook: Bool
 

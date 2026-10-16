@@ -92,7 +92,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private func updateBookProgress() {
     let currentTime = mediaProgress.currentTime
     let totalDuration = total
-    let overallProgress = currentTime / totalDuration
+    let overallProgress = totalDuration > 0 ? currentTime / totalDuration : 0
 
     var current: TimeInterval = currentTime
     var remaining: TimeInterval = totalDuration - currentTime
@@ -120,7 +120,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private func updateChapterProgress() {
     let currentTime = mediaProgress.currentTime
     let totalDuration = total
-    let overallProgress = currentTime / totalDuration
+    let overallProgress = totalDuration > 0 ? currentTime / totalDuration : 0
 
     var current: TimeInterval
     var remaining: TimeInterval
