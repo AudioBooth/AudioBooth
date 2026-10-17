@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- EPUB 3 narration - EPUBs with built-in narration (Media Overlays) can now be downloaded to listen like an audiobook, with the full player, chapters, and progress sync. Read Along highlights the narrated sentence in the reader, and turning pages while paused moves the narration to your page
+- Assistive Access support - AudioBooth now works in Assistive Access mode, with a simplified list of your downloaded books and an easy to use player
+- Assisted Player - New player preference that shows a simplified player with only large play and skip buttons
 - Ebook reader progress header - New reader preference to show a header with the chapter title, chapter progress or page count, and overall book progress
 - Read Along sentence highlight - New reader preference to turn off highlighting of the narrated sentence
 - Bookmarks sorting - Sort bookmarks by time or date added, in ascending or descending order, and your choice is remembered
@@ -16,9 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ebook reader Play from Here - Select a passage in the ebook to start the audiobook from that spot, with Catch Up now offered directly in the reader's player
 - Dynamic progress bar color - New player preference to tint the progress bar with the book cover color
 - Podcast library improvements - Home sections now show episode cards for the latest episodes, and the latest episodes page adds swipe actions to queue or mark as finished, a context menu, and a play button on each episode
-- EPUB 3 narration - EPUBs with built-in narration (Media Overlays) can now be downloaded to listen like an audiobook, with the full player, chapters, and progress sync. Read Along highlights the narrated sentence in the reader, and turning pages while paused moves the narration to your page
 
 ### Changed
+- Now Playing artwork - Cover art now scales properly to the size requested by the lock screen, Control Center, and connected devices
+- Equalizer - Added a 6 kHz band, and you can now save your own custom presets (long press a custom preset to delete it)
+- Sleep timer extend - Pressing play or pause from headphones or the lock screen, or turning up the volume while the timer is fading out, now extends the sleep timer
+- Auto download books - Books added to the queue now download automatically
 - CarPlay improvements - Author images now display, downloads follow your offline sort order, and time left reflects the currently playing book
 - Download storage check - Downloads now check available device storage and stop with a message when there isn't enough space
 - Maximum storage options - Added 100 GB, 200 GB, and 500 GB download storage limits
@@ -30,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Progress sync - The currently playing item now refreshes its progress from the server when you return to the app
 
 ### Fixed
+- Listening activity heatmap - Fixed overlapping month labels on the stats page and widget
+- Player sheets - Fixed incorrect sheet heights in the player
+- Sleep timer extend - Fixed playing or shaking after the extend window expired not resetting the sleep timer alert
 - Book and podcast details - Fixed a cover layout glitch in landscape
 - Screen backgrounds - Fixed backgrounds not extending behind the safe areas on several screens
 - Ebook current chapter - Fixed the current chapter not being detected correctly in the reader
