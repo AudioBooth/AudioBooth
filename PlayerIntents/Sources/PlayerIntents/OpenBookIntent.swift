@@ -21,6 +21,7 @@ public struct OpenBookIntent: AudioPlaybackIntent {
   }
 
   public func perform() async throws -> some IntentResult {
+    guard !bookID.isEmpty else { return .result() }
     await playerManager.open(bookID)
     return .result()
   }

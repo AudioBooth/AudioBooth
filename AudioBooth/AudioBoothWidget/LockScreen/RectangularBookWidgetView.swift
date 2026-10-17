@@ -26,17 +26,18 @@ struct RectangularBookWidgetView: View {
     }
   }
 
-  func intent(bookID: String) -> any AppIntent {
+  func intent(bookID: String, isPlaying: Bool = false) -> any AppIntent {
     switch action {
     case .play:
-      PlayBookIntent(bookID: bookID)
+      if isPlaying { return PausePlaybackIntent() }
+      return PlayBookIntent(bookID: bookID)
     case .open:
-      OpenBookIntent(bookID: bookID)
+      return OpenBookIntent(bookID: bookID)
     }
   }
 
   private func playingBookView(playbackState: PlaybackState) -> some View {
-    Button(intent: intent(bookID: playbackState.bookID)) {
+    Button(intent: intent(bookID: playbackState.bookID, isPlaying: playbackState.isPlaying)) {
       VStack(alignment: .leading, spacing: 2) {
         Text(playbackState.title)
           .font(.caption)
@@ -95,11 +96,12 @@ struct RectangularBookWidgetView: View {
   }
 
   private func formatTime(_ seconds: TimeInterval) -> String {
-    Duration.seconds(seconds).formatted(
+    let time = Duration.seconds(seconds).formatted(
       .units(
         allowed: [.hours, .minutes],
         width: .narrow
       )
-    ) + " left"
+    )
+    return String(localized: "\(time) left")
   }
 }

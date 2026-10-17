@@ -38,7 +38,7 @@ struct ListeningActivityWidgetView: View {
             .font(.subheadline)
             .fontWeight(.semibold)
 
-          Text(formatTime(stats.todayTime) + " today")
+          Text("\(formatTime(stats.todayTime)) today")
             .font(.caption)
             .foregroundStyle(.secondary)
         }

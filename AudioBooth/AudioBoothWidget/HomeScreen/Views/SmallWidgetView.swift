@@ -80,11 +80,12 @@ struct SmallWidgetView: View {
   }
 
   private func formatTime(_ seconds: TimeInterval) -> String {
-    Duration.seconds(seconds).formatted(
+    let time = Duration.seconds(seconds).formatted(
       .units(
         allowed: [.hours, .minutes],
         width: .narrow
       )
-    ) + " left"
+    )
+    return String(localized: "\(time) left")
   }
 }

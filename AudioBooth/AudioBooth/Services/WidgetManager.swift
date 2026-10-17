@@ -89,7 +89,13 @@ final class WidgetManager {
       let data = try? JSONEncoder().encode(state)
     {
       sharedDefaults.set(data, forKey: "playbackState")
-      WidgetCenter.shared.reloadAllTimelines()
+      sharedDefaults.set(
+        UserPreferences.shared.timeRemainingAdjustsWithSpeed,
+        forKey: "timeRemainingAdjustsWithSpeed"
+      )
+      for kind in ["AudioBoothWidget", "AudioBoothLockscreenCircular", "AudioBoothLockscreenBook"] {
+        WidgetCenter.shared.reloadTimelines(ofKind: kind)
+      }
     }
 
     let chapterProgress: Double? =

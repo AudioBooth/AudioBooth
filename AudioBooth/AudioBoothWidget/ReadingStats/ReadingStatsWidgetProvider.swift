@@ -36,7 +36,17 @@ struct ReadingStatsWidgetProvider: TimelineProvider {
     else {
       return nil
     }
-    return stats
+
+    guard !Calendar.current.isDateInToday(stats.updatedAt) else { return stats }
+
+    return WidgetStatsData(
+      todayTime: 0,
+      dailyGoalMinutes: stats.dailyGoalMinutes,
+      weekData: stats.weekData,
+      days: stats.days,
+      daysInARow: stats.daysInARow,
+      updatedAt: stats.updatedAt
+    )
   }
 }
 

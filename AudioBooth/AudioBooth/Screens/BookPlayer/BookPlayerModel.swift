@@ -151,7 +151,7 @@ final class BookPlayerModel: BookPlayer.Model {
       id: episode.episodeID,
       title: episode.title,
       author: episode.podcast?.author,
-      coverURL: episode.coverURL,
+      coverURL: episode.coverURL(raw: true),
       current: mediaProgress.currentTime,
       duration: mediaProgress.duration
     )
@@ -160,7 +160,7 @@ final class BookPlayerModel: BookPlayer.Model {
       id: episode.episodeID,
       title: episode.title,
       author: episode.podcast?.author,
-      coverURL: episode.coverURL
+      coverURL: episode.coverURL()
     )
 
     super.init(

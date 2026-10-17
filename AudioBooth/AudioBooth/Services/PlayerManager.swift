@@ -69,6 +69,8 @@ final class PlayerManager: ObservableObject, Sendable {
         let currentServerID = Audiobookshelf.shared.libraries.current?.serverID
         if serverID != currentServerID {
           serverID = currentServerID
+          sharedDefaults?.removeObject(forKey: "recentBooks")
+          sharedDefaults?.removeObject(forKey: "listeningStats")
           clearCurrent()
           clearQueue()
         }

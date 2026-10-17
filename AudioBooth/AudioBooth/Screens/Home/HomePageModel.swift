@@ -503,6 +503,7 @@ extension HomePageModel {
       let allProgress = try MediaProgress.fetchAll()
       let sortedProgress =
         allProgress
+        .filter { !$0.isFinished }
         .sorted { $0.lastUpdate > $1.lastUpdate }
 
       let continueListeningByID = Dictionary(
