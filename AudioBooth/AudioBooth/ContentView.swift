@@ -148,6 +148,7 @@ struct ContentView: View {
         if let currentPlayer = playerManager.current {
           MiniBookPlayer(player: currentPlayer, namespace: playerNamespace)
             .equatable()
+            .id(currentPlayer.id)
         } else {
           HStack(spacing: 12) {
             Image(systemName: "book.circle")
