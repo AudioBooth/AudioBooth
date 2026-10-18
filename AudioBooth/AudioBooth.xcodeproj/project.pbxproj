@@ -1057,8 +1057,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/readium/swift-toolkit.git";
 			requirement = {
-				branch = hotfix/3.11.1;
-				kind = branch;
+				kind = exactVersion;
+				version = 3.11.1;
 			};
 		};
 		3F3AF2672E91DA350052C80D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
