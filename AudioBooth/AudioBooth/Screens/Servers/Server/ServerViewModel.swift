@@ -60,6 +60,7 @@ final class ServerViewModel: ServerView.Model {
     customHeadersVM.onHeadersChanged = { [weak self] headers in
       guard let self, let serverID = self.server?.id else { return }
       self.audiobookshelf.authentication.updateCustomHeaders(serverID, customHeaders: headers)
+      WatchConnectivityManager.shared.updateContext()
     }
 
     let newAuthModel = NewServerAuthViewModel(parent: self)
@@ -155,6 +156,7 @@ final class ServerViewModel: ServerView.Model {
       customHeadersVM.onHeadersChanged = { [weak self] headers in
         guard let self, let serverID = self.server?.id else { return }
         self.audiobookshelf.authentication.updateCustomHeaders(serverID, customHeaders: headers)
+        WatchConnectivityManager.shared.updateContext()
       }
     }
 
@@ -456,6 +458,7 @@ final class ServerViewModel: ServerView.Model {
     }
 
     audiobookshelf.logout(serverID: serverID)
+    WatchConnectivityManager.shared.updateContext()
     server = nil
 
     let newAuthModel = NewServerAuthViewModel(parent: self)

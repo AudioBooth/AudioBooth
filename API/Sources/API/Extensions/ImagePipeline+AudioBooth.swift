@@ -2,6 +2,8 @@ import Foundation
 import Nuke
 
 extension ImagePipeline {
+  nonisolated private static let dataCache = try? DataCache(name: "me.jgrenier.audioBS.images")
+
   nonisolated static func audioBooth(customHeaders: [String: String]?) -> ImagePipeline {
     ImagePipeline {
       let configuration = DataLoader.defaultConfiguration
@@ -9,7 +11,7 @@ extension ImagePipeline {
       configuration.httpAdditionalHeaders = customHeaders
       $0.dataLoader = DataLoader(configuration: configuration)
 
-      $0.dataCache = try? DataCache(name: "me.jgrenier.audioBS.images")
+      $0.dataCache = dataCache
     }
   }
 }

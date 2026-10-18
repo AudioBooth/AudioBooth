@@ -93,7 +93,11 @@ final class NetworkService: @unchecked Sendable {
     config.allowsCellularAccess = true
     #endif
 
+    #if os(watchOS)
+    return URLSession(configuration: config)
+    #else
     return URLSessionProxy(configuration: config)
+    #endif
   }()
 
   private static let discretionarySession: URLSessionProtocol = {
@@ -117,7 +121,11 @@ final class NetworkService: @unchecked Sendable {
     discretionaryConfig.shouldUseExtendedBackgroundIdleMode = true
     #endif
 
+    #if os(watchOS)
+    return URLSession(configuration: discretionaryConfig)
+    #else
     return URLSessionProxy(configuration: discretionaryConfig)
+    #endif
   }()
 
   private static let userAgent: String = {

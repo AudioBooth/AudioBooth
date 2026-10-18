@@ -242,6 +242,8 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func startSessionInBackground() {
+    guard connectivityManager.isReachable else { return }
+
     Task {
       guard let info = await connectivityManager.startSession(bookID: bookID) else {
         AppLogger.player.warning("Failed to start session for progress reporting")

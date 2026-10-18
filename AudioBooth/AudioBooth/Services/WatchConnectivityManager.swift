@@ -168,11 +168,11 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     updateContext()
   }
 
-  private func updateContext() {
+  func updateContext() {
     guard let session, session.activationState == .activated, session.isPaired, session.isWatchAppInstalled else {
       return
     }
-    context["customHeaders"] = Audiobookshelf.shared.authentication.server?.customHeaders ?? [:]
+    context["connection"] = watchConnection()
     context["skipForwardInterval"] = UserPreferences.shared.skipForwardInterval
     context["skipBackwardInterval"] = UserPreferences.shared.skipBackwardInterval
     do {
@@ -299,6 +299,30 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   private func updateCanDownloadToWatch() {
     guard let session else { return }
     canDownloadToWatch = session.activationState == .activated && session.isPaired && session.isWatchAppInstalled
+  }
+
+  private func watchConnection() -> Data? {
+    guard let server = Audiobookshelf.shared.authentication.server else { return nil }
+
+    let token: Credentials
+    switch server.token {
+    case .bearer(let accessToken, _, let expiresAt, _):
+      token = .bearer(accessToken: accessToken, refreshToken: "", expiresAt: expiresAt, legacyToken: nil)
+    case .legacy, .apiKey:
+      token = server.token
+    }
+
+    let connection = Connection(
+      id: server.id,
+      serverURL: server.baseURL,
+      token: token,
+      customHeaders: server.customHeaders,
+      alternativeURL: server.alternativeURL,
+      isUsingAlternativeURL: server.isUsingAlternativeURL
+    )
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    return try? encoder.encode(connection)
   }
 
   private func watchCompatibleCoverURL(from url: URL?) -> String? {

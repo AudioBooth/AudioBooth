@@ -183,6 +183,7 @@ public final class AuthenticationService: ObservableObject {
       throw Audiobookshelf.AudiobookshelfError.networkError("Server not found")
     }
     server = newServer
+    ImagePipeline.shared = .audioBooth(customHeaders: newServer.customHeaders)
   }
 
   public func restoreConnection(_ connection: Connection) {

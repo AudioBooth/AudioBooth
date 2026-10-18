@@ -1,5 +1,7 @@
+import API
 import Combine
 import Foundation
+import Nuke
 import OSLog
 import WatchConnectivity
 import WatchKit
@@ -35,14 +37,10 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var homeSections: [WatchHomeSection] = []
   private var chapterProgress: Double?
   private var currentBook: WatchBook?
+  private var connectionData: Data?
 
   var customHeaders: [String: String] {
-    get {
-      UserDefaults.standard.dictionary(forKey: Keys.customHeaders) as? [String: String] ?? [:]
-    }
-    set {
-      UserDefaults.standard.set(newValue, forKey: Keys.customHeaders)
-    }
+    Audiobookshelf.shared.authentication.server?.customHeaders ?? [:]
   }
 
   var skipForwardInterval: Double {
@@ -75,7 +73,6 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     static let continueListeningBooks = "continue_listening_books"
     static let progress = "progress"
     static let progressUpdatedAt = "progress_updated_at"
-    static let customHeaders = "custom_headers"
     static let skipForwardInterval = "skip_forward_interval"
     static let skipBackwardInterval = "skip_backward_interval"
   }
@@ -396,11 +393,96 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   func startSession(bookID: String, forDownload: Bool = false) async -> WatchBook? {
-    await withCheckedContinuation { continuation in
+    guard isReachable else {
+      return await startDirectSession(bookID: bookID, forDownload: forDownload)
+    }
+
+    return await withCheckedContinuation { continuation in
       startSessionWithCallback(bookID: bookID, forDownload: forDownload) { book in
         continuation.resume(returning: book)
       }
     }
+  }
+
+  private func startDirectSession(bookID: String, forDownload: Bool) async -> WatchBook? {
+    let audiobookshelf = Audiobookshelf.shared
+    guard let server = audiobookshelf.authentication.server else { return nil }
+
+    AppLogger.watchConnectivity.info("Starting direct session for \(bookID), forDownload=\(forDownload)")
+
+    do {
+      let book: Book
+      let sessionID: String?
+      let audioTracks: [AudioTrack]
+
+      if forDownload {
+        book = try await audiobookshelf.books.fetch(id: bookID)
+        sessionID = nil
+        audioTracks = book.tracks ?? []
+      } else {
+        let playSession = try await audiobookshelf.sessions.start(
+          itemID: bookID,
+          forceTranscode: true,
+          sessionType: .watch,
+          timeout: 30
+        )
+        guard case .book(let sessionBook) = playSession.libraryItem else { return nil }
+        book = sessionBook
+        sessionID = playSession.id
+        audioTracks = playSession.audioTracks ?? []
+      }
+
+      let tracks = audioTracks.map { audioTrack in
+        WatchTrack(
+          index: audioTrack.index,
+          duration: audioTrack.duration,
+          size: audioTrack.metadata?.size,
+          ext: audioTrack.metadata?.ext,
+          url: directTrackURL(bookID: bookID, audioTrack: audioTrack, sessionID: sessionID, server: server),
+          relativePath: nil
+        )
+      }
+
+      let chapters =
+        book.chapters?.enumerated().map { index, chapter in
+          WatchChapter(id: index, title: chapter.title, start: chapter.start, end: chapter.end)
+        } ?? []
+
+      return WatchBook(
+        id: bookID,
+        sessionID: sessionID,
+        title: book.title,
+        authorName: book.authorName,
+        coverURL: book.coverURL()?.appending(queryItems: [URLQueryItem(name: "width", value: "200")]),
+        duration: book.duration,
+        chapters: chapters,
+        tracks: tracks,
+        currentTime: progress[bookID, default: 0]
+      )
+    } catch {
+      AppLogger.watchConnectivity.error("Failed to start direct session: \(error)")
+      return nil
+    }
+  }
+
+  private func directTrackURL(bookID: String, audioTrack: AudioTrack, sessionID: String?, server: Server) -> URL? {
+    if let sessionID {
+      return server.activeURL.appendingPathComponent("public/session/\(sessionID)/track/\(audioTrack.index)")
+    }
+
+    guard let ino = audioTrack.ino else { return nil }
+
+    let token: String
+    switch server.token {
+    case .legacy(let value), .apiKey(let value):
+      token = value
+    case .bearer(let accessToken, _, _, _):
+      token = accessToken
+    }
+
+    return server.activeURL
+      .appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
+      .appending(queryItems: [URLQueryItem(name: "token", value: token)])
   }
 
   private func startSessionWithCallback(
@@ -618,9 +700,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
       return WatchHomeSection(id: id, name: name, count: count)
     }
 
-    if let headers = context["customHeaders"] as? [String: String] {
-      customHeaders = headers
-    }
+    handleConnection(context["connection"] as? Data)
 
     if let forward = context["skipForwardInterval"] as? Double {
       skipForwardInterval = forward
@@ -629,6 +709,27 @@ extension WatchConnectivityManager: WCSessionDelegate {
     if let backward = context["skipBackwardInterval"] as? Double {
       skipBackwardInterval = backward
     }
+  }
+
+  private func handleConnection(_ data: Data?) {
+    let authentication = Audiobookshelf.shared.authentication
+
+    guard let data, let connection = try? JSONDecoder().decode(Connection.self, from: data) else {
+      connectionData = nil
+      if let serverID = authentication.server?.id {
+        authentication.removeServer(serverID)
+        ImagePipeline.shared = .watch(customHeaders: nil)
+      }
+      return
+    }
+
+    guard data != connectionData else { return }
+    connectionData = data
+    if let current = authentication.server, current.id != connection.id {
+      authentication.removeServer(current.id)
+    }
+    authentication.restoreConnection(connection)
+    ImagePipeline.shared = .watch(customHeaders: connection.customHeaders)
   }
 
   private func handleMessage(_ message: [String: Any]) {
