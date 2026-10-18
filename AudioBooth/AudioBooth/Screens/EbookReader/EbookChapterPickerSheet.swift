@@ -95,7 +95,7 @@ extension EbookChapterPickerSheet {
     var chapters: [Chapter]
     var currentIndex: Int
     var isPresented: Bool = false
-    var showSubchapters: Bool = false
+    var showSubchapters: Bool = true
 
     var hasSubchapters: Bool {
       chapters.contains(where: { $0.level > 0 })

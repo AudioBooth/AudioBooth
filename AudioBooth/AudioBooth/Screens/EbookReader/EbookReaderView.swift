@@ -370,8 +370,8 @@ struct EbookReaderView: View {
     switch status {
     case let .preparing(fraction):
       model.isCatchingUpToNarration
-        ? String(localized: "Getting ready… \(Int(fraction * 100))%")
-        : String(localized: "Preparing Read Along… \(Int(fraction * 100))%")
+        ? String(localized: "Getting ready… \(fraction.formatted(.percent.precision(.fractionLength(0))))")
+        : String(localized: "Preparing Read Along… \(fraction.formatted(.percent.precision(.fractionLength(0))))")
     case .locating:
       model.isCatchingUpToNarration
         ? String(localized: "Finding where the narrator is…")
