@@ -270,15 +270,13 @@ final class BookPlayerModel: BookPlayer.Model {
   override func onPlayTapped() {
     if timer.extendIfNeeded() { return }
 
-    guard let player, !isLoading else {
+    guard player != nil, !isLoading else {
       pendingPlay = true
       return
     }
 
     if mediaProgress.isFinished || mediaProgress.remaining <= 1 {
-      let newTime = max(0, mediaProgress.currentTime - 15)
-      mediaProgress.currentTime = newTime
-      player.seek(to: newTime)
+      return
     }
 
     isLoading = true
