@@ -111,10 +111,16 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
   }
 
   override func onPlayAllEpisodes() {
-    let episodes = filteredEpisodes
+    let episodes = filteredEpisodes.filter { !$0.isCompleted }
     guard let first = episodes.first else { return }
 
-    onPlayEpisode(first)
+    if playerManager.current?.id == first.id {
+      if playerManager.current?.isPlaying != true {
+        playerManager.play()
+      }
+    } else {
+      onPlayEpisode(first)
+    }
 
     for episode in episodes.dropFirst() {
       playerManager.addToQueue(
