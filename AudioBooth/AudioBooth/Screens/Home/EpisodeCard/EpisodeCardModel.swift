@@ -12,7 +12,6 @@ final class EpisodeCardModel: EpisodeCard.Model {
   init(podcast: Podcast, episode: PodcastEpisode) {
     let progress = MediaProgress.progress(for: episode.id)
     let coverURL = podcast.coverURL(raw: true)
-    let duration = episode.duration ?? episode.audioTrack?.duration ?? episode.audioFile?.duration
 
     super.init(
       id: episode.id,
@@ -21,7 +20,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
       coverURL: coverURL,
       summary: episode.description?.htmlStripped,
       publishedAt: episode.publishedAt.map { Date(timeIntervalSince1970: Double($0) / 1000) },
-      duration: duration,
+      duration: episode.duration,
       progress: progress,
       contextMenu: PodcastEpisodeContextMenuModel(
         episodeID: episode.id,
@@ -30,7 +29,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
         podcastAuthor: podcast.author,
         coverURL: coverURL,
         episodeTitle: episode.title,
-        episodeDuration: duration,
+        episodeDuration: episode.duration,
         episodeSize: episode.audioTrack?.metadata?.size ?? episode.size,
         isCompleted: progress >= 1.0,
         progress: progress,

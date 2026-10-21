@@ -200,6 +200,10 @@ extension SessionManager {
       mediaProgress.currentTime = audiobookshelfSession.currentTime
     }
 
+    if mediaProgress.duration <= 0, audiobookshelfSession.duration > 0 {
+      mediaProgress.duration = audiobookshelfSession.duration
+    }
+
     let playbackSession = PlaybackSession(
       id: session.id,
       libraryItemID: itemID,

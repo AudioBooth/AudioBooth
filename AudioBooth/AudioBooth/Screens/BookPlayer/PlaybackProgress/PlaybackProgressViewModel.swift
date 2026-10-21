@@ -50,6 +50,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     self.player = player
     self.chapters = chapters
     self.speed = speed
+    total = mediaProgress.duration
     updateProgress()
   }
 
