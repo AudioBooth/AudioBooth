@@ -7,7 +7,9 @@ import SwiftUI
 final class EpisodeCardModel: EpisodeCard.Model {
   private static var backgroundColors: [URL: Color] = [:]
 
+  private let playerManager = PlayerManager.shared
   private var progressObservation: Task<Void, Never>?
+  private var cancellables = Set<AnyCancellable>()
 
   init(podcast: Podcast, episode: PodcastEpisode) {
     let progress = MediaProgress.progress(for: episode.id)
@@ -38,6 +40,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
     )
 
     observeMediaProgress()
+    observePlayer()
     setupBackgroundColor()
   }
 
@@ -70,6 +73,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
     )
 
     observeMediaProgress()
+    observePlayer()
     setupBackgroundColor()
   }
 
@@ -78,7 +82,37 @@ final class EpisodeCardModel: EpisodeCard.Model {
   }
 
   override func onPlayTapped() {
-    contextMenu.onPlayTapped()
+    if let current = playerManager.current, current.id == id {
+      current.onTogglePlaybackTapped()
+    } else {
+      contextMenu.onPlayTapped()
+    }
+  }
+
+  private func observePlayer() {
+    playerManager.$current
+      .sink { [weak self] current in
+        self?.observePlaybackState(current)
+      }
+      .store(in: &cancellables)
+  }
+
+  private func observePlaybackState(_ current: BookPlayer.Model?) {
+    guard let current, current.id == id else {
+      isPlaying = false
+      return
+    }
+
+    isPlaying = current.isPlaying
+
+    withObservationTracking {
+      _ = current.isPlaying
+    } onChange: { [weak self, weak current] in
+      Task { @MainActor [weak self, weak current] in
+        guard let self, let current, current === self.playerManager.current else { return }
+        self.observePlaybackState(current)
+      }
+    }
   }
 
   private func observeMediaProgress() {
