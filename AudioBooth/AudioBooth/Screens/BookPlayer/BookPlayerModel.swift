@@ -775,6 +775,8 @@ extension BookPlayerModel {
         AppLogger.player.error("Background session fetch failed: \(error)")
       }
 
+      await resolveMissingDuration()
+
       if player == nil {
         do {
           try setupAudioPlayer()
@@ -915,6 +917,30 @@ extension BookPlayerModel {
       }
     } catch {
       AppLogger.player.error("Failed to load local episode: \(error)")
+    }
+  }
+
+  private func resolveMissingDuration() async {
+    guard let session = sessionManager.current,
+      session.tracks.count == 1,
+      let track = session.tracks.first,
+      track.duration <= 0,
+      let url = session.url(for: track),
+      url.isFileURL,
+      let duration = try? await AVURLAsset(url: url).load(.duration).seconds,
+      duration.isFinite,
+      duration > 0
+    else { return }
+
+    AppLogger.player.info("Resolved missing duration from local file: \(duration)s")
+    track.duration = duration
+
+    if let localEpisode = item as? LocalEpisode, localEpisode.duration <= 0 {
+      localEpisode.duration = duration
+    }
+
+    if mediaProgress.duration <= 0 {
+      mediaProgress.duration = duration
     }
   }
 
