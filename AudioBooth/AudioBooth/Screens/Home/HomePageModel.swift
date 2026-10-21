@@ -235,7 +235,10 @@ extension HomePageModel {
       }
     }
 
-    let continueListeningSection = buildBooksContinueListeningSection() ?? buildEpisodesContinueListeningSection()
+    let continueListeningSection =
+      Audiobookshelf.shared.libraries.current?.mediaType == .podcast
+      ? buildEpisodesContinueListeningSection() ?? buildBooksContinueListeningSection()
+      : buildBooksContinueListeningSection() ?? buildEpisodesContinueListeningSection()
     let continueReadingSection = buildContinueReadingSection()
     let pinnedPlaylistSection = buildPinnedPlaylistSection()
 
@@ -403,7 +406,7 @@ extension HomePageModel {
     }
 
     for podcast in continueListeningEpisodes {
-      guard let episode = podcast.recentEpisode else { continue }
+      guard let episode = podcast.recentEpisode, MediaProgress.progress(for: episode.id) < 1.0 else { continue }
       models.append(existingModels[episode.id] ?? EpisodeCardModel(podcast: podcast, episode: episode))
     }
 
