@@ -114,12 +114,10 @@ final class PodcastDetailsViewModel: PodcastDetailsView.Model {
     let episodes = filteredEpisodes.filter { !$0.isCompleted }
     guard let first = episodes.first else { return }
 
-    if playerManager.current?.id == first.id {
-      if playerManager.current?.isPlaying != true {
-        playerManager.play()
-      }
-    } else {
+    if playerManager.current?.id != first.id {
       onPlayEpisode(first)
+    } else if !playerManager.isPlaying {
+      playerManager.play()
     }
 
     for episode in episodes.dropFirst() {

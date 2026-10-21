@@ -99,7 +99,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
 
   private func observePlaybackState(_ current: BookPlayer.Model?) {
     guard let current, current.id == id else {
-      isPlaying = false
+      if isPlaying { isPlaying = false }
       return
     }
 

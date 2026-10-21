@@ -130,7 +130,7 @@ final class DownloadingListViewModel: DownloadingListView.Model {
 
         return DownloadingListView.BookItem(
           id: download.itemID,
-          podcastID: download.kind == .episode ? download.podcastID : nil,
+          podcastID: download.podcastID,
           title: download.title,
           details: detailsText(
             duration: download.duration,

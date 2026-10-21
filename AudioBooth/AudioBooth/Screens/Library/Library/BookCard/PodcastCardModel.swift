@@ -36,14 +36,15 @@ final class PodcastCardModel: BookCard.Model {
       details = nil
     }
 
+    let progress = MediaProgress.progress(for: id)
+
     let cover = Cover.Model(
       url: podcast.coverURL(),
       title: title,
       author: author,
-      progress: MediaProgress.progress(for: id)
+      progress: progress
     )
 
-    let progress = MediaProgress.progress(for: id)
     let episodeContextMenu = podcast.recentEpisode.map { episode in
       PodcastEpisodeContextMenuModel(
         episodeID: episode.id,

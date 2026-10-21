@@ -235,8 +235,9 @@ extension HomePageModel {
       }
     }
 
+    let isPodcastLibrary = Audiobookshelf.shared.libraries.current?.mediaType == .podcast
     let continueListeningSection =
-      Audiobookshelf.shared.libraries.current?.mediaType == .podcast
+      isPodcastLibrary
       ? buildEpisodesContinueListeningSection() ?? buildBooksContinueListeningSection()
       : buildBooksContinueListeningSection() ?? buildEpisodesContinueListeningSection()
     let continueReadingSection = buildContinueReadingSection()

@@ -11,8 +11,8 @@ final class NowPlayingManager {
   private var info: [String: Any]
   private let id: String
   private let title: String
-  private let author: String?
-  private let podcastTitle: String?
+  private let artist: String?
+  private let isPodcast: Bool
   private var artwork: MPMediaItemArtwork?
   private var animatedArtwork: Any?
   private let preferences = UserPreferences.shared
@@ -36,8 +36,8 @@ final class NowPlayingManager {
 
     self.id = id
     self.title = title
-    self.author = author
-    self.podcastTitle = podcastTitle
+    self.artist = podcastTitle ?? author
+    self.isPodcast = podcastTitle != nil
 
     primeNowPlaying()
 
@@ -45,9 +45,9 @@ final class NowPlayingManager {
     info[MPNowPlayingInfoPropertyExternalUserProfileIdentifier] = Audiobookshelf.shared.authentication.server?.id
 
     info[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
-    info[MPMediaItemPropertyMediaType] = (podcastTitle == nil ? MPMediaType.audioBook : .podcast).rawValue
+    info[MPMediaItemPropertyMediaType] = (isPodcast ? MPMediaType.podcast : .audioBook).rawValue
     info[MPMediaItemPropertyTitle] = title
-    info[MPMediaItemPropertyArtist] = podcastTitle ?? author
+    info[MPMediaItemPropertyArtist] = artist
 
     info[MPMediaItemPropertyPlaybackDuration] = duration
     info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
@@ -156,11 +156,11 @@ final class NowPlayingManager {
     info[MPNowPlayingInfoPropertyPlaybackRate] = player.isPlaying ? player.rate : 0.0
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current,
-      podcastTitle == nil || chapters.chapters.count > 1
+      !isPodcast || chapters.chapters.count > 1
     {
       info[MPMediaItemPropertyTitle] = decoratedTitle(current.title)
       info[MPMediaItemPropertyArtist] = title
-      info[MPMediaItemPropertyAlbumTitle] = podcastTitle ?? author
+      info[MPMediaItemPropertyAlbumTitle] = artist
       info[MPMediaItemPropertyPlaybackDuration] = current.end - current.start
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = chapters.currentElapsedTime(
         currentTime: mediaProgress.currentTime
@@ -168,7 +168,7 @@ final class NowPlayingManager {
       info[MPNowPlayingInfoPropertyExternalContentIdentifier] = "\(id)-\(current.id)"
     } else {
       info[MPMediaItemPropertyTitle] = decoratedTitle(title)
-      info[MPMediaItemPropertyArtist] = podcastTitle ?? author
+      info[MPMediaItemPropertyArtist] = artist
       info[MPMediaItemPropertyAlbumTitle] = nil
       info[MPMediaItemPropertyPlaybackDuration] = mediaProgress.duration
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = mediaProgress.currentTime
