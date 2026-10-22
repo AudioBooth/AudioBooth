@@ -12,7 +12,6 @@ final class NowPlayingManager {
   private let id: String
   private let title: String
   private let artist: String?
-  private let isPodcast: Bool
   private var artwork: MPMediaItemArtwork?
   private var animatedArtwork: Any?
   private let preferences = UserPreferences.shared
@@ -37,7 +36,6 @@ final class NowPlayingManager {
     self.id = id
     self.title = title
     self.artist = podcastTitle ?? author
-    self.isPodcast = podcastTitle != nil
 
     primeNowPlaying()
 
@@ -45,7 +43,7 @@ final class NowPlayingManager {
     info[MPNowPlayingInfoPropertyExternalUserProfileIdentifier] = Audiobookshelf.shared.authentication.server?.id
 
     info[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
-    info[MPMediaItemPropertyMediaType] = (isPodcast ? MPMediaType.podcast : .audioBook).rawValue
+    info[MPMediaItemPropertyMediaType] = (podcastTitle != nil ? MPMediaType.podcast : .audioBook).rawValue
     info[MPMediaItemPropertyTitle] = title
     info[MPMediaItemPropertyArtist] = artist
 
@@ -156,7 +154,7 @@ final class NowPlayingManager {
     info[MPNowPlayingInfoPropertyPlaybackRate] = player.isPlaying ? player.rate : 0.0
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current,
-      !isPodcast || chapters.chapters.count > 1
+      chapters.chapters.count > 1
     {
       info[MPMediaItemPropertyTitle] = decoratedTitle(current.title)
       info[MPMediaItemPropertyArtist] = title
