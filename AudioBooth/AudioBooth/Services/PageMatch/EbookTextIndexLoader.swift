@@ -51,14 +51,20 @@ final class EbookTextIndexLoader {
     }
 
     let started = Date()
-    let built = await Task.detached(priority: .userInitiated) { [publication] in
+    let build = Task.detached(priority: .userInitiated) { [publication] in
       let index = await BookTextIndex.build(publication: publication)
-      guard !index.isEmpty else { return nil as Indexed? }
+      guard !Task.isCancelled, !index.isEmpty else { return nil as Indexed? }
       let sections = await BookSections.build(from: index, publication: publication)
       return Indexed(index: index, sections: sections)
-    }.value
+    }
 
-    guard let built else { return nil }
+    let built = await withTaskCancellationHandler {
+      await build.value
+    } onCancel: {
+      build.cancel()
+    }
+
+    guard let built, !Task.isCancelled else { return nil }
     let elapsed: String = String(format: "%.1f", Date().timeIntervalSince(started))
     AppLogger.readAlong.info(
       "Page Match: indexed the ebook in \(elapsed)s, \(built.index.words.count) words across \(built.sections.sections.count) sections"

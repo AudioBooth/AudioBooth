@@ -414,7 +414,11 @@ final class BookPlayerModel: BookPlayer.Model {
   private func refreshPositionSyncOffer() {
     guard #available(iOS 26.0, *) else { return }
 
-    guard positionSyncMessage == nil, positionSyncCheck == nil else { return }
+    guard positionSyncMessage == nil, positionSyncCheck == nil,
+      UIApplication.shared.applicationState == .active
+    else {
+      return
+    }
 
     guard playerManager.reader?.readAlong?.status.isActive != true else {
       AppLogger.readAlong.info("Catch Up: Read Along is running, leaving the narration session alone")
@@ -1108,6 +1112,12 @@ extension BookPlayerModel {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] notification in
         self?.handleRouteChange(notification)
+      }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+      .sink { [weak self] _ in
+        self?.positionSyncCheck?.cancel()
       }
       .store(in: &cancellables)
 

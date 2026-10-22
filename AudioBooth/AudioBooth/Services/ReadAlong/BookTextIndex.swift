@@ -88,19 +88,36 @@ nonisolated extension BookTextIndex {
 }
 
 nonisolated private final class SpineProgressReporter: @unchecked Sendable {
-  private let readingOrder: [ReadiumShared.Link]
+  private let spineCount: Int
+  private let indexByHREF: [String: Int]
   private let report: @Sendable (Double) -> Void
+  private var lastHREF: String?
   private var lastReportedIndex = -1
 
   init(readingOrder: [ReadiumShared.Link], report: @escaping @Sendable (Double) -> Void) {
-    self.readingOrder = readingOrder
+    spineCount = readingOrder.count
+    indexByHREF = Dictionary(
+      readingOrder.enumerated().map { ($1.url().normalized.string, $0) },
+      uniquingKeysWith: { first, _ in first }
+    )
     self.report = report
   }
 
   func advance(to href: AnyURL) {
-    guard let index = readingOrder.firstIndexWithHREF(href), index != lastReportedIndex else { return }
+    guard href.string != lastHREF else { return }
+    lastHREF = href.string
+
+    let normalized = href.normalized
+    guard
+      let index = indexByHREF[normalized.string]
+        ?? indexByHREF[normalized.removingQuery().removingFragment().string],
+      index != lastReportedIndex
+    else {
+      return
+    }
+
     lastReportedIndex = index
-    report(Double(index) / Double(max(readingOrder.count, 1)))
+    report(Double(index) / Double(max(spineCount, 1)))
   }
 }
 

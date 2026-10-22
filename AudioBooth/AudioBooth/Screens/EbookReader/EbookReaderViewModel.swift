@@ -80,6 +80,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
       .sink { [weak self] _ in
+        self?.catchUpCheck?.cancel()
         self?.suspendReadAlong()
       }
       .store(in: &cancellables)
