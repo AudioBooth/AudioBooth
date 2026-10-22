@@ -151,6 +151,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("offlineSortOrder")
   var offlineSortOrder: OfflineListView.Model.SortOrder = .manual
 
+  @AppStorage("offlineSortAscending")
+  var offlineSortAscending: Bool = true
+
   @AppStorage("librarySortBy")
   var librarySortBy: SortBy = .title
 
@@ -280,6 +283,7 @@ final class UserPreferences: ObservableObject {
     migrateAutoTimerDuration()
     migrateVolumeBoost()
     migrateSmartContinuePlayback()
+    migrateOfflineSortOrder()
     setupCloudSync()
   }
 
@@ -325,6 +329,19 @@ final class UserPreferences: ObservableObject {
     continueNextInSeries = wasEnabled
     continueNextDownloadedBook = wasEnabled
     continueNextPodcastEpisode = wasEnabled
+  }
+
+  private func migrateOfflineSortOrder() {
+    switch UserDefaults.standard.string(forKey: "offlineSortOrder") {
+    case "newest":
+      offlineSortOrder = .downloadDate
+      offlineSortAscending = false
+    case "oldest":
+      offlineSortOrder = .downloadDate
+      offlineSortAscending = true
+    default:
+      break
+    }
   }
 
   private func migrateVolumeBoost() {

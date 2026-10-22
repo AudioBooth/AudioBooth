@@ -51,7 +51,10 @@ struct OfflineListView: View {
                 model.onSortOrderTapped(order)
               } label: {
                 if model.sortOrder == order {
-                  Label(order.title, systemImage: "checkmark")
+                  Label(
+                    order.title,
+                    systemImage: order == .manual ? "checkmark" : model.ascending ? "chevron.up" : "chevron.down"
+                  )
                 } else {
                   Text(order.title)
                 }
@@ -333,6 +336,7 @@ extension OfflineListView {
     var searchText: String
     var isGroupedBySeries: Bool
     var sortOrder: SortOrder
+    var ascending: Bool
 
     var isReorderEnabled: Bool {
       sortOrder == .manual && !isGroupedBySeries && searchText.trimmingCharacters(in: .whitespaces).isEmpty
@@ -360,7 +364,8 @@ extension OfflineListView {
       selectedIDs: Set<String> = [],
       searchText: String = "",
       isGroupedBySeries: Bool = false,
-      sortOrder: SortOrder = .manual
+      sortOrder: SortOrder = .manual,
+      ascending: Bool = true
     ) {
       self.items = items
       self.selectableCount = selectableCount
@@ -371,18 +376,21 @@ extension OfflineListView {
       self.searchText = searchText
       self.isGroupedBySeries = isGroupedBySeries
       self.sortOrder = sortOrder
+      self.ascending = ascending
     }
 
     enum SortOrder: String, CaseIterable {
       case manual
-      case newest
-      case oldest
+      case downloadDate
+      case title
+      case duration
 
       var title: LocalizedStringResource {
         switch self {
         case .manual: "Manual"
-        case .newest: "Newest"
-        case .oldest: "Oldest"
+        case .downloadDate: "Date Downloaded"
+        case .title: "Title"
+        case .duration: "Duration"
         }
       }
     }

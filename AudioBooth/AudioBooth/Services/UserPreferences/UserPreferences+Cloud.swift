@@ -36,6 +36,7 @@ extension UserPreferences {
     "showBookSubtitle",
     "groupSeriesInOffline",
     "offlineSortOrder",
+    "offlineSortAscending",
     "librarySortBy",
     "librarySortAscending",
     "bookmarkSortBy",

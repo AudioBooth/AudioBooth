@@ -22,6 +22,7 @@ final class OfflineListViewModel: OfflineListView.Model {
     groupingEnabled = UserPreferences.shared.groupSeriesInOffline
     isGroupedBySeries = groupingEnabled
     sortOrder = UserPreferences.shared.offlineSortOrder
+    ascending = UserPreferences.shared.offlineSortAscending
   }
 
   override func onAppear() {
@@ -131,14 +132,21 @@ final class OfflineListViewModel: OfflineListView.Model {
   }
 
   override func onSortOrderTapped(_ order: OfflineListView.Model.SortOrder) {
-    guard order != sortOrder else { return }
+    if order == sortOrder {
+      guard order != .manual else { return }
+      ascending.toggle()
+    } else {
+      sortOrder = order
+      ascending = true
+    }
 
-    sortOrder = order
-    UserPreferences.shared.offlineSortOrder = order
+    let preferences = UserPreferences.shared
+    preferences.offlineSortOrder = sortOrder
+    preferences.offlineSortAscending = ascending
 
-    allBooks = sortOrder.sort(allBooks)
+    allBooks = sortOrder.sort(allBooks, ascending: ascending)
     filteredBooks = allBooks
-    allEpisodes = sortOrder.sort(allEpisodes)
+    allEpisodes = sortOrder.sort(allEpisodes, ascending: ascending)
     filteredEpisodes = allEpisodes
 
     updateDisplayedItems()
@@ -153,7 +161,7 @@ extension OfflineListViewModel {
 
         if !self.isReordering {
           let downloaded = books.filter { $0.isDownloaded || $0.mediaType.contains(.ebook) }
-          self.allBooks = self.sortOrder.sort(downloaded)
+          self.allBooks = self.sortOrder.sort(downloaded, ascending: self.ascending)
           self.filteredBooks = self.allBooks
           self.updateDisplayedItems()
         }
@@ -169,7 +177,7 @@ extension OfflineListViewModel {
       for await episodes in LocalEpisode.observeAll() {
         guard !Task.isCancelled, let self else { break }
 
-        self.allEpisodes = self.sortOrder.sort(episodes.filter { $0.isDownloaded })
+        self.allEpisodes = self.sortOrder.sort(episodes.filter { $0.isDownloaded }, ascending: self.ascending)
         self.filteredEpisodes = self.allEpisodes
         self.updateDisplayedItems()
         self.isLoading = false
@@ -336,6 +344,7 @@ extension OfflineListViewModel {
 
 protocol DownloadDateSortable {
   var title: String { get }
+  var duration: TimeInterval { get }
   var downloadSortID: String { get }
   var downloadDate: Date { get }
 }
@@ -365,22 +374,43 @@ extension Array where Element: DownloadDateSortable {
       return first.downloadSortID < second.downloadSortID
     }
   }
-}
 
-extension OfflineListView.Model.SortOrder {
-  func sort(_ books: [LocalBook]) -> [LocalBook] {
-    switch self {
-    case .manual: books.sorted()
-    case .newest: books.sortedByDownloadDate(ascending: false)
-    case .oldest: books.sortedByDownloadDate(ascending: true)
+  func sortedByTitle(ascending: Bool) -> [Element] {
+    sorted { first, second in
+      let order = first.title.localizedStandardCompare(second.title)
+      guard order == .orderedSame else { return order == (ascending ? .orderedAscending : .orderedDescending) }
+
+      return first.downloadSortID < second.downloadSortID
     }
   }
 
-  func sort(_ episodes: [LocalEpisode]) -> [LocalEpisode] {
+  func sortedByDuration(ascending: Bool) -> [Element] {
+    sorted { first, second in
+      if first.duration != second.duration {
+        return ascending ? first.duration < second.duration : first.duration > second.duration
+      }
+
+      return first.downloadSortID < second.downloadSortID
+    }
+  }
+}
+
+extension OfflineListView.Model.SortOrder {
+  func sort(_ books: [LocalBook], ascending: Bool) -> [LocalBook] {
+    switch self {
+    case .manual: books.sorted()
+    case .downloadDate: books.sortedByDownloadDate(ascending: ascending)
+    case .title: books.sortedByTitle(ascending: ascending)
+    case .duration: books.sortedByDuration(ascending: ascending)
+    }
+  }
+
+  func sort(_ episodes: [LocalEpisode], ascending: Bool) -> [LocalEpisode] {
     switch self {
     case .manual: episodes
-    case .newest: episodes.sortedByDownloadDate(ascending: false)
-    case .oldest: episodes.sortedByDownloadDate(ascending: true)
+    case .downloadDate: episodes.sortedByDownloadDate(ascending: ascending)
+    case .title: episodes.sortedByTitle(ascending: ascending)
+    case .duration: episodes.sortedByDuration(ascending: ascending)
     }
   }
 }

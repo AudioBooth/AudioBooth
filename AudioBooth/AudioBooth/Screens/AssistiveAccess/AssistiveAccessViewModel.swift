@@ -17,7 +17,10 @@ final class AssistiveAccessViewModel: AssistiveAccessView.Model {
   private func loadBooks() {
     let downloadedBooks = (try? LocalBook.fetchAll().filter { $0.isDownloaded && $0.duration > 0 }) ?? []
 
-    books = UserPreferences.shared.offlineSortOrder.sort(downloadedBooks).map { book in
+    books = UserPreferences.shared.offlineSortOrder.sort(
+      downloadedBooks,
+      ascending: UserPreferences.shared.offlineSortAscending
+    ).map { book in
       Book(
         id: book.bookID,
         title: book.title,
