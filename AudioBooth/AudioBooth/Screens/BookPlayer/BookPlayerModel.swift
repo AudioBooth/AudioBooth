@@ -800,52 +800,6 @@ extension BookPlayerModel {
     }
   }
 
-  private func autoDownloadIfNeeded() {
-    guard episodeID == nil else { return }
-
-    let mode = userPreferences.autoDownloadBooks
-
-    guard let item, !item.isDownloaded, mode != .off else { return }
-
-    guard mode.isNetworkAllowed else {
-      AppLogger.player.debug("Auto-download skipped (mode: \(mode.rawValue))")
-      return
-    }
-
-    let delay = userPreferences.autoDownloadDelay
-    if delay == .none, let localBook = item as? LocalBook {
-      AppLogger.player.info("Auto-download starting (mode: \(mode.rawValue))")
-      try? localBook.download()
-    } else {
-      AppLogger.player.info("Auto-download will start after \(delay.displayName) of listening")
-    }
-  }
-
-  private func checkAutoDownloadAfterListening() {
-    guard episodeID == nil else { return }
-
-    let mode = userPreferences.autoDownloadBooks
-    let delay = userPreferences.autoDownloadDelay
-
-    guard let item,
-      !item.isDownloaded,
-      mode != .off,
-      delay != .none,
-      !downloadManager.isDownloading(for: id),
-      let session = sessionManager.current
-    else { return }
-
-    let listeningSeconds = Int(session.timeListening + session.pendingListeningTime)
-    guard listeningSeconds >= delay.rawValue else { return }
-
-    guard mode.isNetworkAllowed else { return }
-
-    AppLogger.player.info("Auto-download starting after \(listeningSeconds)s of listening")
-    if let localBook = item as? LocalBook {
-      try? localBook.download()
-    }
-  }
-
   private func setupAudioPlayer() throws {
     guard let session = sessionManager.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError("No active session")
@@ -983,6 +937,56 @@ extension BookPlayerModel {
     }
 
     AppLogger.player.info("Restored playback position and state after reload")
+  }
+}
+
+extension BookPlayerModel {
+  private func startAutoDownload() {
+    if let localBook = item as? LocalBook {
+      try? localBook.download()
+    } else if let episode = item as? LocalEpisode {
+      downloadManager.startDownload(episode)
+    }
+  }
+
+  private func autoDownloadIfNeeded() {
+    let mode = userPreferences.autoDownloadBooks
+
+    guard let item, !item.isDownloaded, mode != .off else { return }
+
+    guard mode.isNetworkAllowed else {
+      AppLogger.player.debug("Auto-download skipped (mode: \(mode.rawValue))")
+      return
+    }
+
+    let delay = userPreferences.autoDownloadDelay
+    if delay == .none {
+      AppLogger.player.info("Auto-download starting (mode: \(mode.rawValue))")
+      startAutoDownload()
+    } else {
+      AppLogger.player.info("Auto-download will start after \(delay.displayName) of listening")
+    }
+  }
+
+  private func checkAutoDownloadAfterListening() {
+    let mode = userPreferences.autoDownloadBooks
+    let delay = userPreferences.autoDownloadDelay
+
+    guard let item,
+      !item.isDownloaded,
+      mode != .off,
+      delay != .none,
+      !downloadManager.isDownloading(for: id),
+      let session = sessionManager.current
+    else { return }
+
+    let listeningSeconds = Int(session.timeListening + session.pendingListeningTime)
+    guard listeningSeconds >= delay.rawValue else { return }
+
+    guard mode.isNetworkAllowed else { return }
+
+    AppLogger.player.info("Auto-download starting after \(listeningSeconds)s of listening")
+    startAutoDownload()
   }
 }
 

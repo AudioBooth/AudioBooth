@@ -107,6 +107,25 @@ final class StorageManager {
           DownloadManager.shared.deleteDownload(for: book.bookID)
         }
       }
+
+      let episodeDescriptor = FetchDescriptor<LocalEpisode>()
+      let downloadedEpisodes = try context.fetch(episodeDescriptor).filter(\.isDownloaded)
+
+      for episode in downloadedEpisodes {
+        guard episode.episodeID != currentlyPlaying, let podcastID = episode.podcast?.podcastID else { continue }
+
+        let episodeID = episode.episodeID
+        let progressPredicate = #Predicate<MediaProgress> { $0.bookID == episodeID }
+        let progressDescriptor = FetchDescriptor<MediaProgress>(predicate: progressPredicate)
+        let progress = try? context.fetch(progressDescriptor).first
+
+        let lastUsed = progress?.lastPlayedAt ?? episode.downloadedAt ?? episode.createdAt
+
+        if lastUsed < cutoffDate {
+          AppLogger.download.info("Removing unused episode download: \(episode.title) (last used: \(lastUsed))")
+          DownloadManager.shared.deleteEpisodeDownload(episodeID: episodeID, podcastID: podcastID)
+        }
+      }
     } catch {
       AppLogger.download.error("Failed to cleanup downloads for server \(activeServerID): \(error)")
     }

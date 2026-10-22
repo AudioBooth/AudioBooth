@@ -48,11 +48,11 @@ struct StoragePreferencesView: View {
             PreferenceRow(
               systemImage: "arrow.down.circle",
               tint: .green,
-              title: "Auto-Download Books",
-              subtitle: "Pull new books over automatically"
+              title: "Auto-Download",
+              subtitle: "Download books and episodes as you play them"
             )
 
-            modePicker($preferences.autoDownloadBooks, accessibilityLabel: "Auto-Download Books")
+            modePicker($preferences.autoDownloadBooks, accessibilityLabel: "Auto-Download")
               .padding(.bottom, 4)
           }
 
@@ -176,7 +176,7 @@ struct StoragePreferencesView: View {
               Text("Remove After Unused For")
                 .font(.subheadline)
                 .fontWeight(.medium)
-              Text("Auto-clean books you haven't opened")
+              Text("Auto-clean downloads with no recent activity")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
