@@ -107,14 +107,10 @@ final class EpisodeCardModel: EpisodeCard.Model {
   private func loadBackgroundColor(_ coverURL: URL) async {
     let request = ImageRequest(url: coverURL, processors: [.resize(width: 40)])
     guard let image = try? await ImagePipeline.shared.image(for: request),
-      let averageColor = image.averageColor
+      let palette = image.coverPalette
     else { return }
 
-    var hue: CGFloat = 0
-    var saturation: CGFloat = 0
-    var brightness: CGFloat = 0
-    averageColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
-    let color = Color(hue: hue, saturation: saturation, brightness: min(brightness, 0.4))
+    let color = Color(palette.background)
     Self.backgroundColors[coverURL] = color
     backgroundColor = color
   }
