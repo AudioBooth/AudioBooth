@@ -834,6 +834,17 @@ extension TimerPickerSheetViewModel {
     updateLiveActivity(state)
     SleepTimerActivityCleanup.shared.schedule(for: .paused)
   }
+
+  func pauseLiveActivityIfNeeded() {
+    switch current {
+    case .preset, .custom:
+      guard preferences.timerPauseBehavior != .none else { return }
+    case .chapters, .atTime, .duration, .none:
+      break
+    }
+    pauseLiveActivity()
+  }
+
   func resumeLiveActivityIfNeeded() {
     guard liveActivity != nil else { return }
 
@@ -860,6 +871,7 @@ extension TimerPickerSheetViewModel {
   func updateLiveActivity(_ state: Any) {}
   func endLiveActivity() {}
   func pauseLiveActivity(remaining: TimeInterval? = nil) {}
+  func pauseLiveActivityIfNeeded() {}
   func resumeLiveActivityIfNeeded() {}
   #endif
 }

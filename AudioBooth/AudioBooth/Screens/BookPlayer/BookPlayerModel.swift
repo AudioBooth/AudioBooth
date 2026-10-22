@@ -1050,7 +1050,7 @@ extension BookPlayerModel {
           case .paused, .stopped:
             self.handlePlaybackStateChange(false)
             self.isLoading = false
-            (self.timer as? TimerPickerSheetViewModel)?.pauseLiveActivity()
+            (self.timer as? TimerPickerSheetViewModel)?.pauseLiveActivityIfNeeded()
           case .buffering:
             self.isLoading = true
           case .ready:
