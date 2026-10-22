@@ -41,8 +41,6 @@ extension PodcastEpisode {
     audioTrack = try container.decodeIfPresent(AudioTrack.self, forKey: .audioTrack)
     audioFile = try container.decodeIfPresent(AudioFile.self, forKey: .audioFile)
 
-    let decodedDuration = try container.decodeIfPresent(Double.self, forKey: .duration)
-    let candidates = [decodedDuration, audioTrack?.duration, audioFile?.duration]
-    duration = candidates.compactMap { $0 }.first(where: { $0 > 0 }) ?? decodedDuration
+    duration = try container.decodeIfPresent(Double.self, forKey: .duration) ?? audioFile?.duration
   }
 }
