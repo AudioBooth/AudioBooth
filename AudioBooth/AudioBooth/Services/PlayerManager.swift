@@ -603,8 +603,8 @@ extension PlayerManager {
     playItem(first, autoPlay: true)
   }
 
-  func playNext(autoPlay: Bool = true) {
-    if !queue.isEmpty, userPreferences.autoPlayNextInQueue {
+  func playNext(autoPlay: Bool = true, isManual: Bool = false) {
+    if !queue.isEmpty, isManual || userPreferences.autoPlayNextInQueue {
       let nextItem = queue.removeFirst()
       playItem(nextItem, autoPlay: autoPlay)
       return

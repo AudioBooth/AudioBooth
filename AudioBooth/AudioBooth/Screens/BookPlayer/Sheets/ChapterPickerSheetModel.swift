@@ -5,20 +5,20 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   let player: AudioPlayer
 
   private var itemID: String
-  private var hasSmartContinueNext = false
-  private var smartContinueTask: Task<Void, Never>?
+  private let podcastID: String?
 
   private let mediaProgress: MediaProgress
   private let playerManager = PlayerManager.shared
-  private let userPreferences = UserPreferences.shared
 
   init(
     itemID: String,
+    podcastID: String?,
     chapters: [Models.Chapter],
     mediaProgress: MediaProgress,
     player: AudioPlayer
   ) {
     self.itemID = itemID
+    self.podcastID = podcastID
     self.mediaProgress = mediaProgress
     self.player = player
 
@@ -73,22 +73,10 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   private func updateNavigation() {
     canGoPreviousChapter = currentIndex > 0
     let isLastChapter = currentIndex == chapters.count - 1
-    if isLastChapter { resolveSmartContinueNext() }
+    let hasChapters = chapters.count > 1
     canGoNextChapter =
-      !isLastChapter || (!playerManager.queue.isEmpty && userPreferences.autoPlayNextInQueue)
-      || hasSmartContinueNext
-  }
-
-  private func resolveSmartContinueNext() {
-    guard smartContinueTask == nil, let current = playerManager.current, current.id == itemID else { return }
-    smartContinueTask = Task { [weak self] in
-      let next = await SmartContinueResolver().resolve(
-        currentItemID: current.id,
-        currentPodcastID: current.podcastID
-      )
-      self?.hasSmartContinueNext = next != nil
-      self?.updateNavigation()
-    }
+      !isLastChapter || !playerManager.queue.isEmpty
+      || (hasChapters && SmartContinueResolver().isEnabled(currentPodcastID: podcastID))
   }
 
   override func onRepeatTapped() {
@@ -138,7 +126,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     guard currentIndex < chapters.count - 1 else {
       mediaProgress.currentTime = mediaProgress.duration
       player.pause()
-      playerManager.playNext()
+      playerManager.playNext(isManual: true)
       return
     }
     currentIndex += 1

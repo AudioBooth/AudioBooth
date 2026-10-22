@@ -903,6 +903,7 @@ extension BookPlayerModel {
 
     chapters = ChapterPickerSheetViewModel(
       itemID: id,
+      podcastID: podcastID,
       chapters: resolvedChapters,
       mediaProgress: mediaProgress,
       player: player
