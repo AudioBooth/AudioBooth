@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [1.13.0]
+
+### Added
 - EPUB 3 narration - EPUBs with built-in narration (Media Overlays) can now be downloaded to listen like an audiobook, with the full player, chapters, and progress sync. Read Along highlights the narrated sentence in the reader, and turning pages while paused moves the narration to your page
 - Assistive Access support - AudioBooth now works in Assistive Access mode, with a simplified list of your downloaded books and an easy to use player
 - Assisted Player - New player preference that shows a simplified player with only large play and skip buttons
