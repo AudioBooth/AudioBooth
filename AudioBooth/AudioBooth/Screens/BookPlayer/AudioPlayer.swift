@@ -62,8 +62,12 @@ final class AudioPlayer {
     player.timeControlStatus != .paused
   }
 
-  var targetTime: TimeInterval {
-    pendingSeekTarget ?? time
+  func isPositioned(at target: TimeInterval) -> Bool {
+    if let pendingSeekTarget {
+      return abs(pendingSeekTarget - target) <= 1
+    }
+    guard player.currentItem?.status == .readyToPlay else { return false }
+    return abs(time - target) <= 1
   }
 
   var isUsingRemoteURLs: Bool {

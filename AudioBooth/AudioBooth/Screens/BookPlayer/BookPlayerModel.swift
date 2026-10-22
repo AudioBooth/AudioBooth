@@ -1051,9 +1051,7 @@ extension BookPlayerModel {
       guard let self else { return }
 
       RunLoop.main.perform {
-        if !self.isPlaying, let player = self.player,
-          abs(player.targetTime - self.mediaProgress.currentTime) > 1
-        {
+        if !self.isPlaying, let player = self.player, !player.isPositioned(at: self.mediaProgress.currentTime) {
           player.seek(to: self.mediaProgress.currentTime)
         }
         self.observeMediaProgress()
