@@ -331,6 +331,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     metadata.language = language
     metadata.durationText = durationText
     metadata.size = size.map { $0.formatted(.byteCount(style: .file)) }
+    metadata.bitrate = hasAudio ? bitrateText(for: tracks) : nil
     metadata.hasAudio = hasAudio
     metadata.isEbook = isEbook
     isNarrated = localBook?.hasImportedNarration == true
@@ -370,6 +371,15 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
     self.tabs = tabs
     updateActions()
+  }
+
+  private func bitrateText(for tracks: [Track]?) -> String? {
+    let bitrates = tracks?.compactMap(\.bitRate).map { $0 / 1000 } ?? []
+    guard let minBitrate = bitrates.min(), let maxBitrate = bitrates.max() else { return nil }
+    if minBitrate == maxBitrate {
+      return "\(minBitrate) kbps"
+    }
+    return "\(minBitrate)–\(maxBitrate) kbps"
   }
 
   private func convertChapters(

@@ -54,6 +54,15 @@ struct MetadataSection: View {
           .font(.subheadline)
         }
 
+        if let bitrate = model.bitrate {
+          HStack {
+            Image(systemName: "speedometer")
+              .accessibilityHidden(true)
+            Text("**Bitrate:** \(bitrate)")
+          }
+          .font(.subheadline)
+        }
+
         if let narrationSize = model.narrationSize {
           HStack {
             Image(systemName: "waveform")
@@ -75,6 +84,7 @@ extension MetadataSection {
     var language: String?
     var durationText: String?
     var size: String?
+    var bitrate: String?
     var narrationSize: String?
     var hasAudio: Bool
     var isEbook: Bool
@@ -85,6 +95,7 @@ extension MetadataSection {
       language: String? = nil,
       durationText: String? = nil,
       size: String? = nil,
+      bitrate: String? = nil,
       hasAudio: Bool = false,
       isEbook: Bool = false
     ) {
@@ -93,6 +104,7 @@ extension MetadataSection {
       self.language = language
       self.durationText = durationText
       self.size = size
+      self.bitrate = bitrate
       self.hasAudio = hasAudio
       self.isEbook = isEbook
     }
