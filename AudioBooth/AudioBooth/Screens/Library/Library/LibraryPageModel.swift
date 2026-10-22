@@ -55,6 +55,7 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
+        sortOptions: SortBy.bookOptions,
         title: name
       )
     case .narrator(let name, let libraryID):
@@ -63,6 +64,7 @@ final class LibraryPageModel: LibraryPage.Model {
       super.init(
         hasMorePages: true,
         isRoot: false,
+        sortOptions: SortBy.bookOptions,
         title: name
       )
     case .genre(let name, let libraryID):
@@ -338,7 +340,7 @@ final class LibraryPageModel: LibraryPage.Model {
       let response = try await audiobookshelf.books.fetch(
         limit: itemsPerPage,
         page: currentPage,
-        sortBy: isRoot ? self.sortBy : nil,
+        sortBy: self.sortBy,
         ascending: ascending,
         collapseSeries: collapseSeries,
         filter: filter,
