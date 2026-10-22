@@ -453,21 +453,8 @@ struct BookDetailsView: View {
 
   private var actionButtons: some View {
     VStack(spacing: 12) {
-      if model.metadata.hasAudio && !model.isNarrated {
+      if model.metadata.hasAudio {
         playButton
-      }
-
-      if model.metadata.isEbook {
-        Button(action: model.onReadTapped) {
-          Label("Read", systemImage: "book.fill")
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background {
-              actionBackground(progress: model.progress.ebook)
-            }
-            .foregroundColor(.white)
-            .cornerRadius(12)
-        }
       }
 
       if isNarrationButtonVisible {
@@ -484,8 +471,17 @@ struct BookDetailsView: View {
         .disabled(model.isPreparingNarration)
       }
 
-      if model.metadata.hasAudio && model.isNarrated {
-        playButton
+      if model.metadata.isEbook {
+        Button(action: model.onReadTapped) {
+          Label("Read", systemImage: "book.fill")
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background {
+              actionBackground(progress: model.progress.ebook)
+            }
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
       }
     }
   }
@@ -728,7 +724,6 @@ extension BookDetailsView {
     var ereaderDevices: [String]
     var ebookReader: EbookReaderView.Model?
     var isPreparingNarration = false
-    var isNarrated = false
 
     var tabs: [ContentTab]
     var metadata: MetadataSection.Model

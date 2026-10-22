@@ -334,7 +334,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     metadata.bitrate = hasAudio ? bitrateText(for: tracks) : nil
     metadata.hasAudio = hasAudio
     metadata.isEbook = isEbook
-    isNarrated = localBook?.hasImportedNarration == true
 
     if let book {
       self.bookmarks = BookmarkViewerSheetViewModel(item: .remote(book))
