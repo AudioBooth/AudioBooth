@@ -26,6 +26,26 @@ struct WatchHomeSection: Identifiable, Hashable {
   let count: Int
 }
 
+struct PhonePlayback {
+  let bookID: String
+  let currentTime: Double
+  let isPlaying: Bool
+  let savedAt: Date
+
+  init?(dictionary: [String: Any]) {
+    guard let bookID = dictionary["bookID"] as? String,
+      let currentTime = dictionary["currentTime"] as? Double,
+      let isPlaying = dictionary["isPlaying"] as? Bool,
+      let savedAt = dictionary["savedAt"] as? Double
+    else { return nil }
+
+    self.bookID = bookID
+    self.currentTime = currentTime
+    self.isPlaying = isPlaying
+    self.savedAt = Date(timeIntervalSince1970: savedAt)
+  }
+}
+
 final class WatchConnectivityManager: NSObject, ObservableObject {
   static let shared = WatchConnectivityManager()
 
@@ -37,6 +57,11 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var homeSections: [WatchHomeSection] = []
   private var chapterProgress: Double?
   private var currentBook: WatchBook?
+  private var currentBookChapterStarts: [Double] = []
+  private var currentBookChapterTitles: [String] = []
+  private var loadingCoverBookID: String?
+  private var phonePlayback: PhonePlayback?
+  private let phonePlaybackMaxAge: TimeInterval = 3600
   private var connectionData: Data?
 
   var customHeaders: [String: String] {
@@ -663,8 +688,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
   func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
     Task { @MainActor in
-      if userInfo["command"] as? String == "downloadBook" {
+      switch userInfo["command"] as? String {
+      case "downloadBook":
         handleDownloadRequest(userInfo)
+      case "complication":
+        handleComplicationUpdate(userInfo)
+      default:
+        break
       }
       completeBackgroundTasksIfNeeded()
     }
@@ -682,7 +712,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
     hasCurrentBook = context["hasCurrentBook"] as? Bool ?? false
     playbackRate = context["playbackRate"] as? Float ?? 1.0
     chapterProgress = context["chapterProgress"] as? Double
-    currentBook = (context["currentBook"] as? [String: Any]).flatMap { WatchBook(dictionary: $0) }
+    updateCurrentBook(context["currentBook"] as? [String: Any])
+    updatePhonePlayback(context["nowPlaying"] as? [String: Any])
 
     let continueListeningData = context["continueListening"] as? [[String: Any]] ?? []
     handleContinueListening(continueListeningData)
@@ -781,26 +812,91 @@ extension WatchConnectivityManager: WCSessionDelegate {
     updateComplication()
   }
 
+  private func handleComplicationUpdate(_ userInfo: [String: Any]) {
+    if let rate = userInfo["playbackRate"] as? Float {
+      playbackRate = rate
+    }
+    if updatePhonePlayback(userInfo["nowPlaying"] as? [String: Any]) {
+      updateCurrentBook(userInfo["currentBook"] as? [String: Any])
+    }
+    handleProgress(
+      userInfo["progress"] as? [String: Double] ?? [:],
+      updatedAt: userInfo["progressUpdatedAt"] as? [String: Double] ?? [:]
+    )
+  }
+
+  private func updateCurrentBook(_ dictionary: [String: Any]?) {
+    currentBook = dictionary.flatMap { WatchBook(dictionary: $0) }
+    currentBookChapterStarts = dictionary?["chapterStarts"] as? [Double] ?? []
+    currentBookChapterTitles = dictionary?["chapterTitles"] as? [String] ?? []
+  }
+
+  @discardableResult
+  private func updatePhonePlayback(_ dictionary: [String: Any]?) -> Bool {
+    let latestPhonePlayback = dictionary.flatMap { PhonePlayback(dictionary: $0) }
+    guard (latestPhonePlayback?.savedAt ?? .distantFuture) >= (phonePlayback?.savedAt ?? .distantPast) else {
+      return false
+    }
+
+    phonePlayback = latestPhonePlayback
+    return true
+  }
+
   func updateComplication() {
-    if WatchComplicationStorage.load()?.isPlaying == true {
+    if PlayerManager.shared.isPlayingOnWatch {
       return
     }
 
     if var book = currentBook ?? continueListeningBooks.first {
       book.currentTime = progress[book.id] ?? book.currentTime
+      let playback = phonePlayback?.bookID == book.id && phonePlayback?.isPlaying == true ? phonePlayback : nil
+      let isCurrentBook = book.id == currentBook?.id
+      let chapterStarts = isCurrentBook ? currentBookChapterStarts : book.chapters.map(\.start)
+      let chapterTitles = isCurrentBook ? currentBookChapterTitles : book.chapters.map(\.title)
       let state = WatchComplicationState(
         bookTitle: book.title,
         progress: book.progress,
         chapterProgress: chapterProgress,
-        currentTime: book.currentTime,
+        currentTime: playback?.currentTime ?? book.currentTime,
         duration: book.duration,
-        isPlaying: false
+        isPlaying: playback?.isPlaying ?? false,
+        savedAt: playback?.savedAt,
+        playbackRate: Double(playbackRate),
+        chapterStarts: chapterStarts.isEmpty ? nil : chapterStarts,
+        playbackExpiresAt: playback?.savedAt.addingTimeInterval(phonePlaybackMaxAge),
+        bookID: book.id,
+        chapterTitles: chapterTitles.isEmpty ? nil : chapterTitles
       )
       WatchComplicationStorage.save(state)
+      updateComplicationCover(bookID: book.id, coverURL: book.coverURL)
     } else {
       WatchComplicationStorage.clear()
     }
     WidgetCenter.shared.reloadAllTimelines()
+  }
+
+  func updateComplicationCover(bookID: String, coverURL: URL?) {
+    guard let coverURL, loadingCoverBookID != bookID, !WatchComplicationStorage.hasCover(for: bookID) else { return }
+
+    loadingCoverBookID = bookID
+    Task {
+      defer { loadingCoverBookID = nil }
+
+      let request = ImageRequest(
+        url: coverURL,
+        processors: [ImageProcessors.Resize(size: CGSize(width: 100, height: 100), unit: .pixels, crop: true)]
+      )
+      do {
+        let image = try await ImagePipeline.shared.image(for: request)
+        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        WatchComplicationStorage.saveCover(data, for: bookID)
+      } catch {
+        AppLogger.watchConnectivity.error("Failed to load complication cover for \(bookID): \(error)")
+        return
+      }
+
+      WidgetCenter.shared.reloadAllTimelines()
+    }
   }
 
 }

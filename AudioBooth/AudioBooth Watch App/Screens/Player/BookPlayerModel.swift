@@ -116,7 +116,9 @@ final class BookPlayerModel: PlayerView.Model {
         break
       }
 
-    case .seek:
+    case .seek(let time):
+      current = time
+      updateCurrentChapter(currentTime: time)
       updateComplicationState()
 
     case .finished:
@@ -495,10 +497,10 @@ final class BookPlayerModel: PlayerView.Model {
 
     for (index, chapter) in chapters.enumerated() {
       if currentTime >= chapter.start && currentTime < chapter.end {
-        if currentChapterIndex != index {
+        let chapterChanged = currentChapterIndex != index
+        if chapterChanged {
           currentChapterIndex = index
           self.chapters?.currentIndex = index
-          updateComplicationState()
         }
 
         chapterTitle = chapter.title
@@ -506,6 +508,10 @@ final class BookPlayerModel: PlayerView.Model {
         chapterRemaining = chapter.end - currentTime
         let chapterDuration = chapter.end - chapter.start
         chapterProgress = chapterDuration > 0 ? (currentTime - chapter.start) / chapterDuration : 0
+
+        if chapterChanged {
+          updateComplicationState()
+        }
         return
       }
     }
@@ -567,9 +573,13 @@ final class BookPlayerModel: PlayerView.Model {
       savedAt: Date(),
       playbackRate: Double(audioPlayer.rate),
       chapterStart: chapter?.start,
-      chapterEnd: chapter?.end
+      chapterEnd: chapter?.end,
+      chapterStarts: book.chapters.isEmpty ? nil : book.chapters.map(\.start),
+      bookID: book.id,
+      chapterTitles: book.chapters.isEmpty ? nil : book.chapters.map(\.title)
     )
     WatchComplicationStorage.save(state)
+    connectivityManager.updateComplicationCover(bookID: book.id, coverURL: book.coverURL)
     WidgetCenter.shared.reloadAllTimelines()
   }
 

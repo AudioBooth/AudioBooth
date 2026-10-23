@@ -58,7 +58,9 @@ final class WidgetManager {
       title: title,
       author: author,
       coverURL: coverURL,
-      duration: mediaProgress.duration
+      duration: mediaProgress.duration,
+      chapterStarts: chapters?.chapters.map(\.start) ?? [],
+      chapterTitles: chapters?.chapters.map(\.title) ?? []
     )
     update()
     watchConnectivity.sendPlaybackRate(player.rate)
@@ -107,7 +109,7 @@ final class WidgetManager {
         nil
       }
 
-    watchConnectivity.syncProgress(id, chapterProgress: chapterProgress)
+    watchConnectivity.syncProgress(id, chapterProgress: chapterProgress, isPlaying: player?.isPlaybackActive ?? false)
   }
 
   private func observeProgressChanges() {
