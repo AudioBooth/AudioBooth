@@ -13,6 +13,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   private var pendingLocalSessions: [String: [String: Any]] = [:]
   private var localSessionSyncTask: Task<Bool, Never>?
   private var lastQueuedDownloadsRefresh: Date?
+  private var lastComplicationTransfer: (savedAt: Date, currentTime: Double, rate: Float)?
+  private var rateTransferTask: Task<Void, Never>?
 
   private var syncedLocalSessions: [String: Double] {
     didSet { UserDefaults.standard.set(syncedLocalSessions, forKey: Keys.syncedLocalSessions) }
@@ -54,7 +56,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     SessionService.deviceID + "-watch"
   }
 
-  func syncProgress(_ bookID: String, chapterProgress: Double? = nil) {
+  func syncProgress(_ bookID: String, chapterProgress: Double? = nil, isPlaying: Bool = false) {
     guard let current = try? MediaProgress.fetch(bookID: bookID) else { return }
 
     var progress = context["progress"] as? [String: Double] ?? [:]
@@ -72,7 +74,23 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       context.removeValue(forKey: "chapterProgress")
     }
 
+    let wasPlaying = isPhonePlaying
+    context["nowPlaying"] = [
+      "bookID": bookID,
+      "currentTime": current.currentTime,
+      "isPlaying": isPlaying,
+      "savedAt": Date().timeIntervalSince1970,
+    ]
+
     updateContext()
+
+    if wasPlaying != isPlaying {
+      transferComplicationUpdate()
+    } else if isPlaying, needsComplicationRefresh(currentTime: current.currentTime) {
+      transferComplicationUpdate()
+    } else if isPlaying, (context["playbackRate"] as? Float) != lastComplicationTransfer?.rate {
+      scheduleRateTransfer()
+    }
   }
 
   func syncContinueListening(books: [Book]) {
@@ -184,6 +202,52 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
+  private var isPhonePlaying: Bool {
+    (context["nowPlaying"] as? [String: Any])?["isPlaying"] as? Bool ?? false
+  }
+
+  private func needsComplicationRefresh(currentTime: Double) -> Bool {
+    guard let lastComplicationTransfer else { return true }
+
+    let elapsed = Date().timeIntervalSince(lastComplicationTransfer.savedAt)
+    let expectedTime = lastComplicationTransfer.currentTime + elapsed * Double(lastComplicationTransfer.rate)
+    return elapsed > 30 * 60 || abs(currentTime - expectedTime) > 60
+  }
+
+  private func scheduleRateTransfer() {
+    rateTransferTask?.cancel()
+    rateTransferTask = Task {
+      try? await Task.sleep(for: .seconds(2))
+      guard !Task.isCancelled else { return }
+      transferComplicationUpdate()
+    }
+  }
+
+  private func transferComplicationUpdate() {
+    rateTransferTask?.cancel()
+
+    guard let session, session.activationState == .activated, session.isComplicationEnabled else { return }
+
+    var userInfo: [String: Any] = ["command": "complication"]
+    userInfo["nowPlaying"] = context["nowPlaying"]
+    userInfo["currentBook"] = context["currentBook"]
+    userInfo["playbackRate"] = context["playbackRate"]
+    userInfo["progress"] = context["progress"]
+    userInfo["progressUpdatedAt"] = context["progressUpdatedAt"]
+    session.transferCurrentComplicationUserInfo(userInfo)
+
+    if let nowPlaying = context["nowPlaying"] as? [String: Any],
+      let savedAt = nowPlaying["savedAt"] as? Double,
+      let currentTime = nowPlaying["currentTime"] as? Double
+    {
+      lastComplicationTransfer = (
+        savedAt: Date(timeIntervalSince1970: savedAt),
+        currentTime: currentTime,
+        rate: context["playbackRate"] as? Float ?? 1
+      )
+    }
+  }
+
   func syncHomeSections(sections: [Personalized.Section], enabledSections: [HomeSection]) {
     let excludedIDs: Set<String> = ["continue-listening", "continue-reading"]
 
@@ -209,6 +273,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   func sendPlaybackRate(_ rate: Float?) {
+    let wasPlaying = isPhonePlaying
+
     if let rate {
       context["playbackRate"] = rate
       context["hasCurrentBook"] = true
@@ -217,18 +283,42 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       context.removeValue(forKey: "hasCurrentBook")
       context.removeValue(forKey: "chapterProgress")
       context.removeValue(forKey: "currentBook")
+
+      if var nowPlaying = context["nowPlaying"] as? [String: Any] {
+        nowPlaying["isPlaying"] = false
+        nowPlaying["savedAt"] = Date().timeIntervalSince1970
+        context["nowPlaying"] = nowPlaying
+      }
     }
 
     updateContext()
+
+    if wasPlaying != isPhonePlaying {
+      transferComplicationUpdate()
+    }
   }
 
-  func sendCurrentBook(id: String, title: String, author: String?, coverURL: URL?, duration: TimeInterval) {
+  func sendCurrentBook(
+    id: String,
+    title: String,
+    author: String?,
+    coverURL: URL?,
+    duration: TimeInterval,
+    chapterStarts: [Double] = [],
+    chapterTitles: [String] = []
+  ) {
+    let remoteCoverURL =
+      coverURL?.isFileURL == false
+      ? coverURL : Audiobookshelf.shared.authentication.serverURL?.appendingPathComponent("api/items/\(id)/cover")
+
     context["currentBook"] = [
       "id": id,
       "title": title,
       "author": author as Any,
-      "coverURL": watchCompatibleCoverURL(from: coverURL) as Any,
+      "coverURL": watchCompatibleCoverURL(from: remoteCoverURL) as Any,
       "duration": duration,
+      "chapterStarts": chapterStarts,
+      "chapterTitles": chapterTitles,
     ]
     updateContext()
   }

@@ -9,6 +9,11 @@ struct WatchComplicationEntry: TimelineEntry {
   let timeRemaining: TimeInterval?
   var bookInterval: ClosedRange<Date>? = nil
   var chapterInterval: ClosedRange<Date>? = nil
+  var playbackExpiresAt: Date? = nil
+  var chapterTitle: String? = nil
+  var chapterTimeRemaining: TimeInterval? = nil
+  var coverData: Data? = nil
+  var relevance: TimelineEntryRelevance? = nil
 
   static let empty = WatchComplicationEntry(
     date: Date(),
@@ -30,6 +35,10 @@ struct WatchComplicationState: Codable {
   var playbackRate: Double? = nil
   var chapterStart: Double? = nil
   var chapterEnd: Double? = nil
+  var chapterStarts: [Double]? = nil
+  var playbackExpiresAt: Date? = nil
+  var bookID: String? = nil
+  var chapterTitles: [String]? = nil
 
   var timeRemaining: TimeInterval {
     max(0, duration - currentTime)
@@ -58,5 +67,23 @@ enum WatchComplicationStorage {
 
   static func clear() {
     sharedDefaults?.removeObject(forKey: stateKey)
+  }
+
+  static func coverURL(for bookID: String) -> URL? {
+    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suiteName)?
+      .appending(path: "ComplicationCovers/\(bookID).jpg")
+  }
+
+  static func hasCover(for bookID: String) -> Bool {
+    guard let url = coverURL(for: bookID) else { return false }
+    return FileManager.default.fileExists(atPath: url.path())
+  }
+
+  static func saveCover(_ data: Data, for bookID: String) {
+    guard let url = coverURL(for: bookID) else { return }
+    let directory = url.deletingLastPathComponent()
+    try? FileManager.default.removeItem(at: directory)
+    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    try? data.write(to: url)
   }
 }

@@ -58,6 +58,10 @@ final class AudioPlayer {
     player.timeControlStatus == .playing
   }
 
+  var isPlaybackActive: Bool {
+    player.timeControlStatus != .paused
+  }
+
   var isUsingRemoteURLs: Bool {
     tracks.contains { url(for: $0)?.isFileURL == false }
   }

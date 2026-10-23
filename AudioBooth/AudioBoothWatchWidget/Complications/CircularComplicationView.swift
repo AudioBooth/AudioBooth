@@ -23,6 +23,8 @@ struct CircularComplicationView: View {
         dualRingTimerView(bookInterval: entry.bookInterval, chapterInterval: chapterInterval)
       } else if let chapterProgress = entry.chapterProgress {
         dualRingView(bookProgress: entry.progress, chapterProgress: chapterProgress)
+      } else if let bookInterval = entry.bookInterval {
+        singleTimerRingView(interval: bookInterval)
       } else {
         singleRingView(progress: entry.progress)
       }
@@ -77,6 +79,16 @@ struct CircularComplicationView: View {
     }
   }
 
+  private func singleTimerRingView(interval: ClosedRange<Date>) -> some View {
+    ZStack {
+      timerRing(interval: interval)
+        .padding(2)
+
+      Image(systemName: "book.fill")
+        .font(.caption)
+    }
+  }
+
   private func singleRingView(progress: Double) -> some View {
     Gauge(value: progress, in: 0...1) {
       EmptyView()
@@ -89,18 +101,10 @@ struct CircularComplicationView: View {
   }
 
   private func progressRing(progress: Double) -> some View {
-    ZStack {
-      Circle()
-        .stroke(lineWidth: ringWidth)
-        .opacity(0.2)
-
-      Circle()
-        .trim(from: 0, to: CGFloat(min(progress, 1.0)))
-        .stroke(style: StrokeStyle(lineWidth: ringWidth, lineCap: .round))
-        .rotationEffect(.degrees(-90))
-    }
-    .foregroundStyle(.orange)
-    .widgetAccentable()
+    ProgressView(value: min(max(progress, 0), 1))
+      .progressViewStyle(.circular)
+      .tint(.orange)
+      .widgetAccentable()
   }
 
   private var emptyStateView: some View {
