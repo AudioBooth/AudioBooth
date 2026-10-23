@@ -14,7 +14,7 @@ extension EbookReaderViewModel {
     return player
   }
 
-  func setupMediaOverlay(for publication: Publication) async {
+  func setupMediaOverlay(for publication: Publication) {
     guard navigator is EPUBNavigatorViewController,
       let bookID,
       let localBook = try? LocalBook.fetch(bookID: bookID),
@@ -23,15 +23,25 @@ extension EbookReaderViewModel {
       return
     }
 
-    mediaOverlayTimeline = await MediaOverlayTimeline.load(
-      from: publication,
-      trackStartOffsets: localBook.orderedTracks.map(\.startOffset)
-    )
+    let trackStartOffsets = localBook.orderedTracks.map(\.startOffset)
+    mediaOverlayLoad = Task { [weak self] in
+      let timeline = await MediaOverlayTimeline.load(from: publication, trackStartOffsets: trackStartOffsets)
+      guard let self else { return }
+
+      self.mediaOverlayTimeline = timeline
+      if timeline == nil {
+        self.mediaOverlayLoad = nil
+      }
+      self.supportsReadAlong = self.isReadAlongSupported
+    }
   }
 
   func toggleMediaOverlayReadAlong() {
-    if isFollowingMediaOverlay, narrationPlayer?.isPlaying == true {
+    guard mediaOverlayTimeline != nil else { return }
+
+    if isFollowingMediaOverlay, let narrationPlayer, narrationPlayer.isPlaying {
       stopFollowingMediaOverlay()
+      narrationPlayer.onPauseTapped()
       return
     }
 

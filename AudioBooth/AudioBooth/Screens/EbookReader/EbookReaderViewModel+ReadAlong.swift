@@ -19,13 +19,15 @@ extension EbookReaderViewModel {
   private static let decorationChecksAwaitingClear = 20
   private static let secondsBetweenDecorationAudits: TimeInterval = 2
   private static let maximumSecondsSuspendedBeforeRestarting: TimeInterval = 300
+  private static let secondsBetweenSessionChecks: TimeInterval = 0.25
+  private static let sessionChecksBeforeReadAlong = 40
 
   var isReadAlongSupported: Bool {
     if let bookID, (try? LocalBook.fetch(bookID: bookID))?.hasImportedNarration == true {
-      return mediaOverlayTimeline != nil
+      return mediaOverlayLoad != nil
     }
     guard #available(iOS 26.0, *), SpeechTranscriber.isAvailable else { return false }
-    return navigator is DecorableNavigator && matchingSession() != nil
+    return navigator is DecorableNavigator && hasAudiobook
   }
 
   func catchUpToNarration() {
@@ -43,10 +45,42 @@ extension EbookReaderViewModel {
     isCatchingUpToNarration = false
 
     guard let readAlong else {
-      startReadAlong()
+      if matchingSession() == nil {
+        Task { await playAudiobookForReadAlong() }
+      } else {
+        startReadAlong()
+      }
       return
     }
+
+    if readAlong.status.isActive {
+      narrationPlayer?.onPauseTapped()
+    }
     readAlong.toggle()
+  }
+
+  private func playAudiobookForReadAlong() async {
+    guard let bookID,
+      let localBook = try? LocalBook.fetch(bookID: bookID),
+      NarrationSource(downloaded: localBook.tracks) != nil
+    else {
+      Toast(error: String(localized: "Download this audiobook to use Read Along.")).show()
+      return
+    }
+
+    if PlayerManager.shared.current?.id != bookID {
+      PlayerManager.shared.setCurrent(localBook)
+    }
+    PlayerManager.shared.play()
+
+    var checks = 0
+    while matchingSession() == nil, checks < Self.sessionChecksBeforeReadAlong {
+      try? await Task.sleep(for: .seconds(Self.secondsBetweenSessionChecks))
+      checks += 1
+    }
+
+    guard readAlong == nil else { return }
+    startReadAlong()
   }
 
   func suspendReadAlong() {
@@ -177,7 +211,7 @@ extension EbookReaderViewModel {
     Haptics.impact(.medium)
   }
 
-  private func matchingSession() -> PlaybackSession? {
+  func matchingSession() -> PlaybackSession? {
     guard let bookID,
       PlayerManager.shared.current?.id == bookID,
       let session = SessionManager.shared.current,

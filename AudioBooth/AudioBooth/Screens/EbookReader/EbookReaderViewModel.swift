@@ -24,6 +24,13 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     case .temporary: return nil
     }
   }
+  var hasAudiobook: Bool {
+    switch source {
+    case .local(_, let bookID): return (try? LocalBook.fetch(bookID: bookID))?.mediaType.contains(.audiobook) == true
+    case .book(let book): return book.mediaType.contains(.audiobook)
+    case .temporary: return false
+    }
+  }
   private(set) var publication: Publication?
   private(set) var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
@@ -40,6 +47,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   var pendingReadAlongNavigation: Locator?
   var readAlongNavigationTask: Task<Void, Never>?
   var readerSuspendedAt: Date?
+  var mediaOverlayLoad: Task<Void, Never>?
   var mediaOverlayTimeline: MediaOverlayTimeline?
   var mediaOverlayClipIndex: Int?
   var mediaOverlayFollowTask: Task<Void, Never>?
@@ -128,8 +136,11 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onReadAlongTapped() {
-    guard mediaOverlayTimeline == nil else {
-      toggleMediaOverlayReadAlong()
+    if let mediaOverlayLoad {
+      Task {
+        await mediaOverlayLoad.value
+        toggleMediaOverlayReadAlong()
+      }
       return
     }
 
@@ -156,13 +167,13 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private func refreshCatchUpOffer() {
     guard #available(iOS 26.0, *) else { return }
 
-    guard catchUpCheck == nil, catchUpMessage == nil, readAlong == nil, mediaOverlayTimeline == nil,
+    guard catchUpCheck == nil, catchUpMessage == nil, readAlong == nil, mediaOverlayLoad == nil,
       UserPreferences.shared.positionSyncOffers
     else {
       return
     }
 
-    guard let bookID, supportsReadAlong,
+    guard let bookID, supportsReadAlong, matchingSession() != nil,
       let progress = try? MediaProgress.fetch(bookID: bookID),
       PositionSyncOffer.needsCheck(
         .toEbook,
@@ -326,6 +337,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       updateProgress()
       updateCurrentChapterIndex()
+      setupMediaOverlay(for: publication)
       supportsReadAlong = isReadAlongSupported
       refreshCatchUpOffer()
 
@@ -334,9 +346,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       isLoading = false
       updateAutoScroll()
-
-      await setupMediaOverlay(for: publication)
-      supportsReadAlong = isReadAlongSupported
     } catch {
       AppLogger.viewModel.error("Failed to load ebook: \(error)")
       self.error = "Failed to load ebook. Please try again."
