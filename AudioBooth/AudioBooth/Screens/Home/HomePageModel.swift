@@ -166,18 +166,8 @@ extension HomePageModel {
 
       switch section.entities {
       case .books(let items):
-        if section.id == "continue-listening" {
+        if section.id == "continue-listening" || section.id == "continue-reading" {
           continue
-        } else if section.id == "continue-reading" {
-          let books = items.map({ BookCardModel($0, sortBy: .title) })
-          let model = continueReading ?? .init(items: books)
-          model.items = books
-          continueReading = model
-          sectionsByID[section.id] = .init(
-            id: section.id,
-            title: title,
-            items: .continueBooks(model)
-          )
         } else if section.id == "continue-series" {
           let books = items.map({ BookCardModel($0, sortBy: .title, options: .showSequence) })
           sectionsByID[section.id] = .init(
@@ -246,6 +236,7 @@ extension HomePageModel {
     }
 
     let continueListeningSection = buildBooksContinueListeningSection() ?? buildEpisodesContinueListeningSection()
+    let continueReadingSection = buildContinueReadingSection()
     let pinnedPlaylistSection = buildPinnedPlaylistSection()
 
     var orderedSections: [Section] = []
@@ -263,6 +254,11 @@ extension HomePageModel {
       case .continueListening:
         if let continueListeningSection {
           orderedSections.append(continueListeningSection)
+        }
+
+      case .continueReading:
+        if let continueReadingSection {
+          orderedSections.append(continueReadingSection)
         }
 
       default:
@@ -304,7 +300,8 @@ extension HomePageModel {
 
     if let currentPlayerID = playerManager.current?.id,
       !booksToDisplay.contains(where: { $0.id == currentPlayerID }),
-      let currentLocalBook = try? LocalBook.fetch(bookID: currentPlayerID)
+      let currentLocalBook = try? LocalBook.fetch(bookID: currentPlayerID),
+      !currentLocalBook.hasImportedNarration
     {
       if let existingModel = existingModels[currentPlayerID] {
         models.append(existingModel)
@@ -351,6 +348,36 @@ extension HomePageModel {
     return Section(
       id: "continue-listening",
       title: String(localized: "Continue Listening"),
+      items: .continueBooks(model)
+    )
+  }
+
+  private func buildContinueReadingSection() -> Section? {
+    var books: [BookCard.Model] = []
+
+    if let section = personalizedSections.first(where: { $0.id == "continue-reading" }),
+      case .books(let items) = section.entities
+    {
+      books = items.map({ BookCardModel($0, sortBy: .title) })
+    }
+
+    if let currentPlayerID = playerManager.current?.id,
+      !books.contains(where: { $0.id == currentPlayerID }),
+      let currentLocalBook = try? LocalBook.fetch(bookID: currentPlayerID),
+      currentLocalBook.hasImportedNarration
+    {
+      books.insert(BookCardModel(currentLocalBook), at: 0)
+    }
+
+    guard !books.isEmpty else { return nil }
+
+    let model = continueReading ?? .init(items: books)
+    model.items = books
+    continueReading = model
+
+    return Section(
+      id: "continue-reading",
+      title: HomeSection.continueReading.displayName,
       items: .continueBooks(model)
     )
   }
