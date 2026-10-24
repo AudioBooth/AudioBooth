@@ -488,7 +488,7 @@ struct PodcastDetailsView: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(model.filteredEpisodes.isEmpty)
+        .disabled(model.filteredEpisodes.allSatisfy(\.isCompleted))
       }
       .padding(.horizontal)
 

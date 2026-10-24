@@ -103,7 +103,7 @@ struct EpisodeCard: View {
     HStack {
       Button(action: model.onPlayTapped) {
         HStack(spacing: 8) {
-          Image(systemName: "play.fill")
+          Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
 
           if model.progress > 0 && model.progress < 1 {
             ProgressView(value: model.progress)
@@ -124,7 +124,7 @@ struct EpisodeCard: View {
         .background(.white, in: .capsule)
       }
       .buttonStyle(.plain)
-      .accessibilityLabel("Play")
+      .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
       .accessibilityValue(model.playText ?? "")
 
       Spacer(minLength: 0)
@@ -156,6 +156,7 @@ extension EpisodeCard {
     let publishedAt: Date?
     let duration: Double?
     var progress: Double
+    var isPlaying = false
     var backgroundColor: Color?
     let contextMenu: PodcastEpisodeContextMenu.Model
 

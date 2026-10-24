@@ -9,7 +9,7 @@ struct DownloadingListView: View {
     ScrollView {
       VStack(spacing: 12) {
         ForEach(model.books) { book in
-          NavigationLink(value: NavigationDestination.book(id: book.id)) {
+          NavigationLink(value: book.destination) {
             Row(
               book: book,
               onCancel: { model.onCancelDownload(bookID: book.id) },
@@ -123,6 +123,7 @@ extension DownloadingListView {
     }
 
     let id: String
+    let destination: NavigationDestination
     let title: String
     var details: String?
     let coverURL: URL?

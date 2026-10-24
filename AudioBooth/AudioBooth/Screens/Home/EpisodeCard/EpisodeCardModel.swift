@@ -7,12 +7,13 @@ import SwiftUI
 final class EpisodeCardModel: EpisodeCard.Model {
   private static var backgroundColors: [URL: Color] = [:]
 
+  private let playerManager = PlayerManager.shared
   private var progressObservation: Task<Void, Never>?
+  private var cancellables = Set<AnyCancellable>()
 
   init(podcast: Podcast, episode: PodcastEpisode) {
     let progress = MediaProgress.progress(for: episode.id)
     let coverURL = podcast.coverURL(raw: true)
-    let duration = episode.duration ?? episode.audioTrack?.duration ?? episode.audioFile?.duration
 
     super.init(
       id: episode.id,
@@ -21,7 +22,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
       coverURL: coverURL,
       summary: episode.description?.htmlStripped,
       publishedAt: episode.publishedAt.map { Date(timeIntervalSince1970: Double($0) / 1000) },
-      duration: duration,
+      duration: episode.duration,
       progress: progress,
       contextMenu: PodcastEpisodeContextMenuModel(
         episodeID: episode.id,
@@ -30,7 +31,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
         podcastAuthor: podcast.author,
         coverURL: coverURL,
         episodeTitle: episode.title,
-        episodeDuration: duration,
+        episodeDuration: episode.duration,
         episodeSize: episode.audioTrack?.metadata?.size ?? episode.size,
         isCompleted: progress >= 1.0,
         progress: progress,
@@ -39,6 +40,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
     )
 
     observeMediaProgress()
+    observePlayer()
     setupBackgroundColor()
   }
 
@@ -71,6 +73,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
     )
 
     observeMediaProgress()
+    observePlayer()
     setupBackgroundColor()
   }
 
@@ -79,7 +82,37 @@ final class EpisodeCardModel: EpisodeCard.Model {
   }
 
   override func onPlayTapped() {
-    contextMenu.onPlayTapped()
+    if let current = playerManager.current, current.id == id {
+      current.onTogglePlaybackTapped()
+    } else {
+      contextMenu.onPlayTapped()
+    }
+  }
+
+  private func observePlayer() {
+    playerManager.$current
+      .sink { [weak self] current in
+        self?.observePlaybackState(current)
+      }
+      .store(in: &cancellables)
+  }
+
+  private func observePlaybackState(_ current: BookPlayer.Model?) {
+    guard let current, current.id == id else {
+      if isPlaying { isPlaying = false }
+      return
+    }
+
+    isPlaying = current.isPlaying
+
+    withObservationTracking {
+      _ = current.isPlaying
+    } onChange: { [weak self, weak current] in
+      Task { @MainActor [weak self, weak current] in
+        guard let self, let current, current === self.playerManager.current else { return }
+        self.observePlaybackState(current)
+      }
+    }
   }
 
   private func observeMediaProgress() {

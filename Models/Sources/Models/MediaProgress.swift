@@ -220,7 +220,9 @@ extension MediaProgress {
     -> MediaProgress
   {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
-      existingProgress.duration = duration
+      if duration > 0 {
+        existingProgress.duration = duration
+      }
       return existingProgress
     } else {
       let newProgress = MediaProgress(
