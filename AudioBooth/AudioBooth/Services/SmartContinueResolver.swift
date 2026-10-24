@@ -14,6 +14,13 @@ struct SmartContinueResolver {
   private let audiobookshelf = Audiobookshelf.shared
   private let preferences = UserPreferences.shared
 
+  func isEnabled(currentPodcastID: String?) -> Bool {
+    if currentPodcastID != nil {
+      return preferences.continueNextPodcastEpisode
+    }
+    return preferences.continueNextInSeries || preferences.continueNextDownloadedBook
+  }
+
   func resolve(
     currentItemID: String,
     currentPodcastID: String?
