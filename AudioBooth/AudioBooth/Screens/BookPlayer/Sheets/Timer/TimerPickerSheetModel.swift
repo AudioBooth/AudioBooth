@@ -20,6 +20,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
   private var sleepTimer: Timer?
   private var alarmTimer: Timer?
+  private var autoTimerWindowTimer: Timer?
   private var alarmSoundPlayer: AVAudioPlayer?
   private var originalTimerDuration: TimeInterval = 0
   private var lastObservedChapterIndex: Int = 0
@@ -55,6 +56,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   isolated deinit {
     sleepTimer?.invalidate()
     alarmTimer?.invalidate()
+    autoTimerWindowTimer?.invalidate()
     endLiveActivity()
   }
 
@@ -481,9 +483,12 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     guard mode != .off, current == .none else { return }
 
-    if trigger != .focus, isInAutoTimerWindow() {
-      startAutoTimer(mode: mode)
-      return
+    if trigger != .focus {
+      if isInAutoTimerWindow() {
+        startAutoTimer(mode: mode)
+        return
+      }
+      scheduleAutoTimerAtWindowStart()
     }
 
     guard trigger != .timeWindow else { return }
@@ -493,6 +498,38 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       guard let self, self.current == .none else { return }
       self.startAutoTimer(mode: self.preferences.autoTimerMode)
     }
+  }
+
+  private func scheduleAutoTimerAtWindowStart() {
+    autoTimerWindowTimer?.invalidate()
+
+    let startMinutes = preferences.autoTimerWindowStart
+    let components = DateComponents(hour: startMinutes / 60, minute: startMinutes % 60)
+    guard
+      let fireDate = Calendar.current.nextDate(after: Date(), matching: components, matchingPolicy: .nextTime)
+    else { return }
+
+    autoTimerWindowTimer = Timer.scheduledTimer(
+      withTimeInterval: fireDate.timeIntervalSinceNow,
+      repeats: false
+    ) { [weak self] _ in
+      guard let self else { return }
+      self.activateWindowTimer()
+    }
+  }
+
+  private func activateWindowTimer() {
+    guard preferences.autoTimerMode != .off,
+      preferences.autoTimerTrigger != .focus,
+      current == .none,
+      player.isPlaying,
+      isInAutoTimerWindow()
+    else {
+      return
+    }
+
+    AppLogger.player.info("Time window started during playback - starting auto-timer")
+    startAutoTimer(mode: preferences.autoTimerMode)
   }
 
   func activateFocusTimer() {
