@@ -134,14 +134,23 @@ final class PinnedPlaylistManager: ObservableObject {
     let downloadManager = DownloadManager.shared
 
     for item in playlist.items {
-      guard case .book(let book) = item.libraryItem else { continue }
+      switch item.libraryItem {
+      case .book(let book):
+        let progress = MediaProgress.progress(for: book.id)
+        guard progress < 1.0 else { continue }
+        guard downloadManager.downloadStates[book.id] != .downloaded else { continue }
+        guard !downloadManager.isDownloading(for: book.id) else { continue }
 
-      let progress = MediaProgress.progress(for: book.id)
-      guard progress < 1.0 else { continue }
-      guard downloadManager.downloadStates[book.id] != .downloaded else { continue }
-      guard !downloadManager.isDownloading(for: book.id) else { continue }
+        try? book.download()
 
-      try? book.download()
+      case .podcast(let podcast):
+        guard let episode = item.episode else { continue }
+        guard Audiobookshelf.shared.authentication.server?.permissions?.download == true else { continue }
+        guard MediaProgress.progress(for: episode.id) < 1.0 else { continue }
+        guard (downloadManager.downloadStates[episode.id] ?? .notDownloaded) == .notDownloaded else { continue }
+
+        downloadManager.startDownload(episode, podcastID: podcast.id, coverURL: podcast.coverURL())
+      }
     }
   }
 

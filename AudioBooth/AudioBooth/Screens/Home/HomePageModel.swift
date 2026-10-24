@@ -58,7 +58,7 @@ final class HomePageModel: HomePage.Model {
 
   override func onAppear() {
     Task {
-      await fetchContent()
+      await fetchRemoteContent()
     }
 
     downloadManager.updateDownloadStates()
@@ -69,7 +69,7 @@ final class HomePageModel: HomePage.Model {
       _ = try? await Audiobookshelf.shared.filterData.fetch()
     }
     discoverBooks = []
-    await fetchContent()
+    await fetchRemoteContent()
   }
 
   override func onReset(_ shouldRefresh: Bool) {
@@ -112,13 +112,6 @@ final class HomePageModel: HomePage.Model {
 }
 
 extension HomePageModel {
-  private func fetchContent() async {
-    async let pinnedPlaylistFetch = fetchPinnedPlaylist
-    async let remoteContentFetch = fetchRemoteContent
-
-    _ = await [pinnedPlaylistFetch(), remoteContentFetch()]
-  }
-
   private func fetchPinnedPlaylist() async {
     do {
       pinnedPlaylist = try await pinnedPlaylistManager.fetch()
@@ -504,8 +497,11 @@ extension HomePageModel {
           "Some features may be limited on server version \(version). For the best experience, please update your server."
       }
 
+      async let pinnedPlaylistFetch: Void = fetchPinnedPlaylist()
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
       guard personalized.libraryID == Audiobookshelf.shared.libraries.current?.id else { return }
+      await pinnedPlaylistFetch
+
       processSections(personalized.sections)
     } catch {
       AppLogger.viewModel.error("Failed to fetch personalized content: \(error)")
