@@ -350,6 +350,16 @@ struct EbookReaderView: View {
 
   @ViewBuilder
   private var readAlongIcon: some View {
+    if model.isFollowingMediaOverlay {
+      Image(systemName: "waveform")
+        .symbolEffect(.variableColor.iterative, options: .repeating, isActive: playerManager.isPlaying)
+    } else {
+      readAlongStatusIcon
+    }
+  }
+
+  @ViewBuilder
+  private var readAlongStatusIcon: some View {
     switch model.readAlong?.status {
     case .preparing:
       ProgressView()

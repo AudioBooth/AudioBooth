@@ -464,6 +464,7 @@ struct BookDetailsView: View {
             .padding()
             .background {
               actionBackground(progress: coverDownloadProgress)
+                .animation(.linear(duration: 0.5), value: coverDownloadProgress)
             }
             .foregroundColor(.white)
             .cornerRadius(12)
