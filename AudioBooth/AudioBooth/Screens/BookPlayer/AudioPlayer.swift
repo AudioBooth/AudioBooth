@@ -189,7 +189,9 @@ final class AudioPlayer {
         toleranceBefore: .zero,
         toleranceAfter: .zero
       ) { [weak self] _ in
-        self?.pendingSeekTarget = nil
+        if self?.pendingSeekTarget == time {
+          self?.pendingSeekTarget = nil
+        }
         self?.events.send(.seek(time))
       }
       return
@@ -203,7 +205,9 @@ final class AudioPlayer {
         toleranceBefore: .zero,
         toleranceAfter: .zero
       ) { [weak self] _ in
-        self?.pendingSeekTarget = nil
+        if self?.pendingSeekTarget == time {
+          self?.pendingSeekTarget = nil
+        }
         self?.events.send(.seek(time))
       }
       return
