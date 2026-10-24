@@ -22,7 +22,7 @@ struct PodcastDetailsView: View {
   var body: some View {
     GeometryReader { proxy in
       let size = layoutSize ?? proxy.size
-      if size.width > size.height {
+      if size.width > size.height, size.width >= 700 {
         landscapeLayout(coverWidth: proxy.leadingPanelWidth ?? 300)
       } else {
         portraitLayout

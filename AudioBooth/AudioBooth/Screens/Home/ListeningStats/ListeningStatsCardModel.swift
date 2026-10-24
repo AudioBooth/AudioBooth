@@ -45,6 +45,10 @@ final class ListeningStatsCardModel: ListeningStatsCard.Model {
 
     daysInARow = calculateDaysInARow(stats.days)
 
+    daysListened = stats.days.values.filter { $0 > 0 }.count
+    dailyAverage = daysListened > 0 ? stats.totalTime / Double(daysListened) : 0
+    itemsFinished = (try? MediaProgress.fetchAll().filter { $0.isFinished }.count) ?? 0
+
     isLoading = false
 
     syncWidgetStats(stats)

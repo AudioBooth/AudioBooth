@@ -82,12 +82,11 @@ struct BookPlayer: View {
           .tint(.primary)
         }
 
-        ToolbarItem(placement: .topBarTrailing) {
-          HStack(spacing: 0) {
-            AirPlayButton()
-              .frame(width: 36, height: 36)
-              .tint(.primary)
-          }
+        if #available(iOS 27.1, *) {
+          airPlayToolbarItem
+            .axisBehavior(.verticalPreferred)
+        } else {
+          airPlayToolbarItem
         }
 
         if #available(iOS 26.0, *) {
@@ -244,6 +243,16 @@ struct BookPlayer: View {
                 .tint(.primary)
             }
           }
+      }
+    }
+  }
+
+  private var airPlayToolbarItem: some ToolbarContent {
+    ToolbarItem(placement: .topBarTrailing) {
+      HStack(spacing: 0) {
+        AirPlayButton()
+          .frame(width: 36, height: 36)
+          .tint(.primary)
       }
     }
   }

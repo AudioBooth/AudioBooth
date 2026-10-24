@@ -21,8 +21,11 @@ struct BookDetailsView: View {
 
   var body: some View {
     GeometryReader { proxy in
-      if proxy.size.width > proxy.size.height {
-        landscapeLayout(coverWidth: proxy.leadingPanelWidth ?? 300)
+      if proxy.size.width > proxy.size.height, proxy.size.width >= 700 {
+        landscapeLayout(
+          coverWidth: proxy.leadingPanelWidth ?? proxy.size.width / 2,
+          showsActionButtonsUnderCover: proxy.size.height + proxy.safeAreaInsets.bottom >= 500
+        )
       } else {
         portraitLayout
       }
@@ -181,7 +184,7 @@ struct BookDetailsView: View {
           cover(offset: proxy.safeAreaInsets.top)
             .frame(height: 266 + proxy.safeAreaInsets.top)
 
-          contentSections
+          contentSections(showsActionButtons: true)
             .padding()
             .background(theme.colors.background.page.ignoresSafeArea())
         }
@@ -192,23 +195,25 @@ struct BookDetailsView: View {
     }
   }
 
-  private func landscapeLayout(coverWidth: CGFloat) -> some View {
+  private func landscapeLayout(coverWidth: CGFloat, showsActionButtonsUnderCover: Bool) -> some View {
     HStack(spacing: 0) {
-      simpleCover(width: coverWidth)
+      simpleCover(width: coverWidth, showsActionButtons: showsActionButtonsUnderCover)
 
       ScrollView {
-        contentSections
+        contentSections(showsActionButtons: !showsActionButtonsUnderCover)
           .padding()
       }
       .background(theme.colors.background.page.ignoresSafeArea())
     }
   }
 
-  private var contentSections: some View {
+  private func contentSections(showsActionButtons: Bool) -> some View {
     VStack(spacing: 16) {
       title
 
-      actionButtons
+      if showsActionButtons {
+        actionButtons
+      }
 
       headerSection
       MetadataSection(model: model.metadata)
@@ -344,7 +349,7 @@ struct BookDetailsView: View {
     }
   }
 
-  private func simpleCover(width: CGFloat) -> some View {
+  private func simpleCover(width: CGFloat, showsActionButtons: Bool) -> some View {
     VStack {
       Cover(
         model: Cover.Model(
@@ -363,6 +368,13 @@ struct BookDetailsView: View {
       .onTapGesture {
         guard model.coverURL != nil else { return }
         isShowingFullScreenCover = true
+      }
+
+      if showsActionButtons {
+        actionButtons
+          .buttonStyle(.borderless)
+          .frame(maxWidth: width * 2 / 3)
+          .padding([.horizontal, .bottom])
       }
     }
     .frame(width: width)

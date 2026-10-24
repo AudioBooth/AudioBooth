@@ -4,12 +4,13 @@ import SwiftUI
 
 struct ListeningStatsCard: View {
   @Environment(\.appTheme) var theme
+  @Environment(\.horizontalSizeClass) var horizontalSizeClass
   @StateObject var model: Model
   @State private var selectedDay: String?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      NavigationLink(value: NavigationDestination.stats) {
+    NavigationLink(value: NavigationDestination.stats) {
+      VStack(alignment: .leading, spacing: 12) {
         HStack {
           Text("Your Stats")
             .font(.title2)
@@ -22,23 +23,36 @@ struct ListeningStatsCard: View {
             .font(.body)
             .foregroundColor(.secondary)
         }
-        .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
 
-      HStack {
-        VStack(alignment: .leading, spacing: 12) {
-          if model.isLoading, model.weekData.isEmpty {
+        HStack(spacing: 0) {
+          if isShowingProgress {
             ProgressView()
               .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-          } else {
-            todaySection
+          } else if horizontalSizeClass == .regular {
+            recentSection
+              .padding(.horizontal, 16)
 
             Divider()
               .overlay(.secondary)
 
             weekSection
               .padding(.horizontal, 12)
+
+            Divider()
+              .overlay(.secondary)
+
+            totalsSection
+              .padding(.horizontal, 16)
+          } else {
+            VStack(alignment: .leading, spacing: 12) {
+              todaySection
+
+              Divider()
+                .overlay(.secondary)
+
+              weekSection
+                .padding(.horizontal, 12)
+            }
           }
         }
         .frame(minHeight: 180)
@@ -50,9 +64,86 @@ struct ListeningStatsCard: View {
             .stroke(.secondary.opacity(0.3), lineWidth: 2)
         )
       }
+      .contentShape(Rectangle())
     }
+    .buttonStyle(.plain)
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     .onAppear(perform: model.onAppear)
+  }
+
+  private var isShowingProgress: Bool {
+    model.isLoading && model.weekData.isEmpty
+  }
+
+  var recentSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      statRow(
+        icon: "clock.fill",
+        iconColor: .accentColor,
+        value: formatTime(model.todayTime),
+        label: "today"
+      )
+
+      statRow(
+        icon: "chart.bar.fill",
+        iconColor: .accentColor,
+        value: formatTime(model.totalTime),
+        label: "this week"
+      )
+
+      statRow(
+        icon: "flame.fill",
+        iconColor: .orange,
+        value: "\(model.daysInARow)",
+        label: "day streak"
+      )
+    }
+  }
+
+  var totalsSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      statRow(
+        icon: "calendar",
+        iconColor: Color(red: 0.24, green: 0.47, blue: 0.78),
+        value: "\(model.daysListened)",
+        label: "Days Listened"
+      )
+
+      statRow(
+        icon: "books.vertical.fill",
+        iconColor: Color(red: 0.48, green: 0.36, blue: 0.72),
+        value: "\(model.itemsFinished)",
+        label: "Items Finished"
+      )
+
+      statRow(
+        icon: "gauge.with.needle",
+        iconColor: .accentColor,
+        value: formatTime(model.dailyAverage),
+        label: "Daily Avg"
+      )
+    }
+  }
+
+  private func statRow(icon: String, iconColor: Color, value: String, label: LocalizedStringResource) -> some View {
+    HStack(spacing: 10) {
+      Image(systemName: icon)
+        .font(.footnote)
+        .foregroundStyle(iconColor)
+        .frame(width: 28, height: 28)
+        .background(iconColor.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+
+      VStack(alignment: .leading, spacing: 0) {
+        Text(verbatim: value)
+          .font(.callout)
+          .fontWeight(.semibold)
+
+        Text(label)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+      }
+    }
   }
 
   var todaySection: some View {
@@ -205,6 +296,9 @@ extension ListeningStatsCard {
     var totalTime: Double
     var weekData: [DayData]
     var daysInARow: Int
+    var daysListened: Int
+    var itemsFinished: Int
+    var dailyAverage: Double
 
     struct DayData: Identifiable {
       let id: String
@@ -219,13 +313,19 @@ extension ListeningStatsCard {
       todayTime: Double = 0,
       totalTime: Double = 0,
       weekData: [DayData] = [],
-      daysInARow: Int = 0
+      daysInARow: Int = 0,
+      daysListened: Int = 0,
+      itemsFinished: Int = 0,
+      dailyAverage: Double = 0
     ) {
       self.isLoading = isLoading
       self.todayTime = todayTime
       self.totalTime = totalTime
       self.weekData = weekData
       self.daysInARow = daysInARow
+      self.daysListened = daysListened
+      self.itemsFinished = itemsFinished
+      self.dailyAverage = dailyAverage
     }
   }
 }
@@ -245,7 +345,10 @@ extension ListeningStatsCard.Model {
     return ListeningStatsCard.Model(
       todayTime: 135,
       totalTime: 4321,
-      weekData: days
+      weekData: days,
+      daysListened: 171,
+      itemsFinished: 24,
+      dailyAverage: 900
     )
   }
 }
