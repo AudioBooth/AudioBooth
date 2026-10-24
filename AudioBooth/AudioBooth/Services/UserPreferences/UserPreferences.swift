@@ -666,6 +666,14 @@ enum ContinueSectionSize: Int, CaseIterable {
 
   var value: CGFloat { CGFloat(rawValue) }
 
+  var episodeCardWidth: CGFloat {
+    switch self {
+    case .default: 200
+    case .large: 240
+    case .extraLarge: 280
+    }
+  }
+
   var displayText: LocalizedStringResource {
     switch self {
     case .default: "Default"

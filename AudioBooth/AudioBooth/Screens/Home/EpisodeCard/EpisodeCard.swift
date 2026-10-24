@@ -6,7 +6,12 @@ import SwiftUI
 struct EpisodeCard: View {
   @ObservedObject var model: Model
 
-  @ScaledMetric(relativeTo: .title) private var width: CGFloat = 260
+  @Environment(\.episodeCardWidth) private var customWidth
+  @ScaledMetric(relativeTo: .title) private var defaultWidth: CGFloat = 200
+
+  private var width: CGFloat {
+    customWidth ?? defaultWidth
+  }
 
   private var backgroundColor: Color {
     model.backgroundColor ?? Color(white: 0.25)
@@ -37,14 +42,13 @@ struct EpisodeCard: View {
 
   private var content: some View {
     VStack(alignment: .leading, spacing: 6) {
-      Spacer(minLength: 0)
-
       if let publishedAt = model.publishedAt {
         Text(publishedAt.formatted(.dateTime.day().month(.wide).year()))
           .font(.caption2)
           .fontWeight(.medium)
           .textCase(.uppercase)
-          .foregroundStyle(.white.opacity(0.7))
+          .foregroundStyle(.white.opacity(0.85))
+          .shadow(color: .black.opacity(0.9), radius: 1)
       }
 
       Text(model.title)
@@ -52,12 +56,14 @@ struct EpisodeCard: View {
         .fontWeight(.semibold)
         .foregroundStyle(.white)
         .lineLimit(2)
+        .shadow(color: .black.opacity(0.9), radius: 1)
 
       if let summary = model.summary, !summary.isEmpty {
         Text(summary)
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.75))
           .lineLimit(2)
+          .shadow(color: .black.opacity(0.9), radius: 1)
       }
 
       controls
@@ -65,6 +71,13 @@ struct EpisodeCard: View {
     }
     .multilineTextAlignment(.leading)
     .padding(16)
+    .background {
+      LinearGradient(
+        colors: [0, 0.5, 0.75, 0.8, 0.85, 0.9, 0.95, 1].map { backgroundColor.opacity($0) },
+        startPoint: .top,
+        endPoint: .bottom
+      )
+    }
     .frame(width: width, height: width * 1.35, alignment: .bottomLeading)
     .background(alignment: .top) {
       artwork
@@ -89,9 +102,8 @@ struct EpisodeCard: View {
     .mask {
       LinearGradient(
         stops: [
-          .init(color: .black, location: 0.5),
-          .init(color: .black.opacity(0.15), location: 0.75),
-          .init(color: .clear, location: 0.95),
+          .init(color: .black, location: 0.8),
+          .init(color: .clear, location: 1),
         ],
         startPoint: .top,
         endPoint: .bottom

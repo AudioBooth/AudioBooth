@@ -12,9 +12,14 @@ struct HomePage: View {
 
   @ScaledMetric(relativeTo: .title) private var cardWidth: CGFloat = 120
   @ScaledMetric(relativeTo: .title) private var authorCardWidth: CGFloat = 80
+  @ScaledMetric(relativeTo: .title) private var episodeCardWidth: CGFloat = 200
 
   private var continueSectionWidth: CGFloat {
     preferences.continueSectionSize.value / 120 * cardWidth
+  }
+
+  private var continueEpisodeWidth: CGFloat {
+    preferences.continueSectionSize.episodeCardWidth / 200 * episodeCardWidth
   }
 
   private var title: Text {
@@ -320,6 +325,7 @@ struct HomePage: View {
           }
           .padding(.horizontal)
         }
+        .environment(\.episodeCardWidth, section.id == "continue-listening" ? continueEpisodeWidth : nil)
 
       case .series(let items):
         Text(section.title)

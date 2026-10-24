@@ -5,6 +5,7 @@ import SwiftUI
 extension EnvironmentValues {
   @Entry var itemDisplayMode: BookCard.DisplayMode = .card
   @Entry var coverSize: CGFloat? = nil
+  @Entry var episodeCardWidth: CGFloat? = nil
 }
 
 struct BookCard: View {
