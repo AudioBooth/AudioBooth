@@ -151,6 +151,7 @@ final class BookPlayerModel: BookPlayer.Model {
       id: episode.episodeID,
       title: episode.title,
       author: episode.podcast?.author,
+      podcastTitle: episode.podcast?.title,
       coverURL: episode.coverURL(raw: true),
       current: mediaProgress.currentTime,
       duration: mediaProgress.duration
@@ -209,6 +210,7 @@ final class BookPlayerModel: BookPlayer.Model {
       id: episode.id,
       title: episode.title,
       author: podcastAuthor,
+      podcastTitle: podcastTitle,
       coverURL: coverURL,
       current: mediaProgress.currentTime,
       duration: mediaProgress.duration
@@ -775,6 +777,8 @@ extension BookPlayerModel {
         AppLogger.player.error("Background session fetch failed: \(error)")
       }
 
+      await resolveMissingDuration()
+
       if player == nil {
         do {
           try setupAudioPlayer()
@@ -918,6 +922,30 @@ extension BookPlayerModel {
     }
   }
 
+  private func resolveMissingDuration() async {
+    guard let session = sessionManager.current,
+      session.tracks.count == 1,
+      let track = session.tracks.first,
+      track.duration <= 0,
+      let url = session.url(for: track),
+      url.isFileURL,
+      let duration = try? await AVURLAsset(url: url).load(.duration).seconds,
+      duration.isFinite,
+      duration > 0
+    else { return }
+
+    AppLogger.player.info("Resolved missing duration from local file: \(duration)s")
+    track.duration = duration
+
+    if let localEpisode = item as? LocalEpisode, localEpisode.duration <= 0 {
+      localEpisode.duration = duration
+    }
+
+    if mediaProgress.duration <= 0 {
+      mediaProgress.duration = duration
+    }
+  }
+
   private func isPlayerUsingRemoteURL() -> Bool {
     player?.isUsingRemoteURLs == true
   }
@@ -1023,8 +1051,8 @@ extension BookPlayerModel {
       guard let self else { return }
 
       RunLoop.main.perform {
-        if !self.isPlaying {
-          self.player?.seek(to: self.mediaProgress.currentTime)
+        if !self.isPlaying, let player = self.player, !player.isPositioned(at: self.mediaProgress.currentTime) {
+          player.seek(to: self.mediaProgress.currentTime)
         }
         self.observeMediaProgress()
       }

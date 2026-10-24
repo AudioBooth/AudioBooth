@@ -62,6 +62,14 @@ final class AudioPlayer {
     player.timeControlStatus != .paused
   }
 
+  func isPositioned(at target: TimeInterval) -> Bool {
+    if let pendingSeekTarget {
+      return abs(pendingSeekTarget - target) <= 1
+    }
+    guard player.currentItem?.status == .readyToPlay else { return false }
+    return abs(time - target) <= 1
+  }
+
   var isUsingRemoteURLs: Bool {
     tracks.contains { url(for: $0)?.isFileURL == false }
   }
@@ -181,7 +189,9 @@ final class AudioPlayer {
         toleranceBefore: .zero,
         toleranceAfter: .zero
       ) { [weak self] _ in
-        self?.pendingSeekTarget = nil
+        if self?.pendingSeekTarget == time {
+          self?.pendingSeekTarget = nil
+        }
         self?.events.send(.seek(time))
       }
       return
@@ -195,7 +205,9 @@ final class AudioPlayer {
         toleranceBefore: .zero,
         toleranceAfter: .zero
       ) { [weak self] _ in
-        self?.pendingSeekTarget = nil
+        if self?.pendingSeekTarget == time {
+          self?.pendingSeekTarget = nil
+        }
         self?.events.send(.seek(time))
       }
       return

@@ -130,6 +130,8 @@ final class DownloadingListViewModel: DownloadingListView.Model {
 
         return DownloadingListView.BookItem(
           id: download.itemID,
+          destination: download.podcastID.map { NavigationDestination.podcast(id: $0, episodeID: download.itemID) }
+            ?? .book(id: download.itemID),
           title: download.title,
           details: detailsText(
             duration: download.duration,

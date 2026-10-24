@@ -56,6 +56,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   func updateProgress() {
     guard !isDragging else { return }
 
+    total = mediaProgress.duration
+
     if preferences.showFullBookDuration {
       updateBookProgress()
     } else {

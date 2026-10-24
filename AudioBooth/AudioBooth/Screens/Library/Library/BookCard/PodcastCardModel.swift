@@ -36,27 +36,30 @@ final class PodcastCardModel: BookCard.Model {
       details = nil
     }
 
+    let progress = MediaProgress.progress(for: id)
+
     let cover = Cover.Model(
       url: podcast.coverURL(),
       title: title,
       author: author,
-      progress: MediaProgress.progress(for: id)
+      progress: progress
     )
 
-    let progress = MediaProgress.progress(for: id)
-    let episodeContextMenu = PodcastEpisodeContextMenuModel(
-      episodeID: id,
-      podcastID: podcast.id,
-      podcastTitle: podcast.title,
-      podcastAuthor: podcast.author,
-      coverURL: podcast.coverURL(raw: true),
-      episodeTitle: title,
-      episodeDuration: podcast.recentEpisode?.duration,
-      episodeSize: podcast.recentEpisode?.audioTrack?.metadata?.size ?? podcast.recentEpisode?.size,
-      isCompleted: progress >= 1.0,
-      progress: progress,
-      apiEpisode: podcast.recentEpisode
-    )
+    let episodeContextMenu = podcast.recentEpisode.map { episode in
+      PodcastEpisodeContextMenuModel(
+        episodeID: episode.id,
+        podcastID: podcast.id,
+        podcastTitle: podcast.title,
+        podcastAuthor: podcast.author,
+        coverURL: podcast.coverURL(raw: true),
+        episodeTitle: episode.title,
+        episodeDuration: episode.duration,
+        episodeSize: episode.audioTrack?.metadata?.size ?? episode.size,
+        isCompleted: progress >= 1.0,
+        progress: progress,
+        apiEpisode: episode
+      )
+    }
 
     super.init(
       id: id,
