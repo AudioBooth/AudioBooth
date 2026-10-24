@@ -398,11 +398,6 @@ extension PlayerManager {
     commandCenter.playCommand.addTarget { [weak self] _ in
       guard let self, let current else { return .commandFailed }
 
-      if AVAudioSession.sharedInstance().outputVolume == 0 {
-        AppLogger.player.info("Play command received with volume at 0, raising system volume")
-        MPVolumeView.setSystemVolume(0.3)
-      }
-
       current.onPlayTapped()
 
       return .success
