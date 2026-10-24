@@ -329,11 +329,27 @@ final class BookPlayerModel: BookPlayer.Model {
     lastSyncedTime = mediaProgress.currentTime
     player.resume()
 
+    if audioSession.outputVolume == 0 {
+      raiseVolumeOrPause()
+    }
+
     if let timerViewModel = timer as? TimerPickerSheetViewModel {
       timerViewModel.activateAutoTimerIfNeeded()
     }
 
     pendingPlay = false
+  }
+
+  private func raiseVolumeOrPause() {
+    AppLogger.player.info("Playback started with volume at 0, raising system volume")
+    MPVolumeView.setSystemVolume(0.3)
+
+    Task { [weak self] in
+      try? await Task.sleep(for: .milliseconds(500))
+      guard let self, self.audioSession.outputVolume == 0 else { return }
+      AppLogger.player.info("Volume still at 0 after raising, pausing playback")
+      self.onPauseTapped()
+    }
   }
 
   override func onSkipForwardTapped(seconds: Double) {
