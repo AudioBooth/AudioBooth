@@ -46,6 +46,16 @@ struct PlaybackDisplayPreferencesView: View {
           )
         }
         .listRowBackground(theme.colors.background.card)
+
+        Toggle(isOn: $preferences.showSystemVolumeSlider) {
+          PreferenceRow(
+            systemImage: "speaker.wave.2",
+            tint: .green,
+            title: "System Volume Slider",
+            subtitle: "Show device volume under playback controls"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
       } header: {
         Text("Time & Progress")
       }

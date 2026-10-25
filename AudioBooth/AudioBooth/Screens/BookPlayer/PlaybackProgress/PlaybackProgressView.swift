@@ -9,21 +9,22 @@ struct PlaybackProgressView: View {
   @State private var bubbleSize: CGSize = .zero
 
   var body: some View {
-    VStack(spacing: 8) {
+    VStack(spacing: 0) {
       if preferences.showBookProgressBar, let supplementary {
         VStack(spacing: 4) {
           GeometryReader { geometry in
             ZStack(alignment: .leading) {
-              RoundedRectangle(cornerRadius: 1.5)
-                .fill(Color.white.opacity(0.2))
-                .frame(height: 3)
+              Rectangle()
+                .fill(Color(.systemFill))
+                .frame(height: 4)
 
-              RoundedRectangle(cornerRadius: 1.5)
+              Rectangle()
                 .fill(.tint.opacity(0.7))
-                .frame(width: max(0, geometry.size.width * supplementary.progress), height: 3)
+                .frame(width: max(0, geometry.size.width * supplementary.progress), height: 4)
             }
           }
-          .frame(height: 3)
+          .frame(height: 4)
+          .clipShape(.capsule)
 
           HStack {
             Text(formatCurrentTime(supplementary.elapsed))
@@ -37,19 +38,20 @@ struct PlaybackProgressView: View {
           .foregroundColor(.white.opacity(0.7))
           .monospacedDigit()
         }
+        .padding(.bottom, 8)
       }
 
       GeometryReader { geometry in
         ZStack(alignment: .leading) {
           Rectangle()
-            .fill(Color.white.opacity(0.3))
+            .fill(Color(.systemFill))
 
           Rectangle()
             .fill(.tint)
             .frame(width: max(0, geometry.size.width * model.progress))
         }
-        .frame(height: 5)
-        .clipShape(RoundedRectangle(cornerRadius: 2))
+        .frame(height: 6)
+        .clipShape(.capsule)
         .frame(maxHeight: .infinity)
         .contentShape(Rectangle())
         .overlay {

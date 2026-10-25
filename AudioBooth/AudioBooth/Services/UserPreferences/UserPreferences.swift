@@ -100,6 +100,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("coverColorProgressBar")
   var coverColorProgressBar: Bool = true
 
+  @AppStorage("showSystemVolumeSlider")
+  var showSystemVolumeSlider: Bool = false
+
   @AppStorage("keepScreenAwakeInPlayer")
   var keepScreenAwakeInPlayer: Bool = false
 

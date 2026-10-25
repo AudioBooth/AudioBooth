@@ -27,6 +27,7 @@ extension UserPreferences {
     "showBookProgressBar",
     "hideChapterSkipButtons",
     "coverColorProgressBar",
+    "showSystemVolumeSlider",
     "keepScreenAwakeInPlayer",
     "positionSyncOffers",
     "mixWithOtherAudio",
