@@ -52,10 +52,6 @@ extension EbookReaderViewModel {
       }
       return
     }
-
-    if readAlong.status.isActive {
-      narrationPlayer?.onPauseTapped()
-    }
     readAlong.toggle()
   }
 

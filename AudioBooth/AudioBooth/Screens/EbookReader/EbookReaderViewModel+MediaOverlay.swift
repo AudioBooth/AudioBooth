@@ -39,9 +39,8 @@ extension EbookReaderViewModel {
   func toggleMediaOverlayReadAlong() {
     guard mediaOverlayTimeline != nil else { return }
 
-    if isFollowingMediaOverlay, let narrationPlayer, narrationPlayer.isPlaying {
+    if isFollowingMediaOverlay, narrationPlayer?.isPlaying == true {
       stopFollowingMediaOverlay()
-      narrationPlayer.onPauseTapped()
       return
     }
 
