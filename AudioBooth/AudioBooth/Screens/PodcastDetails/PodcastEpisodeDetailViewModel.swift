@@ -46,6 +46,10 @@ final class PodcastEpisodeDetailViewModel: PodcastEpisodeDetailView.Model {
       return
     }
 
+    if let mediaProgress = try? MediaProgress.fetch(bookID: episodeID), mediaProgress.isFinished {
+      mediaProgress.currentTime = 0
+    }
+
     if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
       playerManager.setCurrent(localEpisode)
     } else if let apiEpisode {

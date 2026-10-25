@@ -277,7 +277,7 @@ final class BookPlayerModel: BookPlayer.Model {
       return
     }
 
-    if mediaProgress.isFinished || mediaProgress.remaining <= 1 {
+    if mediaProgress.remaining <= 1 {
       return
     }
 
