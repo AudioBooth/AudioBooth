@@ -82,6 +82,36 @@ struct ContentView: View {
         PlayerQueueView(model: PlayerQueueViewModel())
           .displayScaled()
       }
+      .adaptiveSheet(
+        isPresented: miniPlayerBinding(
+          get: { $0.speed.isPresented },
+          set: { $0.speed.isPresented = $1 }
+        )
+      ) {
+        if let currentPlayer = playerManager.current {
+          FloatPickerSheet(
+            model: Binding(
+              get: { currentPlayer.speed },
+              set: { currentPlayer.speed = $0 }
+            )
+          )
+        }
+      }
+      .adaptiveSheet(
+        isPresented: miniPlayerBinding(
+          get: { $0.timer.isPresented },
+          set: { $0.timer.isPresented = $1 }
+        )
+      ) {
+        if let currentPlayer = playerManager.current {
+          TimerPickerSheet(
+            model: Binding(
+              get: { currentPlayer.timer },
+              set: { currentPlayer.timer = $0 }
+            )
+          )
+        }
+      }
       .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
         isKeyboardVisible = true
       }
@@ -94,6 +124,22 @@ struct ContentView: View {
           playerManager.showFullPlayer()
         }
       }
+  }
+
+  private func miniPlayerBinding(
+    get: @escaping (BookPlayer.Model) -> Bool,
+    set: @escaping (BookPlayer.Model, Bool) -> Void
+  ) -> Binding<Bool> {
+    Binding(
+      get: {
+        guard let current = playerManager.current, !playerManager.isShowingFullPlayer else { return false }
+        return get(current)
+      },
+      set: { newValue in
+        guard let current = playerManager.current else { return }
+        set(current, newValue)
+      }
+    )
   }
 
   @ViewBuilder
