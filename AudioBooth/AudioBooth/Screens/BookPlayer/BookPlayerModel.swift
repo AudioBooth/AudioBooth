@@ -818,6 +818,7 @@ extension BookPlayerModel {
       else { return }
       withAnimation(.easeIn(duration: 0.5)) {
         self.backgroundColor = Color(palette.background)
+        self.secondaryBackgroundColor = Color(palette.secondary)
         self.progressTint = palette.accent.map(Color.init)
       }
     }

@@ -257,15 +257,40 @@ struct BookPlayer: View {
     }
   }
 
+  @ViewBuilder
   private var playerBackground: some View {
-    model.backgroundColor
-      .overlay {
-        LinearGradient(
-          colors: [.clear, .black.opacity(0.3)],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      }
+    let color = model.backgroundColor
+    if #available(iOS 18.0, *) {
+      let secondary = model.secondaryBackgroundColor
+      let middle = color.mix(with: secondary, by: 0.5)
+      MeshGradient(
+        width: 3,
+        height: 3,
+        points: [
+          [0, 0], [0.5, 0], [1, 0],
+          [0, 0.5], [0.5, 0.5], [1, 0.5],
+          [0, 1], [0.5, 1], [1, 1],
+        ],
+        colors: [
+          color, middle, secondary,
+          color.mix(with: .black, by: 0.15),
+          color.mix(with: secondary, by: 0.6).mix(with: .black, by: 0.2),
+          secondary.mix(with: .black, by: 0.3),
+          color.mix(with: .black, by: 0.55),
+          color.mix(with: .black, by: 0.6),
+          middle.mix(with: .black, by: 0.55),
+        ]
+      )
+    } else {
+      color
+        .overlay {
+          LinearGradient(
+            colors: [.clear, .black.opacity(0.3)],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        }
+    }
   }
 
   private func portraitLayout(artworkHeight: CGFloat?) -> some View {
@@ -638,6 +663,7 @@ extension BookPlayer {
 
     var downloadState: DownloadManager.DownloadState
     var backgroundColor: Color = .black
+    var secondaryBackgroundColor: Color = .black
     var progressTint: Color?
 
     var isPresented: Bool = true

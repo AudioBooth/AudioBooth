@@ -3,6 +3,7 @@ import UIKit
 extension UIImage {
   struct CoverPalette {
     let background: UIColor
+    let secondary: UIColor
     let accent: UIColor?
   }
 
@@ -44,7 +45,7 @@ extension UIImage {
   var coverPalette: CoverPalette? {
     guard let ciImage = CIImage(image: self), !ciImage.extent.isEmpty else { return nil }
 
-    let clusters = Self.colorClusters(in: ciImage)
+    let clusters = Self.colorClusters(in: ciImage, size: 100, count: 8)
     guard let dominant = clusters.max(by: { $0.weight < $1.weight }) else { return nil }
 
     func contrast(_ cluster: ColorCluster) -> CGFloat {
@@ -55,7 +56,12 @@ extension UIImage {
       cluster.saturation * cluster.brightness * sqrt(cluster.weight)
     }
 
-    let candidates = clusters.filter { $0.isColorful && $0.weight >= 0.01 }
+    var candidates = clusters.filter { $0.isColorful && $0.weight >= 0.01 }
+    if candidates.isEmpty {
+      candidates = Self.colorClusters(in: ciImage, size: 200, count: 16)
+        .filter { $0.saturation * $0.brightness >= 0.15 && $0.weight >= 0.005 }
+    }
+
     let contrastingAccent =
       candidates
       .filter { contrast($0) >= 0.17 }
@@ -63,19 +69,45 @@ extension UIImage {
     let accentCluster = contrastingAccent ?? candidates.max { vividness($0) < vividness($1) }
     let isMonochrome = contrastingAccent == nil && accentCluster != nil
 
+    let saturationCap: CGFloat = isMonochrome ? 0.25 : 0.7
+    let brightnessCap: CGFloat = dominant.saturation < 0.05 ? 0.28 : 0.42
+    let backgroundSaturation = min(dominant.saturation * 4, saturationCap)
+    let backgroundBrightness = min(dominant.brightness, brightnessCap)
+
     let background = UIColor(
       hue: dominant.hue,
-      saturation: min(dominant.saturation * 4, isMonochrome ? 0.25 : 0.7),
-      brightness: min(dominant.brightness, 0.42),
+      saturation: backgroundSaturation,
+      brightness: backgroundBrightness,
       alpha: 1
     )
+
+    let secondaryCluster =
+      clusters
+      .filter { $0.saturation >= 0.08 && $0.brightness >= 0.15 && $0.hueDistance(to: dominant) >= 0.1 }
+      .max { $0.weight * $0.hueDistance(to: dominant) < $1.weight * $1.hueDistance(to: dominant) }
+
+    let secondary =
+      secondaryCluster.map {
+        UIColor(
+          hue: $0.hue,
+          saturation: min($0.saturation * 4, saturationCap),
+          brightness: min($0.brightness, brightnessCap),
+          alpha: 1
+        )
+      }
+      ?? UIColor(
+        hue: dominant.hue,
+        saturation: backgroundSaturation,
+        brightness: backgroundBrightness * 0.75,
+        alpha: 1
+      )
 
     let accent = accentCluster.map { cluster in
       var saturation = min(max(cluster.saturation, 0.5), 0.85)
       var brightness = max(cluster.brightness, 0.85)
       var color = UIColor(hue: cluster.hue, saturation: saturation, brightness: brightness, alpha: 1)
 
-      while Self.contrastRatio(color, background) < 4.5 && saturation > 0.2 {
+      while Self.contrastRatio(color, background) < 3 && saturation > 0.2 {
         saturation -= 0.05
         brightness = 1
         color = UIColor(hue: cluster.hue, saturation: saturation, brightness: brightness, alpha: 1)
@@ -84,7 +116,7 @@ extension UIImage {
       return color
     }
 
-    return CoverPalette(background: background, accent: accent)
+    return CoverPalette(background: background, secondary: secondary, accent: accent)
   }
 
   private static func contrastRatio(_ first: UIColor, _ second: UIColor) -> CGFloat {
@@ -102,8 +134,8 @@ extension UIImage {
     return (max(firstLuminance, secondLuminance) + 0.05) / (min(firstLuminance, secondLuminance) + 0.05)
   }
 
-  private static func colorClusters(in ciImage: CIImage) -> [ColorCluster] {
-    let scale = 100 / max(ciImage.extent.width, ciImage.extent.height)
+  private static func colorClusters(in ciImage: CIImage, size: CGFloat, count: Int) -> [ColorCluster] {
+    let scale = size / max(ciImage.extent.width, ciImage.extent.height)
     let scaledImage = ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
     let extent = scaledImage.extent
     let badgeWidth = extent.width * 0.45
@@ -115,7 +147,6 @@ extension UIImage {
       to: CGRect(x: extent.minX, y: extent.minY, width: extent.width - badgeWidth, height: badgeHeight)
     )
     let inputImage = aboveBadge.composited(over: leftOfBadge)
-    let count = 8
 
     guard
       let filter = CIFilter(
