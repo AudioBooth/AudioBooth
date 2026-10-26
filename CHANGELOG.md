@@ -8,12 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Apple Watch podcasts - Podcast episodes now show in Continue Listening on the watch, you can browse a podcast's episodes, and send an episode to your watch from its context menu on iPhone
+- System volume slider - New player preference to show the device volume slider under the playback controls
+- Author and narrator sorting - Book lists for an author or narrator can now be sorted
+- Audio bitrate - Book details now show the audio bitrate in the metadata section
 
 ### Changed
+- Mini player on large screens - On wide screens, the mini player now shows time remaining, speed, skip, sleep timer, and queue controls
+- Finished episodes - Playing a finished podcast episode now starts it from the beginning
+- Player background - Improved cover color extraction for richer player and home episode card backgrounds
+- iPhone Duo - Polished layouts for book details, the player, and the listening stats card
+- Home episode cards - Refreshed design with more readable text, and cards in Continue Listening now follow the Continue section size preference
+- Playback with volume at 0 - Starting playback with the volume at 0 now raises the volume, and pauses if it stays muted
+- Next chapter on last chapter - The next chapter button now moves to the next item when Smart Continue is on (thanks @nyxaria)
+- Auto sleep timer - Now starts automatically when the time window begins while you're already listening
+- Apple Watch complications - The rectangular complication now shows the cover, chapter title, and time remaining, with a refreshed circular complication
+- Read Along - Tapping Read Along in the ebook reader now starts the audiobook if it isn't playing, and narrated EPUBs open faster
+- Continue Reading - Narrated EPUBs now show in Continue Reading instead of Continue Listening
+- Book details actions - The Play button now always appears first for narrated EPUBs
+- Downloads sorting - Sort downloads by date downloaded, title, or duration in ascending or descending order, also used by CarPlay and Assistive Access
+- Catch Up - No longer runs while the app is in the background, and the ebook is prepared faster
 - Auto-download - Now also downloads podcast episodes as you play them
 - Remove after unused - Now also applies to podcast episodes
 
 ### Fixed
+- Pinned playlist auto-download - Fixed podcast episodes in a pinned playlist not downloading automatically
+- Narrated EPUB animations - Fixed the narration download progress animation on book details, and the Read Along button now animates while the narration plays
+- Podcast playback - Fixed episodes not playing when their duration is missing, a UI freeze when streaming, Continue Listening in podcast libraries, Now Playing metadata, the Home episode card not showing pause, and Play All playing finished episodes (thanks @Creationsss)
+- Sleep timer Live Activity - Fixed the Live Activity pausing with playback even when the timer is set to keep running while paused
 
 ## [1.13.0]
 
