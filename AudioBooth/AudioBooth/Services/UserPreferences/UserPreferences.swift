@@ -100,6 +100,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("coverColorProgressBar")
   var coverColorProgressBar: Bool = true
 
+  @AppStorage("playerBackgroundStyle")
+  var playerBackgroundStyle: PlayerBackgroundStyle = .solid
+
   @AppStorage("showSystemVolumeSlider")
   var showSystemVolumeSlider: Bool = false
 
@@ -573,6 +576,20 @@ enum PlayerOrientation: String, CaseIterable {
     case .auto: "Auto"
     case .portrait: "Portrait"
     case .landscape: "Landscape"
+    }
+  }
+}
+
+enum PlayerBackgroundStyle: String, CaseIterable {
+  case gradient
+  case solid
+  case off
+
+  var displayText: LocalizedStringResource {
+    switch self {
+    case .gradient: "Gradient"
+    case .solid: "Solid"
+    case .off: "Off"
     }
   }
 }

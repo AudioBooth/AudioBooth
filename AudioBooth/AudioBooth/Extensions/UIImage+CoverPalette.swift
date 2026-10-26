@@ -53,7 +53,7 @@ extension UIImage {
     }
 
     func vividness(_ cluster: ColorCluster) -> CGFloat {
-      cluster.saturation * cluster.brightness * sqrt(cluster.weight)
+      cluster.saturation * sqrt(cluster.brightness) * sqrt(cluster.weight)
     }
 
     var candidates = clusters.filter { $0.isColorful && $0.weight >= 0.01 }
@@ -81,6 +81,13 @@ extension UIImage {
       alpha: 1
     )
 
+    let darkerBackground = UIColor(
+      hue: dominant.hue,
+      saturation: backgroundSaturation,
+      brightness: backgroundBrightness * 0.75,
+      alpha: 1
+    )
+
     let secondaryCluster =
       clusters
       .filter { $0.saturation >= 0.08 && $0.brightness >= 0.15 && $0.hueDistance(to: dominant) >= 0.1 }
@@ -95,19 +102,14 @@ extension UIImage {
           alpha: 1
         )
       }
-      ?? UIColor(
-        hue: dominant.hue,
-        saturation: backgroundSaturation,
-        brightness: backgroundBrightness * 0.75,
-        alpha: 1
-      )
+      ?? darkerBackground
 
     let accent = accentCluster.map { cluster in
-      var saturation = min(max(cluster.saturation, 0.5), 0.85)
+      var saturation = max(cluster.saturation, 0.75)
       var brightness = max(cluster.brightness, 0.85)
       var color = UIColor(hue: cluster.hue, saturation: saturation, brightness: brightness, alpha: 1)
 
-      while Self.contrastRatio(color, background) < 3 && saturation > 0.2 {
+      while Self.contrastRatio(color, darkerBackground) < 3 && saturation > 0.2 {
         saturation -= 0.05
         brightness = 1
         color = UIColor(hue: cluster.hue, saturation: saturation, brightness: brightness, alpha: 1)
@@ -181,9 +183,9 @@ extension UIImage {
       let weight = CGFloat(bitmap[offset + 3] / totalWeight)
       guard weight > 0 else { return nil }
 
-      let red = CGFloat(min(max(bitmap[offset], 0), 1))
-      let green = CGFloat(min(max(bitmap[offset + 1], 0), 1))
-      let blue = CGFloat(min(max(bitmap[offset + 2], 0), 1))
+      let red = ColorCluster.linear(CGFloat(min(max(bitmap[offset], 0), 1)))
+      let green = ColorCluster.linear(CGFloat(min(max(bitmap[offset + 1], 0), 1)))
+      let blue = ColorCluster.linear(CGFloat(min(max(bitmap[offset + 2], 0), 1)))
       let color = UIColor(red: red, green: green, blue: blue, alpha: 1)
 
       var hue: CGFloat = 0
