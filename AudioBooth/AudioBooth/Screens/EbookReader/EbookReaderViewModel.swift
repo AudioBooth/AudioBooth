@@ -321,6 +321,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       if navigator is EPUBNavigatorViewController {
         backgroundColor = themeBackgroundColor
+        textColor = themeTextColor
       }
 
       if publication.conforms(to: .epub), publication.metadata.layout != .fixed,
@@ -445,6 +446,12 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private var themeBackgroundColor: SwiftUI.Color {
     guard let epubNavigator = navigator as? EPUBNavigatorViewController else { return .clear }
     return SwiftUI.Color(uiColor: epubNavigator.settings.effectiveBackgroundColor.uiColor)
+  }
+
+  private var themeTextColor: SwiftUI.Color? {
+    guard let epubNavigator = navigator as? EPUBNavigatorViewController else { return nil }
+    let settings = epubNavigator.settings
+    return SwiftUI.Color(uiColor: (settings.textColor ?? settings.theme.contentColor).uiColor)
   }
 
   private func setupChapters() async {
@@ -646,6 +653,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     let epubPrefs = preferences.toEPUBPreferences(colorScheme: systemColorScheme)
     epubNavigator.submitPreferences(epubPrefs)
     backgroundColor = themeBackgroundColor
+    textColor = themeTextColor
   }
 
   private var systemColorScheme: ColorScheme {

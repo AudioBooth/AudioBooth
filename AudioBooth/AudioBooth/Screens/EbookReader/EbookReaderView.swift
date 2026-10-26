@@ -11,6 +11,7 @@ struct EbookReaderView: View {
   @State private var showSettings = false
   @State private var showZoneEditor = false
   @State private var sideInsets: EdgeInsets?
+  @State private var latestSideInsets = EdgeInsets()
   @State private var headerCornerInsets = EdgeInsets()
   @State private var headerTop: CGFloat = 0
 
@@ -26,15 +27,16 @@ struct EbookReaderView: View {
       }
       .onChange(of: showControls) { _, value in
         model.onShowControlsChanged(value)
+        if !value { sideInsets = latestSideInsets }
       }
-      .onChange(of: model.preferences.theme, initial: true) { _, theme in
-        preferredColorScheme = theme.colorScheme
+      .onChange(of: model.preferences.preferredColorScheme, initial: true) { _, scheme in
+        preferredColorScheme = scheme
       }
       .onChange(of: colorScheme) { _, _ in
         if model.preferences.theme == .auto {
           model.onPreferencesChanged(model.preferences)
         }
-        preferredColorScheme = model.preferences.theme.colorScheme
+        preferredColorScheme = model.preferences.preferredColorScheme
       }
       .onAppear {
         UIApplication.shared.isIdleTimerDisabled = userPreferences.keepScreenAwakeInPlayer
@@ -132,6 +134,7 @@ struct EbookReaderView: View {
             }
             .padding(.leading, max(sideInsets?.leading ?? 0, headerCornerInsets.leading))
             .padding(.trailing, max(sideInsets?.trailing ?? 0, headerCornerInsets.trailing))
+            .foregroundStyle(model.textColor ?? .primary)
             .background(model.backgroundColor.ignoresSafeArea(edges: .top))
             .ignoresHorizontalSafeAreaWhenReservedRegionsAvailable()
             .allowsHitTesting(false)
@@ -247,6 +250,7 @@ struct EbookReaderView: View {
         let insets = proxy.sideOcclusionInsets(below: headerTop)
         Color.clear
           .onChange(of: insets, initial: true) {
+            latestSideInsets = insets
             if !showControls || sideInsets == nil { sideInsets = insets }
           }
           .onChange(of: proxy.size) {
@@ -541,6 +545,7 @@ extension EbookReaderView {
     var chapterProgress: ChapterProgressView.Model?
     var preferences: EbookReaderPreferences
     var backgroundColor: Color
+    var textColor: Color?
     var supportsSettings: Bool
     var search: EbookSearchView.Model?
     var supportsSearch: Bool

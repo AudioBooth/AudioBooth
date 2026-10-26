@@ -65,6 +65,16 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.textNormalization") var textNormalization: Bool = false
   @AppStorage("ebookReader.fontFamily") var fontFamily: FontFamily = .system
   @AppStorage("ebookReader.theme") var theme: Theme = .auto
+  @AppStorage("ebookReader.customBackgroundColor") var customBackgroundColor: SwiftUI.Color = SwiftUI.Color(
+    red: 0.23,
+    green: 0.18,
+    blue: 0.14
+  )
+  @AppStorage("ebookReader.customTextColor") var customTextColor: SwiftUI.Color = SwiftUI.Color(
+    red: 0.94,
+    green: 0.89,
+    blue: 0.80
+  )
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
   @AppStorage("ebookReader.columnCount") var columnCount: ColumnCount = .auto
   @AppStorage("ebookReader.scroll") var scroll: Bool = false
@@ -102,6 +112,7 @@ class EbookReaderPreferences: ObservableObject {
   @AppStorage("ebookReader.paragraphSpacing") var paragraphSpacing: Double = 0.0
   @AppStorage("ebookReader.wordSpacing") var wordSpacing: Double = 0.0
   @AppStorage("ebookReader.letterSpacing") var letterSpacing: Double = 0.0
+  @AppStorage("ebookReader.textAlign") var textAlign: TextAlign = .original
 
   enum FontFamily: String, CaseIterable, Identifiable {
     case system = "Original"
@@ -149,6 +160,7 @@ class EbookReaderPreferences: ObservableObject {
     case dark = "Dark"
     case sepia = "Sepia"
     case gray = "Gray"
+    case custom = "Custom"
 
     var id: String { rawValue }
   }
@@ -173,6 +185,24 @@ class EbookReaderPreferences: ObservableObject {
       case .auto: .auto
       case .one: .one
       case .two: .two
+      }
+    }
+  }
+
+  enum TextAlign: String, CaseIterable, Identifiable {
+    case original = "Original"
+    case left = "Left"
+    case right = "Right"
+    case justify = "Justify"
+
+    var id: String { rawValue }
+
+    var readiumTextAlign: ReadiumNavigator.TextAlignment? {
+      switch self {
+      case .original: nil
+      case .left: .left
+      case .right: .right
+      case .justify: .justify
       }
     }
   }
@@ -202,10 +232,16 @@ extension EbookReaderPreferences {
     prefs.fontWeight = fontWeight
     prefs.textNormalization = textNormalization
     prefs.fontFamily = fontFamily.readiumFontFamily
-    prefs.theme = theme.toReadiumTheme(colorScheme: colorScheme)
-    if theme == .gray {
+    prefs.theme = theme.toReadiumTheme(colorScheme: preferredColorScheme ?? colorScheme)
+    switch theme {
+    case .gray:
       prefs.backgroundColor = ReadiumNavigator.Color(rawValue: 0x323336)
       prefs.textColor = ReadiumNavigator.Color(rawValue: 0xD8D8D8)
+    case .custom:
+      prefs.backgroundColor = ReadiumNavigator.Color(uiColor: UIColor(customBackgroundColor))
+      prefs.textColor = ReadiumNavigator.Color(uiColor: UIColor(customTextColor))
+    default:
+      break
     }
     prefs.pageMargins = pageMargins.value
     prefs.scroll = scroll
@@ -220,14 +256,30 @@ extension EbookReaderPreferences {
       prefs.letterSpacing = letterSpacing
     }
 
+    if let readiumTextAlign = textAlign.readiumTextAlign {
+      prefs.publisherStyles = false
+      prefs.textAlign = readiumTextAlign
+    }
+
     return prefs
+  }
+
+  var preferredColorScheme: ColorScheme? {
+    guard theme == .custom else { return theme.colorScheme }
+
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    UIColor(customBackgroundColor).getRed(&red, green: &green, blue: &blue, alpha: nil)
+    let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+    return luminance < 0.5 ? .dark : .light
   }
 }
 
 extension EbookReaderPreferences.Theme {
   var colorScheme: ColorScheme? {
     switch self {
-    case .auto: return nil
+    case .auto, .custom: return nil
     case .light, .sepia: return .light
     case .dark, .gray: return .dark
     }
@@ -235,7 +287,7 @@ extension EbookReaderPreferences.Theme {
 
   func toReadiumTheme(colorScheme: ColorScheme) -> ReadiumNavigator.Theme {
     switch self {
-    case .auto: return colorScheme == .dark ? .dark : .light
+    case .auto, .custom: return colorScheme == .dark ? .dark : .light
     case .light: return .light
     case .dark, .gray: return .dark
     case .sepia: return .sepia

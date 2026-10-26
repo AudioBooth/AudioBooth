@@ -5,7 +5,7 @@ extension GeometryProxy {
     #if !targetEnvironment(macCatalyst)
     if #available(iOS 27.1, *) {
       var insets = EdgeInsets()
-      for region in reservedRegions(kind: .occlusion)
+      for region in reservedRegions(kind: .occlusion, options: .includeInactive)
       where region.frame.maxY > top && region.frame.width < size.width / 2 {
         if region.frame.minX <= 0 {
           insets.leading = max(insets.leading, region.frame.maxX)

@@ -38,6 +38,12 @@ struct EbookReaderPreferencesView: View {
             }
           }
 
+          Picker("Text Alignment", selection: $preferences.textAlign) {
+            ForEach(EbookReaderPreferences.TextAlign.allCases) { align in
+              Text(align.rawValue).tag(align)
+            }
+          }
+
           Toggle("Text Normalization", isOn: $preferences.textNormalization)
         }
         .listRowBackground(theme.colors.background.card)
@@ -112,6 +118,11 @@ struct EbookReaderPreferencesView: View {
             ForEach(EbookReaderPreferences.Theme.allCases) { theme in
               Text(theme.rawValue).tag(theme)
             }
+          }
+
+          if preferences.theme == .custom {
+            ColorPicker("Background Color", selection: $preferences.customBackgroundColor, supportsOpacity: false)
+            ColorPicker("Text Color", selection: $preferences.customTextColor, supportsOpacity: false)
           }
         }
         .listRowBackground(theme.colors.background.card)
