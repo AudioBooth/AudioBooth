@@ -267,7 +267,10 @@ extension HomePageModel {
 
     self.sections = orderedSections
 
-    WatchConnectivityManager.shared.syncContinueListening(books: continueListeningBooks)
+    WatchConnectivityManager.shared.syncContinueListening(
+      books: continueListeningBooks,
+      episodes: continueListeningEpisodes
+    )
     WatchConnectivityManager.shared.syncHomeSections(
       sections: personalizedSections,
       enabledSections: preferences.homeSections

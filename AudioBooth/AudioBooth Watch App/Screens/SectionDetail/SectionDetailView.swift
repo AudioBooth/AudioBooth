@@ -23,7 +23,7 @@ struct SectionDetailView: View {
         .padding()
       case .loaded:
         ScrollView {
-          VStack(alignment: .leading, spacing: 8) {
+          LazyVStack(alignment: .leading, spacing: 8) {
             ForEach(model.rows) { rowModel in
               ContinueListeningRow(model: rowModel)
             }

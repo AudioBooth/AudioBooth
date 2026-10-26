@@ -42,6 +42,12 @@ struct PodcastEpisodeContextMenu: View {
         }
       }
 
+      if model.actions.contains(.downloadToWatch) {
+        Button(action: model.onDownloadToWatchTapped) {
+          Label("Download to Apple Watch", systemImage: "applewatch")
+        }
+      }
+
       if model.actions.contains(.markAsFinished) || model.actions.contains(.resetProgress)
         || model.actions.contains(.addToPlaylist)
       {
@@ -81,6 +87,7 @@ extension PodcastEpisodeContextMenu {
       static let addToQueue = Actions(rawValue: 1 << 2)
       static let removeFromQueue = Actions(rawValue: 1 << 3)
       static let addToPlaylist = Actions(rawValue: 1 << 4)
+      static let downloadToWatch = Actions(rawValue: 1 << 5)
     }
 
     var downloadState: DownloadManager.DownloadState
@@ -94,6 +101,7 @@ extension PodcastEpisodeContextMenu {
     func onDownloadTapped() {}
     func onCancelDownloadTapped() {}
     func onRemoveDownloadTapped() {}
+    func onDownloadToWatchTapped() {}
     func onMarkAsFinishedTapped() {}
     func onResetProgressTapped() {}
     func onAddToPlaylistTapped() {}

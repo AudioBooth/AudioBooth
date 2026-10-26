@@ -53,6 +53,8 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
       actions.insert(isInQueue ? .removeFromQueue : .addToQueue)
     }
 
+    if Self.canDownloadToWatch(episodeID: episodeID) { actions.insert(.downloadToWatch) }
+
     super.init(downloadState: downloadState, actions: actions)
   }
 
@@ -72,7 +74,16 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
       updatedActions.insert(isInQueue ? .removeFromQueue : .addToQueue)
     }
 
+    if Self.canDownloadToWatch(episodeID: episodeID) { updatedActions.insert(.downloadToWatch) }
+
     actions = updatedActions
+  }
+
+  private static func canDownloadToWatch(episodeID: String) -> Bool {
+    let watchConnectivityManager = WatchConnectivityManager.shared
+    return Audiobookshelf.shared.authentication.server?.permissions?.download == true
+      && watchConnectivityManager.canDownloadToWatch
+      && !watchConnectivityManager.watchDownloadedBookIDs.contains(episodeID)
   }
 
   override func onPlayTapped() {
@@ -140,6 +151,11 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
 
   override func onRemoveDownloadTapped() {
     downloadManager.deleteEpisodeDownload(episodeID: episodeID, podcastID: podcastID)
+  }
+
+  override func onDownloadToWatchTapped() {
+    WatchConnectivityManager.shared.requestWatchDownload(bookID: episodeID, podcastID: podcastID)
+    actions.remove(.downloadToWatch)
   }
 
   override func onMarkAsFinishedTapped() {

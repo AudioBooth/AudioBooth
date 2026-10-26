@@ -193,21 +193,11 @@ final class BookPlayerModel: PlayerView.Model {
     guard book.chapters.isEmpty else { return }
 
     Task {
-      guard let info = await connectivityManager.startSession(bookID: bookID, forDownload: true),
+      guard let info = await connectivityManager.startSession(for: book, forDownload: true),
         !hasStartedPlayback
       else { return }
 
-      book = WatchBook(
-        id: book.id,
-        sessionID: book.sessionID,
-        title: book.title,
-        authorName: book.authorName,
-        coverURL: book.coverURL,
-        duration: book.duration,
-        chapters: info.chapters,
-        tracks: book.tracks,
-        currentTime: book.currentTime
-      )
+      book.chapters = info.chapters
       setupChapters()
       seek(to: current)
     }
@@ -247,7 +237,7 @@ final class BookPlayerModel: PlayerView.Model {
     guard connectivityManager.isReachable else { return }
 
     Task {
-      guard let info = await connectivityManager.startSession(bookID: bookID) else {
+      guard let info = await connectivityManager.startSession(for: book) else {
         AppLogger.player.warning("Failed to start session for progress reporting")
         return
       }
@@ -263,7 +253,7 @@ final class BookPlayerModel: PlayerView.Model {
       "Loading book info for \(self.bookID), isReachable: \(self.connectivityManager.isReachable)"
     )
 
-    guard let info = await connectivityManager.startSession(bookID: bookID) else {
+    guard let info = await connectivityManager.startSession(for: book) else {
       AppLogger.player.error("Failed to start session for streaming")
       playbackState = .error(retryable: true)
       errorMessage = String(localized: "Failed to connect. Tap to retry.")
@@ -274,6 +264,7 @@ final class BookPlayerModel: PlayerView.Model {
       "Got book info: \(info.tracks.count) tracks, \(info.chapters.count) chapters"
     )
 
+    let startsFromBeginning = current == 0 && book.currentTime == 0
     self.sessionID = info.sessionID
     self.book = info
 
@@ -293,7 +284,7 @@ final class BookPlayerModel: PlayerView.Model {
     audioPlayer.prepare(tracks: info.tracks) { track in
       track.url
     }
-    audioPlayer.resume(at: current)
+    audioPlayer.resume(at: startsFromBeginning && info.progress < 1 ? info.currentTime : current)
     setupRemoteCommandCenter()
   }
 
@@ -372,7 +363,7 @@ final class BookPlayerModel: PlayerView.Model {
 
     let currentTime = current
     PlayerManager.shared.clearCurrent()
-    connectivityManager.playOnPhone(bookID: bookID, currentTime: currentTime)
+    connectivityManager.playOnPhone(book, currentTime: currentTime)
     PlayerManager.shared.isShowingFullPlayer = false
   }
 
@@ -530,6 +521,7 @@ final class BookPlayerModel: PlayerView.Model {
       if timeSinceLastReport >= 30 {
         connectivityManager.reportProgress(
           bookID: book.id,
+          podcastID: book.podcastID,
           sessionID: sessionID,
           currentTime: currentTime,
           timeListened: timeSinceLastReport,
@@ -547,6 +539,7 @@ final class BookPlayerModel: PlayerView.Model {
     let timeListened = lastProgressReportTime.map { now.timeIntervalSince($0) } ?? 0
     connectivityManager.reportProgress(
       bookID: book.id,
+      podcastID: book.podcastID,
       sessionID: sessionID,
       currentTime: currentTime,
       timeListened: timeListened,

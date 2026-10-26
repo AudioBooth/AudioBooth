@@ -3,6 +3,7 @@ import Foundation
 struct WatchLocalSession: Codable {
   let id: String
   let bookID: String
+  let podcastID: String?
   let duration: Double
   let startTime: Double
   var currentTime: Double
@@ -28,7 +29,7 @@ final class WatchLocalSessionStore {
     self.sessions = sessions
   }
 
-  func record(bookID: String, currentTime: Double, timeListened: Double, duration: Double) {
+  func record(bookID: String, podcastID: String?, currentTime: Double, timeListened: Double, duration: Double) {
     var updatedSessions = sessions
     if let index = updatedSessions.firstIndex(where: { $0.bookID == bookID }) {
       updatedSessions[index].currentTime = currentTime
@@ -39,6 +40,7 @@ final class WatchLocalSessionStore {
         WatchLocalSession(
           id: UUID().uuidString,
           bookID: bookID,
+          podcastID: podcastID,
           duration: duration,
           startTime: max(0, currentTime - timeListened),
           currentTime: currentTime,

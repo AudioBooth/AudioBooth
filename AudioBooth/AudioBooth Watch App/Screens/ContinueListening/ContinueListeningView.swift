@@ -18,6 +18,9 @@ struct ContinueListeningView: View {
     .navigationDestination(for: WatchHomeSection.self) { section in
       SectionDetailView(model: SectionDetailViewModel(section: section))
     }
+    .navigationDestination(for: WatchPodcast.self) { podcast in
+      SectionDetailView(model: PodcastEpisodesViewModel(podcast: podcast))
+    }
   }
 
   private var content: some View {

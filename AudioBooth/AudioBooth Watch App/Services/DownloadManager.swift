@@ -102,6 +102,7 @@ final class DownloadManager: NSObject, ObservableObject {
       localStorage.saveBook(
         WatchBook(
           id: book.id,
+          podcastID: book.podcastID,
           title: book.title,
           authorName: book.authorName,
           coverURL: book.coverURL,
@@ -234,7 +235,9 @@ final class DownloadManager: NSObject, ObservableObject {
 
   @discardableResult
   private func refreshTracks(for bookID: String) async -> Bool {
-    guard let info = await connectivityManager.startSession(bookID: bookID, forDownload: true) else {
+    guard let book = storedBook(bookID),
+      let info = await connectivityManager.startSession(for: book, forDownload: true)
+    else {
       return false
     }
 
@@ -243,6 +246,7 @@ final class DownloadManager: NSObject, ObservableObject {
     localStorage.updateBook(bookID) { stored in
       stored = WatchBook(
         id: stored.id,
+        podcastID: stored.podcastID,
         title: info.title,
         authorName: info.authorName,
         coverURL: info.coverURL ?? stored.coverURL,

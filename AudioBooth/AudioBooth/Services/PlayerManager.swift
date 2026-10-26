@@ -328,7 +328,7 @@ extension PlayerManager: PlayerManagerProtocol {
     }
   }
 
-  private func open(episodeID: String, podcastID: String) async {
+  func open(episodeID: String, podcastID: String) async {
     if current?.id == episodeID {
       showFullPlayer()
       return

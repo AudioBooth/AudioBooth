@@ -8,6 +8,8 @@ final class SectionDetailViewModel: SectionDetailView.Model {
   }
 
   override func onLoad() async {
+    guard rows.isEmpty else { return }
+
     state = .loading
 
     guard connectivityManager.isReachable else {
@@ -15,19 +17,29 @@ final class SectionDetailViewModel: SectionDetailView.Model {
       return
     }
 
-    guard let books = await connectivityManager.fetchSectionBooks(sectionID: id) else {
+    guard let section = await connectivityManager.fetchSection(sectionID: id) else {
       state = .error(String(localized: "Failed to load books."))
       return
     }
 
     let progress = connectivityManager.progress
-    rows = books.map { book in
+    let bookRows = section.books.map { book in
       var updatedBook = book
       if let currentTime = progress[book.id] {
         updatedBook.currentTime = currentTime
       }
       return ContinueListeningRowModel(book: updatedBook)
     }
+    let podcastRows = section.podcasts.map { podcast in
+      ContinueListeningRow.Model(
+        id: podcast.id,
+        title: podcast.title,
+        author: podcast.author,
+        coverURL: podcast.coverURL,
+        podcast: podcast
+      )
+    }
+    rows = bookRows + podcastRows
     state = .loaded
   }
 }
