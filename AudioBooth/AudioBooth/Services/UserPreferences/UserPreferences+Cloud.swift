@@ -65,6 +65,7 @@ extension UserPreferences {
     "ebookReader.customTextColor",
     "ebookReader.pageMargins",
     "ebookReader.columnCount",
+    "ebookReader.showCoverWhenClosed",
     "ebookReader.scroll",
     "ebookReader.tapToNavigate",
     "ebookReader.publisherStyles",

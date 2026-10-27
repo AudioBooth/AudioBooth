@@ -3,6 +3,7 @@ import SwiftUI
 struct EbookReaderPreferencesView: View {
   @Environment(\.appTheme) var theme
   @ObservedObject var preferences: EbookReaderPreferences
+  var hasHinge = false
   var onEditZones: (() -> Void)?
   @Environment(\.dismiss) private var dismiss
 
@@ -96,6 +97,10 @@ struct EbookReaderPreferencesView: View {
             ForEach(EbookReaderPreferences.PageMargins.allCases) { margins in
               Text(margins.rawValue).tag(margins)
             }
+          }
+
+          if hasHinge {
+            Toggle("Show Cover When Closed", isOn: $preferences.showCoverWhenClosed)
           }
         }
         .listRowBackground(theme.colors.background.card)

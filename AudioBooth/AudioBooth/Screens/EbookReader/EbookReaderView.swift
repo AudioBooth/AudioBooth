@@ -10,8 +10,6 @@ struct EbookReaderView: View {
   @State private var showControls = false
   @State private var showSettings = false
   @State private var showZoneEditor = false
-  @State private var sideInsets: EdgeInsets?
-  @State private var latestSideInsets = EdgeInsets()
   @State private var headerCornerInsets = EdgeInsets()
   @State private var headerTop: CGFloat = 0
 
@@ -27,7 +25,6 @@ struct EbookReaderView: View {
       }
       .onChange(of: showControls) { _, value in
         model.onShowControlsChanged(value)
-        if !value { sideInsets = latestSideInsets }
       }
       .onChange(of: model.preferences.preferredColorScheme, initial: true) { _, scheme in
         preferredColorScheme = scheme
@@ -76,34 +73,36 @@ struct EbookReaderView: View {
 
   @ToolbarContentBuilder
   private var toolbarContent: some ToolbarContent {
-    ToolbarItem(placement: .topBarLeading) {
-      if showControls, !model.isLoading, model.error == nil, model.supportsSearch {
-        Button {
-          model.onSearchTapped()
-        } label: {
-          Label("Search", systemImage: "magnifyingglass")
-        }
-        .transition(.opacity)
-        .tint(.primary)
-      }
-    }
-
-    ToolbarItem(placement: .topBarTrailing) {
-      if showControls || model.isLoading {
-        Button {
-          dismiss()
-        } label: {
-          Label("Close", systemImage: "xmark")
-        }
-        .transition(.opacity)
-        .tint(.primary)
-      }
-    }
-
-    ToolbarItem(placement: .bottomBar) {
-      if !model.isLoading, model.error == nil, showControls {
-        bottomControlBar
+    if model.cover?.isVisible != true {
+      ToolbarItem(placement: .topBarLeading) {
+        if showControls, !model.isLoading, model.error == nil, model.supportsSearch {
+          Button {
+            model.onSearchTapped()
+          } label: {
+            Label("Search", systemImage: "magnifyingglass")
+          }
+          .transition(.opacity)
           .tint(.primary)
+        }
+      }
+
+      ToolbarItem(placement: .topBarTrailing) {
+        if showControls || model.isLoading {
+          Button {
+            dismiss()
+          } label: {
+            Label("Close", systemImage: "xmark")
+          }
+          .transition(.opacity)
+          .tint(.primary)
+        }
+      }
+
+      ToolbarItem(placement: .bottomBar) {
+        if !model.isLoading, model.error == nil, showControls {
+          bottomControlBar
+            .tint(.primary)
+        }
       }
     }
   }
@@ -132,8 +131,8 @@ struct EbookReaderView: View {
             } action: { top in
               headerTop = top
             }
-            .padding(.leading, max(sideInsets?.leading ?? 0, headerCornerInsets.leading))
-            .padding(.trailing, max(sideInsets?.trailing ?? 0, headerCornerInsets.trailing))
+            .padding(.leading, headerCornerInsets.leading)
+            .padding(.trailing, headerCornerInsets.trailing)
             .foregroundStyle(model.textColor ?? .primary)
             .background(model.backgroundColor.ignoresSafeArea(edges: .top))
             .ignoresHorizontalSafeAreaWhenReservedRegionsAvailable()
@@ -153,12 +152,17 @@ struct EbookReaderView: View {
         }
       }
       .animation(.easeInOut(duration: 0.2), value: showZoneEditor)
+      .overlay {
+        if let cover = model.cover {
+          EbookCoverView(model: cover)
+        }
+      }
   }
 
   private var contentWithSheets: some View {
     contentWithOverlays
       .sheet(isPresented: $showSettings) {
-        EbookReaderPreferencesView(preferences: model.preferences) {
+        EbookReaderPreferencesView(preferences: model.preferences, hasHinge: model.cover?.hasHinge == true) {
           showSettings = false
           Task {
             try? await Task.sleep(for: .milliseconds(400))
@@ -243,19 +247,10 @@ struct EbookReaderView: View {
       onPencilDoubleTap: { model.onTapRight() },
       onPencilSqueeze: { model.onTapLeft() }
     )
-    .padding(sideInsets ?? EdgeInsets())
     .background(model.backgroundColor)
     .background {
       GeometryReader { proxy in
-        let insets = proxy.sideOcclusionInsets(below: headerTop)
         Color.clear
-          .onChange(of: insets, initial: true) {
-            latestSideInsets = insets
-            if !showControls || sideInsets == nil { sideInsets = insets }
-          }
-          .onChange(of: proxy.size) {
-            sideInsets = insets
-          }
           .onChange(of: proxy.topCornerInsets(at: headerTop), initial: true) { _, corners in
             headerCornerInsets = corners
           }
@@ -546,6 +541,7 @@ extension EbookReaderView {
     var preferences: EbookReaderPreferences
     var backgroundColor: Color
     var textColor: Color?
+    var cover: EbookCoverView.Model?
     var supportsSettings: Bool
     var search: EbookSearchView.Model?
     var supportsSearch: Bool

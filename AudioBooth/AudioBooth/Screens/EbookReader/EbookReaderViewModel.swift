@@ -65,6 +65,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   init(source: Source) {
     self.source = source
     super.init()
+    cover = EbookCoverViewModel(preferences: preferences)
     observeChanges()
   }
 
@@ -345,11 +346,14 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       await setupChapters()
       (chapterProgress as? ChapterProgressViewModel)?.chapters = chapters
 
+      await (cover as? EbookCoverViewModel)?.load(publication)
+
       isLoading = false
       updateAutoScroll()
     } catch {
       AppLogger.viewModel.error("Failed to load ebook: \(error)")
       self.error = "Failed to load ebook. Please try again."
+      cover = nil
       isLoading = false
     }
   }

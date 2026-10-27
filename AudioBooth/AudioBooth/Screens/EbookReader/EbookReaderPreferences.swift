@@ -77,6 +77,7 @@ class EbookReaderPreferences: ObservableObject {
   )
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
   @AppStorage("ebookReader.columnCount") var columnCount: ColumnCount = .auto
+  @AppStorage("ebookReader.showCoverWhenClosed") var showCoverWhenClosed: Bool = false
   @AppStorage("ebookReader.scroll") var scroll: Bool = false
   @AppStorage("ebookReader.tapToNavigate") var tapToNavigate: Bool = true
   @AppStorage("ebookReader.useVolumeButtonsForPageTurn") var useVolumeButtonsForPageTurn: Bool = false
