@@ -14,6 +14,7 @@ struct BookDetailsView: View {
   @State private var selectedTabIndex: Int = 0
   @State private var isDescriptionExpanded: Bool = false
   @State private var isShowingFullScreenCover = false
+  @Namespace private var coverNamespace
 
   private enum CoordinateSpaces {
     case scrollView
@@ -39,6 +40,7 @@ struct BookDetailsView: View {
     .fullScreenCover(isPresented: $isShowingFullScreenCover) {
       if let coverURL = model.coverURL {
         FullScreenCoverView(coverURL: coverURL)
+          .zoomTransition(sourceID: "cover", in: coverNamespace)
       }
     }
     .overlay {
@@ -319,31 +321,32 @@ struct BookDetailsView: View {
 
   private func cover(offset: CGFloat) -> some View {
     ParallaxHeader(coordinateSpace: CoordinateSpaces.scrollView) {
-      ZStack(alignment: .center) {
+      Cover(
+        model: Cover.Model(
+          url: model.coverURL,
+          title: model.title,
+          author: model.authors.map(\.name).joined(separator: ", "),
+          progress: model.progress.audio > 0 ? model.progress.audio : model.progress.ebook,
+          downloadProgress: coverDownloadProgress
+        ),
+        style: .plain
+      )
+      .zoomTransitionSource(id: "cover", in: coverNamespace)
+      .shadow(radius: 4)
+      .frame(width: 250, height: 250)
+      .offset(y: offset / 2 - 8)
+      .onTapGesture {
+        guard model.coverURL != nil else { return }
+        isShowingFullScreenCover = true
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background {
         LazyImage(url: model.coverURL) { state in
           state.image?
             .resizable()
             .aspectRatio(contentMode: .fill)
             .blur(radius: 5)
             .opacity(0.3)
-        }
-
-        Cover(
-          model: Cover.Model(
-            url: model.coverURL,
-            title: model.title,
-            author: model.authors.map(\.name).joined(separator: ", "),
-            progress: model.progress.audio > 0 ? model.progress.audio : model.progress.ebook,
-            downloadProgress: coverDownloadProgress
-          ),
-          style: .plain
-        )
-        .shadow(radius: 4)
-        .frame(width: 250, height: 250)
-        .offset(y: offset / 2 - 8)
-        .onTapGesture {
-          guard model.coverURL != nil else { return }
-          isShowingFullScreenCover = true
         }
       }
     }
@@ -361,6 +364,7 @@ struct BookDetailsView: View {
         ),
         style: .plain
       )
+      .zoomTransitionSource(id: "cover", in: coverNamespace)
       .aspectRatio(1, contentMode: .fit)
       .frame(maxWidth: width * 2 / 3, maxHeight: width * 2 / 3)
       .shadow(radius: 4)

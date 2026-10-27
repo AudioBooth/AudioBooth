@@ -88,7 +88,7 @@ struct MiniBookPlayer: View, Equatable {
 
   private var cover: some View {
     Cover(url: player.coverURL)
-      .playerZoomSource(in: namespace)
+      .zoomTransitionSource(id: "player", in: namespace)
   }
 
   private var playbackControls: some View {
@@ -274,7 +274,7 @@ struct LegacyMiniBookPlayer: View {
 
   private var cover: some View {
     Cover(url: player.coverURL)
-      .playerZoomSource(in: namespace)
+      .zoomTransitionSource(id: "player", in: namespace)
   }
 }
 

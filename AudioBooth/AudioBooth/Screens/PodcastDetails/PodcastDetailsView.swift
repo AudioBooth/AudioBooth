@@ -314,29 +314,29 @@ struct PodcastDetailsView: View {
 
   private func cover(offset: CGFloat) -> some View {
     ParallaxHeader(coordinateSpace: CoordinateSpaces.scrollView) {
-      ZStack(alignment: .center) {
+      Cover(
+        model: Cover.Model(
+          url: model.coverURL,
+          title: model.title,
+          author: model.author
+        ),
+        style: .plain
+      )
+      .shadow(radius: 4)
+      .frame(width: 250, height: 250)
+      .offset(y: offset / 2 - 8)
+      .onTapGesture {
+        guard model.coverURL != nil else { return }
+        isShowingFullScreenCover = true
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background {
         LazyImage(url: model.coverURL) { state in
           state.image?
             .resizable()
             .aspectRatio(contentMode: .fill)
             .blur(radius: 5)
             .opacity(0.3)
-        }
-
-        Cover(
-          model: Cover.Model(
-            url: model.coverURL,
-            title: model.title,
-            author: model.author
-          ),
-          style: .plain
-        )
-        .shadow(radius: 4)
-        .frame(width: 250, height: 250)
-        .offset(y: offset / 2 - 8)
-        .onTapGesture {
-          guard model.coverURL != nil else { return }
-          isShowingFullScreenCover = true
         }
       }
     }

@@ -57,7 +57,7 @@ struct ContentView: View {
           } else {
             BookPlayer(model: currentPlayer)
               .displayScaled()
-              .playerZoomTransition(in: playerNamespace)
+              .zoomTransition(sourceID: "player", in: playerNamespace)
               .interactiveDismissDisabled(currentPlayer.isLocked)
           }
         }
