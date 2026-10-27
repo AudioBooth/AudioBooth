@@ -9,6 +9,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var speed: FloatPickerSheet.Model?
   private let preferences = UserPreferences.shared
   private var cancellables = Set<AnyCancellable>()
+  private var lastBackgroundUpdate = Date.distantPast
 
   private let mediaProgress: MediaProgress
 
@@ -28,6 +29,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
 
     observeMediaProgress()
     observePreferenceChanges()
+    observeForeground()
   }
 
   private func observeMediaProgress() {
@@ -40,6 +42,14 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
         self.observeMediaProgress()
       }
     }
+  }
+
+  private func observeForeground() {
+    NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+      .sink { [weak self] _ in
+        self?.updateProgress()
+      }
+      .store(in: &cancellables)
   }
 
   func configure(
@@ -55,6 +65,11 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
 
   func updateProgress() {
     guard !isDragging else { return }
+
+    if UIApplication.shared.applicationState == .background {
+      guard Date().timeIntervalSince(lastBackgroundUpdate) >= 10 else { return }
+      lastBackgroundUpdate = Date()
+    }
 
     total = mediaProgress.duration
 
