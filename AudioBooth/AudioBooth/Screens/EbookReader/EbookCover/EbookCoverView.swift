@@ -196,6 +196,7 @@ extension EbookCoverView {
     var subtitle: String?
     var author: String?
     var hasHinge: Bool
+    var isHingeClosed: Bool
     var isVisible: Bool
     var isLoaded: Bool
     var revealsControlsOnAppear: Bool
@@ -210,6 +211,7 @@ extension EbookCoverView {
       subtitle: String? = nil,
       author: String? = nil,
       hasHinge: Bool = false,
+      isHingeClosed: Bool = false,
       isVisible: Bool = false,
       isLoaded: Bool = false,
       revealsControlsOnAppear: Bool = true
@@ -219,6 +221,7 @@ extension EbookCoverView {
       self.subtitle = subtitle
       self.author = author
       self.hasHinge = hasHinge
+      self.isHingeClosed = isHingeClosed
       self.isVisible = isVisible
       self.isLoaded = isLoaded
       self.revealsControlsOnAppear = revealsControlsOnAppear

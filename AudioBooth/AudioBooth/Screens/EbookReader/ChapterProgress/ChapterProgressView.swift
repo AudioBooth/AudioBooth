@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ChapterProgressView: View {
   static let height: CGFloat = 40
+  static let topPadding: CGFloat = 12
   static let pagedBottomPadding: CGFloat = 16
 
   @ObservedObject var model: Model
@@ -44,6 +45,7 @@ struct ChapterProgressView: View {
     }
     .padding(.horizontal, 16)
     .frame(height: Self.height)
+    .padding(.top, Self.topPadding)
     .padding(.bottom, model.isScrollMode ? 0 : Self.pagedBottomPadding)
     .frame(maxWidth: .infinity)
   }

@@ -247,12 +247,16 @@ struct EbookReaderView: View {
       onPencilDoubleTap: { model.onTapRight() },
       onPencilSqueeze: { model.onTapLeft() }
     )
+    .padding(.horizontal, closedHingePadding)
     .background(model.backgroundColor)
     .background {
       GeometryReader { proxy in
         Color.clear
           .onChange(of: proxy.topCornerInsets(at: headerTop), initial: true) { _, corners in
             headerCornerInsets = corners
+          }
+          .onChange(of: proxy.size) {
+            model.onReaderSizeChanged()
           }
       }
     }
@@ -273,6 +277,11 @@ struct EbookReaderView: View {
         }
       }
     }
+  }
+
+  private var closedHingePadding: CGFloat {
+    guard model.cover?.isHingeClosed == true else { return 0 }
+    return 15 * model.preferences.pageMargins.value
   }
 
   private func handleTap(at point: CGPoint) {
@@ -565,6 +574,7 @@ extension EbookReaderView {
     func onTapRight() {}
     func onAutoScrollPlayPauseTapped() {}
     func onShowControlsChanged(_ isVisible: Bool) {}
+    func onReaderSizeChanged() {}
     func onReadAlongTapped() {}
     func onCatchUpTapped() {}
     func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {}

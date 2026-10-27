@@ -57,6 +57,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private var catchUpCheck: Task<Void, Never>?
   private var cancellables = Set<AnyCancellable>()
   private var autoScrollTask: Task<Void, Never>?
+  private var restoreLocationTask: Task<Void, Never>?
+  private var locationBeforeResize: Locator?
   private var isAutoScrollPaused: Bool = false
   weak var currentScrollView: UIScrollView?
 
@@ -108,6 +110,20 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     if isVisible, readAlong == nil {
       supportsReadAlong = isReadAlongSupported
       refreshCatchUpOffer()
+    }
+  }
+
+  override func onReaderSizeChanged() {
+    guard let navigator, !preferences.scroll else { return }
+    guard let locator = locationBeforeResize ?? navigator.currentLocation else { return }
+    locationBeforeResize = locator
+
+    restoreLocationTask?.cancel()
+    restoreLocationTask = Task {
+      try? await Task.sleep(for: .milliseconds(300))
+      guard !Task.isCancelled else { return }
+      locationBeforeResize = nil
+      await navigator.go(to: locator, options: NavigatorGoOptions(animated: false))
     }
   }
 
@@ -367,7 +383,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         publication: publication,
         initialLocation: initialLocation,
         config: EPUBNavigatorViewController.Configuration(
-          preferences: preferences.toEPUBPreferences(colorScheme: systemColorScheme),
+          preferences: epubPreferences(for: publication),
           editingActions: editingActions,
           contentInset: [
             .compact: (top: 40, bottom: 0),
@@ -442,7 +458,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private func updateProgressHeaderInset() {
     let isVisible = chapterProgress != nil && preferences.showProgressHeader
     let bottomPadding = preferences.scroll ? 0 : ChapterProgressView.pagedBottomPadding
-    let top = isVisible ? ChapterProgressView.height + bottomPadding : 0
+    let top = isVisible ? ChapterProgressView.topPadding + ChapterProgressView.height + bottomPadding : 0
     guard let readerViewController, readerViewController.additionalSafeAreaInsets.top != top else { return }
     readerViewController.additionalSafeAreaInsets.top = top
   }
@@ -654,10 +670,17 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       return
     }
 
-    let epubPrefs = preferences.toEPUBPreferences(colorScheme: systemColorScheme)
-    epubNavigator.submitPreferences(epubPrefs)
+    epubNavigator.submitPreferences(epubPreferences(for: publication))
     backgroundColor = themeBackgroundColor
     textColor = themeTextColor
+  }
+
+  private func epubPreferences(for publication: Publication?) -> EPUBPreferences {
+    var prefs = preferences.toEPUBPreferences(colorScheme: systemColorScheme)
+    if publication?.metadata.layout != .fixed {
+      prefs.spread = .never
+    }
+    return prefs
   }
 
   private var systemColorScheme: ColorScheme {

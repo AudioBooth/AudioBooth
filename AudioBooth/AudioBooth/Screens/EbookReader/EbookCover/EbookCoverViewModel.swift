@@ -4,7 +4,6 @@ import SwiftUI
 
 final class EbookCoverViewModel: EbookCoverView.Model {
   private let preferences: EbookReaderPreferences
-  private var isHingeClosed = false
   private var isDismissed = false
   private var cancellables = Set<AnyCancellable>()
 
