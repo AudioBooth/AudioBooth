@@ -27,26 +27,39 @@ nonisolated struct BookShareItem: Transferable, Identifiable {
     }
   }
 
-  /// The ebook's actual file type, so share targets that filter by type (e.g. the Kindle app) accept it.
-  private var ebookContentType: UTType? {
-    guard case .ebook = content else { return nil }
-    return UTType(filenameExtension: (name as NSString).pathExtension)
+  private var contentType: UTType {
+    let ext: String
+    switch content {
+    case .audiobook(let trackURLs):
+      guard trackURLs.count == 1, let track = trackURLs.first else { return .zip }
+      ext = track.pathExtension
+    case .ebook:
+      ext = URL(filePath: name).pathExtension
+    }
+
+    guard
+      let type = UTType(filenameExtension: ext),
+      let match = [.epub, .pdf, .zip, .audio].first(where: type.conforms)
+    else { return .data }
+
+    return match
   }
 
   static var transferRepresentation: some TransferRepresentation {
-    FileRepresentation(exportedContentType: .epub) { item in
-      SentTransferredFile(try await item.resolve())
-    }
-    .exportingCondition { $0.ebookContentType?.conforms(to: .epub) == true }
+    FileRepresentation(exportedContentType: .epub) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .epub }
 
-    FileRepresentation(exportedContentType: .pdf) { item in
-      SentTransferredFile(try await item.resolve())
-    }
-    .exportingCondition { $0.ebookContentType?.conforms(to: .pdf) == true }
+    FileRepresentation(exportedContentType: .pdf) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .pdf }
 
-    FileRepresentation(exportedContentType: .data) { item in
-      SentTransferredFile(try await item.resolve())
-    }
+    FileRepresentation(exportedContentType: .zip) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .zip }
+
+    FileRepresentation(exportedContentType: .audio) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .audio }
+
+    FileRepresentation(exportedContentType: .data) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .data }
   }
 
   private func resolve() async throws -> URL {
