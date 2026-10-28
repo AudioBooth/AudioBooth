@@ -27,10 +27,39 @@ nonisolated struct BookShareItem: Transferable, Identifiable {
     }
   }
 
-  static var transferRepresentation: some TransferRepresentation {
-    FileRepresentation(exportedContentType: .data) { item in
-      SentTransferredFile(try await item.resolve())
+  private var contentType: UTType {
+    let ext: String
+    switch content {
+    case .audiobook(let trackURLs):
+      guard trackURLs.count == 1, let track = trackURLs.first else { return .zip }
+      ext = track.pathExtension
+    case .ebook:
+      ext = URL(filePath: name).pathExtension
     }
+
+    guard
+      let type = UTType(filenameExtension: ext),
+      let match = [.epub, .pdf, .zip, .audio].first(where: type.conforms)
+    else { return .data }
+
+    return match
+  }
+
+  static var transferRepresentation: some TransferRepresentation {
+    FileRepresentation(exportedContentType: .epub) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .epub }
+
+    FileRepresentation(exportedContentType: .pdf) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .pdf }
+
+    FileRepresentation(exportedContentType: .zip) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .zip }
+
+    FileRepresentation(exportedContentType: .audio) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .audio }
+
+    FileRepresentation(exportedContentType: .data) { SentTransferredFile(try await $0.resolve()) }
+      .exportingCondition { $0.contentType == .data }
   }
 
   private func resolve() async throws -> URL {
