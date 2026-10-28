@@ -27,7 +27,23 @@ nonisolated struct BookShareItem: Transferable, Identifiable {
     }
   }
 
+  /// The ebook's actual file type, so share targets that filter by type (e.g. the Kindle app) accept it.
+  private var ebookContentType: UTType? {
+    guard case .ebook = content else { return nil }
+    return UTType(filenameExtension: (name as NSString).pathExtension)
+  }
+
   static var transferRepresentation: some TransferRepresentation {
+    FileRepresentation(exportedContentType: .epub) { item in
+      SentTransferredFile(try await item.resolve())
+    }
+    .exportingCondition { $0.ebookContentType?.conforms(to: .epub) == true }
+
+    FileRepresentation(exportedContentType: .pdf) { item in
+      SentTransferredFile(try await item.resolve())
+    }
+    .exportingCondition { $0.ebookContentType?.conforms(to: .pdf) == true }
+
     FileRepresentation(exportedContentType: .data) { item in
       SentTransferredFile(try await item.resolve())
     }
