@@ -6,6 +6,7 @@ struct EbookReaderView: View {
   @ObservedObject var model: Model
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.scenePhase) private var scenePhase
 
   @State private var showControls = false
   @State private var showSettings = false
@@ -30,10 +31,15 @@ struct EbookReaderView: View {
         preferredColorScheme = scheme
       }
       .onChange(of: colorScheme) { _, _ in
-        if model.preferences.theme == .auto {
+        if scenePhase == .active && model.preferences.theme == .auto {
           model.onPreferencesChanged(model.preferences)
         }
         preferredColorScheme = model.preferences.preferredColorScheme
+      }
+      .onChange(of: scenePhase) { _, phase in
+        if phase == .active && model.preferences.theme == .auto {
+          model.onPreferencesChanged(model.preferences)
+        }
       }
       .onAppear {
         UIApplication.shared.isIdleTimerDisabled = userPreferences.keepScreenAwakeInPlayer
