@@ -918,6 +918,10 @@ extension BookPlayerModel {
 
     do {
       if let existingItem = try LocalBook.fetch(bookID: id) {
+        if existingItem.isDownloaded, existingItem.tracks.contains(where: { $0.localPath == nil }) {
+          AppLogger.player.warning("Downloaded files are missing, removing download")
+          downloadManager.deleteDownload(for: id)
+        }
         self.item = existingItem
         AppLogger.player.debug(
           "Found existing progress: \(self.mediaProgress.currentTime)s"
