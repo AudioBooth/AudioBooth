@@ -206,6 +206,13 @@ struct LibraryPage: View {
             Button(action: hasSelection ? model.onPlaySelectedTapped : model.onPlayAllTapped) {
               Label(hasSelection ? "Play Selected" : "Play All", systemImage: "play.fill")
             }
+
+            Button(action: model.onAddToQueueTapped) {
+              Label(
+                hasSelection ? "Add Selected to Queue" : "Add All to Queue",
+                systemImage: "text.badge.plus"
+              )
+            }
           }
 
           if model.actions.contains(.resetProgress) {
@@ -389,6 +396,7 @@ extension LibraryPage {
     func onDownloadAllTapped() {}
     func onPlayAllTapped() {}
     func onPlaySelectedTapped() {}
+    func onAddToQueueTapped() {}
     func onResetAllProgressTapped() {}
     func onMarkAllFinishedTapped() {}
     func onFilterButtonTapped() {}

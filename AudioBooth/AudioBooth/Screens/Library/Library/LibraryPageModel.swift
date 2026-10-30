@@ -236,6 +236,14 @@ final class LibraryPageModel: LibraryPage.Model {
     exitSelection()
   }
 
+  override func onAddToQueueTapped() {
+    let books = isSelecting ? selectedBooks : allBooks
+    for item in queueItems(for: books) {
+      playerManager.addToQueue(item)
+    }
+    exitSelection()
+  }
+
   override func onResetAllProgressTapped() {
     if isSelecting {
       guard !selectedIDs.isEmpty else { return }
@@ -280,10 +288,13 @@ final class LibraryPageModel: LibraryPage.Model {
 
   private func play(_ books: [BookCard.Model]) {
     guard !books.isEmpty else { return }
+    playerManager.playAll(queueItems(for: books))
+  }
 
+  private func queueItems(for books: [BookCard.Model]) -> [QueueItem] {
     let notCompleted = books.filter { MediaProgress.progress(for: $0.id) < 1.0 }
     let source = notCompleted.isEmpty ? books : notCompleted
-    let queueItems = source.map { book in
+    return source.map { book in
       QueueItem(
         bookID: book.id,
         title: book.title,
@@ -292,7 +303,6 @@ final class LibraryPageModel: LibraryPage.Model {
         podcastID: book.podcastID
       )
     }
-    playerManager.playAll(queueItems)
   }
 
   private func updateActions() {

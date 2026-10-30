@@ -206,9 +206,19 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
   }
 
   override func onPlayAll() {
+    playerManager.playAll(queueItems)
+  }
+
+  override func onAddAllToQueueTapped() {
+    for item in queueItems {
+      playerManager.addToQueue(item)
+    }
+  }
+
+  private var queueItems: [QueueItem] {
     let notCompleted = books.filter { MediaProgress.progress(for: $0.id) < 1.0 }
     let source = notCompleted.isEmpty ? books : notCompleted
-    let items = source.map { book in
+    return source.map { book in
       QueueItem(
         bookID: book.id,
         title: book.title,
@@ -217,7 +227,6 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
         podcastID: book.podcastID
       )
     }
-    playerManager.playAll(items)
   }
 
   override func onPlayItem(_ item: BookCard.Model) {

@@ -103,6 +103,12 @@ struct CollectionDetailPage: View {
             Label("Download All", systemImage: "arrow.down.circle")
           }
 
+          if !model.books.isEmpty {
+            Button(action: model.onAddAllToQueueTapped) {
+              Label("Add All to Queue", systemImage: "text.badge.plus")
+            }
+          }
+
           if model.canEdit {
             Divider()
 
@@ -374,6 +380,7 @@ extension CollectionDetailPage {
     func onTogglePin() {}
     func onPlayItem(_ item: BookCard.Model) {}
     func onPlayAll() {}
+    func onAddAllToQueueTapped() {}
     func onAutoDownloadChanged(_ mode: AutoDownloadMode) {}
     func onRemoveCompletedChanged(_ value: Bool) {}
     func onDownloadAllTapped() {}
