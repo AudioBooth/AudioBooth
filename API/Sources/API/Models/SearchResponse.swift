@@ -23,14 +23,14 @@ public struct SearchResponse: Decodable, Sendable {
 
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    book = try container.decodeIfPresent([SearchBook].self, forKey: .book) ?? []
-    podcast = try container.decodeIfPresent([SearchPodcast].self, forKey: .podcast) ?? []
-    episodes = try container.decodeIfPresent([SearchPodcast].self, forKey: .episodes) ?? []
-    series = try container.decodeIfPresent([Series].self, forKey: .series) ?? []
-    authors = try container.decodeIfPresent([Author].self, forKey: .authors) ?? []
-    narrators = try container.decodeIfPresent([Narrator].self, forKey: .narrators) ?? []
-    tags = try container.decodeIfPresent([Tag].self, forKey: .tags) ?? []
-    genres = try container.decodeIfPresent([Genre].self, forKey: .genres) ?? []
+    book = container.decodeSkippingFailures(SearchBook.self, forKey: .book)
+    podcast = container.decodeSkippingFailures(SearchPodcast.self, forKey: .podcast)
+    episodes = container.decodeSkippingFailures(SearchPodcast.self, forKey: .episodes)
+    series = container.decodeSkippingFailures(Series.self, forKey: .series)
+    authors = container.decodeSkippingFailures(Author.self, forKey: .authors)
+    narrators = container.decodeSkippingFailures(Narrator.self, forKey: .narrators)
+    tags = container.decodeSkippingFailures(Tag.self, forKey: .tags)
+    genres = container.decodeSkippingFailures(Genre.self, forKey: .genres)
   }
 }
 
@@ -56,5 +56,25 @@ extension SearchResponse {
   public struct Genre: Codable, Sendable {
     public let name: String
     public let numItems: Int
+  }
+}
+
+extension KeyedDecodingContainer {
+  /// Decodes an array element by element, so one result the app can't decode
+  /// doesn't fail the whole search. A missing or malformed key yields `[]`.
+  fileprivate func decodeSkippingFailures<T: Decodable>(_ type: T.Type, forKey key: Key) -> [T] {
+    guard var container = try? nestedUnkeyedContainer(forKey: key) else { return [] }
+
+    var results: [T] = []
+    while !container.isAtEnd {
+      // superDecoder() moves past the element even when decoding it fails.
+      guard let elementDecoder = try? container.superDecoder() else { break }
+      do {
+        results.append(try T(from: elementDecoder))
+      } catch {
+        AppLogger.network.warning("Skipping search result in \(key.stringValue): \(error)")
+      }
+    }
+    return results
   }
 }
