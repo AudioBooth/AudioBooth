@@ -266,7 +266,8 @@ private extension AudioPlayer {
     guard index < tracks.count, let url = url(for: tracks[index]) else { return nil }
     return AVPlayerItem(
       url: url,
-      headers: Audiobookshelf.shared.authentication.server?.customHeaders
+      headers: Audiobookshelf.shared.authentication.server?.customHeaders,
+      preciseTiming: tracks[index].codec?.lowercased() == "opus"
     )
   }
 
@@ -713,8 +714,8 @@ extension LevelingStrength {
 }
 
 extension AVPlayerItem {
-  convenience init(url: URL, headers: [String: String]?) {
-    var options: [String: Any] = [:]
+  convenience init(url: URL, headers: [String: String]?, preciseTiming: Bool) {
+    var options: [String: Any] = [AVURLAssetPreferPreciseDurationAndTimingKey: preciseTiming]
     if !url.isFileURL, let headers, !headers.isEmpty {
       options["AVURLAssetHTTPHeaderFieldsKey"] = headers
     }
