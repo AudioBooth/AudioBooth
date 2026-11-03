@@ -1,4 +1,5 @@
 import Combine
+import ReadiumNavigator
 import SwiftUI
 import UIKit
 
@@ -250,6 +251,7 @@ struct EbookReaderView: View {
   private func readerView(_ viewController: UIViewController) -> some View {
     ReaderViewControllerWrapper(
       viewController: viewController,
+      onTap: { handleTap(at: $0) },
       onPencilDoubleTap: { model.onTapRight() },
       onPencilSqueeze: { model.onTapLeft() }
     )
@@ -257,7 +259,7 @@ struct EbookReaderView: View {
     .background(model.backgroundColor)
     .background {
       GeometryReader { proxy in
-        Color.clear
+        SwiftUI.Color.clear
           .onChange(of: proxy.topCornerInsets(at: headerTop), initial: true) { _, corners in
             headerCornerInsets = corners
           }
@@ -267,12 +269,6 @@ struct EbookReaderView: View {
       }
     }
     .ignoresSafeArea()
-    .simultaneousGesture(
-      SpatialTapGesture(coordinateSpace: .global)
-        .onEnded { value in
-          handleTap(at: value.location)
-        }
-    )
     .animation(.easeInOut(duration: 0.2), value: showControls)
     .onAppear {
       showControls = true
@@ -496,10 +492,20 @@ extension View {
 
 struct ReaderViewControllerWrapper: UIViewControllerRepresentable {
   let viewController: UIViewController
+  var onTap: ((CGPoint) -> Void)?
   var onPencilDoubleTap: (() -> Void)?
   var onPencilSqueeze: (() -> Void)?
 
   func makeUIViewController(context: Context) -> UIViewController {
+    let coordinator = context.coordinator
+    (viewController as? VisualNavigator)?.addObserver(
+      .activate { [weak viewController] event in
+        guard let view = viewController?.view else { return false }
+        coordinator.onTap?(view.convert(event.location, to: nil))
+        return false
+      }
+    )
+
     if #available(iOS 17.5, *) {
       let interaction = UIPencilInteraction()
       interaction.delegate = context.coordinator
@@ -509,19 +515,22 @@ struct ReaderViewControllerWrapper: UIViewControllerRepresentable {
   }
 
   func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+    context.coordinator.onTap = onTap
     context.coordinator.onDoubleTap = onPencilDoubleTap
     context.coordinator.onSqueeze = onPencilSqueeze
   }
 
   func makeCoordinator() -> Coordinator {
-    Coordinator(onDoubleTap: onPencilDoubleTap, onSqueeze: onPencilSqueeze)
+    Coordinator(onTap: onTap, onDoubleTap: onPencilDoubleTap, onSqueeze: onPencilSqueeze)
   }
 
   final class Coordinator: NSObject, UIPencilInteractionDelegate {
+    var onTap: ((CGPoint) -> Void)?
     var onDoubleTap: (() -> Void)?
     var onSqueeze: (() -> Void)?
 
-    init(onDoubleTap: (() -> Void)?, onSqueeze: (() -> Void)?) {
+    init(onTap: ((CGPoint) -> Void)?, onDoubleTap: (() -> Void)?, onSqueeze: (() -> Void)?) {
+      self.onTap = onTap
       self.onDoubleTap = onDoubleTap
       self.onSqueeze = onSqueeze
     }
@@ -554,8 +563,8 @@ extension EbookReaderView {
     var chapters: EbookChapterPickerSheet.Model?
     var chapterProgress: ChapterProgressView.Model?
     var preferences: EbookReaderPreferences
-    var backgroundColor: Color
-    var textColor: Color?
+    var backgroundColor: SwiftUI.Color
+    var textColor: SwiftUI.Color?
     var cover: EbookCoverView.Model?
     var supportsSettings: Bool
     var search: EbookSearchView.Model?
@@ -594,7 +603,7 @@ extension EbookReaderView {
       page: (current: Int, total: Int)? = nil,
       chapters: EbookChapterPickerSheet.Model? = nil,
       preferences: EbookReaderPreferences = EbookReaderPreferences(),
-      backgroundColor: Color = .clear,
+      backgroundColor: SwiftUI.Color = .clear,
       supportsSettings: Bool = false,
       search: EbookSearchView.Model? = nil,
       supportsSearch: Bool = false,
