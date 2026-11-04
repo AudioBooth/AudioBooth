@@ -636,6 +636,8 @@ extension PlayerManager {
   }
 
   private func playItem(_ item: QueueItem, autoPlay: Bool) {
+    restartIfFinished(item.bookID)
+
     Task {
       if let podcastID = item.podcastID {
         if autoPlay {
@@ -666,6 +668,7 @@ extension PlayerManager {
     }
 
     queue.removeAll { $0.bookID == item.bookID }
+    restartIfFinished(item.bookID)
 
     Task {
       if let podcastID = item.podcastID {
@@ -673,6 +676,12 @@ extension PlayerManager {
       } else {
         await play(item.bookID)
       }
+    }
+  }
+
+  private func restartIfFinished(_ bookID: String) {
+    if let mediaProgress = try? MediaProgress.fetch(bookID: bookID), mediaProgress.isFinished {
+      mediaProgress.currentTime = 0
     }
   }
 

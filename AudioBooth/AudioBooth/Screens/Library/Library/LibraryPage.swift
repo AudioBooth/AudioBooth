@@ -131,6 +131,24 @@ struct LibraryPage: View {
             Label("List View", systemImage: "rectangle.grid.1x2")
           }
 
+          if !model.sortOptions.isEmpty {
+            Divider()
+
+            Menu("Sort By") {
+              ForEach(model.sortOptions, id: \.self) { sortBy in
+                if model.currentSort == sortBy {
+                  Button(
+                    sortBy.displayTitle,
+                    systemImage: model.ascending ? "chevron.up" : "chevron.down",
+                    action: { model.onSortOptionTapped(sortBy) }
+                  )
+                } else {
+                  Button(sortBy.displayTitle, action: { model.onSortOptionTapped(sortBy) })
+                }
+              }
+            }
+          }
+
           if model.isSelecting {
             Divider()
 
@@ -180,24 +198,6 @@ struct LibraryPage: View {
             }
           }
 
-          if !model.sortOptions.isEmpty {
-            Divider()
-
-            Menu("Sort By") {
-              ForEach(model.sortOptions, id: \.self) { sortBy in
-                if model.currentSort == sortBy {
-                  Button(
-                    sortBy.displayTitle,
-                    systemImage: model.ascending ? "chevron.up" : "chevron.down",
-                    action: { model.onSortOptionTapped(sortBy) }
-                  )
-                } else {
-                  Button(sortBy.displayTitle, action: { model.onSortOptionTapped(sortBy) })
-                }
-              }
-            }
-          }
-
           if showsPlayAction || model.actions.contains(.resetProgress) || model.actions.contains(.markAsFinished) {
             Divider()
           }
@@ -209,7 +209,7 @@ struct LibraryPage: View {
 
             Button(action: model.onAddToQueueTapped) {
               Label(
-                hasSelection ? "Add Selected to Queue" : "Add All to Queue",
+                hasSelection ? "Queue Selected" : "Queue All",
                 systemImage: "text.badge.plus"
               )
             }
@@ -235,6 +235,7 @@ struct LibraryPage: View {
         } label: {
           Image(systemName: "ellipsis")
         }
+        .queueChoiceDialog($model.queueChoice, onSelect: model.onQueueChoiceSelected)
         .tint(.primary)
       }
     }
@@ -315,7 +316,7 @@ struct LibraryPage: View {
   }
 
   var showsPlayAction: Bool {
-    model.actions.contains(.playAll) && !model.items.isEmpty && (!model.isSelecting || hasSelection)
+    hasSelection || (model.actions.contains(.playAll) && !model.isSelecting && !model.items.isEmpty)
   }
 
   var navigationTitle: String {
@@ -381,6 +382,7 @@ extension LibraryPage {
     var isSelecting: Bool = false
     var selectedIDs: [String] = []
     var collectionSelector: CollectionSelectorSheet.Model?
+    var queueChoice: QueueChoice?
 
     var selectableCount: Int {
       items.count { if case .book = $0 { true } else { false } }
@@ -397,6 +399,7 @@ extension LibraryPage {
     func onPlayAllTapped() {}
     func onPlaySelectedTapped() {}
     func onAddToQueueTapped() {}
+    func onQueueChoiceSelected(_ choice: QueueChoice, scope: QueueChoice.Scope) {}
     func onResetAllProgressTapped() {}
     func onMarkAllFinishedTapped() {}
     func onFilterButtonTapped() {}

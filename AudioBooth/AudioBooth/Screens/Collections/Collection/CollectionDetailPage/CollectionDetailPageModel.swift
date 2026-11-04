@@ -206,19 +206,31 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
   }
 
   override func onPlayAll() {
-    playerManager.playAll(queueItems)
+    start(.play)
   }
 
   override func onAddAllToQueueTapped() {
-    for item in queueItems {
-      playerManager.addToQueue(item)
+    start(.addToQueue)
+  }
+
+  override func onQueueChoiceSelected(_ choice: QueueChoice, scope: QueueChoice.Scope) {
+    switch scope {
+    case .unfinished: perform(choice.action, with: books.filter { MediaProgress.progress(for: $0.id) < 1.0 })
+    case .all: perform(choice.action, with: books)
     }
   }
 
-  private var queueItems: [QueueItem] {
-    let notCompleted = books.filter { MediaProgress.progress(for: $0.id) < 1.0 }
-    let source = notCompleted.isEmpty ? books : notCompleted
-    return source.map { book in
+  private func start(_ action: QueueChoice.Action) {
+    let unfinishedCount = books.count { MediaProgress.progress(for: $0.id) < 1.0 }
+    if unfinishedCount == 0 || unfinishedCount == books.count {
+      perform(action, with: books)
+    } else {
+      queueChoice = QueueChoice(action: action, unfinishedCount: unfinishedCount, totalCount: books.count)
+    }
+  }
+
+  private func perform(_ action: QueueChoice.Action, with books: [BookCard.Model]) {
+    let items = books.map { book in
       QueueItem(
         bookID: book.id,
         title: book.title,
@@ -226,6 +238,15 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
         coverURL: book.cover.url,
         podcastID: book.podcastID
       )
+    }
+
+    switch action {
+    case .play:
+      playerManager.playAll(items)
+    case .addToQueue:
+      for item in items {
+        playerManager.addToQueue(item)
+      }
     }
   }
 

@@ -105,7 +105,7 @@ struct CollectionDetailPage: View {
 
           if !model.books.isEmpty {
             Button(action: model.onAddAllToQueueTapped) {
-              Label("Add All to Queue", systemImage: "text.badge.plus")
+              Label("Queue All", systemImage: "text.badge.plus")
             }
           }
 
@@ -142,6 +142,7 @@ struct CollectionDetailPage: View {
           }
           Button("Cancel", role: .cancel) {}
         }
+        .queueChoiceDialog($model.queueChoice, onSelect: model.onQueueChoiceSelected)
         .tint(.primary)
       }
     }
@@ -370,6 +371,7 @@ extension CollectionDetailPage {
     var isPinned: Bool
     var autoDownload: AutoDownloadMode
     var removeCompleted: Bool
+    var queueChoice: QueueChoice?
 
     func onAppear() {}
     func refresh() async {}
@@ -381,6 +383,7 @@ extension CollectionDetailPage {
     func onPlayItem(_ item: BookCard.Model) {}
     func onPlayAll() {}
     func onAddAllToQueueTapped() {}
+    func onQueueChoiceSelected(_ choice: QueueChoice, scope: QueueChoice.Scope) {}
     func onAutoDownloadChanged(_ mode: AutoDownloadMode) {}
     func onRemoveCompletedChanged(_ value: Bool) {}
     func onDownloadAllTapped() {}
