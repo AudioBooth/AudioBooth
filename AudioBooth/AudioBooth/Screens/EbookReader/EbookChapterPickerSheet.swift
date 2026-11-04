@@ -90,6 +90,7 @@ extension EbookChapterPickerSheet {
       let link: ReadiumShared.Link
       var level: Int = 0
       var pageNumber: Int?
+      var resourceIndex: Int?
     }
 
     var chapters: [Chapter]

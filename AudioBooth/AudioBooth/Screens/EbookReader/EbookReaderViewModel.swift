@@ -36,7 +36,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private var lastProgressUpdate: Date?
   private let audiobookshelf = Audiobookshelf.shared
   private var temporaryFileURL: URL?
-  private var positions: [Locator] = []
+  private var publicationIndex = PublicationIndex()
+  private var positions: [Locator] { publicationIndex.positions }
 
   var pendingReadAlongDecorations: [Decoration]?
   var lastReadAlongDecorationAt: Date?
@@ -309,7 +310,10 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       self.publication = publication
       self.supportsSettings = publication.conforms(to: .epub)
       self.supportsSearch = publication.isSearchable
-      self.positions = (try? await publication.positions().get()) ?? []
+      self.publicationIndex = PublicationIndex(
+        publication: publication,
+        positions: (try? await publication.positions().get()) ?? []
+      )
 
       let initialLocation: Locator?
       if let bookID {
@@ -347,7 +351,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         chapterProgress = ChapterProgressViewModel(
           navigator: epubNavigator,
           publication: publication,
-          positions: positions,
+          publicationIndex: publicationIndex,
           preferences: preferences
         )
       }
@@ -501,27 +505,27 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         title: link.title ?? "Untitled",
         link: link,
         level: level,
-        pageNumber: pageNumber(forChapterID: id)
+        pageNumber: pageNumber(forChapterID: id),
+        resourceIndex: publicationIndex.readingOrderIndex(of: link.url())
       )
       return [chapter] + flattenTOC(link.children, level: level + 1)
     }
   }
 
   private func pageNumber(forChapterID id: String) -> Int? {
-    guard !positions.isEmpty, !id.contains("#") else { return nil }
-    return positions.first(where: { $0.href.string == id })?.locations.position
+    guard !id.contains("#") else { return nil }
+    return publicationIndex.firstPosition(in: id)
   }
 
   private func updateCurrentChapterIndex() {
-    guard let chapters, let navigator, let publication else { return }
-    guard let current = navigator.currentLocation?.href else { return }
-
-    let readingOrder = publication.readingOrder
-    guard let currentResourceIndex = readingOrder.firstIndexWithHREF(current) else { return }
+    guard let chapters, let navigator else { return }
+    guard let current = navigator.currentLocation?.href,
+      let currentResourceIndex = publicationIndex.readingOrderIndex(of: current)
+    else { return }
 
     let index =
       chapters.chapters.lastIndex(where: { chapter in
-        guard let chapterResourceIndex = readingOrder.firstIndexWithHREF(chapter.link.url()) else { return false }
+        guard let chapterResourceIndex = chapter.resourceIndex else { return false }
         return chapterResourceIndex <= currentResourceIndex
       }) ?? 0
     chapters.currentIndex = index

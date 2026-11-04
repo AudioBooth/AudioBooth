@@ -12,7 +12,7 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
 
   private weak var navigator: EPUBNavigatorViewController?
   private let publication: Publication
-  private let positions: [Locator]
+  private let publicationIndex: PublicationIndex
   private let preferences: EbookReaderPreferences
 
   private weak var scrollView: UIScrollView?
@@ -27,12 +27,12 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
   init(
     navigator: EPUBNavigatorViewController,
     publication: Publication,
-    positions: [Locator],
+    publicationIndex: PublicationIndex,
     preferences: EbookReaderPreferences
   ) {
     self.navigator = navigator
     self.publication = publication
-    self.positions = positions
+    self.publicationIndex = publicationIndex
     self.preferences = preferences
 
     super.init()
@@ -70,7 +70,7 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
     if index != resourceIndex, publication.readingOrder.indices.contains(index) {
       resourceIndex = index
       let href = publication.readingOrder[index].url().string
-      chapterPositions = positions.filter { $0.href.string == href }
+      chapterPositions = publicationIndex.positions(in: href)
       updateChapterTitle()
     }
 
@@ -81,10 +81,9 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
   private func updateChapterTitle() {
     guard let chapters, let resourceIndex else { return }
 
-    let readingOrder = publication.readingOrder
     chapterTitle =
       chapters.chapters.last(where: { chapter in
-        guard let chapterResourceIndex = readingOrder.firstIndexWithHREF(chapter.link.url()) else { return false }
+        guard let chapterResourceIndex = chapter.resourceIndex else { return false }
         return chapterResourceIndex <= resourceIndex
       })?.title
   }
@@ -141,6 +140,7 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
     pageCount = screens.total
     chapterFraction = screens.fraction
 
+    let positions = publicationIndex.positions
     if let firstPosition = chapterPositions.first?.locations.position, !positions.isEmpty {
       let chapterStart = Double(firstPosition - 1)
       let chapterLength = Double(chapterPositions.count)
