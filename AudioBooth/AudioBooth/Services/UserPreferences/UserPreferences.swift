@@ -115,6 +115,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("mixWithOtherAudio")
   var mixWithOtherAudio: Bool = false
 
+  @AppStorage("pauseAtZeroVolume")
+  var pauseAtZeroVolume: Bool = true
+
   @AppStorage("volumeLevel")
   var volumeLevel: Double = 1.0
 

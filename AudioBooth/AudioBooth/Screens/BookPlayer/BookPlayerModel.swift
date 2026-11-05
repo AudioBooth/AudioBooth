@@ -329,7 +329,7 @@ final class BookPlayerModel: BookPlayer.Model {
     lastSyncedTime = mediaProgress.currentTime
     player.resume()
 
-    if audioSession.outputVolume == 0 {
+    if userPreferences.pauseAtZeroVolume, audioSession.outputVolume == 0 {
       raiseVolumeOrPause()
     }
 
@@ -1351,18 +1351,9 @@ extension BookPlayerModel {
   }
 
   private func handleVolumeChange(from old: Float, to new: Float) {
-    if new == 0 && old > 0 {
-      AppLogger.player.info("Volume dropped to 0 - pausing playback")
-      interruption = isPlaying ? (Date(), false) : nil
-      player?.pause()
-    } else if new > 0 && old == 0, let interruption {
-      if Date().timeIntervalSince(interruption.beganAt) < 60 * 5, sessionManager.current != nil {
-        AppLogger.player.info("Volume restored from 0 - resuming playback")
-        applySmartRewind(reason: .onInterruption)
-        player?.resume()
-      }
-      self.interruption = nil
-    }
+    guard userPreferences.pauseAtZeroVolume, new == 0, old > 0 else { return }
+    AppLogger.player.info("Volume dropped to 0 - pausing playback")
+    onPauseTapped()
   }
 }
 

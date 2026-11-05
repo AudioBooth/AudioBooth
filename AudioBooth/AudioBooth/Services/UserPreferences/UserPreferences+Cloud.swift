@@ -32,6 +32,7 @@ extension UserPreferences {
     "keepScreenAwakeInPlayer",
     "positionSyncOffers",
     "mixWithOtherAudio",
+    "pauseAtZeroVolume",
     "volumeLevel",
     "libraryDisplayMode",
     "collapseSeriesInLibrary",

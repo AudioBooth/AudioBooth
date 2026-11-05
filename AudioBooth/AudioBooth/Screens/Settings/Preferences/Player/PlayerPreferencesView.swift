@@ -75,6 +75,16 @@ struct PlayerPreferencesView: View {
         }
         .listRowBackground(theme.colors.background.card)
 
+        Toggle(isOn: $preferences.pauseAtZeroVolume) {
+          PreferenceRow(
+            systemImage: "speaker.slash",
+            tint: .red,
+            title: "Pause at Zero Volume",
+            subtitle: "Pause when muted and raise the volume when playing"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
+
         Toggle(isOn: $preferences.positionSyncOffers) {
           PreferenceRow(
             systemImage: "book.pages",
