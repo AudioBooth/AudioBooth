@@ -159,7 +159,7 @@ final class AudioPlayer {
         if pendingSeekTarget != mediaProgress.currentTime {
           seek(to: mediaProgress.currentTime)
         }
-        player.play()
+        playWhenReady()
 
         if !activated {
           events.send(.stateChanged(isPlaying ? .playing : .paused))
@@ -246,9 +246,17 @@ private extension AudioPlayer {
     }
 
     if autoPlay {
-      player.play()
-      player.rate = player.defaultRate
+      playWhenReady()
     }
+  }
+
+  /// Starting a streamed item before it is ready to play can leave AVPlayer waiting
+  /// indefinitely, so playback starts from the readyToPlay observer instead.
+  func playWhenReady() {
+    wantsPlayback = true
+    guard player.currentItem?.status == .readyToPlay else { return }
+    player.play()
+    player.rate = player.defaultRate
   }
 
   func topUpQueue() {
@@ -404,6 +412,9 @@ private extension AudioPlayer {
         switch status {
         case .readyToPlay:
           self.events.send(.stateChanged(.ready))
+          if self.wantsPlayback, !self.isPlaying {
+            self.playWhenReady()
+          }
         case .failed:
           AppLogger.player.error("Player item failed: \(item.error?.localizedDescription ?? "Unknown")")
           guard !self.recoverFromDecodeFailure(item.error) else { return }
