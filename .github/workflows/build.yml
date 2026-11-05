@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build iOS App
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
