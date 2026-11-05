@@ -1,0 +1,26 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build:
+    name: Build iOS App
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build iOS App (Simulator)
+        run: |
+          xcodebuild clean build \
+            -project AudioBooth/AudioBooth.xcodeproj \
+            -scheme AudioBooth \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
