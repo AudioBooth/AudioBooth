@@ -414,6 +414,7 @@
 				3FEB781B2F059A3B00618BF9 /* Recording */,
 				3FEB781D2F059A3B00618BF9 /* Reporting */,
 				3FEB78212F059BEC00618BF9 /* Installations */,
+				3FC8DC912E638F5E00A4B080 /* GoogleCastDynamic */,
 			);
 			productName = AudiobookshelfDemo;
 			productReference = 3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */;
@@ -468,6 +469,7 @@
 				3F5C74582EDE5B2400976431 /* XCRemoteSwiftPackageReference "PulseLogHandler" */,
 				3F2F21CF2EE68DFB00A298C6 /* XCRemoteSwiftPackageReference "swift-toolkit" */,
 				3FEB781A2F059A3B00618BF9 /* XCRemoteSwiftPackageReference "KSCrash" */,
+				3FC8DC902E638F5E00A4B080 /* XCRemoteSwiftPackageReference "google-cast-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3FC8DC6F2E638F5E00A4B080 /* Products */;
@@ -1101,6 +1103,14 @@
 				version = 2.6.0;
 			};
 		};
+		3FC8DC902E638F5E00A4B080 /* XCRemoteSwiftPackageReference "google-cast-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlecast/google-cast-ios-sdk.git";
+			requirement = {
+				kind = exactVersion;
+				version = 4.8.6;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1201,6 +1211,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3FEB781A2F059A3B00618BF9 /* XCRemoteSwiftPackageReference "KSCrash" */;
 			productName = Installations;
+		};
+		3FC8DC912E638F5E00A4B080 /* GoogleCastDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FC8DC902E638F5E00A4B080 /* XCRemoteSwiftPackageReference "google-cast-ios-sdk" */;
+			productName = GoogleCastDynamic;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

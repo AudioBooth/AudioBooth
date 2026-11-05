@@ -92,5 +92,12 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>AudioBooth uses the local network to discover and play audio on Chromecast devices.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_googlecast._tcp</string>
+		<string>_CC1AD845._googlecast._tcp</string>
+	</array>
 </dict>
 </plist>
