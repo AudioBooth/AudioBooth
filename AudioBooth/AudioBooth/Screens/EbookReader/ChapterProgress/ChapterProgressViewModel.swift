@@ -165,7 +165,7 @@ final class ChapterProgressViewModel: ChapterProgressView.Model {
     let scrollableLength = contentLength - pageLength
     let fraction = scrollableLength > 0 ? min(max(offset / scrollableLength, 0), 1) : 1
 
-    return ((screen - 1) * columns + 1, screens * columns, fraction)
+    return ((screen - 1) * columns + 1, screens * columns, Double(fraction))
   }
 
   private func paginationScrollView(in view: UIView) -> UIScrollView? {

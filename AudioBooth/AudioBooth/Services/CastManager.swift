@@ -83,32 +83,34 @@ final class CastManager: NSObject, ObservableObject {
 extension CastManager: GCKSessionManagerListener {
   nonisolated func sessionManager(
     _ sessionManager: GCKSessionManager,
-    didStart session: GCKCastSession
+    didStart session: GCKSession
   ) {
     Task { @MainActor in
+      guard let castSession = session as? GCKCastSession else { return }
       self.isConnected = true
-      self.deviceName = session.device.friendlyName
-      self.remoteClient = session.remoteMediaClient
-      session.remoteMediaClient?.add(self)
+      self.deviceName = castSession.device.friendlyName
+      self.remoteClient = castSession.remoteMediaClient
+      castSession.remoteMediaClient?.add(self)
     }
   }
 
   nonisolated func sessionManager(
     _ sessionManager: GCKSessionManager,
-    didResume session: GCKCastSession
+    didResume session: GCKSession
   ) {
     Task { @MainActor in
+      guard let castSession = session as? GCKCastSession else { return }
       self.isConnected = true
-      self.deviceName = session.device.friendlyName
-      self.remoteClient = session.remoteMediaClient
-      session.remoteMediaClient?.add(self)
+      self.deviceName = castSession.device.friendlyName
+      self.remoteClient = castSession.remoteMediaClient
+      castSession.remoteMediaClient?.add(self)
     }
   }
 
   nonisolated func sessionManager(
     _ sessionManager: GCKSessionManager,
-    didEnd session: GCKCastSession,
-    error: (any Error)?
+    didEnd session: GCKSession,
+    withError error: (any Error)?
   ) {
     Task { @MainActor in
       self.isConnected = false
