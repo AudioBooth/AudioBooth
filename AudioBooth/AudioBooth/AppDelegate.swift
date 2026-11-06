@@ -65,6 +65,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     #if canImport(GoogleCast) && !os(watchOS)
     _ = CastManager.shared
     #endif
+    #if DEBUG
+    CastTrackResolver.runSelfCheck()
+    #endif
 
     UNUserNotificationCenter.current().delegate = self
 

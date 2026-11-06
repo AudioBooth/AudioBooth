@@ -618,7 +618,8 @@ extension BookPlayerModel {
     if CastManager.shared.isConnected {
       positionedAt = Date()
       moveProgress(to: time)
-      let (_, offset) = trackAndOffset(for: time)
+      let tracks = sessionManager.current?.tracks ?? []
+      let (_, offset) = CastTrackResolver.trackAndOffset(for: time, in: tracks)
       CastManager.shared.seek(to: offset)
       if let model = self.playbackProgress as? PlaybackProgressViewModel {
         model.updateProgress()
@@ -1676,12 +1677,11 @@ extension BookPlayerModel {
     guard let session = sessionManager.current, let serverURL = Audiobookshelf.shared.serverURL else { return }
     player?.pause()
 
-    let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
+    let (trackIndex, offset) = CastTrackResolver.trackAndOffset(for: mediaProgress.currentTime, in: session.tracks)
     guard session.tracks.indices.contains(trackIndex) else { return }
     let track = session.tracks[trackIndex]
 
-    let base = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    guard let streamURL = URL(string: "\(base)/public/session/\(session.id)/track/\(track.index)") else { return }
+    guard let streamURL = CastTrackResolver.streamURL(serverURL: serverURL, sessionID: session.id, trackIndex: track.index) else { return }
 
     CastManager.shared.load(
       streamURL: streamURL,
@@ -1690,16 +1690,6 @@ extension BookPlayerModel {
       coverURL: coverURL,
       startTime: offset
     )
-  }
-
-  private func trackAndOffset(for time: TimeInterval) -> (Int, TimeInterval) {
-    guard let tracks = sessionManager.current?.tracks, !tracks.isEmpty else { return (0, time) }
-    for (i, track) in tracks.enumerated() {
-      if time >= track.startOffset && time < track.startOffset + track.duration {
-        return (i, time - track.startOffset)
-      }
-    }
-    return (0, 0)
   }
 }
 #endif

@@ -25,6 +25,10 @@ let package = Package(
         .product(name: "Logging", package: "swift-log"),
         .product(name: "API", package: "API"),
       ]
-    )
+    ),
+    .testTarget(
+      name: "ModelsTests",
+      dependencies: ["Models"]
+    ),
   ]
 )

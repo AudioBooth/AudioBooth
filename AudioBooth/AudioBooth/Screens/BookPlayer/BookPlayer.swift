@@ -82,12 +82,7 @@ struct BookPlayer: View {
           .tint(.primary)
         }
 
-        if #available(iOS 27.1, *) {
-          airPlayToolbarItem
-            .axisBehavior(.verticalPreferred)
-        } else {
-          airPlayToolbarItem
-        }
+        airPlayToolbarItem
 
         if #available(iOS 26.0, *) {
           ToolbarSpacer(.fixed, placement: .topBarTrailing)
