@@ -19,7 +19,6 @@ For home setups, connect AudioBooth to your server using its local IP over HTTP:
 ```
 http://<server-local-ip>:13378
 ```
-**Why:** Chromecast devices stream local HTTP directly with zero SSL/TLS certificate requirements.
 
 ---
 
