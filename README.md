@@ -21,6 +21,7 @@ AudioBooth is a streamlined iOS client designed exclusively for Audiobookshelf u
 - **Library Browsing** - Explore your books, authors, series, and collections
 - **Background Playback** - Continue listening while using other apps
 - **Lock Screen Controls** - Standard media controls on your lock screen
+- **Chromecast Support** - Stream audiobooks directly to Chromecast, Google Home, and Nest speakers ([setup guide](docs/CHROMECAST.md))
 - **Apple Watch Support** - Control playback and browse your library from your wrist
 - **Clean, Native Design** - Intuitive interface that feels at home on iOS
 
