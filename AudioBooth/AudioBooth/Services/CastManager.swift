@@ -76,7 +76,7 @@ final class CastManager: NSObject, ObservableObject {
   }
 
   func disconnect() {
-    GCKCastContext.sharedInstance().sessionManager.endCurrentSessionAndStopCasting(true)
+    GCKCastContext.sharedInstance().sessionManager.endSessionAndStopCasting(true)
   }
 }
 
