@@ -117,17 +117,17 @@ struct PlaybackProgressView: View {
         Group {
           if model.isDragging, let label = scrubbingSpeed.label {
             Text(label)
-              .lineLimit(1)
           } else if preferences.showFullBookDuration || preferences.showBookProgressBar
             || model.totalProgress == model.progress
           {
             Text(model.title)
-              .lineLimit(1)
           } else {
             Text(model.totalTimeRemaining.formattedTimeRemaining)
               .accessibilityLabel(model.totalTimeRemaining.accessibilityTimeRemaining)
           }
         }
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
         .font(.caption)
         .foregroundColor(.white)
         .fontWeight(.medium)

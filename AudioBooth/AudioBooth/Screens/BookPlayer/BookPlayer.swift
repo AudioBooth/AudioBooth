@@ -389,12 +389,21 @@ struct BookPlayer: View {
   }
 
   private var bottomControlBar: some View {
-    HStack(alignment: .bottom, spacing: 0) {
+    let bar = HStack(alignment: .bottom, spacing: 0) {
       ForEach(preferences.playerControls) { control in
         controlButton(for: control)
       }
     }
     .foregroundColor(.white.opacity(0.7))
+    .lineLimit(1)
+
+    return Group {
+      if #available(iOS 26.0, *) {
+        bar.padding(6).glassEffect(.regular, in: .capsule)
+      } else {
+        bar.padding(6).background(.ultraThinMaterial, in: .capsule)
+      }
+    }
     .padding(.vertical, 12)
     .buttonStyle(.borderless)
     .opacity(model.isLocked ? 0 : 1)
@@ -434,134 +443,85 @@ struct BookPlayer: View {
   private func controlButton(for control: PlayerControl) -> some View {
     switch control {
     case .speed:
-      Button(action: {
-        Haptics.impact(.soft)
+      ControlButton(control: control) {
         model.speed.isPresented = true
-      }) {
-        VStack(spacing: 6) {
-          Text(verbatim: "\(model.speed.value.formatted(.number.precision(.fractionLength(0...2))))×")
-            .font(.system(size: 16, weight: .medium))
-            .frame(height: 20)
-          Text(control.displayName)
-            .font(.caption2)
-        }
+      } icon: {
+        Text(verbatim: "\(model.speed.value.formatted(.number.precision(.fractionLength(0...2))))×")
+          .font(.system(size: 16, weight: .medium))
+          .fixedSize()
       }
-      .frame(maxWidth: .infinity)
 
     case .timer:
       let isActive: Bool = {
         if case .none = model.timer.current { return false }
         return true
       }()
-      Button(action: {
-        Haptics.impact(.soft)
-        model.timer.isPresented = true
-      }) {
-        VStack(spacing: 6) {
-          Image(systemName: control.systemImage)
-            .font(.system(size: 20))
-            .frame(width: 20, height: 20)
-          Text(control.displayName)
-            .font(.caption2)
-        }
+      ControlButton(control: control) { model.timer.isPresented = true }
         .foregroundStyle(isActive ? Color.accentColor : Color.white.opacity(0.7))
-      }
-      .frame(maxWidth: .infinity)
 
     case .bookmarks:
       if model.bookmarks != nil {
-        Button(action: {
-          Haptics.impact(.soft)
-          model.onBookmarksTapped()
-        }) {
-          VStack(spacing: 6) {
-            Image(systemName: control.systemImage)
-              .font(.system(size: 20))
-              .frame(width: 20, height: 20)
-            Text(control.displayName)
-              .font(.caption2)
-          }
-        }
-        .frame(maxWidth: .infinity)
+        ControlButton(control: control, action: model.onBookmarksTapped)
       }
 
     case .history:
       if model.history != nil {
-        Button(action: {
-          Haptics.impact(.soft)
-          model.onHistoryTapped()
-        }) {
-          VStack(spacing: 6) {
-            Image(systemName: control.systemImage)
-              .font(.system(size: 20))
-              .frame(width: 20, height: 20)
-            Text(control.displayName)
-              .font(.caption2)
-          }
-        }
-        .frame(maxWidth: .infinity)
+        ControlButton(control: control, action: model.onHistoryTapped)
       }
 
     case .volume:
-      Button(action: {
-        Haptics.impact(.soft)
-        model.volume.isPresented = true
-      }) {
-        VStack(spacing: 6) {
-          Image(systemName: control.systemImage)
-            .font(.system(size: 20))
-            .frame(width: 20, height: 20)
-          Text(control.displayName)
-            .font(.caption2)
-        }
-      }
-      .frame(maxWidth: .infinity)
+      ControlButton(control: control) { model.volume.isPresented = true }
 
     case .equalizer:
-      Button(action: {
-        Haptics.impact(.soft)
-        model.equalizer.isPresented = true
-      }) {
-        VStack(spacing: 6) {
-          Image(systemName: control.systemImage)
-            .font(.system(size: 20))
-            .frame(width: 20, height: 20)
-          Text(control.displayName)
-            .font(.caption2)
-        }
-      }
-      .frame(maxWidth: .infinity)
+      ControlButton(control: control) { model.equalizer.isPresented = true }
 
     case .lock:
-      Button(action: {
-        Haptics.impact(.soft)
-        model.onLockTapped()
-      }) {
-        VStack(spacing: 6) {
-          Image(systemName: control.systemImage)
-            .font(.system(size: 20))
-            .frame(width: 20, height: 20)
-          Text(control.displayName)
-            .font(.caption2)
-        }
-      }
-      .frame(maxWidth: .infinity)
+      ControlButton(control: control, action: model.onLockTapped)
 
     case .pageMatch:
       if model.supportsPageMatch {
-        Button(action: {
-          Haptics.impact(.soft)
-          model.onPageMatchTapped()
-        }) {
-          VStack(spacing: 6) {
-            Image(systemName: control.systemImage)
-              .font(.system(size: 20))
-              .frame(width: 20, height: 20)
+        ControlButton(control: control, action: model.onPageMatchTapped)
+      }
+    }
+  }
+}
+
+extension BookPlayer {
+  struct ControlButton<Icon: View>: View {
+    @ObservedObject private var preferences = UserPreferences.shared
+
+    let control: PlayerControl
+    let action: () -> Void
+    let icon: Icon
+
+    init(control: PlayerControl, action: @escaping () -> Void, @ViewBuilder icon: () -> Icon) {
+      self.control = control
+      self.action = action
+      self.icon = icon()
+    }
+
+    init(control: PlayerControl, action: @escaping () -> Void) where Icon == Image {
+      self.init(control: control, action: action) {
+        Image(systemName: control.systemImage)
+      }
+    }
+
+    var body: some View {
+      Button {
+        Haptics.impact(.soft)
+        action()
+      } label: {
+        VStack(spacing: 6) {
+          icon
+            .font(.system(size: 20))
+            .frame(height: 20)
+          if !preferences.hidePlayerControlLabels {
             Text(control.displayName)
               .font(.caption2)
           }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .contentShape(.rect)
       }
     }
   }

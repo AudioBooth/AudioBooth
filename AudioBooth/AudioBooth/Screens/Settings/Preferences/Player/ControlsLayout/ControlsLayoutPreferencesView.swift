@@ -10,6 +10,18 @@ struct ControlsLayoutPreferencesView: View {
   var body: some View {
     Form {
       Section {
+        Toggle(isOn: $preferences.hidePlayerControlLabels) {
+          PreferenceRow(
+            systemImage: "textformat",
+            tint: .gray,
+            title: "Hide Labels",
+            subtitle: "Show only icons in the player bar"
+          )
+        }
+        .listRowBackground(theme.colors.background.card)
+      }
+
+      Section {
         ForEach(enabledControls) { control in
           controlRow(control)
             .listRowBackground(theme.colors.background.card)

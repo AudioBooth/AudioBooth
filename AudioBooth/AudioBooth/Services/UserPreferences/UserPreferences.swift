@@ -13,6 +13,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("playerControls")
   var playerControls: [PlayerControl] = PlayerControl.default
 
+  @AppStorage("hidePlayerControlLabels")
+  var hidePlayerControlLabels: Bool = false
+
   @AppStorage("autoDownloadBooks")
   var autoDownloadBooks: AutoDownloadMode = .off
 
