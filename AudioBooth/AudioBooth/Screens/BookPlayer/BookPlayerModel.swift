@@ -264,6 +264,16 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onTogglePlaybackTapped() {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      if CastManager.shared.isPlaying {
+        onPauseTapped()
+      } else {
+        onPlayTapped()
+      }
+      return
+    }
+    #endif
     if isPlaying {
       onPauseTapped()
     } else {
@@ -278,6 +288,7 @@ final class BookPlayerModel: BookPlayer.Model {
     if CastManager.shared.isConnected {
       player?.pause()
       CastManager.shared.pause()
+      nowPlaying.update()
       return
     }
     #endif
@@ -297,6 +308,7 @@ final class BookPlayerModel: BookPlayer.Model {
           startCasting()
         }
       }
+      nowPlaying.update()
       return
     }
     #endif
@@ -1266,10 +1278,7 @@ extension BookPlayerModel {
       self.updateMediaProgress()
       self.checkAutoDownloadAfterListening()
       self.dismissPositionSyncIfListeningOn(at: globalTime)
-
-      if UserPreferences.shared.lockScreenShowRemainingInTitle {
-        self.nowPlaying.update()
-      }
+      self.nowPlaying.update()
     }
   }
 }
@@ -1528,6 +1537,7 @@ extension BookPlayerModel {
     try? mediaProgress.save()
 
     isPlaying = isNowPlaying
+    nowPlaying.update()
   }
 
   private func recordBookCompletionIfNeeded(autoPlayNext: Bool) {

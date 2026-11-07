@@ -152,14 +152,16 @@ final class NowPlayingManager {
     #if canImport(GoogleCast) && !os(watchOS)
     let isCasting = CastManager.shared.isConnected
     let isPlaying = isCasting ? CastManager.shared.isPlaying : player.isPlaying
-    let playbackRate = isCasting ? (CastManager.shared.isPlaying ? player.rate : 0.0) : (player.isPlaying ? player.rate : 0.0)
+    let rate = player.rate > 0 ? player.rate : Float(mediaProgress.playbackSpeed > 0 ? mediaProgress.playbackSpeed : 1.0)
+    let playbackRate = isPlaying ? rate : 0.0
     #else
     let isPlaying = player.isPlaying
+    let rate = player.rate
     let playbackRate = player.isPlaying ? player.rate : 0.0
     #endif
 
     playbackState = isPlaying ? .playing : .paused
-    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = player.rate
+    info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = rate
     info[MPNowPlayingInfoPropertyPlaybackRate] = playbackRate
 
     if !preferences.showFullBookDuration, let chapters, let current = chapters.current,

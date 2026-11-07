@@ -108,17 +108,27 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     let currentChapter = chapters[currentIndex]
     let timeInCurrentChapter = mediaProgress.currentTime - currentChapter.start
 
+    let seekTime: TimeInterval
+    let targetChapter: Chapter
     if timeInCurrentChapter < 2.0 && currentIndex > 0 {
       let previousChapter = chapters[currentIndex - 1]
       currentIndex -= 1
-      let seekTime = previousChapter.start + 0.1
-      player.seek(to: seekTime)
-      record(chapter: previousChapter, position: seekTime)
+      seekTime = previousChapter.start + 0.1
+      targetChapter = previousChapter
     } else {
-      let seekTime = currentChapter.start + 0.1
-      player.seek(to: seekTime)
-      record(chapter: currentChapter, position: seekTime)
+      seekTime = currentChapter.start + 0.1
+      targetChapter = currentChapter
     }
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      (playerManager.current as? BookPlayerModel)?.seekToTime(seekTime)
+      record(chapter: targetChapter, position: seekTime)
+      mediaProgress.lastPlayedAt = Date()
+      return
+    }
+    #endif
+    player.seek(to: seekTime)
+    record(chapter: targetChapter, position: seekTime)
     mediaProgress.lastPlayedAt = Date()
   }
 
@@ -132,6 +142,14 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     currentIndex += 1
     let nextChapter = chapters[currentIndex]
     let seekTime = nextChapter.start + 0.1
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      (playerManager.current as? BookPlayerModel)?.seekToTime(seekTime)
+      record(chapter: nextChapter, position: seekTime)
+      mediaProgress.lastPlayedAt = Date()
+      return
+    }
+    #endif
     player.seek(to: seekTime)
     record(chapter: nextChapter, position: seekTime)
     mediaProgress.lastPlayedAt = Date()
@@ -141,6 +159,14 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     let chapter = chapters[index]
     currentIndex = index
     let seekTime = chapter.start + 0.1
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      (playerManager.current as? BookPlayerModel)?.seekToTime(seekTime)
+      record(chapter: chapter, position: seekTime)
+      mediaProgress.lastPlayedAt = Date()
+      return
+    }
+    #endif
     player.seek(to: seekTime)
     record(chapter: chapter, position: seekTime)
     mediaProgress.lastPlayedAt = Date()
