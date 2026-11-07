@@ -152,7 +152,8 @@ final class NowPlayingManager {
     #if canImport(GoogleCast) && !os(watchOS)
     let isCasting = CastManager.shared.isConnected
     let isPlaying = isCasting ? CastManager.shared.isPlaying : player.isPlaying
-    let rate = player.rate > 0 ? player.rate : Float(mediaProgress.playbackSpeed > 0 ? mediaProgress.playbackSpeed : 1.0)
+    let savedSpeed = Float(mediaProgress.playbackSpeed ?? 1.0)
+    let rate = player.rate > 0 ? player.rate : (savedSpeed > 0 ? savedSpeed : 1.0)
     let playbackRate = isPlaying ? rate : 0.0
     #else
     let isPlaying = player.isPlaying
