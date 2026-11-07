@@ -47,6 +47,9 @@ final class BookPlayerModel: BookPlayer.Model {
   private var hasPlayedThisSession = false
   private var hasRecordedCompletion = false
   private var narrationProgressSync: NarrationProgressSync?
+  #if canImport(GoogleCast) && !os(watchOS)
+  private var currentCastTrackIndex: Int = 0
+  #endif
 
   init(_ book: Book) {
     self.item = nil
@@ -252,7 +255,12 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override var secondsFromStartOfBook: TimeInterval {
-    player?.time ?? mediaProgress.currentTime
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      return mediaProgress.currentTime
+    }
+    #endif
+    return player?.time ?? mediaProgress.currentTime
   }
 
   override func onTogglePlaybackTapped() {
@@ -374,6 +382,12 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onSkipForwardTapped(seconds: Double) {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      seekToTime(mediaProgress.currentTime + seconds)
+      return
+    }
+    #endif
     guard let player else { return }
     let currentTime = player.time
     let newTime = currentTime + seconds
@@ -381,6 +395,12 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onSkipBackwardTapped(seconds: Double) {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      seekToTime(max(0, mediaProgress.currentTime - seconds))
+      return
+    }
+    #endif
     guard let player else { return }
     let currentTime = player.time
     let newTime = max(0, currentTime - seconds)
@@ -621,8 +641,13 @@ extension BookPlayerModel {
       positionedAt = Date()
       moveProgress(to: time)
       let tracks = sessionManager.current?.tracks ?? []
-      let (_, offset) = CastTrackResolver.trackAndOffset(for: time, in: tracks)
-      CastManager.shared.seek(to: offset)
+      let (targetIndex, offset) = CastTrackResolver.trackAndOffset(for: time, in: tracks)
+      if targetIndex == currentCastTrackIndex {
+        CastManager.shared.seek(to: offset)
+      } else if let session = sessionManager.current, let serverURL = Audiobookshelf.shared.serverURL {
+        currentCastTrackIndex = targetIndex
+        loadCastTrack(session: session, serverURL: serverURL, trackIndex: targetIndex, offset: offset)
+      }
       if let model = self.playbackProgress as? PlaybackProgressViewModel {
         model.updateProgress()
       }
@@ -1091,6 +1116,11 @@ extension BookPlayerModel {
 
       RunLoop.main.perform {
         (self.playbackProgress as? PlaybackProgressViewModel)?.updateProgress()
+        #if canImport(GoogleCast) && !os(watchOS)
+        if CastManager.shared.isConnected {
+          CastManager.shared.setRate(Float(self.speed.value))
+        }
+        #endif
         self.observeSpeedChanged()
       }
     }
@@ -1683,10 +1713,19 @@ extension BookPlayerModel {
     }
     CastManager.shared.onPositionUpdate = { [weak self] position in
       guard let self else { return }
-      self.onTimeChanged(position)
+      self.onCastPositionUpdate(position)
     }
     CastManager.shared.onStateChange = { [weak self] isPlaying in
       self?.handlePlaybackStateChange(isPlaying)
+    }
+    CastManager.shared.onTrackFinished = { [weak self] in
+      guard let self else { return }
+      self.onCastTrackFinished()
+    }
+    CastManager.shared.onError = { [weak self] in
+      guard let self else { return }
+      AppLogger.player.error("Cast stream error encountered, disconnecting Cast session")
+      CastManager.shared.disconnect()
     }
     CastManager.shared.onSessionEnded = { [weak self] in
       guard let self else { return }
@@ -1700,6 +1739,12 @@ extension BookPlayerModel {
 
     let (trackIndex, offset) = CastTrackResolver.trackAndOffset(for: mediaProgress.currentTime, in: session.tracks)
     guard session.tracks.indices.contains(trackIndex) else { return }
+    currentCastTrackIndex = trackIndex
+    loadCastTrack(session: session, serverURL: serverURL, trackIndex: trackIndex, offset: offset)
+  }
+
+  private func loadCastTrack(session: PlaybackSession, serverURL: URL, trackIndex: Int, offset: TimeInterval) {
+    guard session.tracks.indices.contains(trackIndex) else { return }
     let track = session.tracks[trackIndex]
 
     guard let streamURL = CastTrackResolver.streamURL(serverURL: serverURL, sessionID: session.id, trackIndex: track.index) else { return }
@@ -1710,8 +1755,37 @@ extension BookPlayerModel {
       author: author,
       coverURL: coverURL,
       startTime: offset,
+      playbackRate: Float(speed.value),
       contentType: track.mimeType ?? "audio/mpeg"
     )
+  }
+
+  private func onCastPositionUpdate(_ trackPosition: TimeInterval) {
+    guard let session = sessionManager.current else { return }
+    if session.tracks.indices.contains(currentCastTrackIndex) {
+      let track = session.tracks[currentCastTrackIndex]
+      let globalTime = track.startOffset + trackPosition
+      onTimeChanged(globalTime)
+    } else {
+      onTimeChanged(trackPosition)
+    }
+  }
+
+  private func onCastTrackFinished() {
+    guard let session = sessionManager.current, let serverURL = Audiobookshelf.shared.serverURL else { return }
+    let nextIndex = currentCastTrackIndex + 1
+    if session.tracks.indices.contains(nextIndex) {
+      currentCastTrackIndex = nextIndex
+      let nextTrack = session.tracks[nextIndex]
+      mediaProgress.currentTime = nextTrack.startOffset
+      loadCastTrack(session: session, serverURL: serverURL, trackIndex: nextIndex, offset: 0)
+    } else {
+      if mediaProgress.duration > 0 {
+        mediaProgress.currentTime = mediaProgress.duration
+      }
+      recordBookCompletionIfNeeded(autoPlayNext: true)
+      CastManager.shared.disconnect()
+    }
   }
 }
 #endif

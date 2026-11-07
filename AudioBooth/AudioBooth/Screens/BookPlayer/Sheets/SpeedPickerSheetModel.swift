@@ -57,6 +57,11 @@ final class SpeedPickerSheetViewModel: FloatPickerSheet.Model {
     sharedDefaults?.set(floatValue, forKey: "playbackSpeed")
 
     player.rate = floatValue
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      CastManager.shared.setRate(floatValue)
+    }
+    #endif
   }
 
   override func onPresetChanged(at index: Int, newValue: Double) {

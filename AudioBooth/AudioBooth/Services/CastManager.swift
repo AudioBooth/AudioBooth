@@ -13,10 +13,14 @@ final class CastManager: NSObject, ObservableObject {
   @Published private(set) var deviceName: String?
 
   private var remoteClient: GCKRemoteMediaClient?
+  private var hasHandledTrackFinished = false
+
   var onPositionUpdate: ((TimeInterval) -> Void)?
   var onStateChange: ((Bool) -> Void)?
   var onSessionEnded: (() -> Void)?
   var onSessionStarted: (() -> Void)?
+  var onTrackFinished: (() -> Void)?
+  var onError: (() -> Void)?
 
   override private init() {
     super.init()
@@ -34,9 +38,11 @@ final class CastManager: NSObject, ObservableObject {
     author: String?,
     coverURL: URL?,
     startTime: TimeInterval,
+    playbackRate: Float = 1.0,
     contentType: String = "audio/mpeg"
   ) {
     guard let client = remoteClient else { return }
+    hasHandledTrackFinished = false
 
     let metadata = GCKMediaMetadata(metadataType: .musicTrack)
     metadata.setString(title, forKey: kGCKMetadataKeyTitle)
@@ -55,6 +61,7 @@ final class CastManager: NSObject, ObservableObject {
     let loadOptions = GCKMediaLoadOptions()
     loadOptions.playPosition = startTime
     loadOptions.autoplay = true
+    loadOptions.playbackRate = playbackRate
 
     client.loadMedia(builder.build(), with: loadOptions)
   }
@@ -129,6 +136,21 @@ extension CastManager: GCKSessionManagerListener {
       self.onSessionEnded?()
     }
   }
+
+  nonisolated func sessionManager(
+    _ sessionManager: GCKSessionManager,
+    didFailToStart session: GCKSession,
+    withError error: any Error
+  ) {
+    Task { @MainActor in
+      self.isConnected = false
+      self.isPlaying = false
+      self.deviceName = nil
+      self.remoteClient = nil
+      self.onError?()
+      self.onSessionEnded?()
+    }
+  }
 }
 
 extension CastManager: GCKRemoteMediaClientListener {
@@ -137,11 +159,25 @@ extension CastManager: GCKRemoteMediaClientListener {
     didUpdate mediaStatus: GCKMediaStatus?
   ) {
     Task { @MainActor in
-      let nowPlaying = mediaStatus?.playerState == .playing
+      guard let mediaStatus else { return }
+
+      let nowPlaying = mediaStatus.playerState == .playing
       if self.isPlaying != nowPlaying {
         self.isPlaying = nowPlaying
         self.onStateChange?(nowPlaying)
       }
+
+      if mediaStatus.idleReason == .finished {
+        if !self.hasHandledTrackFinished {
+          self.hasHandledTrackFinished = true
+          self.onTrackFinished?()
+        }
+      } else if mediaStatus.idleReason == .error {
+        self.onError?()
+      } else if mediaStatus.playerState == .playing {
+        self.hasHandledTrackFinished = false
+      }
+
       let position = client.approximateStreamPosition()
       if position > 0 {
         self.currentPosition = position
