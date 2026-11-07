@@ -268,6 +268,7 @@ final class BookPlayerModel: BookPlayer.Model {
     interruption = nil
     #if canImport(GoogleCast) && !os(watchOS)
     if CastManager.shared.isConnected {
+      player?.pause()
       CastManager.shared.pause()
       return
     }
@@ -280,6 +281,7 @@ final class BookPlayerModel: BookPlayer.Model {
 
     #if canImport(GoogleCast) && !os(watchOS)
     if CastManager.shared.isConnected {
+      player?.pause()
       if !CastManager.shared.isPlaying {
         if CastManager.shared.currentPosition > 0 {
           CastManager.shared.play()
@@ -1312,6 +1314,13 @@ extension BookPlayerModel {
       interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
 
     case .ended:
+      #if canImport(GoogleCast) && !os(watchOS)
+      if CastManager.shared.isConnected {
+        interruption = nil
+        return
+      }
+      #endif
+
       guard sessionManager.current != nil else {
         AppLogger.player.info("Audio interruption ended - not resuming (no active session)")
         interruption = nil
@@ -1345,6 +1354,10 @@ extension BookPlayerModel {
   }
 
   private func handleRouteChange(_ notification: Notification) {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected { return }
+    #endif
+
     guard let userInfo = notification.userInfo,
       let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
       let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -1388,6 +1401,10 @@ extension BookPlayerModel {
   }
 
   private func handleVolumeChange(from old: Float, to new: Float) {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected { return }
+    #endif
+
     if new == 0 && old > 0 {
       AppLogger.player.info("Volume dropped to 0 - pausing playback")
       interruption = isPlaying ? (Date(), false) : nil

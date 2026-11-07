@@ -23,6 +23,7 @@ final class CastManager: NSObject, ObservableObject {
     let criteria = GCKDiscoveryCriteria(applicationID: kGCKDefaultMediaReceiverApplicationID)
     let options = GCKCastOptions(discoveryCriteria: criteria)
     options.suspendSessionsWhenBackgrounded = false
+    options.physicalVolumeButtonsWillControlDeviceVolume = true
     GCKCastContext.setSharedInstanceWith(options)
     GCKCastContext.sharedInstance().sessionManager.add(self)
   }
@@ -75,6 +76,10 @@ final class CastManager: NSObject, ObservableObject {
 
   func setRate(_ rate: Float) {
     remoteClient?.setPlaybackRate(rate)
+  }
+
+  func setVolume(_ volume: Float) {
+    remoteClient?.setStreamVolume(volume)
   }
 
   func disconnect() {
