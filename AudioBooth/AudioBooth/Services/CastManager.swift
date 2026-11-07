@@ -16,6 +16,7 @@ final class CastManager: NSObject, ObservableObject {
   var onPositionUpdate: ((TimeInterval) -> Void)?
   var onStateChange: ((Bool) -> Void)?
   var onSessionEnded: (() -> Void)?
+  var onSessionStarted: (() -> Void)?
 
   override private init() {
     super.init()
@@ -31,7 +32,8 @@ final class CastManager: NSObject, ObservableObject {
     title: String,
     author: String?,
     coverURL: URL?,
-    startTime: TimeInterval
+    startTime: TimeInterval,
+    contentType: String = "audio/mpeg"
   ) {
     guard let client = remoteClient else { return }
 
@@ -46,7 +48,7 @@ final class CastManager: NSObject, ObservableObject {
 
     let builder = GCKMediaInformationBuilder(contentURL: streamURL)
     builder.streamType = .buffered
-    builder.contentType = "audio/mpeg"
+    builder.contentType = contentType
     builder.metadata = metadata
 
     let loadOptions = GCKMediaLoadOptions()
@@ -91,6 +93,7 @@ extension CastManager: GCKSessionManagerListener {
       self.deviceName = castSession.device.friendlyName
       self.remoteClient = castSession.remoteMediaClient
       castSession.remoteMediaClient?.add(self)
+      self.onSessionStarted?()
     }
   }
 
@@ -104,6 +107,7 @@ extension CastManager: GCKSessionManagerListener {
       self.deviceName = castSession.device.friendlyName
       self.remoteClient = castSession.remoteMediaClient
       castSession.remoteMediaClient?.add(self)
+      self.onSessionStarted?()
     }
   }
 

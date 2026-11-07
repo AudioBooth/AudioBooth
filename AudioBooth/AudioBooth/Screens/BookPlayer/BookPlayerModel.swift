@@ -1660,6 +1660,10 @@ extension BookPlayerModel {
 #if canImport(GoogleCast) && !os(watchOS)
 extension BookPlayerModel {
   func setupCastListeners() {
+    CastManager.shared.onSessionStarted = { [weak self] in
+      guard let self else { return }
+      self.startCasting()
+    }
     CastManager.shared.onPositionUpdate = { [weak self] position in
       guard let self else { return }
       self.onTimeChanged(position)
@@ -1688,7 +1692,8 @@ extension BookPlayerModel {
       title: title,
       author: author,
       coverURL: coverURL,
-      startTime: offset
+      startTime: offset,
+      contentType: track.mimeType ?? "audio/mpeg"
     )
   }
 }

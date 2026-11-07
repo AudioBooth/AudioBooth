@@ -101,6 +101,7 @@ If you encounter any issues or have questions:
 
 ## Dependencies
 
+- [Google Cast iOS SDK](https://github.com/googlecast/google-cast-ios-sdk) - Chromecast device discovery and media streaming
 - [SimpleKeychain](https://github.com/auth0/SimpleKeychain) - Secure credential storage
 - [KSCrash](https://github.com/kstenerud/KSCrash) - Local crash reporting and diagnostics
 - [Nuke](https://github.com/kean/Nuke) - Efficient image loading and caching
