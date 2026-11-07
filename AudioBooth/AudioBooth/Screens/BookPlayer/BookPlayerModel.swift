@@ -1273,6 +1273,7 @@ extension BookPlayerModel {
       let reasonValue = userInfo[AVAudioSessionInterruptionReasonKey] as? UInt
       let reason = reasonValue.flatMap(AVAudioSession.InterruptionReason.init(rawValue:))
       interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
+      player?.pause()
 
     case .ended:
       guard sessionManager.current != nil else {
