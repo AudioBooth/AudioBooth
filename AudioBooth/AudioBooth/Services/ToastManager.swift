@@ -10,6 +10,7 @@ public struct Toast {
     case error
     case success
     case info
+    case volume
   }
 
   private static var window: PassThroughWindow?
@@ -46,7 +47,36 @@ public struct Toast {
     self.type = .info
   }
 
+  public init(volume message: LocalizedStringResource) {
+    self.init(volume: String(localized: message))
+  }
+
+  @_disfavoredOverload
+  public init<S: StringProtocol>(volume message: S) {
+    self.message = String(message)
+    self.type = .volume
+  }
+
   public func show() {
+    let duration: TimeInterval =
+      switch type {
+      case .error: 5
+      case .success: 3
+      case .info: 2
+      case .volume: 1.5
+      }
+
+    if let existingModel = Toast.model, existingModel.visible {
+      existingModel.toast = self
+      Toast.dismissTask?.cancel()
+      Toast.dismissTask = Task {
+        try? await Task.sleep(for: .seconds(duration))
+        guard !Task.isCancelled else { return }
+        Toast.hide()
+      }
+      return
+    }
+
     Toast.hide()
 
     let window: PassThroughWindow
@@ -58,24 +88,17 @@ public struct Toast {
     window.backgroundColor = .clear
     window.windowLevel = .alert
 
-    let model = ToastPage.Model()
+    let model = ToastPage.Model(toast: self)
     model.onDismiss = { Toast.hide() }
     window.model = model
 
-    let rootViewController = UIHostingController(rootView: ToastPage(toast: self, model: model))
+    let rootViewController = UIHostingController(rootView: ToastPage(model: model))
     rootViewController.view.backgroundColor = .clear
     window.rootViewController = rootViewController
     window.isHidden = false
 
     Toast.window = window
     Toast.model = model
-
-    let duration: TimeInterval =
-      switch type {
-      case .error: 5
-      case .success: 3
-      case .info: 2
-      }
 
     Toast.dismissTask = Task {
       try? await Task.sleep(for: .seconds(duration))
@@ -111,22 +134,25 @@ public struct Toast {
 }
 
 struct ToastPage: View {
-  let toast: Toast
-
   @ObservedObject var model: Model
 
   class Model: ObservableObject {
     @Published var visible: Bool = false
+    @Published var toast: Toast
 
     var touchableFrame: CGRect = .zero
     var onDismiss: () -> Void = {}
+
+    init(toast: Toast) {
+      self.toast = toast
+    }
   }
 
   var body: some View {
     GeometryReader { geometry in
       VStack {
         if model.visible {
-          ToastView(toast: toast, onDismiss: model.onDismiss)
+          ToastView(toast: model.toast, onDismiss: model.onDismiss)
             .background {
               GeometryReader { proxy in
                 Color.clear
@@ -238,6 +264,8 @@ struct ToastView: View {
       return "checkmark.circle.fill"
     case .info:
       return "info.circle.fill"
+    case .volume:
+      return "speaker.wave.2.fill"
     }
   }
 
@@ -250,6 +278,8 @@ struct ToastView: View {
         return .green
       case .info:
         return .blue
+      case .volume:
+        return .primary
       }
     } else {
       return .white
@@ -264,6 +294,8 @@ struct ToastView: View {
       return .green
     case .info:
       return .blue
+    case .volume:
+      return Color(uiColor: .secondarySystemBackground)
     }
   }
 }

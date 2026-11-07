@@ -14,6 +14,9 @@ final class CastManager: NSObject, ObservableObject {
 
   private var remoteClient: GCKRemoteMediaClient?
   private var hasHandledTrackFinished = false
+  private var hasReceivedInitialVolume = false
+  private var lastReportedVolume: Float?
+  private var lastReportedMuted: Bool?
 
   var onPositionUpdate: ((TimeInterval) -> Void)?
   var onStateChange: ((Bool) -> Void)?
@@ -92,6 +95,27 @@ final class CastManager: NSObject, ObservableObject {
   func disconnect() {
     GCKCastContext.sharedInstance().sessionManager.endSessionAndStopCasting(true)
   }
+
+  private func handleDeviceVolumeChange(_ volume: Float, muted: Bool) {
+    guard hasReceivedInitialVolume else {
+      hasReceivedInitialVolume = true
+      lastReportedVolume = volume
+      lastReportedMuted = muted
+      return
+    }
+
+    let volumeChanged = lastReportedVolume.map { abs($0 - volume) >= 0.005 } ?? true
+    let muteChanged = lastReportedMuted != muted
+    guard volumeChanged || muteChanged else { return }
+
+    lastReportedVolume = volume
+    lastReportedMuted = muted
+
+    let name = deviceName ?? "Speaker"
+    let percent = Int(round(volume * 100))
+    let message = muted ? "\(name) • Muted" : "\(name) • \(percent)%"
+    Toast(volume: message).show()
+  }
 }
 
 extension CastManager: GCKSessionManagerListener {
@@ -104,6 +128,9 @@ extension CastManager: GCKSessionManagerListener {
       self.isConnected = true
       self.deviceName = castSession.device.friendlyName
       self.remoteClient = castSession.remoteMediaClient
+      self.hasReceivedInitialVolume = false
+      self.lastReportedVolume = nil
+      self.lastReportedMuted = nil
       castSession.remoteMediaClient?.add(self)
       self.onSessionStarted?()
     }
@@ -118,6 +145,9 @@ extension CastManager: GCKSessionManagerListener {
       self.isConnected = true
       self.deviceName = castSession.device.friendlyName
       self.remoteClient = castSession.remoteMediaClient
+      self.hasReceivedInitialVolume = false
+      self.lastReportedVolume = nil
+      self.lastReportedMuted = nil
       castSession.remoteMediaClient?.add(self)
       self.onSessionStarted?()
     }
@@ -133,6 +163,9 @@ extension CastManager: GCKSessionManagerListener {
       self.isPlaying = false
       self.deviceName = nil
       self.remoteClient = nil
+      self.hasReceivedInitialVolume = false
+      self.lastReportedVolume = nil
+      self.lastReportedMuted = nil
       self.onSessionEnded?()
     }
   }
@@ -147,8 +180,33 @@ extension CastManager: GCKSessionManagerListener {
       self.isPlaying = false
       self.deviceName = nil
       self.remoteClient = nil
+      self.hasReceivedInitialVolume = false
+      self.lastReportedVolume = nil
+      self.lastReportedMuted = nil
       self.onError?()
       self.onSessionEnded?()
+    }
+  }
+
+  nonisolated func sessionManager(
+    _ sessionManager: GCKSessionManager,
+    session: GCKSession,
+    didReceiveDeviceVolume volume: Float,
+    muted: Bool
+  ) {
+    Task { @MainActor in
+      self.handleDeviceVolumeChange(volume, muted: muted)
+    }
+  }
+
+  nonisolated func sessionManager(
+    _ sessionManager: GCKSessionManager,
+    castSession: GCKCastSession,
+    didReceiveDeviceVolume volume: Float,
+    muted: Bool
+  ) {
+    Task { @MainActor in
+      self.handleDeviceVolumeChange(volume, muted: muted)
     }
   }
 }
