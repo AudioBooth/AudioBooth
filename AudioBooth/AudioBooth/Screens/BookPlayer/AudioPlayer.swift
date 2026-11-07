@@ -151,19 +151,23 @@ final class AudioPlayer {
 
       if isPlaying {
         events.send(.stateChanged(.playing))
-      } else if player.currentItem == nil || player.currentItem?.status == .failed {
+        return
+      }
+
+      if player.currentItem == nil || player.currentItem?.status == .failed {
         let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
         currentTrackIndex = trackIndex
-        loadQueue(from: trackIndex, seekTo: offset, autoPlay: true)
-      } else {
-        if pendingSeekTarget != mediaProgress.currentTime {
-          seek(to: mediaProgress.currentTime)
-        }
-        playWhenReady()
+        loadQueue(from: trackIndex, seekTo: offset, autoPlay: false)
+      } else if pendingSeekTarget != mediaProgress.currentTime {
+        seek(to: mediaProgress.currentTime)
+      }
 
-        if !activated {
-          events.send(.stateChanged(isPlaying ? .playing : .paused))
-        }
+      guard player.currentItem?.status == .readyToPlay else { return }
+      player.play()
+      player.rate = player.defaultRate
+
+      if !activated {
+        events.send(.stateChanged(isPlaying ? .playing : .paused))
       }
     }
   }
@@ -246,17 +250,9 @@ private extension AudioPlayer {
     }
 
     if autoPlay {
-      playWhenReady()
+      player.play()
+      player.rate = player.defaultRate
     }
-  }
-
-  /// Starting a streamed item before it is ready to play can leave AVPlayer waiting
-  /// indefinitely, so playback starts from the readyToPlay observer instead.
-  func playWhenReady() {
-    wantsPlayback = true
-    guard player.currentItem?.status == .readyToPlay else { return }
-    player.play()
-    player.rate = player.defaultRate
   }
 
   func topUpQueue() {
@@ -413,7 +409,8 @@ private extension AudioPlayer {
         case .readyToPlay:
           self.events.send(.stateChanged(.ready))
           if self.wantsPlayback, !self.isPlaying {
-            self.playWhenReady()
+            self.player.play()
+            self.player.rate = self.player.defaultRate
           }
         case .failed:
           AppLogger.player.error("Player item failed: \(item.error?.localizedDescription ?? "Unknown")")
