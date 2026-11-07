@@ -26,7 +26,7 @@ final class CarPlayChapters {
     let section = CPListSection(items: items)
     let template = CPListTemplate(title: String(localized: "Chapters"), sections: [section])
 
-    interfaceController.pushTemplate(template, animated: true, completion: nil)
+    interfaceController.pushTemplate(template, animated: true, completion: { _, _ in })
   }
 
   private func createListItem(
@@ -54,7 +54,7 @@ final class CarPlayChapters {
     else { return }
 
     chapters.onChapterTapped(at: index)
-    interfaceController.popTemplate(animated: true, completion: nil)
+    interfaceController.popTemplate(animated: true, completion: { _, _ in })
   }
 
   private func formatDuration(_ duration: TimeInterval) -> String {

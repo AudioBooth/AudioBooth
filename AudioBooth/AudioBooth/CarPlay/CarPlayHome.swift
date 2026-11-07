@@ -159,7 +159,7 @@ final class CarPlayHome: CarPlayPageProtocol {
       podcast: podcast
     )
     selectedPodcast = details
-    interfaceController.pushTemplate(details.template, animated: true, completion: nil)
+    interfaceController.pushTemplate(details.template, animated: true, completion: { _, _ in })
   }
 
   private func onBookSelected(_ book: Book, completion: @escaping () -> Void) {
@@ -208,7 +208,7 @@ final class CarPlayHome: CarPlayPageProtocol {
   private func showSectionList(title: String, items: [CPListItem]) {
     let template = CPListTemplate(title: title, sections: [CPListSection(items: items)])
     selectedSectionTemplate = template
-    interfaceController.pushTemplate(template, animated: true, completion: nil)
+    interfaceController.pushTemplate(template, animated: true, completion: { _, _ in })
   }
 
   private func showLibrary(filterType: CarPlayLibrary.FilterType) {
@@ -219,7 +219,7 @@ final class CarPlayHome: CarPlayPageProtocol {
       filterType: filterType
     )
     selected = library
-    interfaceController.pushTemplate(library.template, animated: true, completion: nil)
+    interfaceController.pushTemplate(library.template, animated: true, completion: { _, _ in })
   }
 }
 

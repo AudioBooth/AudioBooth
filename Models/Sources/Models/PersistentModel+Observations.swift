@@ -6,7 +6,7 @@ extension PersistentModel {
   public static func observe<Value: Equatable & Sendable>(
     where keyPath: KeyPath<Self, Value> & Sendable,
     equals value: Value
-  ) -> AsyncStream<Self> {
+  ) -> AsyncStream<Self?> {
     let entityName = String(describing: Self.self)
     return AsyncStream { continuation in
       let task = Task { @MainActor in
@@ -18,7 +18,7 @@ extension PersistentModel {
           let items = try ctx.fetch(descriptor)
           if let model = items.first(where: { $0[keyPath: keyPath] == value }) {
             targetID = model.persistentModelID
-            nonisolated(unsafe) let model = model
+            nonisolated(unsafe) let model: Self? = model
             continuation.yield(model)
           }
         } catch {
@@ -39,6 +39,7 @@ extension PersistentModel {
 
           if let identifier = targetID, deletes.contains(identifier) {
             targetID = nil
+            continuation.yield(nil)
           }
 
           if let identifier = targetID {
@@ -48,7 +49,7 @@ extension PersistentModel {
               !matched.isDeleted
             else { continue }
 
-            nonisolated(unsafe) let model = matched
+            nonisolated(unsafe) let model: Self? = matched
             continuation.yield(model)
           } else {
             for identifier in inserts where identifier.entityName == entityName {
@@ -59,7 +60,7 @@ extension PersistentModel {
               else { continue }
 
               targetID = identifier
-              nonisolated(unsafe) let model = matched
+              nonisolated(unsafe) let model: Self? = matched
               continuation.yield(model)
               break
             }

@@ -103,13 +103,13 @@ final class CarPlayNowPlaying: NSObject {
     guard !interfaceController.templates.isEmpty else { return }
 
     if !interfaceController.templates.contains(where: { $0 is CPNowPlayingTemplate }) {
-      interfaceController.pushTemplate(template, animated: true, completion: nil)
+      interfaceController.pushTemplate(template, animated: true, completion: { _, _ in })
     }
   }
 
   private func hideNowPlaying() {
     if interfaceController.templates.contains(where: { $0 is CPNowPlayingTemplate }) {
-      interfaceController.popToRootTemplate(animated: true, completion: nil)
+      interfaceController.popToRootTemplate(animated: true, completion: { _, _ in })
     }
   }
 

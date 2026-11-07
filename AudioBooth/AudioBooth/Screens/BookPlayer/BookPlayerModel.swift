@@ -1218,7 +1218,7 @@ extension BookPlayerModel {
 
     itemObservation = Task { [weak self] in
       for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
-        guard !Task.isCancelled, let self else { continue }
+        guard !Task.isCancelled, let self, let updatedItem else { continue }
 
         self.item = updatedItem as any PlayableItem
 
@@ -1244,7 +1244,7 @@ extension BookPlayerModel {
 
     itemObservation = Task { [weak self] in
       for await updatedEpisode in LocalEpisode.observe(where: \.episodeID, equals: episodeID) {
-        guard !Task.isCancelled, let self else { continue }
+        guard !Task.isCancelled, let self, let updatedEpisode else { continue }
 
         self.item = updatedEpisode as any PlayableItem
 

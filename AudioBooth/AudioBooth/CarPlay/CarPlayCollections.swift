@@ -87,7 +87,7 @@ final class CarPlayCollections {
       mode: mode
     )
     selectedDetail = details
-    interfaceController.pushTemplate(details.template, animated: true, completion: nil)
+    interfaceController.pushTemplate(details.template, animated: true, completion: { _, _ in })
   }
 
   private func loadImage(from url: URL) async -> UIImage? {

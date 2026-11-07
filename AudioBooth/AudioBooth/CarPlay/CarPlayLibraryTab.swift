@@ -66,6 +66,6 @@ final class CarPlayLibraryTab: CarPlayPageProtocol {
 
   private func push(_ page: AnyObject, template: CPTemplate) {
     selected = page
-    interfaceController.pushTemplate(template, animated: true, completion: nil)
+    interfaceController.pushTemplate(template, animated: true, completion: { _, _ in })
   }
 }

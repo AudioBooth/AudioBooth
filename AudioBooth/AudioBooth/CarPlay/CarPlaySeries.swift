@@ -74,7 +74,7 @@ final class CarPlaySeries {
       filterType: .series(series)
     )
     selected = library
-    interfaceController.pushTemplate(library.template, animated: true, completion: nil)
+    interfaceController.pushTemplate(library.template, animated: true, completion: { _, _ in })
   }
 
   private func loadImage(from url: URL) async -> UIImage? {

@@ -289,7 +289,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     completeBackgroundTasksIfNeeded()
 
     Task { [weak self] in
-      try? await Task.sleep(for: .seconds(20))
+      try? await Task.sleep(for: .seconds(10))
       guard let self, let index = backgroundTasks.firstIndex(where: { $0 === task }) else { return }
       backgroundTasks.remove(at: index)
       task.setTaskCompletedWithSnapshot(false)
