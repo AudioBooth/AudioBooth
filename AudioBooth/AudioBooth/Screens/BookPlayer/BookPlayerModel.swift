@@ -651,6 +651,7 @@ extension BookPlayerModel {
       if let model = self.playbackProgress as? PlaybackProgressViewModel {
         model.updateProgress()
       }
+      self.nowPlaying.update()
       PlaybackHistory.record(itemID: id, action: .seek, position: time)
       return
     }
@@ -1730,6 +1731,7 @@ extension BookPlayerModel {
     CastManager.shared.onSessionEnded = { [weak self] in
       guard let self else { return }
       self.player?.seek(to: self.mediaProgress.currentTime)
+      self.nowPlaying.update()
     }
   }
 

@@ -82,7 +82,16 @@ struct BookPlayer: View {
           .tint(.primary)
         }
 
+        #if ENABLE_EXPERIMENTAL_HINGE_API
+        if #available(iOS 27.1, *) {
+          airPlayToolbarItem
+            .axisBehavior(.verticalPreferred)
+        } else {
+          airPlayToolbarItem
+        }
+        #else
         airPlayToolbarItem
+        #endif
 
         if #available(iOS 26.0, *) {
           ToolbarSpacer(.fixed, placement: .topBarTrailing)

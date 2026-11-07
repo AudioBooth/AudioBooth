@@ -308,7 +308,12 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func updateSleepTimer() {
-    if !player.isPlaying {
+    #if canImport(GoogleCast) && !os(watchOS)
+    let isActivelyPlaying = CastManager.shared.isConnected ? CastManager.shared.isPlaying : player.isPlaying
+    #else
+    let isActivelyPlaying = player.isPlaying
+    #endif
+    if !isActivelyPlaying {
       switch preferences.timerPauseBehavior {
       case .none:
         break
@@ -355,6 +360,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func pauseFromTimer() {
     let duration = originalTimerDuration
 
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      CastManager.shared.pause()
+    }
+    #endif
     PlaybackHistory.record(itemID: itemID, action: .timerCompleted, position: player.time)
     player.pause()
     player.volume = Float(preferences.volumeLevel)
@@ -422,6 +432,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   func pauseFromChapterTimer() {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      CastManager.shared.pause()
+    }
+    #endif
     PlaybackHistory.record(itemID: itemID, action: .timerCompleted, position: player.time)
     player.pause()
 
@@ -706,6 +721,11 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     let remaining = trigger.timeIntervalSinceNow
 
     if remaining <= 0 {
+      #if canImport(GoogleCast) && !os(watchOS)
+      if CastManager.shared.isConnected {
+        CastManager.shared.pause()
+      }
+      #endif
       player.pause()
       playAlarmTone()
       stopAlarmTimer()

@@ -5,7 +5,7 @@ import SwiftUI
 struct CastButton: UIViewRepresentable {
   func makeUIView(context: Context) -> GCKUICastButton {
     let button = GCKUICastButton(frame: CGRect(x: 0, y: 0, width: 24, height: 24))
-    button.tintColor = .white
+    button.tintColor = UIColor.label
     return button
   }
 
