@@ -28,6 +28,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>CFBundleDisplayName</key>
+	<string>AudioBooth</string>
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>$(ORG_IDENTIFIER).AudioBS</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>AudioBooth needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.</string>
 	<key>UIBackgroundModes</key>

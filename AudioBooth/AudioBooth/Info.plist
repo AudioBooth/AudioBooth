@@ -92,5 +92,32 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>AudioBooth</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.books</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Use NFC to read and write data.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>AudioBooth needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~iphone</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 </dict>
 </plist>
