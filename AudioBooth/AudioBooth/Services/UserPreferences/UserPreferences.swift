@@ -676,11 +676,13 @@ enum LevelingStrength: Int, CaseIterable, Identifiable, Codable {
 enum ContinueListeningStyle: String, CaseIterable {
   case carousel
   case coverFlow
+  case poster
 
   var displayText: LocalizedStringResource {
     switch self {
     case .carousel: "Carousel"
     case .coverFlow: "Cover Flow"
+    case .poster: "Poster"
     }
   }
 }

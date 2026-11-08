@@ -289,6 +289,17 @@ struct HomePage: View {
 
         case .coverFlow:
           ContinueListeningCoverFlowView(model: model)
+
+        case .poster:
+          ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(alignment: .top, spacing: 16) {
+              ForEach(model.items, id: \.id) { item in
+                ContinueBookCard(model: ContinueBookCardModel(book: item))
+              }
+            }
+            .padding(.horizontal)
+          }
+          .environment(\.episodeCardWidth, continueEpisodeWidth)
         }
 
       case .books(let items):

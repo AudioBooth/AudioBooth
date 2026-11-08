@@ -13,6 +13,10 @@ struct EpisodeCard: View {
     customWidth ?? defaultWidth
   }
 
+  private var isCompact: Bool {
+    width <= defaultWidth
+  }
+
   private var backgroundColor: Color {
     model.backgroundColor ?? Color(white: 0.25)
   }
@@ -125,6 +129,7 @@ struct EpisodeCard: View {
 
           if let playText = model.playText {
             Text(playText)
+              .font(isCompact ? .footnote : .subheadline)
               .lineLimit(1)
           }
         }

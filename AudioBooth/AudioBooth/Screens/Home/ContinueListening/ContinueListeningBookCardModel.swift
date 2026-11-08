@@ -41,6 +41,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
       timeRemaining: book.duration
     )
 
+    summary = book.descriptionPlain ?? book.description?.htmlStripped
     observeMediaProgress()
     setupDownloadProgressObserver()
   }
@@ -67,6 +68,7 @@ final class ContinueListeningBookCardModel: BookCard.Model {
       timeRemaining: localBook.duration
     )
 
+    summary = localBook.bookDescription?.htmlStripped
     observeMediaProgress()
     setupDownloadProgressObserver()
   }

@@ -395,6 +395,7 @@ extension BookCard {
     var isDownloaded: Bool
     let isExplicit: Bool
     var timeRemaining: TimeInterval?
+    var summary: String?
 
     func onAppear() {}
 
