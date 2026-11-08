@@ -8,6 +8,7 @@ import UIKit
 final class LatestViewModel: LatestView.Model {
   private let libraries = Audiobookshelf.shared.libraries
   private let playerManager = PlayerManager.shared
+  private let downloadManager = DownloadManager.shared
   private var cancellables = Set<AnyCancellable>()
   private var hasFetched = false
 
@@ -33,6 +34,12 @@ final class LatestViewModel: LatestView.Model {
     playerManager.$current
       .sink { [weak self] current in
         self?.observePlaybackState(current)
+      }
+      .store(in: &cancellables)
+
+    downloadManager.$downloadStates
+      .sink { [weak self] states in
+        self?.applyDownloadStates(states)
       }
       .store(in: &cancellables)
   }
@@ -105,6 +112,7 @@ final class LatestViewModel: LatestView.Model {
       publishedAt: recent.episode.publishedAt.map { Date(timeIntervalSince1970: Double($0) / 1000) },
       duration: recent.episode.duration,
       progress: progress,
+      downloadState: downloadManager.downloadStates[episodeID] ?? .notDownloaded,
       summary: recent.episode.description?.htmlStripped,
       contextMenu: contextMenu
     )
@@ -113,6 +121,15 @@ final class LatestViewModel: LatestView.Model {
   private func refreshProgress(episodeID: String) {
     guard let index = episodes.firstIndex(where: { $0.id == episodeID }) else { return }
     episodes[index].progress = MediaProgress.progress(for: episodeID)
+  }
+
+  private func applyDownloadStates(_ states: [String: DownloadManager.DownloadState]) {
+    for index in episodes.indices {
+      let newState = states[episodes[index].id] ?? .notDownloaded
+      if episodes[index].downloadState != newState {
+        episodes[index].downloadState = newState
+      }
+    }
   }
 
   private func observePlaybackState(_ current: BookPlayer.Model?) {

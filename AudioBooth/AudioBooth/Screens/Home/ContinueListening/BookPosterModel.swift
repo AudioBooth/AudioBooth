@@ -2,7 +2,7 @@ import Combine
 import Nuke
 import SwiftUI
 
-final class ContinueBookCardModel: ContinueBookCard.Model {
+final class BookPosterModel: BookPoster.Model {
   private static var backgroundColors: [URL: Color] = [:]
 
   private let playerManager = PlayerManager.shared

@@ -3,11 +3,11 @@ import Nuke
 import NukeUI
 import SwiftUI
 
-struct ContinueBookCard: View {
+struct BookPoster: View {
   @StateObject var model: Model
   @ObservedObject private var preferences = UserPreferences.shared
 
-  @Environment(\.episodeCardWidth) private var customWidth
+  @Environment(\.posterWidth) private var customWidth
   @ScaledMetric(relativeTo: .title) private var defaultWidth: CGFloat = 200
 
   private var book: BookCard.Model { model.book }
@@ -133,12 +133,24 @@ struct ContinueBookCard: View {
 
         Spacer()
 
-        if book.isDownloaded {
+        if let downloadProgress = book.cover.downloadProgress {
+          downloadProgressBadge(downloadProgress)
+        } else if book.isDownloaded {
           coverBadge(systemImage: "arrow.down.circle.fill")
         }
       }
       .padding(8)
     }
+  }
+
+  private func downloadProgressBadge(_ progress: Double) -> some View {
+    ProgressView(value: progress)
+      .progressViewStyle(GaugeProgressViewStyle(tint: .white, lineWidth: 2))
+      .frame(width: 12, height: 12)
+      .padding(.horizontal, 6)
+      .padding(.vertical, 4)
+      .background(.black.opacity(0.6), in: .capsule)
+      .accessibilityLabel("Downloading…")
   }
 
   private func coverBadge(systemImage: String) -> some View {
@@ -198,7 +210,7 @@ struct ContinueBookCard: View {
   }
 }
 
-extension ContinueBookCard {
+extension BookPoster {
   @Observable
   class Model: ObservableObject, Identifiable {
     let book: BookCard.Model
@@ -231,8 +243,8 @@ extension ContinueBookCard {
 
 #Preview {
   NavigationStack {
-    ContinueBookCard(
-      model: ContinueBookCard.Model(
+    BookPoster(
+      model: BookPoster.Model(
         book: BookCard.Model(
           title: "The Lord of the Rings",
           cover: Cover.Model(

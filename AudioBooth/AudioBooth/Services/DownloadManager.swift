@@ -73,6 +73,11 @@ final class DownloadManager: NSObject, ObservableObject {
     case notDownloaded
     case downloading(progress: Double)
     case downloaded
+
+    var progress: Double? {
+      if case .downloading(let progress) = self { return progress }
+      return nil
+    }
   }
 
   struct DownloadFile {

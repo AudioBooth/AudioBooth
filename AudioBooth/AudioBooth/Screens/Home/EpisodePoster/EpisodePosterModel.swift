@@ -4,7 +4,7 @@ import Models
 import Nuke
 import SwiftUI
 
-final class EpisodeCardModel: EpisodeCard.Model {
+final class EpisodePosterModel: EpisodePoster.Model {
   private static var backgroundColors: [URL: Color] = [:]
 
   private let playerManager = PlayerManager.shared
@@ -41,6 +41,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
 
     observeMediaProgress()
     observePlayer()
+    observeDownloadState()
     setupBackgroundColor()
   }
 
@@ -74,6 +75,7 @@ final class EpisodeCardModel: EpisodeCard.Model {
 
     observeMediaProgress()
     observePlayer()
+    observeDownloadState()
     setupBackgroundColor()
   }
 
@@ -87,6 +89,19 @@ final class EpisodeCardModel: EpisodeCard.Model {
     } else {
       contextMenu.onPlayTapped()
     }
+  }
+
+  private func observeDownloadState() {
+    let episodeID = id
+    DownloadManager.shared.$downloadStates
+      .map { states in
+        states[episodeID] ?? .notDownloaded
+      }
+      .removeDuplicates()
+      .sink { [weak self] state in
+        self?.downloadState = state
+      }
+      .store(in: &cancellables)
   }
 
   private func observePlayer() {

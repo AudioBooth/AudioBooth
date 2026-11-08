@@ -621,7 +621,15 @@ struct PodcastDetailsView: View {
         HStack(spacing: 8) {
           episodePlayButton(episode)
 
-          if episode.downloadState == .downloaded {
+          switch episode.downloadState {
+          case .notDownloaded:
+            EmptyView()
+          case .downloading(let progress):
+            ProgressView(value: progress)
+              .progressViewStyle(GaugeProgressViewStyle(lineWidth: 3))
+              .frame(width: 18, height: 18)
+              .accessibilityLabel("Downloading…")
+          case .downloaded:
             Image(systemName: "arrow.down.circle.fill")
               .font(.title3)
               .foregroundStyle(.green)

@@ -12,14 +12,14 @@ struct HomePage: View {
 
   @ScaledMetric(relativeTo: .title) private var cardWidth: CGFloat = 120
   @ScaledMetric(relativeTo: .title) private var authorCardWidth: CGFloat = 80
-  @ScaledMetric(relativeTo: .title) private var episodeCardWidth: CGFloat = 200
+  @ScaledMetric(relativeTo: .title) private var posterWidth: CGFloat = 200
 
   private var continueSectionWidth: CGFloat {
     preferences.continueSectionSize.value / 120 * cardWidth
   }
 
   private var continueEpisodeWidth: CGFloat {
-    preferences.continueSectionSize.episodeCardWidth / 200 * episodeCardWidth
+    preferences.continueSectionSize.posterWidth / 200 * posterWidth
   }
 
   private var title: Text {
@@ -259,7 +259,7 @@ struct HomePage: View {
               case .book(let model):
                 BookCard(model: model)
               case .episode(let model):
-                EpisodeCard(model: model)
+                EpisodePoster(model: model)
               }
             }
           }
@@ -294,12 +294,12 @@ struct HomePage: View {
           ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(alignment: .top, spacing: 16) {
               ForEach(model.items, id: \.id) { item in
-                ContinueBookCard(model: ContinueBookCardModel(book: item))
+                BookPoster(model: BookPosterModel(book: item))
               }
             }
             .padding(.horizontal)
           }
-          .environment(\.episodeCardWidth, continueEpisodeWidth)
+          .environment(\.posterWidth, continueEpisodeWidth)
         }
 
       case .books(let items):
@@ -331,12 +331,12 @@ struct HomePage: View {
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items) { episode in
-              EpisodeCard(model: episode)
+              EpisodePoster(model: episode)
             }
           }
           .padding(.horizontal)
         }
-        .environment(\.episodeCardWidth, section.id == "continue-listening" ? continueEpisodeWidth : nil)
+        .environment(\.posterWidth, section.id == "continue-listening" ? continueEpisodeWidth : nil)
 
       case .series(let items):
         Text(section.title)
@@ -495,7 +495,7 @@ extension HomePage {
         case continueBooks(ContinueListeningCoverFlowView.Model)
         case playlist(id: String, items: [PlaylistItem])
         case books([BookCard.Model])
-        case episodes([EpisodeCard.Model])
+        case episodes([EpisodePoster.Model])
         case series([SeriesCard.Model])
         case authors([AuthorCard.Model])
       }
@@ -503,7 +503,7 @@ extension HomePage {
 
       enum PlaylistItem: Identifiable {
         case book(BookCard.Model)
-        case episode(EpisodeCard.Model)
+        case episode(EpisodePoster.Model)
 
         var id: String {
           switch self {

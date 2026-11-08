@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Audio bitrate - Book details now show the audio bitrate in the metadata section
 
 ### Changed
+- Podcast downloads - Episodes now show download progress and a downloaded indicator on the Home page, in the Latest tab, and in playlists, and show progress on the podcast and episode pages
 - Mini player on large screens - On wide screens, the mini player now shows time remaining, speed, skip, sleep timer, and queue controls
 - Finished episodes - Playing a finished podcast episode now starts it from the beginning
 - Player background - Improved cover color extraction for richer player and home episode card backgrounds

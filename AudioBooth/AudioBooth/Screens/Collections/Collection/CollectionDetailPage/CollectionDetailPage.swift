@@ -269,6 +269,18 @@ struct CollectionDetailPage: View {
   private func episodeRow(_ book: BookCard.Model) -> some View {
     HStack(spacing: 12) {
       Cover(model: book.cover, size: .small)
+        .overlay(alignment: .bottomTrailing) {
+          if book.isDownloaded {
+            Image(systemName: "arrow.down.circle.fill")
+              .font(.caption2)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 4)
+              .frame(height: 16)
+              .background(.black.opacity(0.6), in: .capsule)
+              .padding(2)
+              .accessibilityLabel("Downloaded")
+          }
+        }
         .frame(width: rowCoverSize, height: rowCoverSize)
 
       VStack(alignment: .leading, spacing: 6) {

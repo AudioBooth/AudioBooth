@@ -1,4 +1,5 @@
 import API
+import Combine
 import Foundation
 import Logging
 import Models
@@ -8,9 +9,11 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private let playerManager = PlayerManager.shared
   private let pinnedPlaylistManager = PinnedPlaylistManager.shared
+  private let downloadManager = DownloadManager.shared
   private let collectionID: String
   private var loadTask: Task<Void, Never>?
   private var playlistItems: [PlaylistItem] = []
+  private var downloadStatesCancellable: AnyCancellable?
 
   var onDeleted: (() -> Void)?
 
@@ -41,6 +44,11 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
       autoDownload: isPinned ? (config?.autoDownload ?? .off) : .off,
       removeCompleted: isPinned ? (config?.removeCompleted ?? false) : false
     )
+
+    downloadStatesCancellable = downloadManager.$downloadStates
+      .sink { [weak self] states in
+        self?.applyEpisodeDownloadStates(states)
+      }
   }
 
   override func onAppear() {
@@ -323,6 +331,20 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
     loadTask = nil
   }
 
+  private func applyEpisodeDownloadStates(_ states: [String: DownloadManager.DownloadState]) {
+    for book in books where book.podcastID != nil {
+      let downloadProgress = states[book.id]?.progress
+      if book.cover.downloadProgress != downloadProgress {
+        book.cover.downloadProgress = downloadProgress
+      }
+
+      let isDownloaded = states[book.id] == .downloaded
+      if book.isDownloaded != isDownloaded {
+        book.isDownloaded = isDownloaded
+      }
+    }
+  }
+
   private func mapPlaylistItems(_ playlist: Playlist) -> [BookCard.Model] {
     playlistItems = playlist.items
     return playlist.items.map { item in
@@ -330,6 +352,7 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
         let durationText = episode.duration.map {
           Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes], width: .narrow))
         }
+        let downloadState = downloadManager.downloadStates[episode.id]
         return BookCard.Model(
           id: episode.id,
           podcastID: item.libraryItemID,
@@ -337,9 +360,11 @@ final class CollectionDetailPageModel: CollectionDetailPage.Model {
           details: durationText,
           cover: Cover.Model(
             url: item.coverURL,
-            progress: MediaProgress.progress(for: episode.id)
+            progress: MediaProgress.progress(for: episode.id),
+            downloadProgress: downloadState?.progress
           ),
-          author: item.title
+          author: item.title,
+          isDownloaded: downloadState == .downloaded
         )
       } else if case .book(let book) = item.libraryItem {
         return BookCardModel(book, sortBy: nil)

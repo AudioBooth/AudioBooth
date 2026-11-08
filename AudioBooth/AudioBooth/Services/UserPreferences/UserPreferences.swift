@@ -694,7 +694,7 @@ enum ContinueSectionSize: Int, CaseIterable {
 
   var value: CGFloat { CGFloat(rawValue) }
 
-  var episodeCardWidth: CGFloat {
+  var posterWidth: CGFloat {
     switch self {
     case .default: 200
     case .large: 240
