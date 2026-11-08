@@ -39,7 +39,7 @@ struct AudiobookshelfInfoView: View {
     .fixedSize(horizontal: false, vertical: true)
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(16)
-    .background(theme.colors.background.card, in: RoundedRectangle(cornerRadius: 16))
+    .background(theme.colors.background.card, in: .rect(cornerRadius: 16))
   }
 
   private var steps: some View {

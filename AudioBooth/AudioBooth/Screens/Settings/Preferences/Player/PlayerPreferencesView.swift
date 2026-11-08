@@ -276,7 +276,7 @@ private struct NarrationSpeedCard: View {
           RoundedRectangle(cornerRadius: 10, style: .continuous)
             .fill(isSelected ? Color.black : Color.gray.opacity(0.12))
         )
-        .contentShape(Rectangle())
+        .contentShape(.rect)
     }
     .buttonStyle(.plain)
   }
@@ -296,7 +296,7 @@ private struct NarrationSpeedCard: View {
             .font(.system(size: 18, weight: .bold))
             .foregroundStyle(foreground)
         )
-        .contentShape(Rectangle())
+        .contentShape(.rect)
     }
     .buttonStyle(.plain)
   }

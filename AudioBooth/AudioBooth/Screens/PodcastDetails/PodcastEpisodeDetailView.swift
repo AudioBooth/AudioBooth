@@ -103,7 +103,7 @@ struct PodcastEpisodeDetailView: View {
       .padding(.vertical, 6)
       .foregroundStyle(model.isPlaying ? .white : Color.accentColor)
       .background(model.isPlaying ? Color.accentColor : Color.accentColor.opacity(0.15))
-      .clipShape(Capsule())
+      .clipShape(.capsule)
     }
     .buttonStyle(.plain)
     .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
@@ -127,7 +127,7 @@ struct PodcastEpisodeDetailView: View {
               .foregroundStyle(.orange)
           }
           .frame(width: 20, height: 20)
-          .contentShape(Rectangle())
+          .contentShape(.rect)
         case .downloaded:
           Image(systemName: "arrow.down.circle.fill")
             .foregroundStyle(.green)

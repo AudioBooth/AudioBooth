@@ -49,7 +49,7 @@ struct BookListCard: View {
 
   var body: some View {
     BookCard.Content(model: model)
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .overlay {
         if !isEditing {
           NavigationLink(value: navigationDestination) {}
@@ -139,7 +139,7 @@ extension BookCard {
         }
         .frame(maxWidth: coverWidth, alignment: .leading)
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     }
 
     private var rowLayout: some View {
@@ -186,7 +186,7 @@ extension BookCard {
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     }
 
     private var cover: some View {
@@ -210,7 +210,7 @@ extension BookCard {
             }
           }
         }
-        .contentShape(Rectangle())
+        .contentShape(.rect)
     }
 
     @ViewBuilder

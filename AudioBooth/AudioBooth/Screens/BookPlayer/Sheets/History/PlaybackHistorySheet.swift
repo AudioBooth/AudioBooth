@@ -56,7 +56,7 @@ struct PlaybackHistorySheet: View {
 
                 PlaybackHistoryRow(model: entry)
               }
-              .contentShape(Rectangle())
+              .contentShape(.rect)
             }
             .buttonStyle(.plain)
           }

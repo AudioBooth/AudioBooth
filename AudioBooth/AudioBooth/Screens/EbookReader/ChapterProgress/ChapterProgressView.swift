@@ -19,7 +19,7 @@ struct ChapterProgressView: View {
               .frame(width: proxy.size.width * min(max(model.chapterFraction, 0), 1))
           }
         }
-        .clipShape(Capsule())
+        .clipShape(.capsule)
         .frame(height: 4)
 
       ZStack {

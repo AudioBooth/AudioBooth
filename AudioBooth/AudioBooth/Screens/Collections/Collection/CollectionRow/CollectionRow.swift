@@ -26,7 +26,7 @@ struct CollectionRow: View {
     HStack(spacing: 12) {
       coverGrid
         .frame(width: coverSize, height: coverSize)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 8))
 
       VStack(alignment: .leading, spacing: 4) {
         Text(model.name)

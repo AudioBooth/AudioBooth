@@ -120,7 +120,7 @@ struct PodcastFeedView: View {
       Spacer(minLength: 0)
     }
     .padding(.vertical, 10)
-    .contentShape(Rectangle())
+    .contentShape(.rect)
   }
 
   @ViewBuilder
@@ -142,7 +142,7 @@ struct PodcastFeedView: View {
           label(text: "Request Download", systemImage: "icloud.and.arrow.down")
             .foregroundStyle(Color.accentColor)
             .background(Color.accentColor.opacity(0.15))
-            .clipShape(Capsule())
+            .clipShape(.capsule)
         }
         .buttonStyle(.plain)
       } else {

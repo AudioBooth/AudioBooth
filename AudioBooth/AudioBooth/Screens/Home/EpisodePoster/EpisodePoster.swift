@@ -87,8 +87,8 @@ struct EpisodePoster: View {
       artwork
     }
     .background(backgroundColor)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
-    .contentShape(RoundedRectangle(cornerRadius: 16))
+    .clipShape(.rect(cornerRadius: 16))
+    .contentShape(.rect(cornerRadius: 16))
   }
 
   private var artwork: some View {
@@ -182,7 +182,7 @@ struct EpisodePoster: View {
           .fontWeight(.semibold)
           .foregroundStyle(.white.opacity(0.8))
           .frame(width: 32, height: 32)
-          .contentShape(Rectangle())
+          .contentShape(.rect)
       }
       .menuOrder(.priority)
       .accessibilityLabel("More")

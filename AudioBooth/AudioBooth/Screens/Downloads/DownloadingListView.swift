@@ -104,7 +104,7 @@ extension DownloadingListView {
       }
       .foregroundColor(.primary)
       .padding(.horizontal)
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     }
 
     var cover: some View {

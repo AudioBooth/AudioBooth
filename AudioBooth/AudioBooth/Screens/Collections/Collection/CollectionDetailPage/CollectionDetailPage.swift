@@ -317,7 +317,7 @@ struct CollectionDetailPage: View {
       }
       .buttonStyle(.plain)
     }
-    .contentShape(Rectangle())
+    .contentShape(.rect)
     .overlay {
       NavigationLink(value: NavigationDestination.podcast(id: book.podcastID ?? book.id)) {}
         .opacity(0)
@@ -359,7 +359,7 @@ struct CollectionDetailPage: View {
             .padding(.vertical, 6)
             .foregroundStyle(Color.accentColor)
             .background(Color.accentColor.opacity(0.15))
-            .clipShape(Capsule())
+            .clipShape(.capsule)
           }
           .buttonStyle(.plain)
         }
@@ -515,7 +515,7 @@ private struct PinnedPlaylistPreferencesSheet: View {
         .padding(.horizontal)
         .padding(.vertical, 12)
       }
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+      .background(.regularMaterial, in: .rect(cornerRadius: 12))
       .padding(.horizontal)
       .padding(.bottom, 32)
     }

@@ -48,7 +48,7 @@ extension ColorSchemePickerView.Row {
             .fill(.clear)
             .overlay(background)
             .overlay(bar)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(.rect(cornerRadius: 18, style: .continuous))
             .frame(maxWidth: .infinity)
             .frame(height: 84)
             .padding(4)

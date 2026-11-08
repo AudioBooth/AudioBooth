@@ -36,7 +36,7 @@ struct OnboardingView: View {
         .resizable()
         .aspectRatio(contentMode: .fit)
         .frame(width: 96, height: 96)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .clipShape(.rect(cornerRadius: 22, style: .continuous))
         .accessibilityHidden(true)
 
       Text("Welcome to AudioBooth")

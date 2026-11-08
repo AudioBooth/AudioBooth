@@ -43,7 +43,7 @@ extension ThemePickerView.Row {
             .fill(.clear)
             .overlay(background)
             .overlay(card)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(.rect(cornerRadius: 18, style: .continuous))
             .frame(maxWidth: .infinity)
             .frame(height: 84)
             .padding(4)
@@ -74,7 +74,7 @@ extension ThemePickerView.Row {
           theme.colors.background.card.colorScheme(.light)
           theme.colors.background.card.colorScheme(.dark)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .clipShape(.rect(cornerRadius: 6, style: .continuous))
         .frame(width: geo.size.width * 0.55, height: geo.size.height * 0.45)
         .position(x: geo.size.width / 2, y: geo.size.height / 2)
       }

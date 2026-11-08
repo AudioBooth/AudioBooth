@@ -156,7 +156,7 @@ struct AuthorsPage: View {
             .resizable()
             .aspectRatio(contentMode: .fill)
             .frame(width: avatarSize, height: avatarSize)
-            .clipShape(Circle())
+            .clipShape(.circle)
         } else {
           placeholderImage
         }

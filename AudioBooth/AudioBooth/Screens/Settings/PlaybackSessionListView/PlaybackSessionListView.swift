@@ -23,7 +23,7 @@ struct PlaybackSessionListView: View {
                 .fill(Color.gray.opacity(0.3))
             }
             .frame(width: coverSize, height: coverSize)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(.rect(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 8) {
               VStack(alignment: .leading, spacing: 0) {

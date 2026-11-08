@@ -53,7 +53,7 @@ struct Cover: View {
       ProgressOverlay(progress: model.progress)
         .padding(size.progressPadding)
     }
-    .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value))
+    .clipShape(.rect(cornerRadius: preferences.cardCoverCornerRadius.value))
     .overlay {
       RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value)
         .strokeBorder(Color.gray.opacity(0.6), lineWidth: preferences.cardCoverBorderWidth.value)

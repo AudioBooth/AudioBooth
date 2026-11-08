@@ -24,7 +24,7 @@ struct ChaptersContent: View {
               .font(.caption)
               .foregroundColor(.secondary)
           }
-          .contentShape(Rectangle())
+          .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

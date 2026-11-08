@@ -31,7 +31,7 @@ struct AuthorCard: View {
           }
         }
         .aspectRatio(1.0, contentMode: .fit)
-        .clipShape(Circle())
+        .clipShape(.circle)
         .overlay(alignment: .bottomTrailing) {
           if model.bookCount > 0 {
             HStack(spacing: 2) {

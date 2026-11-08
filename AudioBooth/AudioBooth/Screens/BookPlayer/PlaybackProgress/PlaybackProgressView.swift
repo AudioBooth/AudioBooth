@@ -53,7 +53,7 @@ struct PlaybackProgressView: View {
         .frame(height: 6)
         .clipShape(.capsule)
         .frame(maxHeight: .infinity)
-        .contentShape(Rectangle())
+        .contentShape(.rect)
         .overlay {
           if model.isDragging {
             let x = geometry.size.width * model.progress

@@ -243,7 +243,7 @@ private struct CardPreview: View {
             .padding(4)
         }
       }
-      .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value, style: .continuous))
+      .clipShape(.rect(cornerRadius: preferences.cardCoverCornerRadius.value, style: .continuous))
       .overlay {
         RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value, style: .continuous)
           .strokeBorder(Color.gray.opacity(0.6), lineWidth: preferences.cardCoverBorderWidth.value)

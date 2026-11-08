@@ -34,7 +34,7 @@ struct EbookChapterPickerSheet: View {
               }
               .padding(.leading, CGFloat(chapter.level) * 16)
               .padding(.vertical, 4)
-              .contentShape(Rectangle())
+              .contentShape(.rect)
               .overlay(alignment: .leading) {
                 if isCurrent {
                   RoundedRectangle(cornerRadius: 8)

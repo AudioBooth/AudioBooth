@@ -18,7 +18,7 @@ struct SeriesCard: View {
       zooms: displayMode == .card
     ) {
       content
-        .contentShape(Rectangle())
+        .contentShape(.rect)
     }
     .buttonStyle(.plain)
   }
@@ -40,7 +40,7 @@ struct SeriesCard: View {
           ProgressOverlay(progress: model.progress)
             .padding(2)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 8))
         .frame(width: rowCoverSize, height: rowCoverSize)
 
       VStack(alignment: .leading, spacing: 4) {
@@ -63,7 +63,7 @@ struct SeriesCard: View {
         .foregroundColor(.secondary)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .contentShape(Rectangle())
+    .contentShape(.rect)
   }
 
   var cardLayout: some View {
@@ -113,7 +113,7 @@ struct SeriesCard: View {
         ProgressOverlay(progress: model.progress)
           .padding(4)
       }
-      .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value))
+      .clipShape(.rect(cornerRadius: preferences.cardCoverCornerRadius.value))
       .overlay(alignment: .topTrailing) {
         bookCountBadge
       }
@@ -126,7 +126,7 @@ struct SeriesCard: View {
           Color.black.opacity(0.5)
         }
       }
-      .clipShape(RoundedRectangle(cornerRadius: preferences.cardCoverCornerRadius.value))
+      .clipShape(.rect(cornerRadius: preferences.cardCoverCornerRadius.value))
   }
 
   @ViewBuilder

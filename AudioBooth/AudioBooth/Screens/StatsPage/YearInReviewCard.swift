@@ -53,7 +53,7 @@ struct YearInReviewCard: View {
             .font(.body)
             .foregroundColor(.secondary)
         }
-        .contentShape(Rectangle())
+        .contentShape(.rect)
       }
       .buttonStyle(.plain)
 
@@ -78,7 +78,7 @@ struct YearInReviewCard: View {
       .frame(height: 600)
       .allowsHitTesting(false)
     )
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    .clipShape(.rect(cornerRadius: 12))
   }
 
   private func statsGrid(stats: YearInReviewStats) -> some View {
@@ -144,7 +144,7 @@ struct YearInReviewCard: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding()
     .background(.background.opacity(0.8))
-    .clipShape(RoundedRectangle(cornerRadius: 8))
+    .clipShape(.rect(cornerRadius: 8))
   }
 
   private func topStatItem(title: LocalizedStringResource, name: String, time: Double) -> some View {
@@ -166,7 +166,7 @@ struct YearInReviewCard: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
     .background(.background.opacity(0.8))
-    .clipShape(RoundedRectangle(cornerRadius: 8))
+    .clipShape(.rect(cornerRadius: 8))
   }
 
   private func formatTime(_ seconds: Double) -> String {

@@ -11,7 +11,7 @@ struct SessionsContent: View {
         let showDate = index == 0 || model.sessions[index - 1].dateKey != session.dateKey
         Button(action: { model.onSessionTapped(session) }) {
           sessionRow(session, showDate: showDate, isLast: index == model.sessions.count - 1)
-            .contentShape(Rectangle())
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

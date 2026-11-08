@@ -61,7 +61,7 @@ struct PageScannerView: View {
             Image(systemName: "xmark")
               .font(.headline)
               .padding(10)
-              .background(.ultraThinMaterial, in: Circle())
+              .background(.ultraThinMaterial, in: .circle)
           }
           .accessibilityLabel("Cancel")
         }
@@ -73,7 +73,7 @@ struct PageScannerView: View {
           .padding(.bottom, 40)
       }
     }
-    .contentShape(Rectangle())
+    .contentShape(.rect)
     .onTapGesture(perform: scan.captureNow)
     .preferredColorScheme(.dark)
     .onAppear { scan.start(onCaptured: onCaptured) }
@@ -103,7 +103,7 @@ struct PageScannerView: View {
     }
     .padding(.horizontal, 18)
     .padding(.vertical, 12)
-    .background(.regularMaterial, in: Capsule())
+    .background(.regularMaterial, in: .capsule)
   }
 }
 

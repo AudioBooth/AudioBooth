@@ -55,7 +55,7 @@ struct HomePage: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .center)
             .background(.red.opacity(0.3))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(.rect(cornerRadius: 12))
             .overlay {
               RoundedRectangle(cornerRadius: 12)
                 .stroke(.red.opacity(0.5), lineWidth: 2)
@@ -248,7 +248,7 @@ struct HomePage: View {
               .foregroundColor(.secondary)
           }
           .padding(.horizontal)
-          .contentShape(Rectangle())
+          .contentShape(.rect)
         }
         .buttonStyle(.plain)
 

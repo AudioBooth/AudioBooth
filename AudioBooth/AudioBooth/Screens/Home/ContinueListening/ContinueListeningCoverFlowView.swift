@@ -81,13 +81,13 @@ struct ContinueListeningCoverFlowView: View {
           }
           .allowsHitTesting(false)
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     }
     .buttonStyle(.plain)
     .overlay {
       if model.focusedID != item.id {
         Color.clear
-          .contentShape(Rectangle())
+          .contentShape(.rect)
           .onTapGesture {
             withAnimation(.smooth(duration: 0.4)) {
               model.focusedID = item.id

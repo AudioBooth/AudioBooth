@@ -125,7 +125,7 @@ struct BookmarkViewerSheet: View {
             }
             .buttonStyle(.plain)
           }
-          .contentShape(Rectangle())
+          .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {

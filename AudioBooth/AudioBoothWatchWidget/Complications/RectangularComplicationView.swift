@@ -59,7 +59,7 @@ struct RectangularComplicationView: View {
     image
       .aspectRatio(contentMode: .fill)
       .frame(width: coverSize, height: coverSize)
-      .clipShape(RoundedRectangle(cornerRadius: 6))
+      .clipShape(.rect(cornerRadius: 6))
   }
 
   private var placeholderCover: some View {

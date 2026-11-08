@@ -109,7 +109,7 @@ extension PlayerQueueView {
         info
         trailingButton
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .overlay {
         if !isEditing {
           NavigationLink(value: queueDestination(for: item)) {}
@@ -180,7 +180,7 @@ extension PlayerQueueView {
           playButton
         }
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .overlay {
         if !isEditing {
           NavigationLink(value: queueDestination(for: item)) {}

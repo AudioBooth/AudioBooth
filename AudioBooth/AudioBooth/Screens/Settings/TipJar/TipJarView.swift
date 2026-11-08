@@ -114,7 +114,7 @@ struct TipJarView: View {
         }
       }) {
         headerContent
-          .contentShape(Rectangle())
+          .contentShape(.rect)
       }
       .buttonStyle(.plain)
     } else {

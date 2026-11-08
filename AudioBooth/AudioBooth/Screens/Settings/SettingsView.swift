@@ -122,7 +122,7 @@ struct SettingsView: View {
             .textSelection(.enabled)
             .listRowBackground(Color.clear)
         }
-        .contentShape(Rectangle())
+        .contentShape(.rect)
         .onTapGesture(count: 5) {
           preferences.showDebugSection.toggle()
         }

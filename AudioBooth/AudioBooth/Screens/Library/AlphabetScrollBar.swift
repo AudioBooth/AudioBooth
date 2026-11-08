@@ -27,13 +27,13 @@ struct AlphabetScrollBar: View {
           .foregroundColor(.accentColor)
           .frame(minWidth: 30, alignment: .trailing)
           .padding(.trailing, 4)
-          .contentShape(Rectangle())
+          .contentShape(.rect)
           .background(dragObserver(for: letter))
       }
     }
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     .background(Color.clear)
-    .contentShape(Rectangle())
+    .contentShape(.rect)
     .gesture(
       DragGesture(minimumDistance: 0, coordinateSpace: .global)
         .updating($dragLocation) { value, state, _ in

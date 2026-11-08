@@ -254,7 +254,7 @@ private struct VerticalSlider: View {
           .offset(y: thumbY - center)
       }
       .frame(maxWidth: .infinity)
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { drag in

@@ -163,7 +163,7 @@ struct CollectionSelectorSheet: View {
             }
           }
         }
-        .contentShape(Rectangle())
+        .contentShape(.rect)
         .listRowBackground(theme.colors.background.card)
       }
     }

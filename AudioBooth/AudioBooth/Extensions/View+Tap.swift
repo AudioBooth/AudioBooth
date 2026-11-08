@@ -5,10 +5,10 @@ extension View {
     #if targetEnvironment(macCatalyst)
     self
       .background(Color.black.opacity(0.001))
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     #else
     self
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     #endif
   }
 }

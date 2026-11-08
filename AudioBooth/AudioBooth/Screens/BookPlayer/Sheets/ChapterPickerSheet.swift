@@ -28,7 +28,7 @@ struct ChapterPickerSheet: View {
                   .foregroundColor(.primary)
               }
               .padding(.vertical, 4)
-              .contentShape(Rectangle())
+              .contentShape(.rect)
               .overlay(alignment: .leading) {
                 if model.currentIndex == index {
                   RoundedRectangle(cornerRadius: 8)

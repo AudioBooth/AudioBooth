@@ -32,7 +32,7 @@ struct ContinueListeningRow: View {
         }
       }
       .aspectRatio(1, contentMode: .fit)
-      .clipShape(RoundedRectangle(cornerRadius: 6))
+      .clipShape(.rect(cornerRadius: 6))
       .frame(width: 50, height: 50)
 
       VStack(alignment: .leading, spacing: 4) {
@@ -70,7 +70,7 @@ struct ContinueListeningRow: View {
     }
     .padding()
     .background(Color(red: 0.1, green: 0.1, blue: 0.2))
-    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .clipShape(.rect(cornerRadius: 16))
     .overlay(
       RoundedRectangle(cornerRadius: 16)
         .stroke(Color(red: 0.2, green: 0.2, blue: 0.4), lineWidth: 1)

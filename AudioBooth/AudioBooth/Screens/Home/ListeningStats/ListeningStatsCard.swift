@@ -58,13 +58,13 @@ struct ListeningStatsCard: View {
         .frame(minHeight: 180)
         .padding(.vertical, 12)
         .background(theme.colors.background.card)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 8))
         .overlay(
           RoundedRectangle(cornerRadius: 8)
             .stroke(.secondary.opacity(0.3), lineWidth: 2)
         )
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     }
     .buttonStyle(.plain)
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -132,7 +132,7 @@ struct ListeningStatsCard: View {
         .foregroundStyle(iconColor)
         .frame(width: 28, height: 28)
         .background(iconColor.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 8))
 
       VStack(alignment: .leading, spacing: 0) {
         Text(verbatim: value)
@@ -272,7 +272,7 @@ struct ListeningStatsCard: View {
             .padding(.vertical, 2)
             .padding(.horizontal, 4)
             .background(theme.colors.background.card)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(.rect(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor, lineWidth: 1))
             .fixedSize(horizontal: true, vertical: true)
             .offset(x: 0, y: -16)

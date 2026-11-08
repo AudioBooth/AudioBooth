@@ -20,7 +20,7 @@ struct Cover: View {
       download
     }
     .aspectRatio(1, contentMode: .fit)
-    .clipShape(RoundedRectangle(cornerRadius: 6))
+    .clipShape(.rect(cornerRadius: 6))
   }
 
   @ViewBuilder

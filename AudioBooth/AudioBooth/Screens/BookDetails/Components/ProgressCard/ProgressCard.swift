@@ -18,7 +18,7 @@ struct ProgressCard: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
     .background(theme.colors.background.card)
-    .clipShape(RoundedRectangle(cornerRadius: 8))
+    .clipShape(.rect(cornerRadius: 8))
   }
 
   private var progressRow: some View {

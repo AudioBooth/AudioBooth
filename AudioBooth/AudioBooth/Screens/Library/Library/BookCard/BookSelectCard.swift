@@ -9,7 +9,7 @@ struct BookSelectCard: View {
 
   var body: some View {
     BookCard.Content(model: model)
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .overlay {
         GeometryReader { proxy in
           let center = displayMode == .row ? proxy.size.height / 2 : proxy.size.width / 2

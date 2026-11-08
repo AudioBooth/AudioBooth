@@ -239,7 +239,7 @@ extension EbookTapZonesEditorView {
                 .padding(.vertical, 8)
                 .background(selectedAction == action ? action.color : Color.white.opacity(0.15))
                 .foregroundStyle(.white)
-                .clipShape(Capsule())
+                .clipShape(.capsule)
             }
           }
         }

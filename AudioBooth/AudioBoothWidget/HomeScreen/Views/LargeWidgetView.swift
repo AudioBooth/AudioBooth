@@ -39,7 +39,7 @@ struct BookRow: View {
           .resizable()
           .aspectRatio(contentMode: .fill)
           .frame(width: 50, height: 50)
-          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .clipShape(.rect(cornerRadius: 8))
       } else {
         RoundedRectangle(cornerRadius: 8)
           .fill(Color.gray.opacity(0.3))

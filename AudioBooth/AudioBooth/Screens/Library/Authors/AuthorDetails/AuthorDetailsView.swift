@@ -71,7 +71,7 @@ struct AuthorDetailsView: View {
           }
         }
         .frame(width: 200, height: 200)
-        .clipShape(Circle())
+        .clipShape(.circle)
       } else {
         Circle()
           .fill(Color.secondary.opacity(0.2))
@@ -144,7 +144,7 @@ struct AuthorDetailsView: View {
             .foregroundColor(.secondary)
         }
         .padding(.horizontal)
-        .contentShape(Rectangle())
+        .contentShape(.rect)
       }
       .buttonStyle(.plain)
       .disabled(model.libraryID == nil)
@@ -180,7 +180,7 @@ struct AuthorDetailsView: View {
             .foregroundColor(.secondary)
         }
         .padding(.horizontal)
-        .contentShape(Rectangle())
+        .contentShape(.rect)
       }
       .buttonStyle(.plain)
       .disabled(model.libraryID == nil)

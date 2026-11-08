@@ -91,7 +91,7 @@ struct LatestView: View {
           style: .plain
         )
         .frame(width: 72, height: 72)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 8))
         .overlay(alignment: .bottomTrailing) {
           if episode.downloadState == .downloaded {
             Image(systemName: "arrow.down.circle.fill")
@@ -139,7 +139,7 @@ struct LatestView: View {
       Spacer(minLength: 0)
     }
     .padding(.vertical, 10)
-    .contentShape(Rectangle())
+    .contentShape(.rect)
   }
 
   private func playButton(_ episode: Model.Episode) -> some View {

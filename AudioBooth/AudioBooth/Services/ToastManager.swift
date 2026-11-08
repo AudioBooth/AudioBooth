@@ -188,7 +188,7 @@ struct ToastView: View {
         Image(systemName: "xmark")
           .foregroundColor(.secondary)
           .font(.caption)
-          .contentShape(Rectangle())
+          .contentShape(.rect)
       }
     }
     .padding()
@@ -221,7 +221,7 @@ struct ToastView: View {
           .foregroundColor(.white)
           .font(.caption)
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
     }
     .padding()
     .background(backgroundColor)

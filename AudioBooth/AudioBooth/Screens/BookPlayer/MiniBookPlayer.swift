@@ -27,7 +27,7 @@ struct MiniBookPlayer: View, Equatable {
     content
       .padding(.vertical, 8)
       .padding(.horizontal, 12)
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .onTapGesture {
         Haptics.impact(.medium)
         playerManager.showFullPlayer()
@@ -206,7 +206,7 @@ struct LegacyMiniBookPlayer: View {
       Divider()
     }
     .background(.regularMaterial)
-    .contentShape(Rectangle())
+    .contentShape(.rect)
     .onTapGesture {
       Haptics.impact(.medium)
       playerManager.showFullPlayer()

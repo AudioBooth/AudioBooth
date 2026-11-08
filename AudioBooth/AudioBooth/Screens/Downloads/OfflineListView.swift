@@ -261,7 +261,7 @@ struct OfflineListView: View {
           .font(.caption)
           .foregroundColor(.secondary)
       }
-      .contentShape(Rectangle())
+      .contentShape(.rect)
       .overlay {
         if model.editMode != .active {
           NavigationLink(

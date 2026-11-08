@@ -35,7 +35,7 @@ struct DailyGoalCard: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 28, height: 28)
                 .background(Color.secondary.opacity(0.12))
-                .clipShape(Circle())
+                .clipShape(.circle)
             }
             .buttonStyle(.plain)
           } else {
@@ -46,7 +46,7 @@ struct DailyGoalCard: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
                 .background(Color.accentColor)
-                .clipShape(Capsule())
+                .clipShape(.capsule)
             }
             .buttonStyle(.plain)
           }
@@ -93,7 +93,7 @@ struct DailyGoalCard: View {
     .padding(16)
     .frame(maxWidth: .infinity)
     .background(theme.colors.background.card)
-    .clipShape(RoundedRectangle(cornerRadius: 20))
+    .clipShape(.rect(cornerRadius: 20))
   }
 
   @ViewBuilder

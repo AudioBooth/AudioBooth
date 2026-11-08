@@ -18,7 +18,7 @@ struct MediumWidgetView: View {
           .widgetAccentedRenderingMode(.desaturated)
           .aspectRatio(contentMode: .fill)
           .frame(width: 120, height: 120)
-          .clipShape(RoundedRectangle(cornerRadius: 12))
+          .clipShape(.rect(cornerRadius: 12))
       } else {
         RoundedRectangle(cornerRadius: 12)
           .fill(Color.gray)

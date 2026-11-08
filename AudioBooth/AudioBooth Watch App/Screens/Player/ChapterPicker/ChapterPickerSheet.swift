@@ -35,7 +35,7 @@ struct ChapterPickerSheet: View {
                   .offset(x: -12)
               }
             }
-            .contentShape(Rectangle())
+            .contentShape(.rect)
           }
           .buttonStyle(.plain)
           .id(chapter.id)

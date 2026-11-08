@@ -56,7 +56,7 @@ struct BookPlayerControls: View {
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
+        .contentShape(.rect)
       }
       .frame(width: 80, height: 80)
       .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
