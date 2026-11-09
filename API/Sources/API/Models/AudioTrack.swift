@@ -21,3 +21,22 @@ public struct AudioTrack: Codable, Sendable {
     public let size: Int64?
   }
 }
+
+extension AudioTrack {
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    index = try container.decodeIfPresent(Int.self, forKey: .index) ?? 1
+    startOffset = try container.decode(Double.self, forKey: .startOffset)
+    duration = try container.decode(Double.self, forKey: .duration)
+    title = try container.decodeIfPresent(String.self, forKey: .title)
+    updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+    metadata = try container.decodeIfPresent(Metadata.self, forKey: .metadata)
+    format = try container.decodeIfPresent(String.self, forKey: .format)
+    bitRate = try container.decodeIfPresent(Int.self, forKey: .bitRate)
+    codec = try container.decodeIfPresent(String.self, forKey: .codec)
+    channels = try container.decodeIfPresent(Int.self, forKey: .channels)
+    channelLayout = try container.decodeIfPresent(String.self, forKey: .channelLayout)
+    mimeType = try container.decodeIfPresent(String.self, forKey: .mimeType)
+    ino = try container.decodeIfPresent(String.self, forKey: .ino)
+  }
+}
