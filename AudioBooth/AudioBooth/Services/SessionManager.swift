@@ -64,7 +64,8 @@ extension SessionManager {
     episodeID: String? = nil,
     item: (any PlayableItem)?,
     mediaProgress: MediaProgress,
-    forceTranscode: Bool
+    forceTranscode: Bool,
+    forceRemote: Bool = false
   ) async throws -> any PlayableItem {
     let isSameItem = current?.libraryItemID == itemID && current?.episodeID == episodeID
 
@@ -77,7 +78,9 @@ extension SessionManager {
     }
 
     if let item, let current, isSameItem {
-      if item.isDownloaded, current.isRemote {
+      if forceRemote && !current.isRemote {
+        AppLogger.session.info("Item needs remote session for casting, starting remote session")
+      } else if item.isDownloaded, current.isRemote, !forceRemote {
         AppLogger.session.info(
           "Item is now downloaded, closing remote session to switch to local session"
         )
@@ -90,7 +93,7 @@ extension SessionManager {
       }
     }
 
-    if let item, item.isDownloaded {
+    if let item, item.isDownloaded, !forceRemote {
       startLocalSession(
         libraryItemID: itemID,
         episodeID: episodeID,

@@ -833,7 +833,26 @@ extension BookPlayerModel {
       throw Audiobookshelf.AudiobookshelfError.networkError("No playable audio files available")
     }
 
-    let player = AudioPlayer(mediaProgress: mediaProgress, session: session)
+    let player = AudioPlayer(mediaProgress: mediaProgress, session: session, coverURL: coverURL)
+    player.onRequireRemoteSession = { [weak self] completion in
+      guard let self else { completion(nil); return }
+      Task { @MainActor in
+        do {
+          _ = try await self.sessionManager.ensureSession(
+            itemID: self.podcastID ?? self.id,
+            episodeID: self.episodeID,
+            item: self.item,
+            mediaProgress: self.mediaProgress,
+            forceTranscode: false,
+            forceRemote: true
+          )
+          completion(self.sessionManager.current)
+        } catch {
+          AppLogger.player.error("Failed to establish remote session for casting: \(error)")
+          completion(nil)
+        }
+      }
+    }
     self.player = player
 
     lastSyncedTime = mediaProgress.currentTime
@@ -1196,10 +1215,7 @@ extension BookPlayerModel {
       self.updateMediaProgress()
       self.checkAutoDownloadAfterListening()
       self.dismissPositionSyncIfListeningOn(at: globalTime)
-
-      if UserPreferences.shared.lockScreenShowRemainingInTitle {
-        self.nowPlaying.update()
-      }
+      self.nowPlaying.update()
     }
   }
 }
@@ -1275,6 +1291,11 @@ extension BookPlayerModel {
       interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
 
     case .ended:
+      if player?.isCasting == true {
+        interruption = nil
+        return
+      }
+
       guard sessionManager.current != nil else {
         AppLogger.player.info("Audio interruption ended - not resuming (no active session)")
         interruption = nil
@@ -1308,6 +1329,8 @@ extension BookPlayerModel {
   }
 
   private func handleRouteChange(_ notification: Notification) {
+    if player?.isCasting == true { return }
+
     guard let userInfo = notification.userInfo,
       let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
       let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -1351,6 +1374,8 @@ extension BookPlayerModel {
   }
 
   private func handleVolumeChange(from old: Float, to new: Float) {
+    if player?.isCasting == true { return }
+
     guard userPreferences.pauseAtZeroVolume, new == 0, old > 0 else { return }
     AppLogger.player.info("Volume dropped to 0 - pausing playback")
     onPauseTapped()
@@ -1434,6 +1459,8 @@ extension BookPlayerModel {
     try? mediaProgress.save()
 
     isPlaying = isNowPlaying
+    nowPlaying.update()
+    widgetManager.update()
   }
 
   private func recordBookCompletionIfNeeded(autoPlayNext: Bool) {

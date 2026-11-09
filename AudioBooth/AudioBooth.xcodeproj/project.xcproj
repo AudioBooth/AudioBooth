@@ -61,6 +61,12 @@
       "version": {
         "version": "2.6.0",
       },
+    }, {
+      "kind": "remote",
+      "repository": "https://github.com/googlecast/google-cast-ios-sdk.git",
+      "version": {
+        "version": "4.8.6",
+      },
     },
   ],
   "files": [
@@ -300,6 +306,10 @@
         }, {
           "package": "swift-toolkit",
           "product-name": "ReadiumStreamer",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "google-cast-ios-sdk",
+          "product-name": "GoogleCastDynamic",
           "build-phase": { "build-phase": "frameworks" },
         },
       ],

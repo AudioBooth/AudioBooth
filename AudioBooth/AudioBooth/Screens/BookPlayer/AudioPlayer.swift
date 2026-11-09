@@ -32,6 +32,7 @@ final class AudioPlayer {
   private var eqEnabled = false
   private let mediaProgress: MediaProgress
   private var session: PlaybackSession
+  private var coverURL: URL?
   private var tracks: [Track] = []
   private(set) var currentTrackIndex: Int = 0
   private var lastQueuedIndex: Int = -1
@@ -46,7 +47,26 @@ final class AudioPlayer {
 
   let events = PassthroughSubject<Event, Never>()
 
+  var onRequireRemoteSession: ((@escaping (PlaybackSession?) -> Void) -> Void)?
+
+  var isCasting: Bool {
+    #if canImport(GoogleCast) && !os(watchOS)
+    return CastManager.shared.isConnected
+    #else
+    return false
+    #endif
+  }
+
   var time: TimeInterval {
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      if tracks.indices.contains(currentTrackIndex) {
+        let track = tracks[currentTrackIndex]
+        return track.startOffset + CastManager.shared.currentPosition
+      }
+      return mediaProgress.currentTime
+    }
+    #endif
     let seconds = player.currentSeconds
     guard seconds >= 0 else { return mediaProgress.currentTime }
     guard !tracks.isEmpty else { return seconds }
@@ -55,17 +75,32 @@ final class AudioPlayer {
   }
 
   var isPlaying: Bool {
-    player.timeControlStatus == .playing
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      return CastManager.shared.isPlaying
+    }
+    #endif
+    return player.timeControlStatus == .playing
   }
 
   var isPlaybackActive: Bool {
-    player.timeControlStatus != .paused
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      return CastManager.shared.isPlaying
+    }
+    #endif
+    return player.timeControlStatus != .paused
   }
 
   func isPositioned(at target: TimeInterval) -> Bool {
     if let pendingSeekTarget {
       return abs(pendingSeekTarget - target) <= 1
     }
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      return abs(time - target) <= 1
+    }
+    #endif
     guard player.currentItem?.status == .readyToPlay else { return false }
     return abs(time - target) <= 1
   }
@@ -83,23 +118,38 @@ final class AudioPlayer {
     get { player.defaultRate }
     set {
       player.defaultRate = newValue
+      #if canImport(GoogleCast) && !os(watchOS)
+      if CastManager.shared.isConnected {
+        CastManager.shared.setRate(newValue)
+      } else if player.timeControlStatus == .playing {
+        player.rate = newValue
+      }
+      #else
       if player.timeControlStatus == .playing {
         player.rate = newValue
       }
+      #endif
       events.send(.rateChanged(newValue))
     }
   }
 
-  init(mediaProgress: MediaProgress, session: PlaybackSession) {
+  init(mediaProgress: MediaProgress, session: PlaybackSession, coverURL: URL? = nil) {
     self.mediaProgress = mediaProgress
     self.session = session
+    self.coverURL = coverURL
     player.allowsExternalPlayback = false
     player.automaticallyWaitsToMinimizeStalling = false
     setupObservers()
+    #if canImport(GoogleCast) && !os(watchOS)
+    setupCastCallbacks()
+    #endif
   }
 
   deinit {
     removeTimeObserver()
+    #if canImport(GoogleCast) && !os(watchOS)
+    detachCastCallbacks()
+    #endif
   }
 
   func setQueue(for session: PlaybackSession) {
@@ -121,12 +171,25 @@ final class AudioPlayer {
 
     let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
     currentTrackIndex = trackIndex
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      player.removeAllItems()
+      loadCastCurrentTrack(seekTo: offset, autoPlay: wasPlaying)
+      return
+    }
+    #endif
     loadQueue(from: trackIndex, seekTo: offset, autoPlay: wasPlaying)
   }
 
   func pause() {
     wantsPlayback = false
     resumeTask?.cancel()
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      CastManager.shared.pause()
+      return
+    }
+    #endif
     player.pause()
   }
 
@@ -137,6 +200,22 @@ final class AudioPlayer {
     }
 
     wantsPlayback = true
+
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      player.pause()
+      if !CastManager.shared.isPlaying {
+        if CastManager.shared.currentPosition > 0 {
+          CastManager.shared.play()
+        } else {
+          let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
+          currentTrackIndex = trackIndex
+          loadCastCurrentTrack(seekTo: offset, autoPlay: true)
+        }
+      }
+      return
+    }
+    #endif
 
     AudioSession.configure()
 
@@ -173,6 +252,12 @@ final class AudioPlayer {
     resumeTask?.cancel()
     pendingSeekTarget = nil
     removeTimeObserver()
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      CastManager.shared.pause()
+      detachCastCallbacks()
+    }
+    #endif
     player.pause()
     player.removeAllItems()
     AudioSession.deactivate()
@@ -182,6 +267,21 @@ final class AudioPlayer {
   func seek(to time: TimeInterval) {
     mediaProgress.currentTime = time
     pendingSeekTarget = time
+
+    #if canImport(GoogleCast) && !os(watchOS)
+    if CastManager.shared.isConnected {
+      let (targetIndex, offset) = trackAndOffset(for: time)
+      if targetIndex == currentTrackIndex {
+        CastManager.shared.seek(to: offset)
+        pendingSeekTarget = nil
+      } else {
+        currentTrackIndex = targetIndex
+        loadCastCurrentTrack(seekTo: offset, autoPlay: isPlaying)
+      }
+      events.send(.seek(time))
+      return
+    }
+    #endif
 
     guard !tracks.isEmpty else {
       player.seek(
@@ -722,3 +822,111 @@ extension AVPlayerItem {
     self.init(asset: AVURLAsset(url: url, options: options))
   }
 }
+
+#if canImport(GoogleCast) && !os(watchOS)
+private extension AudioPlayer {
+  func setupCastCallbacks() {
+    CastManager.shared.onSessionStarted = { [weak self] in
+      guard let self else { return }
+      self.player.pause()
+      let (trackIndex, offset) = self.trackAndOffset(for: self.mediaProgress.currentTime)
+      self.currentTrackIndex = trackIndex
+      self.loadCastCurrentTrack(seekTo: offset, autoPlay: self.wantsPlayback || self.isPlaying)
+    }
+
+    CastManager.shared.onPositionUpdate = { [weak self] trackPosition in
+      guard let self else { return }
+      guard self.tracks.indices.contains(self.currentTrackIndex) else { return }
+      let globalTime = self.tracks[self.currentTrackIndex].startOffset + trackPosition
+      if let target = self.pendingSeekTarget {
+        if abs(globalTime - target) <= 2 {
+          self.pendingSeekTarget = nil
+        } else {
+          return
+        }
+      }
+      self.mediaProgress.currentTime = globalTime
+      self.events.send(.timeUpdate(globalTime))
+    }
+
+    CastManager.shared.onStateChange = { [weak self] isPlaying in
+      guard let self else { return }
+      if isPlaying {
+        self.pendingSeekTarget = nil
+      }
+      self.events.send(.stateChanged(isPlaying ? .playing : .paused))
+    }
+
+    CastManager.shared.onTrackFinished = { [weak self] in
+      guard let self else { return }
+      let nextIndex = self.currentTrackIndex + 1
+      if self.tracks.indices.contains(nextIndex) {
+        self.currentTrackIndex = nextIndex
+        self.mediaProgress.currentTime = self.tracks[nextIndex].startOffset
+        self.loadCastCurrentTrack(seekTo: 0, autoPlay: true)
+      } else {
+        if self.mediaProgress.duration > 0 {
+          self.mediaProgress.currentTime = self.mediaProgress.duration
+        }
+        self.events.send(.finished)
+        CastManager.shared.disconnect()
+      }
+    }
+
+    CastManager.shared.onError = { [weak self] in
+      guard let self else { return }
+      self.events.send(.error(nil))
+    }
+
+    CastManager.shared.onSessionEnded = { [weak self] in
+      guard let self else { return }
+      self.events.send(.stateChanged(.paused))
+      self.seek(to: self.mediaProgress.currentTime)
+    }
+  }
+
+  func detachCastCallbacks() {
+    CastManager.shared.onSessionStarted = nil
+    CastManager.shared.onPositionUpdate = nil
+    CastManager.shared.onStateChange = nil
+    CastManager.shared.onTrackFinished = nil
+    CastManager.shared.onError = nil
+    CastManager.shared.onSessionEnded = nil
+  }
+
+  func loadCastCurrentTrack(seekTo offset: TimeInterval? = nil, autoPlay: Bool = true) {
+    guard tracks.indices.contains(currentTrackIndex) else { return }
+    let track = tracks[currentTrackIndex]
+
+    if session.remoteURL(for: track) == nil {
+      onRequireRemoteSession? { [weak self] newSession in
+        guard let self else { return }
+        guard let newSession, self.tracks.indices.contains(self.currentTrackIndex),
+          newSession.remoteURL(for: self.tracks[self.currentTrackIndex]) != nil
+        else {
+          self.events.send(.error(nil))
+          return
+        }
+        self.session = newSession
+        self.tracks = newSession.tracks
+        self.loadCastCurrentTrack(seekTo: offset, autoPlay: autoPlay)
+      }
+      return
+    }
+
+    guard let streamURL = session.remoteURL(for: track) ?? session.url(for: track) else { return }
+
+    let startOffset = offset ?? max(0, mediaProgress.currentTime - track.startOffset)
+    CastManager.shared.load(
+      streamURL: streamURL,
+      title: session.displayTitle ?? "Audiobook",
+      author: session.displayAuthor,
+      coverURL: coverURL,
+      startTime: startOffset,
+      playbackRate: rate > 0 ? rate : 1.0,
+      contentType: track.mimeType ?? "audio/mpeg",
+      autoplay: autoPlay
+    )
+  }
+}
+#endif

@@ -64,6 +64,10 @@ public final class PlaybackSession {
     if let localPath = track.localPath {
       return localPath
     }
+    return remoteURL(for: track)
+  }
+
+  public func remoteURL(for track: Track) -> URL? {
     guard let baseURL else { return nil }
     return baseURL.appendingPathComponent("track/\(track.index)")
   }
