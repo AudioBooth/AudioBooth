@@ -46,6 +46,23 @@ struct PhonePlayback {
   }
 }
 
+struct PhoneSleepTimer {
+  let selection: TimerPickerSheet.Selection
+  let chapterEstimates: [TimeInterval]
+
+  init?(dictionary: [String: Any]) {
+    guard dictionary["error"] == nil else { return nil }
+
+    if let remaining = dictionary["remaining"] as? Double {
+      selection = .endsAt(Date().addingTimeInterval(remaining))
+    } else {
+      selection = .none
+    }
+
+    chapterEstimates = dictionary["chapterEstimates"] as? [Double] ?? []
+  }
+}
+
 final class WatchConnectivityManager: NSObject, ObservableObject {
   static let shared = WatchConnectivityManager()
 
@@ -188,6 +205,32 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     ]
     session.sendMessage(message, replyHandler: nil) { error in
       AppLogger.watchConnectivity.error("Failed to send playback rate command to iOS: \(error)")
+    }
+  }
+
+  func sendSleepTimerCommand(action: String, value: Int? = nil) async -> PhoneSleepTimer? {
+    guard let session, session.isReachable else {
+      AppLogger.watchConnectivity.warning("Cannot send sleep timer command - session not reachable")
+      return nil
+    }
+
+    var message: [String: Any] = [
+      "command": "sleepTimer",
+      "action": action,
+    ]
+    message["value"] = value
+
+    return await withCheckedContinuation { continuation in
+      session.sendMessage(
+        message,
+        replyHandler: { response in
+          continuation.resume(returning: PhoneSleepTimer(dictionary: response))
+        },
+        errorHandler: { error in
+          AppLogger.watchConnectivity.error("Failed to send sleep timer command: \(error)")
+          continuation.resume(returning: nil)
+        }
+      )
     }
   }
 

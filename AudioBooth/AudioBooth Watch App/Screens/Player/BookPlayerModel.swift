@@ -21,6 +21,7 @@ final class BookPlayerModel: PlayerView.Model {
   private var lastProgressReportTime: Date?
   private var progressSaveCounter: Int = 0
   private var hasStartedPlayback = false
+  private var sleepTimer: BookTimerPickerModel?
 
   init(book: WatchBook) {
     self.bookID = book.id
@@ -85,6 +86,8 @@ final class BookPlayerModel: PlayerView.Model {
 
       guard hasStartedPlayback else { return }
 
+      sleepTimer?.onTimeUpdate()
+
       progressSaveCounter += 1
       if isPlaying {
         reportProgressIfNeeded(currentTime: globalTime)
@@ -99,6 +102,7 @@ final class BookPlayerModel: PlayerView.Model {
       case .playing:
         isPlaying = true
         lastProgressReportTime = Date()
+        sleepTimer?.onPlaybackStarted()
         updateComplicationState()
       case .paused:
         if isPlaying {
@@ -122,6 +126,7 @@ final class BookPlayerModel: PlayerView.Model {
       updateComplicationState()
 
     case .finished:
+      sleepTimer?.reset()
       reportProgressNow(currentTime: current)
       isPlaying = false
       saveProgress(currentTime: current)
@@ -160,6 +165,9 @@ final class BookPlayerModel: PlayerView.Model {
       playerModel: self,
       hasChapters: !book.chapters.isEmpty
     )
+    let timerModel = BookTimerPickerModel(playerModel: self)
+    optionsModel.timer = timerModel
+    sleepTimer = timerModel
     options = optionsModel
   }
 

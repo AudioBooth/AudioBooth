@@ -225,6 +225,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     current = .none
     completedAlert = nil
     estimatedEndTime = nil
+    player.volume = Float(preferences.volumeLevel)
     stopSleepTimer()
     endLiveActivity()
     isPresented = false
@@ -254,7 +255,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
   }
 
-  private func calculateChapterDuration(for chapterCount: Int) -> TimeInterval? {
+  func calculateChapterDuration(for chapterCount: Int) -> TimeInterval? {
     guard let chapters, chapterCount > 0 else { return nil }
 
     let currentTime = player.time

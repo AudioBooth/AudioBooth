@@ -37,6 +37,13 @@ struct PlayerOptionsSheet: View {
       }
 
       Button(action: {
+        model.onTimerTapped()
+        dismiss()
+      }) {
+        Label("Sleep Timer", systemImage: "moon.zzz")
+      }
+
+      Button(action: {
         model.onDownloadTapped()
         dismiss()
       }) {
@@ -89,6 +96,7 @@ extension PlayerOptionsSheet {
     var downloadState: DownloadManager.DownloadState
     var speed: Float
     var speedPicker: SpeedPickerSheet.Model
+    var timer: TimerPickerSheet.Model
 
     var isCoverDownloadEnabled: Bool {
       switch downloadState {
@@ -108,6 +116,7 @@ extension PlayerOptionsSheet {
       self.downloadState = downloadState
       self.speed = speed
       self.speedPicker = SpeedPickerSheet.Model(speed: speed)
+      self.timer = TimerPickerSheet.Model()
     }
 
     func onChaptersTapped() {}
@@ -116,6 +125,9 @@ extension PlayerOptionsSheet {
     func onPlayOnPhoneTapped() {}
     func onSpeedTapped() {
       speedPicker.isPresented = true
+    }
+    func onTimerTapped() {
+      timer.isPresented = true
     }
   }
 }

@@ -31,7 +31,8 @@ struct PlayerView: View {
       Playback(
         current: model.chapterTitle != nil ? model.chapterCurrent : model.current,
         remaining: model.chapterTitle != nil ? model.chapterRemaining : model.remaining,
-        totalTimeRemaining: model.totalTimeRemaining
+        totalTimeRemaining: model.totalTimeRemaining,
+        sleepTimerStatus: model.options.timer.status
       )
       .padding(.bottom, 12)
     }
@@ -44,6 +45,11 @@ struct PlayerView: View {
     }
     .sheet(isPresented: $model.options.speedPicker.isPresented) {
       SpeedPickerSheet(model: model.options.speedPicker)
+    }
+    .sheet(isPresented: $model.options.timer.isPresented) {
+      NavigationStack {
+        TimerPickerSheet(model: model.options.timer)
+      }
     }
     .sheet(
       isPresented: Binding(
@@ -210,15 +216,24 @@ extension PlayerView {
     let current: Double
     let remaining: Double
     let totalTimeRemaining: Double
+    let sleepTimerStatus: String?
 
     var body: some View {
       HStack(alignment: .bottom) {
         Text(formatTime(current))
           .font(.system(size: 10))
 
-        Text("\(formatTimeRemaining(totalTimeRemaining))")
-          .font(.system(size: 11))
-          .frame(maxWidth: .infinity, alignment: .center)
+        Group {
+          if let sleepTimerStatus {
+            Label(sleepTimerStatus, systemImage: "moon.zzz.fill")
+              .lineLimit(1)
+              .minimumScaleFactor(0.6)
+          } else {
+            Text("\(formatTimeRemaining(totalTimeRemaining))")
+          }
+        }
+        .font(.system(size: 11))
+        .frame(maxWidth: .infinity, alignment: .center)
 
         Text(verbatim: "-\(formatTime(remaining))")
           .font(.system(size: 10))

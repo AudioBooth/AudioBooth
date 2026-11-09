@@ -674,10 +674,56 @@ extension WatchConnectivityManager: WCSessionDelegate {
           replyHandler(["error": "Failed to sync local sessions"])
         }
 
+      case "sleepTimer":
+        handleSleepTimer(message, replyHandler: replyHandler)
+
       default:
         replyHandler(["error": "Unknown command: \(command)"])
       }
     }
+  }
+
+  private func handleSleepTimer(
+    _ message: [String: Any],
+    replyHandler: @escaping ([String: Any]) -> Void
+  ) {
+    guard let timer = PlayerManager.shared.current?.timer as? TimerPickerSheetViewModel, !timer.current.isAlarm else {
+      replyHandler(["error": "Sleep timer unavailable"])
+      return
+    }
+
+    switch message["action"] as? String {
+    case "preset":
+      if let minutes = message["value"] as? Int {
+        timer.completedAlert = nil
+        timer.onQuickTimerSelected(minutes)
+      }
+    case "chapter":
+      if let count = message["value"] as? Int {
+        timer.completedAlert = nil
+        timer.onChaptersChanged(count)
+        timer.onStartTimerTapped()
+      }
+    case "cancel":
+      timer.onOffSelected()
+    default:
+      break
+    }
+
+    var reply: [String: Any] = [
+      "chapterEstimates": (1...max(1, timer.maxRemainingChapters)).compactMap {
+        timer.calculateChapterDuration(for: $0)
+      }
+    ]
+    switch timer.current {
+    case .preset(let remaining), .custom(let remaining):
+      reply["remaining"] = remaining
+    case .chapters(let count):
+      reply["remaining"] = timer.calculateChapterDuration(for: count)
+    case .atTime, .duration, .none:
+      break
+    }
+    replyHandler(reply)
   }
 
   private func handleStartSession(
