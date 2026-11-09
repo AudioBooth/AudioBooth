@@ -623,6 +623,22 @@ extension WatchConnectivityManager: WCSessionDelegate {
         refreshProgress()
       }
 
+    case "addBookmark":
+      guard let bookID = userInfo["bookID"] as? String,
+        let title = userInfo["title"] as? String,
+        let time = userInfo["time"] as? Int
+      else { return }
+
+      Task {
+        guard (try? Bookmark.fetch(bookID: bookID, time: time)) == nil else { return }
+
+        do {
+          _ = try await BookmarkSyncQueue.shared.create(bookID: bookID, title: title, time: time)
+        } catch {
+          AppLogger.watchConnectivity.error("Failed to save watch bookmark: \(error)")
+        }
+      }
+
     default:
       break
     }
@@ -677,6 +693,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
       case "sleepTimer":
         handleSleepTimer(message, replyHandler: replyHandler)
 
+      case "fetchBookmarks":
+        guard let bookID = message["bookID"] as? String else {
+          replyHandler(["error": "Missing bookID"])
+          return
+        }
+        handleFetchBookmarks(bookID: bookID, replyHandler: replyHandler)
+
       default:
         replyHandler(["error": "Unknown command: \(command)"])
       }
@@ -724,6 +747,19 @@ extension WatchConnectivityManager: WCSessionDelegate {
       break
     }
     replyHandler(reply)
+  }
+
+  private func handleFetchBookmarks(
+    bookID: String,
+    replyHandler: @escaping ([String: Any]) -> Void
+  ) {
+    do {
+      let bookmarks = try Bookmark.fetch(bookID: bookID)
+      replyHandler(["bookmarks": bookmarks.map { ["time": $0.time, "title": $0.title] as [String: Any] }])
+    } catch {
+      AppLogger.watchConnectivity.error("Failed to fetch bookmarks for watch: \(error)")
+      replyHandler(["error": error.localizedDescription])
+    }
   }
 
   private func handleStartSession(

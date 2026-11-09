@@ -234,6 +234,55 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
   }
 
+  func sendBookmark(bookID: String, title: String, time: Int) {
+    guard let session, session.activationState == .activated else {
+      AppLogger.watchConnectivity.warning("Cannot send bookmark - session not activated")
+      return
+    }
+
+    session.transferUserInfo([
+      "command": "addBookmark",
+      "bookID": bookID,
+      "title": title,
+      "time": time,
+    ])
+  }
+
+  func bookmarkTimesInFlight(bookID: String) -> Set<Int> {
+    guard let session else { return [] }
+
+    return Set(
+      session.outstandingUserInfoTransfers
+        .filter { $0.userInfo["command"] as? String == "addBookmark" && $0.userInfo["bookID"] as? String == bookID }
+        .compactMap { $0.userInfo["time"] as? Int }
+    )
+  }
+
+  func fetchBookmarks(bookID: String) async -> [WatchBookmark]? {
+    guard let session, session.isReachable else {
+      AppLogger.watchConnectivity.warning("Cannot fetch bookmarks - session not reachable")
+      return nil
+    }
+
+    return await withCheckedContinuation { continuation in
+      let message: [String: Any] = [
+        "command": "fetchBookmarks",
+        "bookID": bookID,
+      ]
+      session.sendMessage(
+        message,
+        replyHandler: { response in
+          let bookmarks = (response["bookmarks"] as? [[String: Any]])?.compactMap { WatchBookmark(dictionary: $0) }
+          continuation.resume(returning: bookmarks)
+        },
+        errorHandler: { error in
+          AppLogger.watchConnectivity.error("Failed to fetch bookmarks: \(error)")
+          continuation.resume(returning: nil)
+        }
+      )
+    }
+  }
+
   func playOnPhone(_ book: WatchBook, currentTime: Double) {
     guard let session, session.isReachable else {
       AppLogger.watchConnectivity.warning("Cannot play on iPhone - session not reachable")

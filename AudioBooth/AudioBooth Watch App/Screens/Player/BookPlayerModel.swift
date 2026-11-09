@@ -167,6 +167,8 @@ final class BookPlayerModel: PlayerView.Model {
     )
     let timerModel = BookTimerPickerModel(playerModel: self)
     optionsModel.timer = timerModel
+    optionsModel.bookmarks = BookBookmarksModel(playerModel: self)
+    optionsModel.hasBookmarks = book.podcastID == nil
     sleepTimer = timerModel
     options = optionsModel
   }
@@ -447,6 +449,18 @@ final class BookPlayerModel: PlayerView.Model {
       saveProgress(currentTime: chapter.start)
     }
     reportProgressNow(currentTime: chapter.start)
+  }
+
+  func seekToBookmark(at time: Int) {
+    let time = Double(time)
+
+    seek(to: time)
+
+    if isPlaying {
+      reportProgressNow(currentTime: time)
+    } else {
+      connectivityManager.recordLocalProgress(bookID: bookID, currentTime: time)
+    }
   }
 
   private func setupRemoteCommandCenter() {

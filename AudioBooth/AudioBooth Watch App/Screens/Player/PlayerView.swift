@@ -51,6 +51,11 @@ struct PlayerView: View {
         TimerPickerSheet(model: model.options.timer)
       }
     }
+    .sheet(isPresented: $model.options.bookmarks.isPresented) {
+      NavigationStack {
+        BookmarksSheet(model: model.options.bookmarks)
+      }
+    }
     .sheet(
       isPresented: Binding(
         get: { model.chapters?.isPresented ?? false },
