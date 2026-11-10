@@ -40,7 +40,7 @@ struct BookPlayerPlaybackSection: View {
 private struct SystemVolumeSlider: UIViewRepresentable {
   private static let thumb = UIGraphicsImageRenderer(size: CGSize(width: 1, height: 1)).image { _ in }
   private static let minimumTrack = trackImage(color: .secondaryLabel)
-  private static let maximumTrack = trackImage(color: .systemFill)
+  private static let maximumTrack = trackImage(color: .white.withAlphaComponent(0.2))
 
   private static func trackImage(color: UIColor) -> UIImage {
     let size = CGSize(width: 7, height: 6)

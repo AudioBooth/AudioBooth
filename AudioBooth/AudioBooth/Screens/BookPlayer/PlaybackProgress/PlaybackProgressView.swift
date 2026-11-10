@@ -15,7 +15,7 @@ struct PlaybackProgressView: View {
           GeometryReader { geometry in
             ZStack(alignment: .leading) {
               Rectangle()
-                .fill(Color(.systemFill))
+                .fill(.white.opacity(0.2))
                 .frame(height: 4)
 
               Rectangle()
@@ -44,7 +44,7 @@ struct PlaybackProgressView: View {
       GeometryReader { geometry in
         ZStack(alignment: .leading) {
           Rectangle()
-            .fill(Color(.systemFill))
+            .fill(.white.opacity(0.2))
 
           Rectangle()
             .fill(.tint)
