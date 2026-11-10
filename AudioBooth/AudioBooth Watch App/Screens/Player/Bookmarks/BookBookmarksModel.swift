@@ -26,20 +26,27 @@ final class BookBookmarksModel: BookmarksSheet.Model {
   }
 
   override func onAddTapped() {
-    guard let playerModel else { return }
+    guard addBookmark() else { return }
+
+    WKInterfaceDevice.current().play(.success)
+  }
+
+  @discardableResult
+  func addBookmark(title: String? = nil) -> Bool {
+    guard let playerModel else { return false }
 
     let time = Int(playerModel.current.rounded(.up))
-    guard !bookmarks.contains(where: { $0.time == time }) else { return }
+    guard !store.bookmarks(for: bookID).contains(where: { $0.time == time }) else { return false }
 
     let formatter = DateFormatter()
     formatter.dateFormat = "M/d/yyyy HH:mm"
-    let title = formatter.string(from: Date())
+    let title = title ?? formatter.string(from: Date())
 
     store.add(WatchBookmark(time: time, title: title), for: bookID)
     connectivityManager.sendBookmark(bookID: bookID, title: title, time: time)
     bookmarks = store.bookmarks(for: bookID)
 
-    WKInterfaceDevice.current().play(.success)
+    return true
   }
 
   override func onBookmarkTapped(_ bookmark: WatchBookmark) {

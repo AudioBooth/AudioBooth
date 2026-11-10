@@ -334,13 +334,15 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   override func skipForward() {
-    let newTime = min(current + connectivityManager.skipForwardInterval, totalDuration)
-    seek(to: newTime)
+    skip(by: connectivityManager.skipForwardInterval)
   }
 
   override func skipBackward() {
-    let newTime = max(current - connectivityManager.skipBackwardInterval, 0)
-    seek(to: newTime)
+    skip(by: -connectivityManager.skipBackwardInterval)
+  }
+
+  func skip(by seconds: Double) {
+    seek(to: min(max(current + seconds, 0), totalDuration))
   }
 
   override func stop() {
