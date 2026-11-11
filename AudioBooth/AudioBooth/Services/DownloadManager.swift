@@ -81,7 +81,7 @@ final class DownloadManager: NSObject, ObservableObject {
   }
 
   struct DownloadFile {
-    let request: URLRequest
+    var request: URLRequest
     let expectedSize: Int64
     let relativePath: String
     let destination: URL
@@ -687,8 +687,18 @@ final class DownloadManager: NSObject, ObservableObject {
 
     Task {
       try? await Task.sleep(for: .seconds(delay))
+      var file = file
+      if resumeData == nil, active === download, let url = file.request.url,
+        let server = Audiobookshelf.shared.authentication.server,
+        relativePath.hasPrefix(server.id + "/"),
+        let credentials = try? await server.freshToken,
+        Audiobookshelf.shared.authentication.server === server
+      {
+        file.request = authorizedRequest(url: url, credentials: credentials)
+      }
       guard active === download, download.files[relativePath] != nil else { return }
       let task = makeTask(for: file, priority: download.priority, resumeData: resumeData)
+      download.files[relativePath]?.request = file.request
       download.files[relativePath]?.task = task
       task.resume()
     }
@@ -1082,7 +1092,7 @@ private final class DownloadSessionDelegate: NSObject, URLSessionDownloadDelegat
       AppLogger.download.error("Download failed with HTTP \(httpResponse.statusCode): \(statusDescription)")
 
       let error = URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: statusDescription])
-      let retryable = httpResponse.statusCode >= 500 || httpResponse.statusCode == 429
+      let retryable = httpResponse.statusCode >= 500 || [401, 429].contains(httpResponse.statusCode)
 
       Task { @MainActor in
         DownloadManager.shared.fileFailed(
