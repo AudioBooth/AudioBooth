@@ -8,6 +8,8 @@ struct ResumePlaybackIntent: AudioPlaybackIntent {
 
   func perform() async throws -> some IntentResult {
     try await MainActor.run {
+      PlayerManager.shared.restoreLastPlayer()
+
       guard let player = PlayerManager.shared.current as? BookPlayerModel else {
         throw AppIntentError.noAudiobookPlaying
       }

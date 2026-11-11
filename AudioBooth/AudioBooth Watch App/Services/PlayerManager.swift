@@ -46,6 +46,16 @@ final class PlayerManager: ObservableObject {
     UserDefaults.standard.set(player.bookID, forKey: Self.currentBookIDKey)
   }
 
+  func restoreLastPlayer() {
+    guard current == nil,
+      let bookID = UserDefaults.standard.string(forKey: Self.currentBookIDKey),
+      let book = LocalBookStorage.shared.books.first(where: { $0.id == bookID })
+        ?? WatchConnectivityManager.shared.continueListeningBooks.first(where: { $0.id == bookID })
+    else { return }
+
+    current = BookPlayerModel(book: book)
+  }
+
   func clearCurrent() {
     current?.stop()
     current = nil
