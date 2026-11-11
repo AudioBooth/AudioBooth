@@ -8,7 +8,6 @@ final class NetworkMonitor {
   static let didChange = Notification.Name("NetworkMonitorDidChange")
 
   private let monitor = NWPathMonitor()
-  private let queue = DispatchQueue(label: "me.jgrenier.AudioBS.NetworkMonitor")
 
   private(set) var isConnected = true
   private(set) var interfaceType: NWInterface.InterfaceType?
@@ -47,7 +46,7 @@ final class NetworkMonitor {
         NotificationCenter.default.post(name: NetworkMonitor.didChange, object: nil)
       }
     }
-    monitor.start(queue: queue)
+    monitor.start(queue: .main)
   }
 
   private func onNetworkInterfaceChanged() {
