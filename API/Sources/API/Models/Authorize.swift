@@ -2,7 +2,7 @@ import Foundation
 
 public struct Authorize: Codable, Sendable {
   public let user: User
-  public let userDefaultLibraryId: String
+  public let userDefaultLibraryId: String?
   public let ereaderDevices: [EreaderDevice]
   public let serverSettings: ServerSettings
 }
