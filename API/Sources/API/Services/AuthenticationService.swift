@@ -245,7 +245,9 @@ public final class AuthenticationService: ObservableObject {
 
     server.customHeaders = customHeaders
 
-    ImagePipeline.shared = .audioBooth(customHeaders: customHeaders)
+    if self.server?.id == serverID {
+      ImagePipeline.shared = .audioBooth(customHeaders: customHeaders)
+    }
 
     var allConnections = connections
     allConnections[serverID] = Connection(server)
