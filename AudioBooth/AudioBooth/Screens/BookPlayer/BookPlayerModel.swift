@@ -622,6 +622,7 @@ extension BookPlayerModel {
   }
 
   func stopPlayer() {
+    hasRecordedCompletion = true
     player?.stop()
     player = nil
 
