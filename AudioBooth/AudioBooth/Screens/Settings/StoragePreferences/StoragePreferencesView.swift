@@ -308,7 +308,9 @@ private struct StorageBreakdownCard: View {
     [
       (.orange, model.audiobooksBytes),
       (.blue, model.ebooksBytes),
+      (.teal, model.podcastsBytes),
       (.purple, model.imageCacheBytes),
+      (.pink, model.databaseBytes),
     ]
   }
 
@@ -348,23 +350,40 @@ private struct StorageBreakdownCard: View {
         legendRow(
           color: .orange,
           title: "Audiobooks",
-          subtitle: bookCountText(model.audiobooksCount),
+          subtitle: Text("^[\(model.audiobooksCount) book](inflect: true)"),
           size: formatBytes(model.audiobooksBytes)
         )
         legendRow(
           color: .blue,
           title: "Ebooks",
-          subtitle: bookCountText(model.ebooksCount),
+          subtitle: Text("^[\(model.ebooksCount) book](inflect: true)"),
           size: formatBytes(model.ebooksBytes)
         )
-        legendRow(color: .purple, title: "Image Cache", subtitle: "—", size: formatBytes(model.imageCacheBytes))
+        legendRow(
+          color: .teal,
+          title: "Podcasts",
+          subtitle: Text("^[\(model.podcastsCount) episode](inflect: true)"),
+          size: formatBytes(model.podcastsBytes)
+        )
+        legendRow(
+          color: .purple,
+          title: "Image Cache",
+          subtitle: Text(verbatim: "—"),
+          size: formatBytes(model.imageCacheBytes)
+        )
+        legendRow(
+          color: .pink,
+          title: "Database",
+          subtitle: Text("Library data"),
+          size: formatBytes(model.databaseBytes)
+        )
       }
     }
     .padding(16)
   }
 
   @ViewBuilder
-  private func legendRow(color: Color, title: LocalizedStringKey, subtitle: String, size: String) -> some View {
+  private func legendRow(color: Color, title: LocalizedStringKey, subtitle: Text, size: String) -> some View {
     HStack(alignment: .top, spacing: 8) {
       RoundedRectangle(cornerRadius: 2)
         .fill(color)
@@ -375,7 +394,7 @@ private struct StorageBreakdownCard: View {
         Text(title)
           .font(.subheadline)
           .fontWeight(.semibold)
-        Text(subtitle)
+        subtitle
           .font(.caption)
           .foregroundStyle(.secondary)
       }
@@ -387,10 +406,6 @@ private struct StorageBreakdownCard: View {
         .fontWeight(.semibold)
         .foregroundStyle(.secondary)
     }
-  }
-
-  private func bookCountText(_ count: Int) -> String {
-    count == 1 ? String(localized: "1 book") : String(localized: "\(count) books")
   }
 
   private func formatBytes(_ bytes: Int64) -> String {
@@ -460,6 +475,9 @@ extension StoragePreferencesView {
     var audiobooksCount: Int = 0
     var ebooksBytes: Int64 = 0
     var ebooksCount: Int = 0
+    var podcastsBytes: Int64 = 0
+    var podcastsCount: Int = 0
+    var databaseBytes: Int64 = 0
     var imageCacheBytes: Int64 = 0
     var totalBytes: Int64 = 0
     var showDownloadConfirmation = false
@@ -483,6 +501,9 @@ extension StoragePreferencesView {
       audiobooksCount: Int = 0,
       ebooksBytes: Int64 = 0,
       ebooksCount: Int = 0,
+      podcastsBytes: Int64 = 0,
+      podcastsCount: Int = 0,
+      databaseBytes: Int64 = 0,
       imageCacheBytes: Int64 = 0,
       totalBytes: Int64 = 0,
       serverDownloads: [ServerDownloads] = []
@@ -495,6 +516,9 @@ extension StoragePreferencesView {
       self.audiobooksCount = audiobooksCount
       self.ebooksBytes = ebooksBytes
       self.ebooksCount = ebooksCount
+      self.podcastsBytes = podcastsBytes
+      self.podcastsCount = podcastsCount
+      self.databaseBytes = databaseBytes
       self.imageCacheBytes = imageCacheBytes
       self.totalBytes = totalBytes
       self.serverDownloads = serverDownloads
@@ -512,8 +536,11 @@ extension StoragePreferencesView.Model {
     audiobooksCount: 6,
     ebooksBytes: 800_000_000,
     ebooksCount: 3,
+    podcastsBytes: 400_000_000,
+    podcastsCount: 12,
+    databaseBytes: 20_000_000,
     imageCacheBytes: 9_300_000,
-    totalBytes: 2_410_000_000
+    totalBytes: 2_830_000_000
   )
 }
 

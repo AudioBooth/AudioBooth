@@ -169,8 +169,8 @@ struct SettingsView: View {
       return Text("Manage downloads & cache")
     }
     let bookCount = storage.audiobooksCount + storage.ebooksCount
-    let bookText = bookCount == 1 ? String(localized: "1 book") : String(localized: "\(bookCount) books")
-    return Text(verbatim: "\(storage.totalSize) · \(bookText)")
+    let bookText = AttributedString(localized: "^[\(bookCount) book](inflect: true)")
+    return Text(verbatim: "\(storage.totalSize) · \(String(bookText.characters))")
   }
 
   @ViewBuilder
