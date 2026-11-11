@@ -567,8 +567,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
         if let rate = message["rate"] as? Float {
           PlayerManager.shared.current?.speed.onValueChanged(Double(rate))
         }
-      case "refreshContinueListening":
-        refreshContinueListening()
       case "syncDownloadedBooks":
         if let bookIDs = message["bookIDs"] as? [String] {
           updateWatchDownloadStatus(downloaded: bookIDs, queued: watchQueuedBookIDs)
@@ -699,6 +697,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
           return
         }
         handleFetchBookmarks(bookID: bookID, replyHandler: replyHandler)
+
+      case "refreshContinueListening":
+        refreshContinueListening()
+        replyHandler([:])
 
       default:
         replyHandler(["error": "Unknown command: \(command)"])
