@@ -100,7 +100,7 @@ final class StorageManager {
         let progressDescriptor = FetchDescriptor<MediaProgress>(predicate: progressPredicate)
         let progress = try? context.fetch(progressDescriptor).first
 
-        let lastUsed = progress?.lastPlayedAt ?? book.createdAt
+        let lastUsed = max(progress?.lastPlayedAt ?? .distantPast, book.downloadedAt ?? book.createdAt)
 
         if lastUsed < cutoffDate {
           AppLogger.download.info("Removing unused download: \(book.title) (last used: \(lastUsed))")
@@ -119,7 +119,7 @@ final class StorageManager {
         let progressDescriptor = FetchDescriptor<MediaProgress>(predicate: progressPredicate)
         let progress = try? context.fetch(progressDescriptor).first
 
-        let lastUsed = progress?.lastPlayedAt ?? episode.downloadedAt ?? episode.createdAt
+        let lastUsed = max(progress?.lastPlayedAt ?? .distantPast, episode.downloadedAt ?? episode.createdAt)
 
         if lastUsed < cutoffDate {
           AppLogger.download.info("Removing unused episode download: \(episode.title) (last used: \(lastUsed))")
