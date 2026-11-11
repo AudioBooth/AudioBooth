@@ -1282,11 +1282,8 @@ extension DownloadManager {
       )
 
       for directory in directories {
-        var isDirectory: ObjCBool = false
-        FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
-
-        if isDirectory.boolValue {
-          try? FileManager.default.removeItem(at: directory)
+        for name in ["audiobooks", "ebooks", "narration", "episodes", "covers"] {
+          try? FileManager.default.removeItem(at: directory.appendingPathComponent(name))
         }
       }
 
