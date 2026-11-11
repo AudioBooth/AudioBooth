@@ -48,7 +48,7 @@ final class AudioPlayer {
 
   var time: TimeInterval {
     let seconds = player.currentSeconds
-    guard seconds >= 0 else { return mediaProgress.currentTime }
+    guard player.currentItem != nil, seconds >= 0 else { return mediaProgress.currentTime }
     guard !tracks.isEmpty else { return seconds }
     let track = tracks[currentTrackIndex]
     return track.startOffset + min(seconds, track.duration)
