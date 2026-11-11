@@ -12,9 +12,9 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-log.git", exact: "1.15.1"),
+    .package(url: "https://github.com/apple/swift-log.git", exact: "1.17.0"),
     .package(url: "https://github.com/auth0/SimpleKeychain.git", exact: "1.3.0"),
-    .package(url: "https://github.com/kean/Nuke.git", exact: "13.2.0"),
+    .package(url: "https://github.com/kean/Nuke.git", exact: "13.2.3"),
     .package(url: "https://github.com/kean/Pulse.git", exact: "5.2.3"),
   ],
   targets: [

@@ -8,12 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Apple Watch shortcuts - Pause, resume, skip, change chapters, set or cancel the sleep timer, and add bookmarks from Siri, the Shortcuts app, or the Action button on Apple Watch
+- Apple Watch bookmarks - Add bookmarks and jump to them while listening on your watch, even offline, and they sync to your server when your iPhone is back in range
+- Apple Watch sleep timer - Set a sleep timer by duration or number of chapters from the watch, whether playing on the watch or on your iPhone
+- Poster style for Continue Listening - New Continue Listening style on the Home page that shows large covers
+- Add to queue - Add all or selected books from a series, collection, or playlist to the queue
+- Pause at Zero Volume - New player preference to turn off pausing when muted and raising the volume when playing
+- Hide player labels - New preference to show only icons in the player actions bar
+- Player background styles - Choose a gradient, solid, or no cover color background for the player, and optionally tint the progress bar with the cover color
+- Ebook reader customization - Set the text alignment and pick custom background and text colors
+- Ebook cover on iPhone Duo - New option to show the book cover on the outside screen when the iPhone Duo is closed
 - Apple Watch podcasts - Podcast episodes now show in Continue Listening on the watch, you can browse a podcast's episodes, and send an episode to your watch from its context menu on iPhone
 - System volume slider - New player preference to show the device volume slider under the playback controls
 - Author and narrator sorting - Book lists for an author or narrator can now be sorted
 - Audio bitrate - Book details now show the audio bitrate in the metadata section
 
 ### Changed
+- Play All and Queue All - When some items are already finished, choose whether to play or queue only the unfinished ones or all of them
+- Ebook sharing - Ebooks are now shared with their file type so apps like Kindle accept them (thanks @ashishnag124)
+- Ebook reader on iPhone Duo - Improved reading experience on the iPhone Duo
+- Background battery use - The player now updates its progress less often while the app is in the background
+- Opus audio - Improved playback accuracy for Opus files
 - Podcast downloads - Episodes now show download progress and a downloaded indicator on the Home page, in the Latest tab, and in playlists, and show progress on the podcast and episode pages
 - Mini player on large screens - On wide screens, the mini player now shows time remaining, speed, skip, sleep timer, and queue controls
 - Finished episodes - Playing a finished podcast episode now starts it from the beginning
@@ -33,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove after unused - Now also applies to podcast episodes
 
 ### Fixed
+- Book loading - Fixed some books and listening sessions failing to load when the server leaves out optional track or session details
+- Missing downloads - A download whose files are missing is now removed when you play it, so the book streams instead of failing
+- Ebook reader - Fixed taps not turning pages reliably, the auto theme not following the system appearance after returning to the app, and a crash when looking up chapters
+- Crashes - Fixed several crashes, including in CarPlay
 - Pinned playlist auto-download - Fixed podcast episodes in a pinned playlist not downloading automatically
 - Narrated EPUB animations - Fixed the narration download progress animation on book details, and the Read Along button now animates while the narration plays
 - Podcast playback - Fixed episodes not playing when their duration is missing, a UI freeze when streaming, Continue Listening in podcast libraries, Now Playing metadata, the Home episode card not showing pause, and Play All playing finished episodes (thanks @Creationsss)
