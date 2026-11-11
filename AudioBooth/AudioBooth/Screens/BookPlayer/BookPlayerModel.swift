@@ -1481,7 +1481,7 @@ extension BookPlayerModel {
     }
 
     ReviewRequestManager.shared.recordBookCompletion()
-    playerManager.playNext(autoPlay: autoPlayNext)
+    playerManager.playNext(autoPlay: autoPlayNext && timer.current == .none)
   }
 
   private func repeatItem() {
