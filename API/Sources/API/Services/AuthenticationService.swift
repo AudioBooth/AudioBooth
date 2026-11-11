@@ -292,7 +292,9 @@ public final class AuthenticationService: ObservableObject {
         serverURL: serverURL,
         token: token,
         customHeaders: customHeaders,
-        alias: existingServer.alias
+        alias: existingServer.alias,
+        alternativeURL: existingServer.alternativeURL,
+        isUsingAlternativeURL: existingServer.urlMode == .alternative
       )
 
       var allConnections = connections
