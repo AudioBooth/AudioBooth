@@ -166,7 +166,7 @@ final class LibraryPageModel: LibraryPage.Model {
   }
 
   override func loadNextPageIfNeeded() {
-    guard loadTask == nil else { return }
+    guard loadTask == nil, search.searchText.isEmpty else { return }
     loadTask = Task {
       await loadBooks()
     }
