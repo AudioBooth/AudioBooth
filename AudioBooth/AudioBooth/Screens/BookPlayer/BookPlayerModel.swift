@@ -1446,7 +1446,7 @@ extension BookPlayerModel {
     else { return }
 
     if let chapters, chapters.repeatMode != .off {
-      repeatItem()
+      if autoPlayNext { repeatItem() }
       return
     }
 
