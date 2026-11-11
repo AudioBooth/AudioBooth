@@ -139,7 +139,7 @@ final class CarPlayHome: CarPlayPageProtocol {
         try? await Task.sleep(for: .milliseconds(500))
 
         PlayerManager.shared.play()
-        nowPlaying?.showNowPlaying()
+        if PlayerManager.shared.current != nil { nowPlaying?.showNowPlaying() }
       } catch {
         AppLogger.player.error("Failed to play episode from CarPlay: \(error)")
       }
@@ -170,7 +170,7 @@ final class CarPlayHome: CarPlayPageProtocol {
       try? await Task.sleep(for: .milliseconds(500))
 
       PlayerManager.shared.play()
-      nowPlaying?.showNowPlaying()
+      if PlayerManager.shared.current != nil { nowPlaying?.showNowPlaying() }
       completion()
       loadingCancellable = nil
 
@@ -196,7 +196,7 @@ final class CarPlayHome: CarPlayPageProtocol {
       }
 
       RunLoop.main.perform {
-        if PlayerManager.shared.current?.isLoading == false {
+        if PlayerManager.shared.current?.isLoading != true {
           continuation.resume()
         } else {
           self.observePlayerLoading(continuation: continuation)

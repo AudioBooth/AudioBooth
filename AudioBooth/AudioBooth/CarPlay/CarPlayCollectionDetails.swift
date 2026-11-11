@@ -135,7 +135,7 @@ final class CarPlayCollectionDetails {
       _ = PlayerManager.shared.current?.isLoading
     } onChange: {
       RunLoop.main.perform {
-        if PlayerManager.shared.current?.isLoading == false {
+        if PlayerManager.shared.current?.isLoading != true {
           continuation.resume()
         } else {
           self.observePlayerLoading(continuation: continuation)

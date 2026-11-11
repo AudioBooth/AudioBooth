@@ -90,7 +90,7 @@ final class CarPlayPodcastDetails {
       try? await Task.sleep(for: .milliseconds(500))
 
       PlayerManager.shared.play()
-      nowPlaying?.showNowPlaying()
+      if PlayerManager.shared.current != nil { nowPlaying?.showNowPlaying() }
       completion()
       loadingCancellable = nil
     }
@@ -109,7 +109,7 @@ final class CarPlayPodcastDetails {
       _ = PlayerManager.shared.current?.isLoading
     } onChange: {
       RunLoop.main.perform {
-        if PlayerManager.shared.current?.isLoading == false {
+        if PlayerManager.shared.current?.isLoading != true {
           continuation.resume()
         } else {
           self.observePlayerLoading(continuation: continuation)
