@@ -35,12 +35,14 @@ final class KeepOfflineManager {
   }
 
   private func downloadBook(_ book: Book) async {
+    guard (try? DownloadRequest.fetch(itemID: book.id))?.hasFailed != true else { return }
     guard await StorageManager.shared.canDownload(additionalBytes: book.size ?? 0) else { return }
 
     downloadManager.startDownload(book)
   }
 
   private func downloadEpisode(_ episode: PodcastEpisode, podcast: Podcast) async {
+    guard (try? DownloadRequest.fetch(itemID: episode.id))?.hasFailed != true else { return }
     guard await StorageManager.shared.canDownload(additionalBytes: episode.size ?? 0) else { return }
 
     downloadManager.startDownload(episode, podcastID: podcast.id, coverURL: podcast.coverURL())

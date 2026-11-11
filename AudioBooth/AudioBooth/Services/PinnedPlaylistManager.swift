@@ -140,6 +140,7 @@ final class PinnedPlaylistManager: ObservableObject {
         guard progress < 1.0 else { continue }
         guard downloadManager.downloadStates[book.id] != .downloaded else { continue }
         guard !downloadManager.isDownloading(for: book.id) else { continue }
+        guard (try? DownloadRequest.fetch(itemID: book.id))?.hasFailed != true else { continue }
 
         try? book.download()
 
@@ -148,6 +149,7 @@ final class PinnedPlaylistManager: ObservableObject {
         guard Audiobookshelf.shared.authentication.server?.permissions?.download == true else { continue }
         guard MediaProgress.progress(for: episode.id) < 1.0 else { continue }
         guard (downloadManager.downloadStates[episode.id] ?? .notDownloaded) == .notDownloaded else { continue }
+        guard (try? DownloadRequest.fetch(itemID: episode.id))?.hasFailed != true else { continue }
 
         downloadManager.startDownload(episode, podcastID: podcast.id, coverURL: podcast.coverURL())
       }
