@@ -325,7 +325,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
           initialLocation = locator
           AppLogger.viewModel.info("Restored from ebookLocation")
         } else {
-          let progress = MediaProgress.progress(for: bookID)
+          let ebookProgress = mediaProgress?.ebookProgress.flatMap { $0 > 0 ? $0 : nil }
+          let progress = ebookProgress ?? MediaProgress.progress(for: bookID)
           initialLocation = await publication.locate(progression: progress)
           AppLogger.viewModel.info("Restored from ebookProgress: \(progress)")
         }
