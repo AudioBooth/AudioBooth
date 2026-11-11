@@ -522,7 +522,7 @@ public final class AuthenticationService: ObservableObject {
       let user: User
     }
 
-    let networkService = NetworkService(baseURL: server.activeURL)
+    let networkService = NetworkService(server: server)
 
     var headers = server.customHeaders
     headers["x-refresh-token"] = refreshToken

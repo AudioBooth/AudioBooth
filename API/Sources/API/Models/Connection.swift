@@ -36,7 +36,7 @@ public struct Connection: Codable, Sendable {
       customHeaders: server.customHeaders,
       alias: server.alias,
       alternativeURL: server.alternativeURL,
-      isUsingAlternativeURL: server.isUsingAlternativeURL
+      isUsingAlternativeURL: server.urlMode == .alternative
     )
   }
 
