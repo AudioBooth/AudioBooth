@@ -560,7 +560,7 @@ final class BookPlayerModel: PlayerView.Model {
 
   private func reportProgressNow(currentTime: Double) {
     let now = Date()
-    let timeListened = lastProgressReportTime.map { now.timeIntervalSince($0) } ?? 0
+    let timeListened = isPlaying ? lastProgressReportTime.map { now.timeIntervalSince($0) } ?? 0 : 0
     connectivityManager.reportProgress(
       bookID: book.id,
       podcastID: book.podcastID,
