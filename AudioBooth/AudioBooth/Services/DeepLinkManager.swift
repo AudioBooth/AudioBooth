@@ -78,12 +78,13 @@ class DeepLinkManager: ObservableObject {
     }
 
     do {
-      _ = try await Audiobookshelf.shared.authentication.loginWithJWT(
+      let connectionID = try await Audiobookshelf.shared.authentication.loginWithJWT(
         serverURL: exportConnection.url,
         token: token,
         customHeaders: exportConnection.headers,
         alias: exportConnection.alias
       )
+      try? await Audiobookshelf.shared.switchToServer(connectionID)
       Toast(success: "Connection imported successfully").show()
     } catch {
       Toast(error: "Server reachable, but Audiobookshelf credentials failed").show()
