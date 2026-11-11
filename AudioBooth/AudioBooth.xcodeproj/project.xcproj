@@ -86,6 +86,12 @@
       ],
     }, {
       "kind": "folder",
+      "path": "AudioBoothTests",
+      "target-membership": [
+        "AudioBoothTests",
+      ],
+    }, {
+      "kind": "folder",
       "path": "AudioBooth Watch App",
       "target-membership": [
         "AudioBooth Watch App",
@@ -173,6 +179,7 @@
         { "path": "<PRODUCTS>/AudioBooth Watch App.app", "id": "3FBEA0652E8CD49300976BA0", "type": "wrapper.application", "index": false, "target-membership": [ { "build-phase": "AudioBooth/copy/Embed Watch Content", "platforms": [ "ios" ], "header-preservation": "remove-on-copy" } ] },
         { "path": "<PRODUCTS>/AudioBoothWidgetExtension.appex", "id": "3F2D3BF32EBE711800D49AFF", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "AudioBooth/copy/Embed Foundation Extensions", "platforms": [ "ios" ], "header-preservation": "remove-on-copy" } ] },
         { "path": "<PRODUCTS>/AudioBoothWatchWidgetExtension.appex", "id": "3F5A20502F6E656C00CFD89E", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "AudioBooth Watch App/copy/Embed Foundation Extensions", "header-preservation": "remove-on-copy" } ] },
+        { "path": "<PRODUCTS>/AudioBoothTests.xctest", "id": "3FC8DC6E2E638F5E00A4B099", "type": "wrapper.cfbundle", "index": false },
       ],
     },
     { "path": "Signing.xcconfig" },
@@ -310,7 +317,10 @@
         }, {
           "package": "google-cast-ios-sdk",
           "product-name": "GoogleCastDynamic",
-          "build-phase": { "build-phase": "frameworks" },
+          "build-phase": {
+            "build-phase": "frameworks",
+            "code-sign-on-copy": true,
+          },
         },
       ],
       "build-settings": {
@@ -325,6 +335,8 @@
         "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
         "INFOPLIST_FILE": "AudioBooth/Info.plist",
         "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
+        "OTHER_LDFLAGS": "$(inherited) -ObjC",
         "PRODUCT_BUNDLE_IDENTIFIER": "$(ORG_IDENTIFIER).AudioBS",
         "SUPPORTS_MACCATALYST": "YES",
         "SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD": "NO",
@@ -420,6 +432,25 @@
         "SKIP_INSTALL": "YES",
         "TARGETED_DEVICE_FAMILY": "4",
         "WATCHOS_DEPLOYMENT_TARGET": "10",
+      },
+    }, {
+      "name": "AudioBoothTests",
+      "id": "3FC8DC6D2E638F5E00A4B099",
+      "product": "Products/AudioBoothTests.xctest",
+      "product-type": "bundle.unit-test",
+      "dependencies": [
+        "AudioBooth",
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "BUNDLE_LOADER": "$(TEST_HOST)",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "PRODUCT_BUNDLE_IDENTIFIER": "$(ORG_IDENTIFIER).AudioBoothTests",
+        "TEST_HOST": "$(BUILT_PRODUCTS_DIR)/AudioBooth.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioBooth",
       },
     },
   ],

@@ -630,8 +630,16 @@ extension BookPlayer {
     let author: String?
     let coverURL: URL?
 
-    var isPlaying: Bool
-    var isLoading: Bool
+    var isPlaying: Bool = false {
+      willSet {
+        objectWillChange.send()
+      }
+    }
+    var isLoading: Bool = false {
+      willSet {
+        objectWillChange.send()
+      }
+    }
     var speed: FloatPickerSheet.Model
     var timer: TimerPickerSheet.Model
     var volume: FloatPickerSheet.Model
