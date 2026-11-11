@@ -155,6 +155,7 @@ final class OfflineListViewModel: OfflineListView.Model {
 
 extension OfflineListViewModel {
   private func setupBooksObservation() {
+    booksObservation?.cancel()
     booksObservation = Task { [weak self] in
       for await books in LocalBook.observeAll() {
         guard !Task.isCancelled, let self else { break }
@@ -173,6 +174,7 @@ extension OfflineListViewModel {
   }
 
   private func setupEpisodesObservation() {
+    episodesObservation?.cancel()
     episodesObservation = Task { [weak self] in
       for await episodes in LocalEpisode.observeAll() {
         guard !Task.isCancelled, let self else { break }
