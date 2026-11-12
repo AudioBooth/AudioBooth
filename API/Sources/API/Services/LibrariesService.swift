@@ -101,7 +101,7 @@ public final class LibrariesService: ObservableObject {
       guard let server = audiobookshelf.authentication.servers[serverID] else {
         throw Audiobookshelf.AudiobookshelfError.networkError("Server not found")
       }
-      networkService = NetworkService(baseURL: server.baseURL, server: server) {
+      networkService = NetworkService(server: server) {
         let freshToken = try? await server.freshToken
         guard let credentials = freshToken else {
           return [:]
