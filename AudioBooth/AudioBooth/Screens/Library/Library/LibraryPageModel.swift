@@ -16,6 +16,7 @@ final class LibraryPageModel: LibraryPage.Model {
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 100
   private var loadTask: Task<Void, Never>?
+  private var loadGeneration = 0
 
   init() {
     let preferences = UserPreferences.shared
@@ -112,6 +113,7 @@ final class LibraryPageModel: LibraryPage.Model {
   override func refresh() async {
     loadTask?.cancel()
     loadTask = nil
+    loadGeneration += 1
     exitSelection()
     isLoading = true
     isLoadingNextPage = false
@@ -358,6 +360,7 @@ final class LibraryPageModel: LibraryPage.Model {
   private func loadBooks() async {
     guard hasMorePages && !isLoadingNextPage && search.searchText.isEmpty else { return }
 
+    let generation = loadGeneration
     isLoadingNextPage = true
     isLoading = currentPage == 0
     pageLoadFailed = false
@@ -377,11 +380,7 @@ final class LibraryPageModel: LibraryPage.Model {
         libraryID: libraryID
       )
 
-      guard !Task.isCancelled else {
-        isLoadingNextPage = false
-        isLoading = false
-        return
-      }
+      guard generation == loadGeneration else { return }
 
       var newItems = [LibraryView.Item]()
       let ignorePrefix = isRoot && (audiobookshelf.authentication.server?.sortingIgnorePrefix ?? false)
@@ -419,11 +418,7 @@ final class LibraryPageModel: LibraryPage.Model {
       totalCount = response.total
       hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
-      guard !Task.isCancelled else {
-        isLoadingNextPage = false
-        isLoading = false
-        return
-      }
+      guard generation == loadGeneration else { return }
 
       pageLoadFailed = true
       if currentPage == 0 {
