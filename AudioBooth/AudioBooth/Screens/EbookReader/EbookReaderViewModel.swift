@@ -801,7 +801,17 @@ extension EbookReaderViewModel {
   }
 
   private func downloadTemporaryFile(from url: URL) async throws -> URL {
-    let (tempURL, _) = try await URLSession.shared.download(from: url)
+    var request = URLRequest(url: url)
+    for (key, value) in audiobookshelf.authentication.server?.customHeaders ?? [:] {
+      request.setValue(value, forHTTPHeaderField: key)
+    }
+
+    let (tempURL, response) = try await URLSession.shared.download(for: request)
+
+    if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+      try? FileManager.default.removeItem(at: tempURL)
+      throw EbookError.downloadFailed
+    }
 
     let tempDirectory = FileManager.default.temporaryDirectory
     let fileName = url.lastPathComponent
