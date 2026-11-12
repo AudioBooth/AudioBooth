@@ -47,8 +47,8 @@ public final class Audiobookshelf {
 
     networkService = NetworkService(
       server: server
-    ) { [weak self] in
-      guard let self, let server = await self.authentication.server else { return [:] }
+    ) { [weak server] in
+      guard let server else { return [:] }
 
       let freshToken = try? await server.freshToken
       guard let credentials = freshToken else { return [:] }
