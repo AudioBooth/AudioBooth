@@ -1084,13 +1084,14 @@ private final class DownloadSessionDelegate: NSObject, URLSessionDownloadDelegat
     }
 
     if let httpResponse = downloadTask.response as? HTTPURLResponse,
-      !(200...299).contains(httpResponse.statusCode)
+      !(200...299).contains(httpResponse.statusCode) || httpResponse.mimeType?.lowercased() == "text/html"
     {
       try? FileManager.default.removeItem(at: location)
 
-      let statusDescription = HTTPURLResponse.localizedString(
-        forStatusCode: httpResponse.statusCode
-      ).capitalized
+      let statusDescription =
+        (200...299).contains(httpResponse.statusCode)
+        ? String(localized: "Unexpected response from server")
+        : HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode).capitalized
       AppLogger.download.error("Download failed with HTTP \(httpResponse.statusCode): \(statusDescription)")
 
       let error = URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: statusDescription])
