@@ -665,23 +665,8 @@ extension BookPlayerModel {
         try await sessionManager.syncProgress(currentTime: mediaProgress.currentTime)
       } catch {
         AppLogger.player.error("Failed to sync session progress: \(error)")
-
-        if sessionManager.current?.isRemote == true && isSessionNotFoundError(error) {
-          AppLogger.player.debug("Remote session not found (404) - triggering recovery")
-          handleStreamFailure(error: error)
-        }
       }
     }
-  }
-
-  private func isSessionNotFoundError(_ error: Error) -> Bool {
-    if case NetworkError.httpError(let statusCode, _) = error {
-      return statusCode == 404
-    }
-    if let urlError = error as? URLError {
-      return urlError.code == .badServerResponse || urlError.code == .fileDoesNotExist
-    }
-    return false
   }
 
   func closeSession() {
