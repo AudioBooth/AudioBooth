@@ -179,6 +179,8 @@ final class NetworkService: @unchecked Sendable {
   ]
 
   func send<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
+    let initialMode = await server?.urlMode
+
     do {
       return try await performRequest(request)
     } catch {
@@ -191,6 +193,11 @@ final class NetworkService: @unchecked Sendable {
       }
 
       let previousMode = await server.urlMode
+
+      guard previousMode == initialMode else {
+        return try await performRequest(request)
+      }
+
       let nextMode: Server.URLMode = previousMode == .primary ? .fallback : .primary
       await MainActor.run { server.urlMode = nextMode }
 
