@@ -307,6 +307,7 @@ final class BookPlayerModel: BookPlayer.Model {
           AppLogger.player.error("Failed to recreate session: \(error)")
           isLoading = false
           pendingPlay = false
+          guard playerManager.current === self else { return }
           Toast(error: "Couldn't reconnect. Please try again.").show()
         }
       }
@@ -792,6 +793,11 @@ extension BookPlayerModel {
         autoDownloadIfNeeded()
       } catch {
         AppLogger.player.error("Background session fetch failed: \(error)")
+      }
+
+      guard playerManager.current === self else {
+        isLoading = false
+        return
       }
 
       await resolveMissingDuration()
@@ -1580,6 +1586,12 @@ extension BookPlayerModel {
       try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
     }
 
+    guard playerManager.current === self else {
+      isLoading = false
+      isRecovering = false
+      return
+    }
+
     do {
       if !isDownloaded, recoveryAttempts > 1 {
         sessionManager.clearSession()
@@ -1601,6 +1613,8 @@ extension BookPlayerModel {
 
       isLoading = false
       isRecovering = false
+
+      guard playerManager.current === self else { return }
 
       if recoveryAttempts < maxRecoveryAttempts && !isDownloaded {
         handleStreamFailure(error: error)

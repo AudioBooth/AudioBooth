@@ -133,6 +133,10 @@ extension SessionManager {
       timeout: item == nil ? 30 : 10
     )
 
+    guard PlayerManager.shared.current?.id == (episodeID ?? itemID) else {
+      throw CancellationError()
+    }
+
     guard let session = Session(from: audiobookshelfSession) else {
       throw SessionError.failedToCreateSession
     }
