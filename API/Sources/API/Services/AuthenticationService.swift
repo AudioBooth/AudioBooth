@@ -26,6 +26,8 @@ public final class AuthenticationService: ObservableObject {
 
   public var servers: [String: Server] = [:]
 
+  public var onTokenUpdated: (() -> Void)?
+
   public private(set) var server: Server? {
     didSet {
       if let server {
@@ -260,6 +262,7 @@ public final class AuthenticationService: ObservableObject {
     server.token = token
 
     connections[serverID] = Connection(server)
+    onTokenUpdated?()
   }
 
   public func removeServer(_ serverID: String) {

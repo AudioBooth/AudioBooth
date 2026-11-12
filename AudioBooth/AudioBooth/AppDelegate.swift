@@ -47,6 +47,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
       WatchConnectivityManager.shared.updateContext()
     }
 
+    Audiobookshelf.shared.authentication.onTokenUpdated = {
+      WatchConnectivityManager.shared.updateContext()
+    }
+
     if let server = Audiobookshelf.shared.authentication.server {
       do {
         try ModelContextProvider.shared.switchToServer(server.id)
