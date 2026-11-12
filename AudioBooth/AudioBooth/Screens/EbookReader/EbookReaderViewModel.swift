@@ -34,6 +34,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   private(set) var publication: Publication?
   private(set) var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
+  private var hasUnsyncedProgress = false
   private let audiobookshelf = Audiobookshelf.shared
   private var temporaryFileURL: URL?
   private var publicationIndex = PublicationIndex()
@@ -145,6 +146,10 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onDisappear() {
+    if hasUnsyncedProgress {
+      lastProgressUpdate = nil
+      syncProgressToServer(progress)
+    }
     catchUpCheck?.cancel()
     mediaOverlayRetargetTask?.cancel()
     stopFollowingMediaOverlay()
@@ -747,10 +752,12 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     if let lastUpdate = lastProgressUpdate,
       now.timeIntervalSince(lastUpdate) < minimumSecondsBetweenProgressSyncs
     {
+      hasUnsyncedProgress = true
       return
     }
 
     lastProgressUpdate = now
+    hasUnsyncedProgress = false
 
     Task {
       do {
