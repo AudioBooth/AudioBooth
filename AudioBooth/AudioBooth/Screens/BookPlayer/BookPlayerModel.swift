@@ -1472,7 +1472,8 @@ extension BookPlayerModel {
     }
 
     ReviewRequestManager.shared.recordBookCompletion()
-    playerManager.playNext(autoPlay: autoPlayNext && timer.current == .none)
+    let handOffToNextItem = (timer as? TimerPickerSheetViewModel)?.handOffToNextItem() ?? true
+    playerManager.playNext(autoPlay: autoPlayNext && handOffToNextItem)
   }
 
   private func repeatItem() {

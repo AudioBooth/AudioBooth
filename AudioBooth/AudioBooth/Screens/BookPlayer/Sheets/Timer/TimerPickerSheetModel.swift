@@ -18,6 +18,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private let speed: FloatPickerSheet.Model
   private let alarmNotificationService = AlarmNotificationService()
 
+  private static var carriedEndDate: Date?
+
   private var sleepTimer: Timer?
   private var alarmTimer: Timer?
   private var autoTimerWindowTimer: Timer?
@@ -51,6 +53,13 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     setupShakeObserver()
     setupVolumeObserver()
     observeChapterChanges()
+
+    if let remaining = Self.carriedEndDate?.timeIntervalSinceNow, remaining > 1 {
+      current = .preset(remaining)
+      startSleepTimer(duration: remaining)
+      fadeOut(remaining)
+    }
+    Self.carriedEndDate = nil
   }
 
   isolated deinit {
@@ -297,6 +306,21 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     ShakeDetector.shared.startMonitoring()
 
     startLiveActivity(duration: duration)
+  }
+
+  func handOffToNextItem() -> Bool {
+    switch current {
+    case .preset(let seconds), .custom(let seconds):
+      Self.carriedEndDate = Date().addingTimeInterval(seconds)
+      stopSleepTimer()
+      current = .none
+      player.volume = Float(preferences.volumeLevel)
+      return true
+    case .chapters:
+      return false
+    case .atTime, .duration, .none:
+      return true
+    }
   }
 
   private func stopSleepTimer() {
