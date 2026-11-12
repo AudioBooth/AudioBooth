@@ -248,7 +248,9 @@ final class DownloadManager: NSObject, ObservableObject {
 
   func resumeOutstandingRequests() {
     guard Audiobookshelf.shared.libraries.current != nil else { return }
-    guard NetworkMonitor.shared.interfaceType == .wifi else { return }
+    guard let interfaceType = NetworkMonitor.shared.interfaceType,
+      [.wifi, .wiredEthernet].contains(interfaceType)
+    else { return }
     startNextIfIdle()
   }
 
