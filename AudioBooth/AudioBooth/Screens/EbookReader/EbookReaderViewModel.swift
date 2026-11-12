@@ -629,8 +629,8 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     stopAutoScroll()
     updateCurrentScrollView(in: vc.view)
     autoScrollTask = Task { [weak self] in
-      guard let self else { return }
       while !Task.isCancelled {
+        guard let self else { return }
         let speed = preferences.autoScrollSpeed
         let targetDelta = CGFloat(speed * 20) * 0.016
         let delta = max(targetDelta, 0.25)
