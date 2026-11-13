@@ -66,6 +66,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     _ = SleepTimerActivityCleanup.shared
     _ = UserPreferences.shared
     _ = KeepOfflineManager.shared
+    #if canImport(GoogleCast) && !os(watchOS)
+    _ = CastManager.shared
+    #endif
 
     UNUserNotificationCenter.current().delegate = self
 

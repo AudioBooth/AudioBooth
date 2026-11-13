@@ -641,13 +641,15 @@ extension BookPlayerModel {
 }
 
 extension BookPlayerModel {
-  private func setupSession(forceTranscode: Bool) async throws {
+  private func setupSession(forceTranscode: Bool, forceRemote: Bool = false) async throws {
+    let effectiveForceRemote = forceRemote || isCasting
     item = try await sessionManager.ensureSession(
       itemID: podcastID ?? id,
       episodeID: episodeID,
       item: item,
       mediaProgress: mediaProgress,
-      forceTranscode: forceTranscode
+      forceTranscode: forceTranscode,
+      forceRemote: effectiveForceRemote
     )
 
     if let pendingSeekTime {
@@ -825,19 +827,64 @@ extension BookPlayerModel {
       throw Audiobookshelf.AudiobookshelfError.networkError("No playable audio files available")
     }
 
-    let player = AudioPlayer(mediaProgress: mediaProgress, session: session)
+    let player = AudioPlayer(mediaProgress: mediaProgress, session: session, coverURL: coverURL)
+    player.onRequireRemoteSession = { [weak self] completion in
+      guard let self else { completion(nil); return }
+      Task { @MainActor in
+        do {
+          self.item = try await self.sessionManager.ensureSession(
+            itemID: self.podcastID ?? self.id,
+            episodeID: self.episodeID,
+            item: self.item,
+            mediaProgress: self.mediaProgress,
+            forceTranscode: false,
+            forceRemote: true
+          )
+          completion(self.sessionManager.current)
+        } catch {
+          AppLogger.player.error("Failed to establish remote session for casting: \(error)")
+          completion(nil)
+        }
+      }
+    }
+    player.onCastSessionEnded = { [weak self] in
+      guard let self else { return }
+      Task { @MainActor in
+        if self.item?.isDownloaded == true {
+          do {
+            AppLogger.player.info("Cast session ended, switching downloaded item back to local session")
+            try await self.setupSession(forceTranscode: false)
+            self.reloadPlayer()
+          } catch {
+            AppLogger.player.error("Failed to switch back to local session after cast ended: \(error)")
+          }
+        } else {
+          self.player?.seek(to: self.mediaProgress.currentTime)
+        }
+      }
+    }
     self.player = player
 
     lastSyncedTime = mediaProgress.currentTime
 
-    player.setQueue(for: session)
-    player.volume = Float(userPreferences.volumeLevel)
-
     configurePlayerComponents(player: player)
+
+    player.setQueue(for: session, autoPlay: pendingPlay ? true : nil)
+    player.volume = Float(userPreferences.volumeLevel)
 
     isLoading = false
     if pendingPlay {
-      onPlayTapped()
+      pendingPlay = false
+      if !hasPlayedThisSession, userPreferences.smartRewindOnSessionStart {
+        applySmartRewind(reason: .sessionStart)
+      }
+      hasPlayedThisSession = true
+      if let timerViewModel = timer as? TimerPickerSheetViewModel {
+        timerViewModel.activateAutoTimerIfNeeded()
+      }
+      if !player.isPlaying {
+        onPlayTapped()
+      }
     }
   }
 
@@ -964,6 +1011,14 @@ extension BookPlayerModel {
     player?.isUsingRemoteURLs == true
   }
 
+  private var isCasting: Bool {
+    #if canImport(GoogleCast) && !os(watchOS)
+    return player?.isCasting == true || CastManager.shared.isConnected
+    #else
+    return false
+    #endif
+  }
+
   private func reloadPlayer() {
     guard let player, let session = sessionManager.current else {
       AppLogger.player.warning("Cannot reload player - missing player or session")
@@ -973,12 +1028,21 @@ extension BookPlayerModel {
     let currentTimeSeconds = max(player.time, mediaProgress.currentTime)
     AppLogger.player.info("Reloading player at position: \(currentTimeSeconds)s")
 
-    player.setQueue(for: session)
+    player.setQueue(for: session, autoPlay: pendingPlay ? true : nil)
     player.volume = Float(userPreferences.volumeLevel)
 
     if pendingPlay {
-      player.resume()
       pendingPlay = false
+      if !hasPlayedThisSession, userPreferences.smartRewindOnSessionStart {
+        applySmartRewind(reason: .sessionStart)
+      }
+      hasPlayedThisSession = true
+      if let timerViewModel = timer as? TimerPickerSheetViewModel {
+        timerViewModel.activateAutoTimerIfNeeded()
+      }
+      if !player.isPlaying {
+        player.resume()
+      }
     }
 
     AppLogger.player.info("Restored playback position and state after reload")
@@ -1188,10 +1252,7 @@ extension BookPlayerModel {
       self.updateMediaProgress()
       self.checkAutoDownloadAfterListening()
       self.dismissPositionSyncIfListeningOn(at: globalTime)
-
-      if UserPreferences.shared.lockScreenShowRemainingInTitle {
-        self.nowPlaying.update()
-      }
+      self.nowPlaying.update()
     }
   }
 }
@@ -1214,7 +1275,7 @@ extension BookPlayerModel {
 
         self.item = updatedItem as any PlayableItem
 
-        if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
+        if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL(), !self.isCasting {
           AppLogger.player.info("Download completed, refreshing player to use local files")
           try? await self.setupSession(forceTranscode: false)
           self.reloadPlayer()
@@ -1240,7 +1301,7 @@ extension BookPlayerModel {
 
         self.item = updatedEpisode as any PlayableItem
 
-        if updatedEpisode.isDownloaded, self.isPlayerUsingRemoteURL() {
+        if updatedEpisode.isDownloaded, self.isPlayerUsingRemoteURL(), !self.isCasting {
           AppLogger.player.info("Episode download completed, refreshing player to use local file")
           try? await self.setupSession(forceTranscode: false)
           self.reloadPlayer()
@@ -1267,6 +1328,11 @@ extension BookPlayerModel {
       interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
 
     case .ended:
+      if player?.isCasting == true {
+        interruption = nil
+        return
+      }
+
       guard sessionManager.current != nil else {
         AppLogger.player.info("Audio interruption ended - not resuming (no active session)")
         interruption = nil
@@ -1300,6 +1366,8 @@ extension BookPlayerModel {
   }
 
   private func handleRouteChange(_ notification: Notification) {
+    if player?.isCasting == true { return }
+
     guard let userInfo = notification.userInfo,
       let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
       let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -1343,6 +1411,8 @@ extension BookPlayerModel {
   }
 
   private func handleVolumeChange(from old: Float, to new: Float) {
+    if player?.isCasting == true { return }
+
     guard userPreferences.pauseAtZeroVolume, new == 0, old > 0 else { return }
     AppLogger.player.info("Volume dropped to 0 - pausing playback")
     onPauseTapped()
@@ -1426,6 +1496,8 @@ extension BookPlayerModel {
     try? mediaProgress.save()
 
     isPlaying = isNowPlaying
+    nowPlaying.update()
+    widgetManager.update()
   }
 
   private func recordBookCompletionIfNeeded(autoPlayNext: Bool) {

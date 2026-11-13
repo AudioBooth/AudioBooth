@@ -7,6 +7,7 @@ import MediaPlayer
 import Models
 import Nuke
 
+@MainActor
 final class NowPlayingManager {
   private var info: [String: Any]
   private let id: String
