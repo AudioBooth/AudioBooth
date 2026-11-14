@@ -9,6 +9,7 @@ final class BookTimerPickerModel: TimerPickerSheet.Model {
   private var chapterStopTime: Double = 0
   private var endDate = Date()
   private var expiredAt: Date?
+  private var timer: Timer?
 
   private var upcomingChapters: [WatchChapter] {
     guard let playerModel else { return [] }
@@ -102,7 +103,8 @@ final class BookTimerPickerModel: TimerPickerSheet.Model {
   }
 
   private func startTicking() {
-    Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
+    timer?.invalidate()
+    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
       guard let self, case .duration = self.current else {
         timer.invalidate()
         return

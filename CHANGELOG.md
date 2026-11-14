@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Narrated EPUB animations - Fixed the narration download progress animation on book details, and the Read Along button now animates while the narration plays
 - Podcast playback - Fixed episodes not playing when their duration is missing, a UI freeze when streaming, Continue Listening in podcast libraries, Now Playing metadata, the Home episode card not showing pause, and Play All playing finished episodes (thanks @Creationsss)
 - Sleep timer Live Activity - Fixed the Live Activity pausing with playback even when the timer is set to keep running while paused
+- Apple Watch skip buttons - Fixed playback not starting at the position reached with the skip buttons while paused
+- Apple Watch finished books - Fixed Play doing nothing on a finished book, it now starts the book from the beginning
+- Apple Watch player - Fixed the skip buttons always showing 30 seconds instead of your skip intervals, and the time remaining not being translated
 
 ## [1.13.0]
 

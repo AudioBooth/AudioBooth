@@ -921,11 +921,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
   private func handleMessage(_ message: [String: Any]) {
     if message["command"] as? String == "downloadBook" {
       handleDownloadRequest(message)
-      return
-    }
-
-    if let progressData = message["progress"] as? [String: Double] {
-      handleProgress(progressData)
     }
   }
 
@@ -940,19 +935,15 @@ extension WatchConnectivityManager: WCSessionDelegate {
     updateComplication()
   }
 
-  private func handleProgress(_ data: [String: Double], updatedAt: [String: Double] = [:]) {
+  private func handleProgress(_ data: [String: Double], updatedAt: [String: Double]) {
     var updatedBooks = continueListeningBooks
 
     for (bookID, currentTime) in data {
-      if let remoteUpdatedAt = updatedAt[bookID] {
-        let localUpdatedAt = progressUpdatedAt[bookID] ?? 0
-        guard remoteUpdatedAt > localUpdatedAt else { continue }
-        progressUpdatedAt[bookID] = remoteUpdatedAt
-      } else {
-        let localTime = progress[bookID] ?? 0
-        guard currentTime > localTime else { continue }
-      }
+      guard let remoteUpdatedAt = updatedAt[bookID],
+        remoteUpdatedAt > progressUpdatedAt[bookID] ?? 0
+      else { continue }
 
+      progressUpdatedAt[bookID] = remoteUpdatedAt
       progress[bookID] = currentTime
 
       if let index = updatedBooks.firstIndex(where: { $0.id == bookID }) {

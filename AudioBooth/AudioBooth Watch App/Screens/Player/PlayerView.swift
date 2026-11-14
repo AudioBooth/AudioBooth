@@ -119,7 +119,7 @@ struct PlayerView: View {
       Button(
         action: model.skipBackward,
         label: {
-          Image(systemName: "gobackward.30")
+          Image(systemName: "gobackward.\(Int(model.skipBackwardInterval))")
         }
       )
       .disabled(model.playbackState != .ready)
@@ -132,7 +132,7 @@ struct PlayerView: View {
       Button(
         action: model.skipForward,
         label: {
-          Image(systemName: "goforward.30")
+          Image(systemName: "goforward.\(Int(model.skipForwardInterval))")
         }
       )
       .disabled(model.playbackState != .ready)
@@ -252,12 +252,13 @@ extension PlayerView {
     }
 
     private func formatTimeRemaining(_ duration: Double) -> String {
-      Duration.seconds(duration).formatted(
+      let formatted = Duration.seconds(duration).formatted(
         .units(
           allowed: [.hours, .minutes],
           width: .narrow
         )
-      ) + " left"
+      )
+      return String(localized: "\(formatted) left")
     }
   }
 }
@@ -274,6 +275,8 @@ extension PlayerView {
     var playbackState: PlaybackState = .loading
     var isLocal: Bool = false
     var errorMessage: String?
+    var skipBackwardInterval: Double = 30
+    var skipForwardInterval: Double = 30
 
     var isPlaying: Bool
     var progress: Double

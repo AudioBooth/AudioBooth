@@ -7,9 +7,7 @@ final class WatchAudioPlayer {
     case playing
     case paused
     case stopped
-    case buffering
     case ready
-    case error
   }
 
   enum Event {
@@ -17,7 +15,6 @@ final class WatchAudioPlayer {
     case stateChanged(PlaybackState)
     case seek(TimeInterval)
     case finished
-    case stalled
     case error(Error?)
   }
 
@@ -83,25 +80,15 @@ final class WatchAudioPlayer {
   }
 
   func resume(at time: TimeInterval? = nil) {
-    if isPrepared {
-      isPrepared = false
-      guard !trackURLs.isEmpty else {
-        events.send(.error(nil))
-        return
-      }
-
-      let seekTime = time ?? self.time
-      let (trackIndex, offset) = trackAndOffset(for: seekTime)
-      currentTrackIndex = trackIndex
-      loadTrack(at: trackIndex, seekTo: offset, autoPlay: true)
-    } else if player.currentItem != nil, player.currentItem?.status != .failed {
+    if !isPrepared, let item = player.currentItem, item.status != .failed {
       player.play()
-    } else {
-      let seekTime = time ?? self.time
-      let (trackIndex, offset) = trackAndOffset(for: seekTime)
-      currentTrackIndex = trackIndex
-      loadTrack(at: trackIndex, seekTo: offset, autoPlay: true)
+      return
     }
+
+    isPrepared = false
+    let (trackIndex, offset) = trackAndOffset(for: time ?? self.time)
+    currentTrackIndex = trackIndex
+    loadTrack(at: trackIndex, seekTo: offset, autoPlay: true)
   }
 
   func pause() {
@@ -244,8 +231,6 @@ private extension WatchAudioPlayer {
           self.events.send(.stateChanged(.paused))
         case .playing:
           self.events.send(.stateChanged(.playing))
-        case .waitingToPlayAtSpecifiedRate where player.status != .readyToPlay:
-          self.events.send(.stateChanged(.buffering))
         default:
           break
         }
@@ -279,17 +264,15 @@ private extension WatchAudioPlayer {
       .store(in: &itemObservers)
 
     NotificationCenter.default.publisher(for: AVPlayerItem.playbackStalledNotification, object: item)
-      .sink { [weak self] _ in
+      .sink { _ in
         AppLogger.player.warning("Playback stalled")
-        self?.events.send(.stalled)
       }
       .store(in: &itemObservers)
 
     NotificationCenter.default.publisher(for: AVPlayerItem.failedToPlayToEndTimeNotification, object: item)
-      .sink { [weak self] notification in
+      .sink { notification in
         let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
         AppLogger.player.error("Failed to play to end: \(error?.localizedDescription ?? "Unknown")")
-        self?.events.send(.stalled)
       }
       .store(in: &itemObservers)
 

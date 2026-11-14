@@ -52,12 +52,13 @@ final class ContinueListeningRowModel: ContinueListeningRow.Model {
 
   private static func formatTimeRemaining(_ timeRemaining: Double) -> String? {
     guard timeRemaining > 0 else { return nil }
-    return Duration.seconds(timeRemaining).formatted(
+    let formatted = Duration.seconds(timeRemaining).formatted(
       .units(
         allowed: [.hours, .minutes],
         width: .narrow
       )
-    ) + " left"
+    )
+    return String(localized: "\(formatted) left")
   }
 
   override func onTapped() {

@@ -554,26 +554,11 @@ extension WatchConnectivityManager: WCSessionDelegate {
             podcastID: message["podcastID"] as? String,
             currentTime: message["currentTime"] as? Double
           )
-        } else {
-          PlayerManager.shared.current?.onPlayTapped()
         }
-      case "pause":
-        PlayerManager.shared.current?.onPauseTapped()
-      case "skipForward":
-        PlayerManager.shared.current?.onSkipForwardTapped(seconds: UserPreferences.shared.skipForwardInterval)
-      case "skipBackward":
-        PlayerManager.shared.current?.onSkipBackwardTapped(seconds: UserPreferences.shared.skipBackwardInterval)
       case "changePlaybackRate":
         if let rate = message["rate"] as? Float {
           PlayerManager.shared.current?.speed.onValueChanged(Double(rate))
         }
-      case "syncDownloadedBooks":
-        if let bookIDs = message["bookIDs"] as? [String] {
-          updateWatchDownloadStatus(downloaded: bookIDs, queued: watchQueuedBookIDs)
-          refreshProgress()
-        }
-      case "requestContext":
-        refreshProgress()
       case "reportProgress":
         if let bookID = message["bookID"] as? String,
           let sessionID = message["sessionID"] as? String,
