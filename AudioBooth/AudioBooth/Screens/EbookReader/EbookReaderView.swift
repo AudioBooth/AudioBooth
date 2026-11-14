@@ -107,7 +107,7 @@ struct EbookReaderView: View {
 
       ToolbarItem(placement: .bottomBar) {
         if !model.isLoading, model.error == nil, showControls {
-          bottomControlBar
+          EbookReaderControlBar(model: model) { showSettings = true }
             .tint(.primary)
         }
       }
@@ -333,59 +333,6 @@ struct EbookReaderView: View {
     }
   }
 
-  private var progressLabel: String {
-    if let page = displayedPage {
-      return page.current.formatted()
-    }
-    return model.progress.formatted(.percent.precision(.fractionLength(0)))
-  }
-
-  private var progressCaption: String {
-    if let page = displayedPage {
-      return String(localized: "of \(page.total)")
-    }
-    return String(localized: "Progress")
-  }
-
-  private var displayedPage: (current: Int, total: Int)? {
-    model.preferences.progressDisplay == .page ? model.page : nil
-  }
-
-  private var isReadAlongActive: Bool {
-    if model.isFollowingMediaOverlay {
-      return playerManager.isPlaying
-    }
-    return model.readAlong?.status.isActive == true
-  }
-
-  @ViewBuilder
-  private var readAlongIcon: some View {
-    if model.isFollowingMediaOverlay {
-      Image(systemName: "waveform")
-        .symbolEffect(.variableColor.iterative, options: .repeating, isActive: playerManager.isPlaying)
-    } else {
-      readAlongStatusIcon
-    }
-  }
-
-  @ViewBuilder
-  private var readAlongStatusIcon: some View {
-    switch model.readAlong?.status {
-    case .preparing:
-      ProgressView()
-        .controlSize(.small)
-    case .locating:
-      Image(systemName: "waveform.badge.magnifyingglass")
-    case .following:
-      Image(systemName: "waveform")
-        .symbolEffect(.variableColor.iterative, options: .repeating)
-    case .failed:
-      Image(systemName: "waveform.badge.exclamationmark")
-    case .off, .none:
-      Image(systemName: "waveform")
-    }
-  }
-
   private func readAlongStatusMessage(_ status: ReadAlongCoordinator.Status) -> String? {
     switch status {
     case let .preparing(fraction):
@@ -401,81 +348,6 @@ struct EbookReaderView: View {
     case .off, .following:
       nil
     }
-  }
-
-  @ViewBuilder
-  private var bottomControlBar: some View {
-    HStack(alignment: .bottom, spacing: 0) {
-      if model.chapters != nil {
-        Button(action: { model.onTableOfContentsTapped() }) {
-          VStack(spacing: 6) {
-            Image(systemName: "list.bullet")
-              .font(.system(size: 20))
-              .frame(height: 20)
-            Text("Contents")
-              .font(.caption2)
-          }
-        }
-        .frame(maxWidth: .infinity)
-      }
-
-      if model.supportsSettings {
-        Button(action: {
-          model.onSettingsTapped()
-          showSettings = true
-        }) {
-          VStack(spacing: 6) {
-            Image(systemName: "textformat.size")
-              .font(.system(size: 20))
-              .frame(height: 20)
-            Text("Settings")
-              .font(.caption2)
-          }
-        }
-        .frame(maxWidth: .infinity)
-      }
-
-      Button(action: { model.onProgressTapped() }) {
-        VStack(spacing: 6) {
-          Text(progressLabel)
-            .font(.system(size: 16, weight: .medium))
-            .monospacedDigit()
-            .lineLimit(1)
-            .frame(width: 60, height: 20)
-          Text(progressCaption)
-            .font(.caption2)
-        }
-      }
-      .frame(maxWidth: .infinity)
-
-      if model.supportsReadAlong {
-        Button(action: { model.onReadAlongTapped() }) {
-          VStack(spacing: 6) {
-            readAlongIcon
-              .font(.system(size: 20))
-              .frame(height: 20)
-            Text("Read Along")
-              .font(.caption2)
-          }
-        }
-        .frame(maxWidth: .infinity)
-        .tint(isReadAlongActive ? .accentColor : .primary)
-      }
-
-      if playerManager.current != nil {
-        Button(action: model.onNowPlayingTapped) {
-          VStack(spacing: 6) {
-            Image(systemName: "playpause.circle")
-              .font(.system(size: 20))
-              .frame(height: 20)
-            Text("Now Playing")
-              .font(.caption2)
-          }
-        }
-        .frame(maxWidth: .infinity)
-      }
-    }
-    .padding(.vertical, 8)
   }
 }
 
