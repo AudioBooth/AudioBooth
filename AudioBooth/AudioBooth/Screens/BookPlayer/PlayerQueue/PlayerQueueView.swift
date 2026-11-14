@@ -14,10 +14,6 @@ struct PlayerQueueView: View {
           Section("Now Playing") {
             CurrentRow(
               item: currentItem,
-              onTapped: {
-                dismiss()
-                PlayerManager.shared.showFullPlayer()
-              },
               onClear: model.onClearCurrentTapped
             )
           }
@@ -96,7 +92,6 @@ extension PlayerQueueView {
     @ScaledMetric(relativeTo: .title) private var coverSize: CGFloat = 40
 
     let item: QueueItem
-    let onTapped: () -> Void
     let onClear: () -> Void
 
     private var isEditing: Bool {

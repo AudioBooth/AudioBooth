@@ -48,199 +48,129 @@ final class BookPlayerModel: BookPlayer.Model {
   private var hasRecordedCompletion = false
   private var narrationProgressSync: NarrationProgressSync?
 
-  init(_ book: Book) {
-    self.item = nil
-    do {
-      let duration = book.duration > 0 ? book.duration : (try? LocalBook.fetch(bookID: book.id))?.duration ?? 0
-      self.mediaProgress = try MediaProgress.getOrCreate(for: book.id, duration: duration)
-    } catch {
-      fatalError("Failed to create MediaProgress for book \(book.id): \(error)")
-    }
-
-    nowPlaying = NowPlayingManager(
+  convenience init(_ book: Book) {
+    self.init(
       id: book.id,
+      item: nil,
       title: book.title,
       author: book.authorName,
       coverURL: book.coverURL(raw: true),
-      current: mediaProgress.currentTime,
-      duration: mediaProgress.duration
+      nowPlayingCoverURL: book.coverURL(raw: true),
+      widgetCoverURL: book.coverURL(raw: false),
+      duration: book.duration > 0 ? book.duration : (try? LocalBook.fetch(bookID: book.id))?.duration ?? 0
     )
-
-    widgetManager = WidgetManager(
-      id: book.id,
-      title: book.title,
-      author: book.authorName,
-      coverURL: book.coverURL(raw: false)
-    )
-
-    super.init(
-      id: book.id,
-      title: book.title,
-      author: book.authorName,
-      coverURL: book.coverURL(raw: true),
-      speed: FloatPickerSheet.Model(),
-      timer: TimerPickerSheet.Model(),
-      bookmarks: BookmarkViewerSheet.Model(),
-      history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(itemID: book.id, mediaProgress: mediaProgress, title: book.title)
-    )
-
-    setupDownloadStateBinding(bookID: book.id)
-    setupPageMatch()
-    refreshPositionSyncOffer()
-    setupHistory()
-
-    onLoad()
   }
 
-  init(_ item: LocalBook) {
-    self.item = item
-    do {
-      self.mediaProgress = try MediaProgress.getOrCreate(for: item.bookID, duration: item.duration)
-    } catch {
-      fatalError("Failed to create MediaProgress for item \(item.bookID): \(error)")
-    }
-
-    nowPlaying = NowPlayingManager(
+  convenience init(_ item: LocalBook) {
+    self.init(
       id: item.bookID,
+      item: item,
       title: item.title,
       author: item.authorNames,
       coverURL: item.coverURL(raw: true),
-      current: mediaProgress.currentTime,
-      duration: mediaProgress.duration
+      nowPlayingCoverURL: item.coverURL(raw: true),
+      widgetCoverURL: item.coverURL(raw: false),
+      duration: item.duration
     )
-
-    widgetManager = WidgetManager(
-      id: item.bookID,
-      title: item.title,
-      author: item.authorNames,
-      coverURL: item.coverURL(raw: false)
-    )
-
-    super.init(
-      id: item.bookID,
-      title: item.title,
-      author: item.authorNames,
-      coverURL: item.coverURL(raw: true),
-      speed: FloatPickerSheet.Model(),
-      timer: TimerPickerSheet.Model(),
-      bookmarks: BookmarkViewerSheet.Model(),
-      history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(itemID: item.bookID, mediaProgress: mediaProgress, title: item.title)
-    )
-
-    setupDownloadStateBinding(bookID: item.bookID)
-    setupPageMatch()
-    refreshPositionSyncOffer()
-    setupHistory()
-
-    onLoad()
   }
 
-  init(_ episode: LocalEpisode) {
-    self.item = episode
-    self.episodeID = episode.episodeID
-
-    do {
-      self.mediaProgress = try MediaProgress.getOrCreate(for: episode.episodeID, duration: episode.duration)
-    } catch {
-      fatalError("Failed to create MediaProgress for episode \(episode.episodeID): \(error)")
-    }
-
-    nowPlaying = NowPlayingManager(
+  convenience init(_ episode: LocalEpisode) {
+    self.init(
       id: episode.episodeID,
+      podcastID: episode.podcast?.podcastID,
+      episodeID: episode.episodeID,
+      item: episode,
       title: episode.title,
       author: episode.podcast?.author,
       podcastTitle: episode.podcast?.title,
-      coverURL: episode.coverURL(raw: true),
-      current: mediaProgress.currentTime,
-      duration: mediaProgress.duration
-    )
-
-    widgetManager = WidgetManager(
-      id: episode.episodeID,
-      title: episode.title,
-      author: episode.podcast?.author,
-      coverURL: episode.coverURL()
-    )
-
-    super.init(
-      id: episode.episodeID,
-      podcastID: episode.podcast?.podcastID,
-      title: episode.title,
-      author: episode.podcast?.author,
       coverURL: episode.coverURL,
-      speed: FloatPickerSheet.Model(),
-      timer: TimerPickerSheet.Model(),
-      bookmarks: nil,
-      history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(
-        itemID: episode.episodeID,
-        mediaProgress: mediaProgress,
-        title: episode.title
-      )
+      nowPlayingCoverURL: episode.coverURL(raw: true),
+      widgetCoverURL: episode.coverURL(),
+      duration: episode.duration
     )
-
-    setupDownloadStateBinding(episodeID: episode.episodeID)
-    setupHistory()
-
-    onLoad()
   }
 
-  init(
+  convenience init(
     _ episode: PodcastEpisode,
     podcastID: String,
     podcastTitle: String,
     podcastAuthor: String?,
     coverURL: URL?
   ) {
-    self.item = nil
-    self.episodeID = episode.id
-
-    do {
-      self.mediaProgress = try MediaProgress.getOrCreate(
-        for: episode.id,
-        duration: episode.duration ?? 0
-      )
-    } catch {
-      fatalError("Failed to create MediaProgress for episode \(episode.id): \(error)")
-    }
-
-    nowPlaying = NowPlayingManager(
+    self.init(
       id: episode.id,
+      podcastID: podcastID,
+      episodeID: episode.id,
+      item: nil,
       title: episode.title,
       author: podcastAuthor,
       podcastTitle: podcastTitle,
       coverURL: coverURL,
+      nowPlayingCoverURL: coverURL,
+      widgetCoverURL: coverURL,
+      duration: episode.duration ?? 0
+    )
+  }
+
+  private init(
+    id: String,
+    podcastID: String? = nil,
+    episodeID: String? = nil,
+    item: (any PlayableItem)?,
+    title: String,
+    author: String?,
+    podcastTitle: String? = nil,
+    coverURL: URL?,
+    nowPlayingCoverURL: URL?,
+    widgetCoverURL: URL?,
+    duration: TimeInterval
+  ) {
+    self.item = item
+    self.episodeID = episodeID
+
+    do {
+      self.mediaProgress = try MediaProgress.getOrCreate(for: id, duration: duration)
+    } catch {
+      fatalError("Failed to create MediaProgress for \(id): \(error)")
+    }
+
+    nowPlaying = NowPlayingManager(
+      id: id,
+      title: title,
+      author: author,
+      podcastTitle: podcastTitle,
+      coverURL: nowPlayingCoverURL,
       current: mediaProgress.currentTime,
       duration: mediaProgress.duration
     )
 
     widgetManager = WidgetManager(
-      id: episode.id,
-      title: episode.title,
-      author: podcastAuthor,
-      coverURL: coverURL
+      id: id,
+      title: title,
+      author: author,
+      coverURL: widgetCoverURL
     )
 
+    let isBook = episodeID == nil
+
     super.init(
-      id: episode.id,
+      id: id,
       podcastID: podcastID,
-      title: episode.title,
-      author: podcastAuthor,
+      title: title,
+      author: author,
       coverURL: coverURL,
       speed: FloatPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
-      bookmarks: nil,
+      bookmarks: isBook ? BookmarkViewerSheet.Model() : nil,
       history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(
-        itemID: episode.id,
-        mediaProgress: mediaProgress,
-        title: episode.title
-      )
+      playbackProgress: PlaybackProgressViewModel(itemID: id, mediaProgress: mediaProgress, title: title)
     )
 
-    setupDownloadStateBinding(episodeID: episode.id)
+    setupDownloadStateBinding()
+    if isBook {
+      setupPageMatch()
+      refreshPositionSyncOffer()
+    }
     setupHistory()
 
     onLoad()
@@ -296,13 +226,9 @@ final class BookPlayerModel: BookPlayer.Model {
             AppLogger.player.info("Player using remote URLs, reloading with new session")
             pendingPlay = false
             reloadPlayer()
-            isLoading = false
-            resumePlayback()
-          } else {
-            AppLogger.player.info("Player using local files, no reload needed")
-            isLoading = false
-            resumePlayback()
           }
+          isLoading = false
+          resumePlayback()
         } catch {
           AppLogger.player.error("Failed to recreate session: \(error)")
           isLoading = false
@@ -1197,11 +1123,14 @@ extension BookPlayerModel {
 }
 
 extension BookPlayerModel {
-  private func setupDownloadStateBinding(bookID: String) {
+  private func setupDownloadStateBinding() {
+    let id = id
+    let isEpisode = episodeID != nil
+
     downloadManager.$downloadStates
       .receive(on: DispatchQueue.main)
       .map { states in
-        states[bookID] ?? .notDownloaded
+        states[id] ?? .notDownloaded
       }
       .sink { [weak self] downloadState in
         self?.downloadState = downloadState
@@ -1209,43 +1138,27 @@ extension BookPlayerModel {
       .store(in: &cancellables)
 
     itemObservation = Task { [weak self] in
-      for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
-        guard !Task.isCancelled, let self, let updatedItem else { continue }
-
-        self.item = updatedItem as any PlayableItem
-
-        if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
-          AppLogger.player.info("Download completed, refreshing player to use local files")
-          try? await self.setupSession(forceTranscode: false)
-          self.reloadPlayer()
+      if isEpisode {
+        for await episode in LocalEpisode.observe(where: \.episodeID, equals: id) {
+          await self?.onItemUpdated(episode)
+        }
+      } else {
+        for await book in LocalBook.observe(where: \.bookID, equals: id) {
+          await self?.onItemUpdated(book)
         }
       }
     }
   }
 
-  private func setupDownloadStateBinding(episodeID: String) {
-    downloadManager.$downloadStates
-      .receive(on: DispatchQueue.main)
-      .map { states in
-        states[episodeID] ?? .notDownloaded
-      }
-      .sink { [weak self] downloadState in
-        self?.downloadState = downloadState
-      }
-      .store(in: &cancellables)
+  private func onItemUpdated(_ updatedItem: (any PlayableItem)?) async {
+    guard !Task.isCancelled, let updatedItem else { return }
 
-    itemObservation = Task { [weak self] in
-      for await updatedEpisode in LocalEpisode.observe(where: \.episodeID, equals: episodeID) {
-        guard !Task.isCancelled, let self, let updatedEpisode else { continue }
+    item = updatedItem
 
-        self.item = updatedEpisode as any PlayableItem
-
-        if updatedEpisode.isDownloaded, self.isPlayerUsingRemoteURL() {
-          AppLogger.player.info("Episode download completed, refreshing player to use local file")
-          try? await self.setupSession(forceTranscode: false)
-          self.reloadPlayer()
-        }
-      }
+    if updatedItem.isDownloaded, isPlayerUsingRemoteURL() {
+      AppLogger.player.info("Download completed, refreshing player to use local files")
+      try? await setupSession(forceTranscode: false)
+      reloadPlayer()
     }
   }
 }
@@ -1273,19 +1186,15 @@ extension BookPlayerModel {
         return
       }
 
+      let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+      let shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
+
       if let interruption, !interruption.wasRouteDisconnect,
-        let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt,
-        AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
+        shouldResume
+          || (Date().timeIntervalSince(interruption.beganAt) < 60 * 5
+            && !audioSession.secondaryAudioShouldBeSilencedHint)
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")
-        self.interruption = nil
-        applySmartRewind(reason: .onInterruption)
-        player?.resume()
-      } else if let interruption, !interruption.wasRouteDisconnect,
-        Date().timeIntervalSince(interruption.beganAt) < 60 * 5,
-        !audioSession.secondaryAudioShouldBeSilencedHint
-      {
-        AppLogger.player.info("Audio interruption ended - resuming playback (within 5 minutes)")
         self.interruption = nil
         applySmartRewind(reason: .onInterruption)
         player?.resume()

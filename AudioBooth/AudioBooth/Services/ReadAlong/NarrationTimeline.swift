@@ -11,8 +11,6 @@ nonisolated struct NarrationTimeline: Sendable {
   private static let secondsToHoldPastLastWord: TimeInterval = 5
   private static let longestGapWorthInterpolating: TimeInterval = 10
 
-  var isEmpty: Bool { entries.isEmpty }
-
   mutating func append(bookWord: Int, at start: TimeInterval) {
     guard start > (entries.last?.start ?? -.greatestFiniteMagnitude) else { return }
     entries.append(Entry(bookWord: bookWord, start: start))

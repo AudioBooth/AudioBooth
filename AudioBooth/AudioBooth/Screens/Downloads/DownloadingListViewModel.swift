@@ -5,7 +5,6 @@ import Models
 final class DownloadingListViewModel: DownloadingListView.Model {
   private var downloadManager: DownloadManager { .shared }
   private var cancellables: Set<AnyCancellable> = []
-  private var requestsObservation: Task<Void, Never>?
 
   private struct PendingDownload {
     let itemID: String
@@ -15,7 +14,6 @@ final class DownloadingListViewModel: DownloadingListView.Model {
     let coverURL: URL?
     let duration: TimeInterval
     let size: Int64
-    let createdAt: Date
     let hasFailed: Bool
   }
 
@@ -25,7 +23,7 @@ final class DownloadingListViewModel: DownloadingListView.Model {
   override init(books: [DownloadingListView.BookItem] = []) {
     super.init(books: books)
 
-    requestsObservation = Task { [weak self] in
+    Task { [weak self] in
       for await requests in DownloadRequest.observeAll() {
         guard let self else { return }
         self.pending = requests.sorted().map {
@@ -37,7 +35,6 @@ final class DownloadingListViewModel: DownloadingListView.Model {
             coverURL: $0.coverURL,
             duration: $0.duration,
             size: $0.size,
-            createdAt: $0.createdAt,
             hasFailed: $0.hasFailed
           )
         }

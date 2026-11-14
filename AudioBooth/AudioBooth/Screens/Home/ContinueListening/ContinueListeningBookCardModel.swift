@@ -4,12 +4,6 @@ import Foundation
 import Models
 
 final class ContinueListeningBookCardModel: BookCard.Model {
-  enum Item {
-    case local(LocalBook)
-    case remote(Book)
-    case localEpisode(LocalEpisode)
-  }
-
   private var progressObservation: Task<Void, Never>?
   private var downloadStateCancellable: AnyCancellable?
 

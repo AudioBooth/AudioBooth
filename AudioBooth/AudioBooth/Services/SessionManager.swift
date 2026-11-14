@@ -274,16 +274,8 @@ extension SessionManager {
 
     if session.isRemote {
       if session.pendingListeningTime > 0 {
-        let timeListening = session.pendingListeningTime
         do {
-          try await audiobookshelf.sessions.sync(
-            session.id,
-            timeListened: timeListening,
-            currentTime: session.currentTime
-          )
-          session.timeListening += timeListening
-          session.pendingListeningTime -= timeListening
-          try session.save()
+          try await uploadRemoteProgress(session)
           AppLogger.session.debug("Synced final progress before closing remote session")
         } catch {
           AppLogger.session.error(
@@ -341,11 +333,7 @@ extension SessionManager {
       current = nil
 
       do {
-        let sessionSync = SessionSync(session)
-        try await audiobookshelf.sessions.syncLocalSession(sessionSync)
-        session.timeListening += session.pendingListeningTime
-        session.pendingListeningTime = 0
-        try session.save()
+        try await uploadLocalSession(session)
         AppLogger.session.info(
           "Successfully closed and synced local session: \(session.id)"
         )
@@ -386,17 +374,28 @@ extension SessionManager {
     }
   }
 
-  private func syncRemoteSession(_ session: PlaybackSession) async throws {
+  private func uploadRemoteProgress(_ session: PlaybackSession) async throws {
     let timeListening = session.pendingListeningTime
+    try await audiobookshelf.sessions.sync(
+      session.id,
+      timeListened: timeListening,
+      currentTime: session.currentTime
+    )
+    session.timeListening += timeListening
+    session.pendingListeningTime -= timeListening
+    try session.save()
+  }
+
+  private func uploadLocalSession(_ session: PlaybackSession) async throws {
+    try await audiobookshelf.sessions.syncLocalSession(SessionSync(session))
+    session.timeListening += session.pendingListeningTime
+    session.pendingListeningTime = 0
+    try session.save()
+  }
+
+  private func syncRemoteSession(_ session: PlaybackSession) async throws {
     do {
-      try await audiobookshelf.sessions.sync(
-        session.id,
-        timeListened: timeListening,
-        currentTime: session.currentTime
-      )
-      session.timeListening += timeListening
-      session.pendingListeningTime -= timeListening
-      try session.save()
+      try await uploadRemoteProgress(session)
       scheduleSessionClose()
       AppLogger.session.info("Successfully synced remote session: \(session.id)")
     } catch {
@@ -407,10 +406,7 @@ extension SessionManager {
 
   private func syncLocalSession(_ session: PlaybackSession) async {
     do {
-      try await audiobookshelf.sessions.syncLocalSession(SessionSync(session))
-      session.timeListening += session.pendingListeningTime
-      session.pendingListeningTime = 0
-      try session.save()
+      try await uploadLocalSession(session)
       AppLogger.session.info("Successfully synced local session: \(session.id)")
     } catch {
       lastSyncAt = Date().advanced(by: min(session.pendingListeningTime * 2, 600))
@@ -469,10 +465,7 @@ extension SessionManager {
       var syncedCount = 0
       for session in unsyncedSessions {
         do {
-          try await audiobookshelf.sessions.syncLocalSession(SessionSync(session))
-          session.timeListening += session.pendingListeningTime
-          session.pendingListeningTime = 0
-          try session.save()
+          try await uploadLocalSession(session)
           syncedCount += 1
         } catch {
           if let networkError = error as? NetworkError,

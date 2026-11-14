@@ -17,8 +17,6 @@ nonisolated struct PageOverlapScorer: Sendable {
     self.init(pageWords: pageWords, isLowInformation: { _ in false })
   }
 
-  var isUsable: Bool { !pageWords.isEmpty }
-
   func score(against transcript: some Sequence<String>) -> Double {
     var matched = 0.0
     var total = 0.0

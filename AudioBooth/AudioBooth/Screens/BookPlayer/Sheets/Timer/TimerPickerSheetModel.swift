@@ -153,12 +153,9 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     let newRemaining: TimeInterval
     switch current {
-    case .preset(let seconds):
+    case .preset(let seconds), .custom(let seconds):
       newRemaining = seconds + additional
-      current = .preset(newRemaining)
-    case .custom(let seconds):
-      newRemaining = seconds + additional
-      current = .custom(newRemaining)
+      setRemaining(newRemaining)
     case .chapters, .atTime, .duration, .none:
       return
     }
@@ -190,43 +187,22 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func updateEstimatedEndTime(for chapterCount: Int) {
-    guard let chapters, chapterCount > 0 else {
+    guard let duration = calculateChapterDuration(for: chapterCount) else {
       estimatedEndTime = nil
       return
     }
 
-    let currentTime = player.time
-    let currentIndex = chapters.currentIndex
-    let allChapters = chapters.chapters
-
-    guard currentIndex < allChapters.count else {
-      estimatedEndTime = nil
-      return
-    }
-
-    var totalSeconds: TimeInterval = 0
-
-    let currentChapter = allChapters[currentIndex]
-    totalSeconds += max(0, currentChapter.end - currentTime)
-
-    let additionalChaptersNeeded = chapterCount - 1
-    if additionalChaptersNeeded > 0 {
-      for i in 1...additionalChaptersNeeded {
-        let chapterIndex = currentIndex + i
-        guard chapterIndex < allChapters.count else { break }
-        let chapter = allChapters[chapterIndex]
-        totalSeconds += chapter.end - chapter.start
-      }
-    }
-
-    let playbackSpeed = speed.value
-    let adjustedSeconds = totalSeconds / playbackSpeed
-
-    let endDate = Date().addingTimeInterval(adjustedSeconds)
-
-    let time = endDate.formatted(date: .omitted, time: .shortened)
+    let time = Date().addingTimeInterval(duration).formatted(date: .omitted, time: .shortened)
 
     estimatedEndTime = String(localized: "Pauses at \(time)")
+  }
+
+  private func setRemaining(_ seconds: TimeInterval) {
+    if case .custom = current {
+      current = .custom(seconds)
+    } else {
+      current = .preset(seconds)
+    }
   }
 
   override func onOffSelected() {
@@ -349,18 +325,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     }
 
     switch current {
-    case .preset(let seconds):
+    case .preset(let seconds), .custom(let seconds):
       if seconds > 1 {
         fadeOut(seconds)
-        current = .preset(seconds - 1)
-      } else {
-        pauseFromTimer()
-      }
-
-    case .custom(let seconds):
-      if seconds > 1 {
-        fadeOut(seconds)
-        current = .custom(seconds - 1)
+        setRemaining(seconds - 1)
       } else {
         pauseFromTimer()
       }
@@ -436,12 +404,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func resetTimerFromAlert() {
     completedAlert = nil
     current = .none
-    sleepTimer?.invalidate()
-    sleepTimer = nil
-    originalTimerDuration = 0
-
-    ShakeDetector.shared.stopMonitoring()
-    endLiveActivity()
+    stopSleepTimer()
 
     AppLogger.player.info("Timer reset from alert")
   }
@@ -601,12 +564,9 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     guard originalTimerDuration > 0 else { return }
 
     switch current {
-    case .preset(let seconds):
+    case .preset(let seconds), .custom(let seconds):
       guard seconds != originalTimerDuration else { return }
-      current = .preset(originalTimerDuration)
-    case .custom(let seconds):
-      guard seconds != originalTimerDuration else { return }
-      current = .custom(originalTimerDuration)
+      setRemaining(originalTimerDuration)
     case .chapters, .atTime, .duration, .none:
       return
     }
@@ -665,15 +625,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     player.volume = Float(preferences.volumeLevel)
 
     switch current {
-    case .preset:
-      current = .preset(originalTimerDuration)
+    case .preset, .custom:
+      setRemaining(originalTimerDuration)
       startSleepTimer(duration: originalTimerDuration)
-      AppLogger.player.info("Preset timer reset to \(originalTimerDuration) seconds via \(source)")
-
-    case .custom:
-      current = .custom(originalTimerDuration)
-      startSleepTimer(duration: originalTimerDuration)
-      AppLogger.player.info("Custom timer reset to \(originalTimerDuration) seconds via \(source)")
+      AppLogger.player.info("Timer reset to \(originalTimerDuration) seconds via \(source)")
 
     case .chapters:
       AppLogger.player.debug("Reset via \(source) during chapter timer - no reset action")

@@ -5,7 +5,6 @@ import Logging
 nonisolated enum PageLocator {
   struct Located: Sendable {
     let time: TimeInterval
-    let score: Double
     let isExact: Bool
     var pageSeconds: TimeInterval?
   }
@@ -250,7 +249,7 @@ nonisolated enum PageLocator {
       AppLogger.readAlong.info(
         "Page Match: region \(Int(region.lowerBound))s scored \(formatted) over \(words.count) heard words but \(query.count) page words would not align"
       )
-      return Located(time: anchor, score: score, isExact: false)
+      return Located(time: anchor, isExact: false)
     }
 
     let pageSeconds = narratedLength(
@@ -265,7 +264,7 @@ nonisolated enum PageLocator {
     AppLogger.readAlong.info(
       "Page Match: page starts at \(Int(time))s (overlap \(overlap), alignment \(quality), page \(length))"
     )
-    return Located(time: time, score: score, isExact: true, pageSeconds: pageSeconds)
+    return Located(time: time, isExact: true, pageSeconds: pageSeconds)
   }
 
   private static func sample(

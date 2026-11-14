@@ -138,29 +138,11 @@ final class PlayerManager: ObservableObject, Sendable {
   }
 
   func setCurrent(_ book: LocalBook) {
-    if book.bookID == current?.id {
-      isShowingFullPlayer = true
-    } else {
-      if let currentPlayer = current as? BookPlayerModel {
-        currentPlayer.stopPlayer()
-      }
-      removeFromQueue(bookID: book.bookID)
-      current = BookPlayerModel(book)
-      WidgetCenter.shared.reloadAllTimelines()
-    }
+    setCurrent(id: book.bookID, BookPlayerModel(book))
   }
 
   func setCurrent(_ book: Book) {
-    if book.id == current?.id {
-      isShowingFullPlayer = true
-    } else {
-      if let currentPlayer = current as? BookPlayerModel {
-        currentPlayer.stopPlayer()
-      }
-      removeFromQueue(bookID: book.id)
-      current = BookPlayerModel(book)
-      WidgetCenter.shared.reloadAllTimelines()
-    }
+    setCurrent(id: book.id, BookPlayerModel(book))
   }
 
   func setCurrent(
@@ -170,33 +152,31 @@ final class PlayerManager: ObservableObject, Sendable {
     podcastAuthor: String?,
     coverURL: URL?
   ) {
-    if episode.id == current?.id {
-      isShowingFullPlayer = true
-    } else {
-      if let currentPlayer = current as? BookPlayerModel {
-        currentPlayer.stopPlayer()
-      }
-      removeFromQueue(bookID: episode.id)
-      current = BookPlayerModel(
+    setCurrent(
+      id: episode.id,
+      BookPlayerModel(
         episode,
         podcastID: podcastID,
         podcastTitle: podcastTitle,
         podcastAuthor: podcastAuthor,
         coverURL: coverURL
       )
-      WidgetCenter.shared.reloadAllTimelines()
-    }
+    )
   }
 
   func setCurrent(_ episode: LocalEpisode) {
-    if episode.episodeID == current?.id {
+    setCurrent(id: episode.episodeID, BookPlayerModel(episode))
+  }
+
+  private func setCurrent(id: String, _ player: @autoclosure () -> BookPlayerModel) {
+    if id == current?.id {
       isShowingFullPlayer = true
     } else {
       if let currentPlayer = current as? BookPlayerModel {
         currentPlayer.stopPlayer()
       }
-      removeFromQueue(bookID: episode.episodeID)
-      current = BookPlayerModel(episode)
+      removeFromQueue(bookID: id)
+      current = player()
       WidgetCenter.shared.reloadAllTimelines()
     }
   }
@@ -250,110 +230,86 @@ extension PlayerManager: PlayerManagerProtocol {
   }
 
   func play(_ bookID: String) async {
-    do {
-      if current?.id == bookID {
-        play()
-      } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-        if localBook.mediaType.contains(.audiobook) {
-          setCurrent(localBook)
-          play()
-        } else if localBook.mediaType.contains(.ebook) {
-          openLocalBookAsEbook(localBook)
-        }
-      } else {
-        let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
-        if book.mediaType.contains(.audiobook) {
-          setCurrent(book)
-          play()
-        } else if book.mediaType.contains(.ebook) {
-          openRemoteBookAsEbook(book)
-        }
-      }
-    } catch {
-      AppLogger.player.error("Failed to play book: \(error)")
-    }
-  }
-
-  private func play(episodeID: String, podcastID: String) async {
-    if current?.id == episodeID {
-      play()
-      return
-    }
-
-    if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
-      setCurrent(localEpisode)
-      play()
-      return
-    }
-
-    do {
-      let podcast = try await Audiobookshelf.shared.podcasts.fetch(id: podcastID)
-      if let episode = podcast.media.episodes?.first(where: { $0.id == episodeID }) {
-        setCurrent(
-          episode: episode,
-          podcastID: podcastID,
-          podcastTitle: podcast.title,
-          podcastAuthor: podcast.author,
-          coverURL: podcast.coverURL()
-        )
-        play()
-      }
-    } catch {
-      AppLogger.player.error("Failed to play episode: \(error)")
-    }
+    await start(bookID, autoPlay: true)
   }
 
   func open(_ bookID: String) async {
-    do {
-      if current?.id == bookID {
-        showFullPlayer()
-      } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-        if localBook.mediaType.contains(.ebook) {
-          openLocalBookAsEbook(localBook)
-        } else if localBook.mediaType.contains(.audiobook) {
-          setCurrent(localBook)
-          showFullPlayer()
-        }
-      } else {
-        let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
-        if book.mediaType.contains(.ebook) {
-          openRemoteBookAsEbook(book)
-        } else if book.mediaType.contains(.audiobook) {
-          setCurrent(book)
-          showFullPlayer()
-        }
-      }
-    } catch {
-      AppLogger.player.error("Failed to open book: \(error)")
-    }
+    await start(bookID, autoPlay: false)
   }
 
   func open(episodeID: String, podcastID: String) async {
-    if current?.id == episodeID {
-      showFullPlayer()
-      return
-    }
+    await start(episodeID: episodeID, podcastID: podcastID, autoPlay: false)
+  }
 
-    if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
-      setCurrent(localEpisode)
-      showFullPlayer()
-      return
-    }
-
+  private func start(_ bookID: String, autoPlay: Bool) async {
     do {
-      let podcast = try await Audiobookshelf.shared.podcasts.fetch(id: podcastID)
-      if let episode = podcast.media.episodes?.first(where: { $0.id == episodeID }) {
-        setCurrent(
-          episode: episode,
-          podcastID: podcastID,
-          podcastTitle: podcast.title,
-          podcastAuthor: podcast.author,
-          coverURL: podcast.coverURL()
-        )
+      if current?.id != bookID {
+        if let localBook = try LocalBook.fetch(bookID: bookID) {
+          switch destination(for: localBook.mediaType, autoPlay: autoPlay) {
+          case .player: setCurrent(localBook)
+          case .reader: return openLocalBookAsEbook(localBook)
+          case nil: return
+          }
+        } else {
+          let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
+          switch destination(for: book.mediaType, autoPlay: autoPlay) {
+          case .player: setCurrent(book)
+          case .reader: return openRemoteBookAsEbook(book)
+          case nil: return
+          }
+        }
+      }
+
+      if autoPlay {
+        play()
+      } else {
         showFullPlayer()
       }
     } catch {
-      AppLogger.player.error("Failed to open episode: \(error)")
+      AppLogger.player.error("Failed to start book: \(error)")
+    }
+  }
+
+  private enum Destination {
+    case player
+    case reader
+  }
+
+  private func destination(for mediaType: Book.MediaType, autoPlay: Bool) -> Destination? {
+    let isAudiobook = mediaType.contains(.audiobook)
+    let isEbook = mediaType.contains(.ebook)
+
+    if autoPlay, isAudiobook { return .player }
+    if isEbook { return .reader }
+    return isAudiobook ? .player : nil
+  }
+
+  private func start(episodeID: String, podcastID: String, autoPlay: Bool) async {
+    if current?.id != episodeID {
+      if let localEpisode = try? LocalEpisode.fetch(episodeID: episodeID) {
+        setCurrent(localEpisode)
+      } else {
+        do {
+          let podcast = try await Audiobookshelf.shared.podcasts.fetch(id: podcastID)
+          guard let episode = podcast.media.episodes?.first(where: { $0.id == episodeID }) else { return }
+          setCurrent(
+            episode: episode,
+            podcastID: podcastID,
+            podcastTitle: podcast.title,
+            podcastAuthor: podcast.author,
+            coverURL: podcast.coverURL()
+          )
+        } catch {
+          AppLogger.player.error("Failed to start episode: \(error)")
+          return
+        }
+      }
+    }
+
+    if autoPlay {
+      play()
+    } else {
+      showFullPlayer()
     }
   }
 }
@@ -640,17 +596,9 @@ extension PlayerManager {
 
     Task {
       if let podcastID = item.podcastID {
-        if autoPlay {
-          await play(episodeID: item.bookID, podcastID: podcastID)
-        } else {
-          await open(episodeID: item.bookID, podcastID: podcastID)
-        }
+        await start(episodeID: item.bookID, podcastID: podcastID, autoPlay: autoPlay)
       } else {
-        if autoPlay {
-          await play(item.bookID)
-        } else {
-          await open(item.bookID)
-        }
+        await start(item.bookID, autoPlay: autoPlay)
       }
     }
   }
@@ -668,15 +616,7 @@ extension PlayerManager {
     }
 
     queue.removeAll { $0.bookID == item.bookID }
-    restartIfFinished(item.bookID)
-
-    Task {
-      if let podcastID = item.podcastID {
-        await play(episodeID: item.bookID, podcastID: podcastID)
-      } else {
-        await play(item.bookID)
-      }
-    }
+    playItem(item, autoPlay: true)
   }
 
   private func restartIfFinished(_ bookID: String) {

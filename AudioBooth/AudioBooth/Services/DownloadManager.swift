@@ -23,10 +23,6 @@ final class DownloadManager: NSObject, ObservableObject {
     return url
   }()
 
-  nonisolated static func serverDirectory(serverID: String) -> URL {
-    appGroupContainer.appendingPathComponent(serverID)
-  }
-
   nonisolated static func audiobookPath(serverID: String, bookID: String) -> String {
     "\(serverID)/audiobooks/\(bookID)"
   }

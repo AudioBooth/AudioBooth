@@ -3,7 +3,6 @@ import Models
 
 nonisolated struct BookSyncContext: Sendable {
   let bookID: String
-  let title: String
   let chapters: [AudioChapter]
   let duration: TimeInterval
   let source: NarrationSource?
@@ -22,7 +21,6 @@ nonisolated struct BookSyncContext: Sendable {
     let progress = try? MediaProgress.fetch(bookID: localBook.bookID)
 
     bookID = localBook.bookID
-    title = localBook.title
     chapters = localBook.orderedChapters.map {
       AudioChapter(title: $0.title, start: $0.start, end: $0.end)
     }

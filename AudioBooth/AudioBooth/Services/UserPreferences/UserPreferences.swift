@@ -289,47 +289,9 @@ final class UserPreferences: ObservableObject {
   var isApplyingCloudChanges = false
 
   private init() {
-    migrateShowListeningStats()
-    migrateAutoDownloadBooks()
-    migrateShakeToExtendTimer()
-    migrateAutoTimerDuration()
-    migrateVolumeBoost()
     migrateSmartContinuePlayback()
     migrateOfflineSortOrder()
     setupCloudSync()
-  }
-
-  private func migrateShowListeningStats() {
-    if UserDefaults.standard.bool(forKey: "showListeningStats") == true {
-      UserDefaults.standard.removeObject(forKey: "showListeningStats")
-
-      homeSections.insert(.listeningStats, at: 0)
-    }
-  }
-
-  private func migrateAutoDownloadBooks() {
-    if UserDefaults.standard.object(forKey: "autoDownloadBooks") is Bool {
-      let wasEnabled = UserDefaults.standard.bool(forKey: "autoDownloadBooks")
-      UserDefaults.standard.removeObject(forKey: "autoDownloadBooks")
-      autoDownloadBooks = wasEnabled ? .wifiAndCellular : .off
-    }
-  }
-
-  private func migrateShakeToExtendTimer() {
-    if UserDefaults.standard.object(forKey: "shakeToExtendTimer") is Bool {
-      let wasEnabled = UserDefaults.standard.bool(forKey: "shakeToExtendTimer")
-      UserDefaults.standard.removeObject(forKey: "shakeToExtendTimer")
-      shakeSensitivity = wasEnabled ? .medium : .off
-    }
-  }
-
-  private func migrateAutoTimerDuration() {
-    if let duration = UserDefaults.standard.object(forKey: "autoTimerDuration") as? TimeInterval {
-      UserDefaults.standard.removeObject(forKey: "autoTimerDuration")
-      if duration > 0 {
-        autoTimerMode = .duration(duration)
-      }
-    }
   }
 
   private func migrateSmartContinuePlayback() {
@@ -353,19 +315,6 @@ final class UserPreferences: ObservableObject {
       offlineSortAscending = true
     default:
       break
-    }
-  }
-
-  private func migrateVolumeBoost() {
-    guard let rawValue = UserDefaults.standard.string(forKey: "volumeBoost") else { return }
-    UserDefaults.standard.removeObject(forKey: "volumeBoost")
-
-    switch rawValue {
-    case "none": volumeLevel = 1.0
-    case "low": volumeLevel = 1.5
-    case "medium": volumeLevel = 2.0
-    case "high": volumeLevel = 3.0
-    default: break
     }
   }
 }

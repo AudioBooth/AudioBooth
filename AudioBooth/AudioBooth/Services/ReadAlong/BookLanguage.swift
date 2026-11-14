@@ -1,11 +1,6 @@
 import Foundation
 
 nonisolated enum BookLanguage {
-  static func locale(for raw: String?) -> Locale? {
-    guard let code = code(for: raw) else { return nil }
-    return Locale(identifier: code)
-  }
-
   static func code(for raw: String?) -> String? {
     guard let raw = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
       return nil

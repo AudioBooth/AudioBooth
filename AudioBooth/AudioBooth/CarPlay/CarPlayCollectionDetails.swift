@@ -11,7 +11,6 @@ final class CarPlayCollectionDetails {
   private let mode: CollectionMode
   private var items: [QueueItem] = []
   private var loadingTask: Task<Void, Never>?
-  private var loadTask: Task<Void, Never>?
 
   let template: CPListTemplate
 
@@ -30,7 +29,7 @@ final class CarPlayCollectionDetails {
     template = CPListTemplate(title: name, sections: [])
     template.emptyViewTitleVariants = [String(localized: "Loading...")]
 
-    loadTask = Task { await load() }
+    Task { await load() }
   }
 
   private func load() async {

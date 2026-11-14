@@ -61,32 +61,7 @@ public final class CollectionsService {
     return response.value
   }
 
-  public func removeItem(collectionID: String, libraryItemID: String) async throws -> Collection {
-    guard let networkService = audiobookshelf.networkService else {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first."
-      )
-    }
-
-    let request = NetworkRequest<Collection>(
-      path: "/api/collections/\(collectionID)/book/\(libraryItemID)",
-      method: .delete
-    )
-
-    let response = try await networkService.send(request)
-    didChange.send()
-    return response.value
-  }
-
   public func removeItems(collectionID: String, items: [String]) async throws -> Collection {
-    struct CollectionItem: Codable {
-      let libraryItemID: String
-
-      private enum CodingKeys: String, CodingKey {
-        case libraryItemID = "libraryItemId"
-      }
-    }
-
     struct RemoveItemsRequest: Codable {
       let books: [String]
     }

@@ -7,7 +7,6 @@ final class CarPlayPodcastDetails {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
   private let podcast: Podcast
-  private var loadingCancellable: Task<Void, Never>?
 
   let template: CPListTemplate
 
@@ -77,7 +76,7 @@ final class CarPlayPodcastDetails {
   }
 
   private func onEpisodeSelected(_ episode: PodcastEpisode, completion: @escaping () -> Void) {
-    loadingCancellable = Task {
+    Task {
       PlayerManager.shared.setCurrent(
         episode: episode,
         podcastID: podcast.id,
@@ -92,7 +91,6 @@ final class CarPlayPodcastDetails {
       PlayerManager.shared.play()
       if PlayerManager.shared.current != nil { nowPlaying?.showNowPlaying() }
       completion()
-      loadingCancellable = nil
     }
   }
 

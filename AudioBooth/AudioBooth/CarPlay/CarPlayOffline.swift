@@ -8,7 +8,6 @@ final class CarPlayOffline: CarPlayPageProtocol {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
   private var currentPlayerCancellable: AnyCancellable?
-  private let downloadManager = DownloadManager.shared
 
   let template: CPListTemplate
 
