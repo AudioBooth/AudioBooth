@@ -65,6 +65,19 @@ extension PlaybackHistory {
     position: TimeInterval
   ) {
     let context = ModelContextProvider.shared.context
+
+    if let lastEntry,
+      lastEntry.itemID == itemID,
+      lastEntry.action == action,
+      Date().timeIntervalSince(lastEntry.timestamp) < 10
+    {
+      lastEntry.title = title
+      lastEntry.position = position
+      lastEntry.timestamp = Date()
+      try? context.save()
+      return
+    }
+
     let entry = PlaybackHistory(
       itemID: itemID,
       actionType: action,
@@ -73,6 +86,8 @@ extension PlaybackHistory {
     )
     context.insert(entry)
     try? context.save()
+    lastEntry = entry
   }
 
+  private static var lastEntry: PlaybackHistory?
 }
