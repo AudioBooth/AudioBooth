@@ -1,7 +1,6 @@
 import API
 @preconcurrency import CarPlay
 import Foundation
-import Nuke
 
 final class CarPlayPodcastDetails {
   private let interfaceController: CPInterfaceController
@@ -62,7 +61,7 @@ final class CarPlayPodcastDetails {
 
     if let coverURL = podcast.coverURL() {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
@@ -114,10 +113,5 @@ final class CarPlayPodcastDetails {
         }
       }
     }
-  }
-
-  private func loadImage(from url: URL) async -> UIImage? {
-    let request = ImageRequest(url: url)
-    return try? await ImagePipeline.shared.image(for: request)
   }
 }

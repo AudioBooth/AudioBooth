@@ -4,7 +4,6 @@ import Combine
 import Foundation
 import Logging
 import Models
-import Nuke
 
 final class CarPlayHome: CarPlayPageProtocol {
   private let interfaceController: CPInterfaceController
@@ -109,11 +108,6 @@ final class CarPlayHome: CarPlayPageProtocol {
     }
 
     return sections
-  }
-
-  private func loadImage(from url: URL) async -> UIImage? {
-    let request = ImageRequest(url: url)
-    return try? await ImagePipeline.shared.image(for: request)
   }
 
   private func onEpisodeSelected(_ podcast: Podcast, completion: @escaping () -> Void) {
@@ -385,7 +379,7 @@ extension CarPlayHome {
       for (index, url) in urls.enumerated() {
         group.addTask {
           guard let url else { return (index, nil) }
-          return (index, await self.loadImage(from: url))
+          return (index, await CarPlayCover.load(from: url))
         }
       }
       var results = [UIImage?](repeating: nil, count: urls.count)
@@ -404,7 +398,7 @@ extension CarPlayHome {
 
     if let coverURL = podcast.coverURL() {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
@@ -428,7 +422,7 @@ extension CarPlayHome {
 
     if let coverURL = podcast.coverURL() {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
@@ -451,7 +445,7 @@ extension CarPlayHome {
 
     if let coverURL = book.coverURL() {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
@@ -473,7 +467,7 @@ extension CarPlayHome {
 
     if let firstBook = series.books.first, let coverURL = firstBook.coverURL() {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
@@ -496,7 +490,7 @@ extension CarPlayHome {
 
     if let imageURL = author.imageURL {
       Task {
-        if let image = await loadImage(from: imageURL) {
+        if let image = await CarPlayCover.load(from: imageURL) {
           item.setImage(image)
         }
       }

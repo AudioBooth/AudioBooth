@@ -2,7 +2,6 @@ import CarPlay
 import Combine
 import Foundation
 import Models
-import Nuke
 
 final class CarPlayOffline: CarPlayPageProtocol {
   private let interfaceController: CPInterfaceController
@@ -85,7 +84,7 @@ final class CarPlayOffline: CarPlayPageProtocol {
 
     if let coverURL = localBook.coverURL {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
@@ -96,11 +95,6 @@ final class CarPlayOffline: CarPlayPageProtocol {
     }
 
     return item
-  }
-
-  private func loadImage(from url: URL) async -> UIImage? {
-    let request = ImageRequest(url: url)
-    return try? await ImagePipeline.shared.image(for: request)
   }
 
   private func onBookSelected(bookID: String, completion: @escaping () -> Void) {
@@ -146,7 +140,7 @@ final class CarPlayOffline: CarPlayPageProtocol {
 
     if let coverURL = episode.coverURL() {
       Task {
-        if let image = await loadImage(from: coverURL) {
+        if let image = await CarPlayCover.load(from: coverURL) {
           item.setImage(image)
         }
       }
