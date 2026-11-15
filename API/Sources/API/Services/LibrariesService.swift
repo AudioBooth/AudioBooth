@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 import Logging
-import Nuke
 
 @MainActor
 public final class LibrariesService: ObservableObject {
@@ -69,7 +68,6 @@ public final class LibrariesService: ObservableObject {
       } else {
         audiobookshelf.authentication.server?.storage.removeObject(forKey: Keys.library)
       }
-      ImagePipeline.shared.cache.removeAll()
     }
   }
 
