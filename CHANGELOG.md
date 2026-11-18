@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [1.14.0]
+
+### Added
 - Apple Watch shortcuts - Pause, resume, skip, change chapters, set or cancel the sleep timer, and add bookmarks from Siri, the Shortcuts app, or the Action button on Apple Watch
 - Apple Watch bookmarks - Add bookmarks and jump to them while listening on your watch, even offline, and they sync to your server when your iPhone is back in range
 - Apple Watch sleep timer - Set a sleep timer by duration or number of chapters from the watch, whether playing on the watch or on your iPhone
