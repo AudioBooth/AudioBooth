@@ -27,22 +27,14 @@ extension BookActionable {
 
   public func resetProgress() async throws {
     let progress = try MediaProgress.fetch(bookID: bookID)
-    let progressID: String
 
-    if let progress, let id = progress.id {
-      progressID = id
-    } else {
-      let apiProgress = try await Audiobookshelf.shared.progress.fetch(
-        bookID: bookID
-      )
-      progressID = apiProgress.id
+    if let progressID = progress?.id {
+      try await Audiobookshelf.shared.progress.reset(progressID: progressID)
+    } else if let apiProgress = try await Audiobookshelf.shared.progress.fetch(bookID: bookID) {
+      try await Audiobookshelf.shared.progress.reset(progressID: apiProgress.id)
     }
 
-    try await Audiobookshelf.shared.progress.reset(progressID: progressID)
-
-    if let progress {
-      try progress.delete()
-    }
+    try progress?.delete()
   }
 
   public func download() throws {

@@ -502,22 +502,14 @@ extension OfflineListViewModel {
           let podcastID = episode.podcast?.podcastID ?? ""
           let episodeProgressID = "\(podcastID)/\(episode.episodeID)"
           let progress = try MediaProgress.fetch(bookID: episode.episodeID)
-          let progressID: String
 
-          if let progress, let progressIDValue = progress.id {
-            progressID = progressIDValue
-          } else {
-            let apiProgress = try await audiobookshelf.progress.fetch(
-              bookID: episodeProgressID
-            )
-            progressID = apiProgress.id
+          if let progressID = progress?.id {
+            try await audiobookshelf.progress.reset(progressID: progressID)
+          } else if let apiProgress = try await audiobookshelf.progress.fetch(bookID: episodeProgressID) {
+            try await audiobookshelf.progress.reset(progressID: apiProgress.id)
           }
 
-          try await audiobookshelf.progress.reset(progressID: progressID)
-
-          if let progress {
-            try progress.delete()
-          }
+          try progress?.delete()
         } catch {
           AppLogger.viewModel.error("Failed to reset progress for episode \(id): \(error)")
         }

@@ -7,13 +7,21 @@ public final class ProgressService {
     self.audiobookshelf = audiobookshelf
   }
 
-  public func fetch(bookID: String) async throws -> User.MediaProgress {
+  public func fetch(bookID: String) async throws -> User.MediaProgress? {
     let request = NetworkRequest<User.MediaProgress>(
       path: "/api/me/progress/\(bookID)",
       method: .get
     )
 
-    return try await send(request, failure: "Failed to fetch media progress")
+    do {
+      return try await send(request)
+    } catch NetworkError.httpError(statusCode: 404, _) {
+      return nil
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to fetch media progress: \(error.localizedDescription)"
+      )
+    }
   }
 
   public func update(
@@ -79,18 +87,22 @@ public final class ProgressService {
   }
 
   private func send<T: Decodable>(_ request: NetworkRequest<T>, failure: String) async throws -> T {
+    do {
+      return try await send(request)
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "\(failure): \(error.localizedDescription)"
+      )
+    }
+  }
+
+  private func send<T: Decodable>(_ request: NetworkRequest<T>) async throws -> T {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "Network service not configured. Please login first."
       )
     }
 
-    do {
-      return try await networkService.send(request).value
-    } catch {
-      throw Audiobookshelf.AudiobookshelfError.networkError(
-        "\(failure): \(error.localizedDescription)"
-      )
-    }
+    return try await networkService.send(request).value
   }
 }

@@ -186,19 +186,12 @@ final class PodcastEpisodeContextMenuModel: PodcastEpisodeContextMenu.Model {
     Task {
       do {
         let progress = try MediaProgress.fetch(bookID: episodeID)
-        let progressID: String
-        if let progress, let id = progress.id {
-          progressID = id
-        } else {
-          let apiProgress = try await Audiobookshelf.shared.progress.fetch(
-            bookID: episodeProgressID
-          )
-          progressID = apiProgress.id
+        if let progressID = progress?.id {
+          try await Audiobookshelf.shared.progress.reset(progressID: progressID)
+        } else if let apiProgress = try await Audiobookshelf.shared.progress.fetch(bookID: episodeProgressID) {
+          try await Audiobookshelf.shared.progress.reset(progressID: apiProgress.id)
         }
-        try await Audiobookshelf.shared.progress.reset(progressID: progressID)
-        if let progress {
-          try progress.delete()
-        }
+        try progress?.delete()
         actions.remove(.resetProgress)
         actions.insert(.markAsFinished)
         onProgressChanged?()

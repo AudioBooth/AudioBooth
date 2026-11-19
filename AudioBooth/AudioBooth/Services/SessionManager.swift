@@ -231,8 +231,10 @@ extension SessionManager {
     Task {
       do {
         let progressID = episodeID.map { "\(itemID)/\($0)" } ?? itemID
-        let apiProgress = try await audiobookshelf.progress.fetch(bookID: progressID)
-        guard let mediaProgress = try MediaProgress.fetch(bookID: episodeID ?? itemID) else { return }
+        guard
+          let apiProgress = try await audiobookshelf.progress.fetch(bookID: progressID),
+          let mediaProgress = try MediaProgress.fetch(bookID: episodeID ?? itemID)
+        else { return }
         mediaProgress.update(from: apiProgress)
         try mediaProgress.save()
       } catch {
