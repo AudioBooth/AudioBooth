@@ -24,13 +24,6 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     case .temporary: return nil
     }
   }
-  var hasAudiobook: Bool {
-    switch source {
-    case .local(_, let bookID): return (try? LocalBook.fetch(bookID: bookID))?.mediaType.contains(.audiobook) == true
-    case .book(let book): return book.mediaType.contains(.audiobook)
-    case .temporary: return false
-    }
-  }
   private(set) var publication: Publication?
   private(set) var navigator: (any Navigator)?
   private var lastProgressUpdate: Date?
@@ -69,6 +62,12 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   init(source: Source) {
     self.source = source
     super.init()
+    hasAudiobook =
+      switch source {
+      case .local(_, let bookID): (try? LocalBook.fetch(bookID: bookID))?.mediaType.contains(.audiobook) == true
+      case .book(let book): book.mediaType.contains(.audiobook)
+      case .temporary: false
+      }
     cover = EbookCoverViewModel(preferences: preferences)
     observeChanges()
   }
@@ -177,7 +176,22 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onNowPlayingTapped() {
-    guard let player = PlayerManager.shared.current else { return }
+    let playerManager = PlayerManager.shared
+
+    if hasAudiobook, !playerManager.isPlaying, playerManager.current?.id != bookID {
+      switch source {
+      case .local:
+        if let bookID, let localBook = try? LocalBook.fetch(bookID: bookID) {
+          playerManager.setCurrent(localBook)
+        }
+      case .book(let book):
+        playerManager.setCurrent(book)
+      case .temporary:
+        break
+      }
+    }
+
+    guard let player = playerManager.current else { return }
     playerSheet = EbookPlayerSheetModel(player: player, isPresented: true)
   }
 

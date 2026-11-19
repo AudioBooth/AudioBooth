@@ -61,7 +61,7 @@ struct EbookReaderControlBar: View {
         .tint(isReadAlongActive ? .accentColor : .primary)
       }
 
-      if playerManager.current != nil {
+      if playerManager.current != nil || model.hasAudiobook {
         Button(action: model.onNowPlayingTapped) {
           item(Text("Now Playing"), isCompact: isCompact) {
             Image(systemName: "playpause.circle")

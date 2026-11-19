@@ -449,6 +449,7 @@ extension EbookReaderView {
     var positionSync: PositionSyncSheet.Model?
     var playerSheet: EbookPlayerSheet.Model?
     var isFollowingMediaOverlay: Bool = false
+    var hasAudiobook: Bool = false
 
     func onAppear() {}
     func onDisappear() {}
