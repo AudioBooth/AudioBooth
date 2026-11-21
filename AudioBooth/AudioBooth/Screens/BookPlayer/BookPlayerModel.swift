@@ -1264,7 +1264,17 @@ extension BookPlayerModel {
       do {
         if isPlaying, sessionManager.current == nil {
           AppLogger.player.warning("Playback active with no session - recreating session")
-          Task { try? await setupSession(forceTranscode: false) }
+          Task {
+            do {
+              try await setupSession(forceTranscode: false)
+              if let player, isPlayerUsingRemoteURL() {
+                moveProgress(to: player.time)
+                reloadPlayer()
+              }
+            } catch {
+              AppLogger.player.error("Failed to recreate session: \(error)")
+            }
+          }
           return
         }
 
