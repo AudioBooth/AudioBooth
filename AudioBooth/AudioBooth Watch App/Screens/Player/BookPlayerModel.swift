@@ -129,10 +129,15 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   private func handlePlaybackError(_ error: Error?) {
-    if localBook != nil {
-      AppLogger.player.warning("Local playback failed, falling back to streaming.")
-      Task {
-        await handleCorruptedDownload()
+    if let localBook {
+      if isFileError(error, for: localBook) {
+        AppLogger.player.warning("Local file is unplayable, falling back to streaming.")
+        Task {
+          await handleCorruptedDownload()
+        }
+      } else {
+        playbackState = .error(retryable: true)
+        errorMessage = String(localized: "Playback failed.")
       }
     } else {
       let isNetworkError: Bool
@@ -146,6 +151,17 @@ final class BookPlayerModel: PlayerView.Model {
       errorMessage =
         isNetworkError ? String(localized: "Network error. Tap to retry.") : String(localized: "Playback failed.")
     }
+  }
+
+  private func isFileError(_ error: Error?, for localBook: WatchBook) -> Bool {
+    let hasMissingFile = localBook.tracks.contains { track in
+      guard let url = localBook.localURL(for: track) else { return true }
+      return !FileManager.default.fileExists(atPath: url.path)
+    }
+    if hasMissingFile { return true }
+
+    guard let error = error as? AVError else { return false }
+    return [.fileFormatNotRecognized, .fileFailedToParse].contains(error.code)
   }
 
   private func setupOptionsModel() {
