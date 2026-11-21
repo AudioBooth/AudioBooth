@@ -250,6 +250,10 @@ struct BookPlayer: View {
   private var airPlayToolbarItem: some ToolbarContent {
     ToolbarItem(placement: .topBarTrailing) {
       HStack(spacing: 0) {
+        #if canImport(GoogleCast) && !targetEnvironment(macCatalyst) && !os(watchOS)
+        CastButton()
+          .frame(width: 36, height: 36)
+        #endif
         AirPlayButton()
           .frame(width: 36, height: 36)
           .tint(.primary)

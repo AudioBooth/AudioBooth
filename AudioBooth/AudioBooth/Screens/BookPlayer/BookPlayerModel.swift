@@ -256,7 +256,7 @@ final class BookPlayerModel: BookPlayer.Model {
     lastSyncedTime = mediaProgress.currentTime
     player.resume()
 
-    if userPreferences.pauseAtZeroVolume, audioSession.outputVolume == 0 {
+    if !isCasting, userPreferences.pauseAtZeroVolume, audioSession.outputVolume == 0 {
       raiseVolumeOrPause()
     }
 
@@ -567,13 +567,16 @@ extension BookPlayerModel {
 }
 
 extension BookPlayerModel {
-  private func setupSession(forceTranscode: Bool) async throws {
+  private var isCasting: Bool { player?.isCasting ?? CastPlaybackController.isDefaultSessionActive }
+
+  private func setupSession(forceTranscode: Bool, forceRemote: Bool = false) async throws {
     item = try await sessionManager.ensureSession(
       itemID: podcastID ?? id,
       episodeID: episodeID,
       item: item,
       mediaProgress: mediaProgress,
-      forceTranscode: forceTranscode
+      forceTranscode: forceTranscode,
+      forceRemote: forceRemote || isCasting
     )
 
     if let pendingSeekTime {
@@ -751,8 +754,38 @@ extension BookPlayerModel {
       throw Audiobookshelf.AudiobookshelfError.networkError("No playable audio files available")
     }
 
-    let player = AudioPlayer(mediaProgress: mediaProgress, session: session)
+    let player = AudioPlayer(mediaProgress: mediaProgress, session: session, coverURL: coverURL)
     self.player = player
+
+    player.onRequireRemoteSession = { [weak self] in
+      guard let self else { return nil }
+      do {
+        self.item = try await self.sessionManager.ensureSession(
+          itemID: self.podcastID ?? self.id,
+          episodeID: self.episodeID,
+          item: self.item,
+          mediaProgress: self.mediaProgress,
+          forceTranscode: false,
+          forceRemote: true
+        )
+        return self.sessionManager.current
+      } catch {
+        AppLogger.player.error("Failed to create remote session for Cast: \(error)")
+        return nil
+      }
+    }
+
+    player.onCastSessionEnded = { [weak self] in
+      guard let self else { return }
+      Task {
+        guard self.playerManager.current === self, self.player != nil else { return }
+        if self.item?.isDownloaded == true {
+          try? await self.setupSession(forceTranscode: false)
+        }
+        guard self.playerManager.current === self, self.player != nil else { return }
+        self.reloadPlayer()
+      }
+    }
 
     lastSyncedTime = mediaProgress.currentTime
 
@@ -1155,7 +1188,7 @@ extension BookPlayerModel {
 
     item = updatedItem
 
-    if updatedItem.isDownloaded, isPlayerUsingRemoteURL() {
+    if updatedItem.isDownloaded, !isCasting, isPlayerUsingRemoteURL() {
       AppLogger.player.info("Download completed, refreshing player to use local files")
       try? await setupSession(forceTranscode: false)
       reloadPlayer()
@@ -1180,6 +1213,10 @@ extension BookPlayerModel {
       interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
 
     case .ended:
+      guard !isCasting else {
+        interruption = nil
+        return
+      }
       guard sessionManager.current != nil else {
         AppLogger.player.info("Audio interruption ended - not resuming (no active session)")
         interruption = nil
@@ -1209,6 +1246,7 @@ extension BookPlayerModel {
   }
 
   private func handleRouteChange(_ notification: Notification) {
+    guard !isCasting else { return }
     guard let userInfo = notification.userInfo,
       let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
       let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -1252,6 +1290,7 @@ extension BookPlayerModel {
   }
 
   private func handleVolumeChange(from old: Float, to new: Float) {
+    guard !isCasting else { return }
     guard userPreferences.pauseAtZeroVolume, new == 0, old > 0 else { return }
     AppLogger.player.info("Volume dropped to 0 - pausing playback")
     onPauseTapped()

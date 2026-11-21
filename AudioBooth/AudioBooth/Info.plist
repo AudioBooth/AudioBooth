@@ -102,6 +102,11 @@
 	<string>Use NFC to read and write data.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>AudioBooth needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_googlecast._tcp</string>
+		<string>_CC1AD845._googlecast._tcp</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>
