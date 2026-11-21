@@ -5,6 +5,7 @@ import SwiftData
 @Model
 public final class LocalPodcast {
   @Attribute(.unique) public var podcastID: String
+  public var libraryID: String?
   public var title: String
   public var author: String?
   public var coverURL: URL?
@@ -32,6 +33,7 @@ public final class LocalPodcast {
 
   public init(
     podcastID: String,
+    libraryID: String? = nil,
     title: String,
     author: String? = nil,
     coverURL: URL? = nil,
@@ -42,6 +44,7 @@ public final class LocalPodcast {
     podcastType: String? = nil
   ) {
     self.podcastID = podcastID
+    self.libraryID = libraryID
     self.title = title
     self.author = author
     self.coverURL = coverURL
@@ -56,6 +59,7 @@ public final class LocalPodcast {
   public convenience init(from podcast: Podcast) {
     self.init(
       podcastID: podcast.id,
+      libraryID: podcast.libraryID,
       title: podcast.title,
       author: podcast.author,
       coverURL: podcast.coverURL(),
@@ -83,6 +87,7 @@ extension LocalPodcast {
     let context = ModelContextProvider.shared.context
 
     if let existing = try LocalPodcast.fetch(podcastID: self.podcastID) {
+      existing.libraryID = self.libraryID
       existing.title = self.title
       existing.author = self.author
       existing.coverURL = self.coverURL

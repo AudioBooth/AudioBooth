@@ -161,6 +161,7 @@ extension SessionManager {
 
       let localPodcast: LocalPodcast
       if let existing = try? LocalPodcast.fetch(podcastID: podcast.id) {
+        existing.libraryID = podcast.libraryID
         existing.title = podcast.title
         existing.author = podcast.author
         existing.coverURL = podcast.coverURL()
