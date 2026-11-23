@@ -59,6 +59,13 @@ struct ContentView: View {
               .displayScaled()
               .zoomTransition(sourceID: "player", in: playerNamespace)
               .interactiveDismissDisabled(currentPlayer.isLocked)
+              .onAppear {
+                UIApplication.shared.isIdleTimerDisabled = preferences.keepScreenAwakeInPlayer
+              }
+              .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+              .onChange(of: preferences.keepScreenAwakeInPlayer) { _, newValue in
+                UIApplication.shared.isIdleTimerDisabled = newValue
+              }
           }
         }
       }
@@ -68,26 +75,11 @@ struct ContentView: View {
         }
         .displayScaled()
       }
-      .adaptivePresentation(
-        isPresented: Binding(
-          get: {
-            guard let current = playerManager.current else { return false }
-            return current.isQueuePresented && !playerManager.isShowingFullPlayer
-          },
-          set: { newValue in
-            playerManager.current?.isQueuePresented = newValue
-          }
-        )
-      ) {
+      .adaptivePresentation(isPresented: miniPlayerBinding(\.isQueuePresented)) {
         PlayerQueueView(model: PlayerQueueViewModel())
           .displayScaled()
       }
-      .adaptiveSheet(
-        isPresented: miniPlayerBinding(
-          get: { $0.speed.isPresented },
-          set: { $0.speed.isPresented = $1 }
-        )
-      ) {
+      .adaptiveSheet(isPresented: miniPlayerBinding(\.speed.isPresented)) {
         if let currentPlayer = playerManager.current {
           FloatPickerSheet(
             model: Binding(
@@ -97,12 +89,7 @@ struct ContentView: View {
           )
         }
       }
-      .adaptiveSheet(
-        isPresented: miniPlayerBinding(
-          get: { $0.timer.isPresented },
-          set: { $0.timer.isPresented = $1 }
-        )
-      ) {
+      .adaptiveSheet(isPresented: miniPlayerBinding(\.timer.isPresented)) {
         if let currentPlayer = playerManager.current {
           TimerPickerSheet(
             model: Binding(
@@ -126,19 +113,13 @@ struct ContentView: View {
       }
   }
 
-  private func miniPlayerBinding(
-    get: @escaping (BookPlayer.Model) -> Bool,
-    set: @escaping (BookPlayer.Model, Bool) -> Void
-  ) -> Binding<Bool> {
+  private func miniPlayerBinding(_ keyPath: ReferenceWritableKeyPath<BookPlayer.Model, Bool>) -> Binding<Bool> {
     Binding(
       get: {
-        guard let current = playerManager.current, !playerManager.isShowingFullPlayer else { return false }
-        return get(current)
+        guard !playerManager.isShowingFullPlayer, !playerManager.isReaderOpen else { return false }
+        return playerManager.current?[keyPath: keyPath] == true
       },
-      set: { newValue in
-        guard let current = playerManager.current else { return }
-        set(current, newValue)
-      }
+      set: { playerManager.current?[keyPath: keyPath] = $0 }
     )
   }
 

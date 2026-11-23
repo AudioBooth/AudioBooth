@@ -4,6 +4,15 @@ import SwiftUI
 import UIKit
 
 struct EbookReaderView: View {
+  static let miniPlayerHeight: CGFloat = 48
+  static let miniPlayerSpacing: CGFloat = 8
+  static let miniPlayerMaxBottomOffset: CGFloat = 28
+
+  static func miniPlayerInset(safeAreaBottom: CGFloat) -> CGFloat {
+    let bottomOffset = safeAreaBottom > 0 ? min(safeAreaBottom, miniPlayerMaxBottomOffset) : miniPlayerSpacing
+    return bottomOffset + miniPlayerHeight + miniPlayerSpacing
+  }
+
   @ObservedObject var model: Model
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var colorScheme
@@ -14,6 +23,8 @@ struct EbookReaderView: View {
   @State private var showZoneEditor = false
   @State private var headerCornerInsets = EdgeInsets()
   @State private var headerTop: CGFloat = 0
+  @State private var readerWidth: CGFloat = 0
+  @State private var scrubBarFrame: CGRect = .zero
 
   @State var preferredColorScheme: ColorScheme?
 
@@ -50,6 +61,7 @@ struct EbookReaderView: View {
         UIApplication.shared.isIdleTimerDisabled = false
         model.onDisappear()
       }
+      .overlay { scrubBubble }
       .statusBarHidden(true)
       .preferredColorScheme(preferredColorScheme)
       .background {
@@ -109,6 +121,8 @@ struct EbookReaderView: View {
         if !model.isLoading, model.error == nil, showControls {
           EbookReaderControlBar(model: model) { showSettings = true }
             .tint(.primary)
+        } else {
+          toolbarMiniPlayer
         }
       }
     }
@@ -116,6 +130,11 @@ struct EbookReaderView: View {
 
   private var contentWithOverlays: some View {
     content
+      .onGeometryChange(for: CGFloat.self) { proxy in
+        proxy.size.width
+      } action: { width in
+        readerWidth = width
+      }
       .overlay(alignment: .top) {
         if let readAlong = model.readAlong, let message = readAlongStatusMessage(readAlong.status) {
           ReadAlongStatusPill(message: message, status: readAlong.status)
@@ -188,24 +207,50 @@ struct EbookReaderView: View {
       .sheet(item: $model.positionSync) { positionSync in
         PositionSyncSheet(model: positionSync)
       }
-      .adaptiveSheet(
-        isPresented: Binding(
-          get: { model.playerSheet?.isPresented ?? false },
-          set: { newValue in model.playerSheet?.isPresented = newValue }
-        )
-      ) {
-        if let playerSheet = model.playerSheet {
-          EbookPlayerSheet(model: playerSheet)
+      .sheet(isPresented: $model.isPlayerPresented) {
+        if let player = playerManager.current {
+          fullPlayer(player)
         }
       }
-      .sheet(
-        item: Binding(
-          get: { model.playerSheet?.player.positionSync },
-          set: { newValue in model.playerSheet?.player.positionSync = newValue }
-        )
-      ) { positionSync in
-        PositionSyncSheet(model: positionSync)
+  }
+
+  @ViewBuilder
+  private func fullPlayer(_ player: BookPlayer.Model) -> some View {
+    if userPreferences.assistedPlayer {
+      AssistedPlayer(model: player)
+        .displayScaled()
+        .interactiveDismissDisabled()
+    } else {
+      BookPlayer(model: player)
+        .displayScaled()
+        .interactiveDismissDisabled(player.isLocked)
+    }
+  }
+
+  @ViewBuilder
+  private var toolbarMiniPlayer: some View {
+    if #available(iOS 26.0, *) {
+      if model.preferences.showMiniPlayer, !showZoneEditor, !model.isLoading, model.error == nil,
+        let player = playerManager.current
+      {
+        EbookMiniPlayer(player: player, scrubBarFrame: $scrubBarFrame, onTap: model.onMiniPlayerTapped)
+          .frame(width: max(readerWidth - 32, 0))
+          .id(player.id)
       }
+    }
+  }
+
+  @ViewBuilder
+  private var scrubBubble: some View {
+    if !model.isPlayerPresented, let progress = playerManager.current?.playbackProgress, progress.isDragging {
+      GeometryReader { geometry in
+        let origin = geometry.frame(in: .global).origin
+        PlaybackProgressView.TimeBubble(time: progress.current, progress: progress.progress)
+          .frame(width: scrubBarFrame.width, height: scrubBarFrame.height)
+          .position(x: scrubBarFrame.midX - origin.x, y: scrubBarFrame.midY - origin.y - 12)
+      }
+      .ignoresSafeArea()
+    }
   }
 
   private var isChaptersPresented: Binding<Bool> {
@@ -447,7 +492,7 @@ extension EbookReaderView {
     var catchUpMessage: LocalizedStringResource?
     var isCatchingUpToNarration: Bool = false
     var positionSync: PositionSyncSheet.Model?
-    var playerSheet: EbookPlayerSheet.Model?
+    var isPlayerPresented: Bool = false
     var isFollowingMediaOverlay: Bool = false
     var hasAudiobook: Bool = false
 
@@ -467,6 +512,7 @@ extension EbookReaderView {
     func onCatchUpTapped() {}
     func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {}
     func onNowPlayingTapped() {}
+    func onMiniPlayerTapped() {}
 
     init(
       isLoading: Bool = true,

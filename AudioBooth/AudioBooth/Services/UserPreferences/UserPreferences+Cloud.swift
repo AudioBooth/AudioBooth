@@ -80,6 +80,7 @@ extension UserPreferences {
     "ebookReader.useVolumeButtonsForPageTurn",
     "ebookReader.autoScrollSpeed",
     "ebookReader.showProgressHeader",
+    "ebookReader.showMiniPlayer",
     "ebookReader.readAlongFollows",
     "ebookReader.readAlongHighlightsWord",
     "ebookReader.readAlongHighlightsSentence",

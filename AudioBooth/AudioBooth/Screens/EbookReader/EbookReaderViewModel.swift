@@ -85,8 +85,21 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         guard let self else { return }
         self.applyPreferences(self.preferences)
         self.updateProgressHeaderInset()
+        self.updateMiniPlayerInset()
         self.updateAutoScroll()
         self.syncReadAlongPreferences()
+      }
+      .store(in: &cancellables)
+
+    PlayerManager.shared.$current
+      .map { $0 != nil }
+      .removeDuplicates()
+      .sink { [weak self] hasPlayer in
+        guard let self else { return }
+        updateMiniPlayerInset(hasPlayer: hasPlayer)
+        if !hasPlayer {
+          isPlayerPresented = false
+        }
       }
       .store(in: &cancellables)
 
@@ -139,6 +152,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
   }
 
   override func onAppear() {
+    PlayerManager.shared.isReaderOpen = true
     Task {
       await loadEbook()
     }
@@ -154,6 +168,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     stopFollowingMediaOverlay()
     stopAutoScroll()
     NarrationProgressSync.openReaderBookID = nil
+    PlayerManager.shared.isReaderOpen = false
     cleanupTemporaryFile()
   }
 
@@ -191,8 +206,12 @@ final class EbookReaderViewModel: EbookReaderView.Model {
       }
     }
 
-    guard let player = playerManager.current else { return }
-    playerSheet = EbookPlayerSheetModel(player: player, isPresented: true)
+    guard playerManager.current != nil else { return }
+    isPlayerPresented = true
+  }
+
+  override func onMiniPlayerTapped() {
+    isPlayerPresented = true
   }
 
   override func onCatchUpDismissed(_ scope: PositionSyncOffer.Dismissal) {
@@ -376,6 +395,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         )
       }
       updateProgressHeaderInset()
+      updateMiniPlayerInset()
 
       updateProgress()
       updateCurrentChapterIndex()
@@ -485,6 +505,14 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     let top = isVisible ? ChapterProgressView.topPadding + ChapterProgressView.height + bottomPadding : 0
     guard let readerViewController, readerViewController.additionalSafeAreaInsets.top != top else { return }
     readerViewController.additionalSafeAreaInsets.top = top
+  }
+
+  private func updateMiniPlayerInset(hasPlayer: Bool = PlayerManager.shared.current != nil) {
+    guard #available(iOS 26.0, *) else { return }
+    let isVisible = hasPlayer && preferences.showMiniPlayer
+    let bottom = isVisible ? EbookReaderView.miniPlayerHeight : 0
+    guard let readerViewController, readerViewController.additionalSafeAreaInsets.bottom != bottom else { return }
+    readerViewController.additionalSafeAreaInsets.bottom = bottom
   }
 
   private var themeBackgroundColor: SwiftUI.Color {
@@ -657,7 +685,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
         try? await Task.sleep(for: .milliseconds(max(sleepMs, 16)))
         if Task.isCancelled { break }
         if let scrollView = currentScrollView {
-          let maxOffset = scrollView.contentSize.height - scrollView.frame.size.height
+          let maxOffset = scrollView.contentSize.height - scrollView.frame.size.height + scrollView.contentInset.bottom
           guard scrollView.contentOffset.y < maxOffset else { continue }
           scrollView.contentOffset.y = min(
             scrollView.contentOffset.y + delta,
@@ -873,12 +901,24 @@ extension EbookReaderViewModel: EPUBNavigatorDelegate, PDFNavigatorDelegate {
   }
 
   func navigatorContentInset(_ navigator: VisualNavigator) -> UIEdgeInsets? {
-    guard chapterProgress != nil, let viewController = navigator as? UIViewController else { return nil }
+    guard let viewController = navigator as? UIViewController else { return nil }
+
+    let isMiniPlayerVisible = viewController.additionalSafeAreaInsets.bottom > 0
+    guard chapterProgress != nil || isMiniPlayerVisible else { return nil }
 
     let windowInsets = viewController.view.window?.safeAreaInsets ?? .zero
-    let headerHeight = viewController.additionalSafeAreaInsets.top
-    let top = headerHeight > 0 ? windowInsets.top + headerHeight : max(windowInsets.top, 40)
-    return UIEdgeInsets(top: top, left: 0, bottom: windowInsets.bottom, right: 0)
+    var insets: UIEdgeInsets
+    if chapterProgress != nil {
+      let headerHeight = viewController.additionalSafeAreaInsets.top
+      let top = headerHeight > 0 ? windowInsets.top + headerHeight : max(windowInsets.top, 40)
+      insets = UIEdgeInsets(top: top, left: 0, bottom: windowInsets.bottom, right: 0)
+    } else {
+      insets = UIDevice.current.userInterfaceIdiom == .phone ? windowInsets : .zero
+    }
+    if isMiniPlayerVisible {
+      insets.bottom = EbookReaderView.miniPlayerInset(safeAreaBottom: windowInsets.bottom)
+    }
+    return insets
   }
 }
 

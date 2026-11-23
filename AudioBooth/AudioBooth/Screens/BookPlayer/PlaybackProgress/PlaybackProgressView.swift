@@ -6,7 +6,6 @@ struct PlaybackProgressView: View {
 
   @State private var lastDragLocationX: CGFloat?
   @State private var scrubbingSpeed: ScrubbingSpeed = .normal
-  @State private var bubbleSize: CGSize = .zero
 
   var body: some View {
     VStack(spacing: 0) {
@@ -56,20 +55,8 @@ struct PlaybackProgressView: View {
         .contentShape(.rect)
         .overlay {
           if model.isDragging {
-            let x = geometry.size.width * model.progress
-            let inset =
-              bubbleSize.width / 2 - (bubbleSize.height - TimeBubbleShape.arrowHeight) / 2
-              - TimeBubbleShape.arrowWidth / 2
-            let bubbleX = min(max(x, inset), geometry.size.width - inset)
-
-            timeBubble(arrowOffset: x - bubbleX)
-              .onGeometryChange(for: CGSize.self) {
-                $0.size
-              } action: {
-                bubbleSize = $0
-              }
-              .position(x: bubbleX, y: -15)
-              .allowsHitTesting(false)
+            TimeBubble(time: model.current, progress: model.progress)
+              .foregroundStyle(.white)
           }
         }
         .gesture(
@@ -142,25 +129,6 @@ struct PlaybackProgressView: View {
     }
   }
 
-  @ViewBuilder
-  private func timeBubble(arrowOffset: CGFloat) -> some View {
-    let label = Text(verbatim: formatCurrentTime(model.current))
-      .font(.subheadline)
-      .fontWeight(.semibold)
-      .monospacedDigit()
-      .foregroundStyle(.white)
-      .padding(.horizontal, 10)
-      .padding(.vertical, 4)
-      .padding(.bottom, TimeBubbleShape.arrowHeight)
-      .fixedSize()
-
-    if #available(iOS 26.0, *) {
-      label.glassEffect(.regular, in: TimeBubbleShape(arrowOffset: arrowOffset))
-    } else {
-      label.background(.ultraThinMaterial, in: TimeBubbleShape(arrowOffset: arrowOffset))
-    }
-  }
-
   private func formatCurrentTime(_ duration: TimeInterval) -> String {
     Duration.seconds(duration).formatted(.time(pattern: .hourMinuteSecond))
   }
@@ -177,6 +145,48 @@ struct PlaybackProgressView: View {
 }
 
 extension PlaybackProgressView {
+  struct TimeBubble: View {
+    let time: TimeInterval
+    let progress: Double
+
+    @State private var size: CGSize = .zero
+
+    var body: some View {
+      GeometryReader { geometry in
+        let x = geometry.size.width * progress
+        let inset = size.width / 2 - (size.height - TimeBubbleShape.arrowHeight) / 2 - TimeBubbleShape.arrowWidth / 2
+        let bubbleX = min(max(x, inset), geometry.size.width - inset)
+
+        label(arrowOffset: x - bubbleX)
+          .onGeometryChange(for: CGSize.self) {
+            $0.size
+          } action: {
+            size = $0
+          }
+          .position(x: bubbleX, y: geometry.size.height / 2 - 23)
+      }
+      .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func label(arrowOffset: CGFloat) -> some View {
+      let label = Text(verbatim: Duration.seconds(time).formatted(.time(pattern: .hourMinuteSecond)))
+        .font(.subheadline)
+        .fontWeight(.semibold)
+        .monospacedDigit()
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .padding(.bottom, TimeBubbleShape.arrowHeight)
+        .fixedSize()
+
+      if #available(iOS 26.0, *) {
+        label.glassEffect(.regular, in: TimeBubbleShape(arrowOffset: arrowOffset))
+      } else {
+        label.background(.ultraThinMaterial, in: TimeBubbleShape(arrowOffset: arrowOffset))
+      }
+    }
+  }
+
   private struct TimeBubbleShape: Shape {
     static let arrowHeight: CGFloat = 8
     static let arrowWidth: CGFloat = 12
@@ -215,7 +225,7 @@ extension PlaybackProgressView {
     }
   }
 
-  private enum ScrubbingSpeed {
+  enum ScrubbingSpeed {
     case normal
     case half
     case quarter

@@ -61,14 +61,7 @@ struct BookPlayer: View {
       .animation(.easeInOut, value: model.isLocked)
       .animation(.easeInOut, value: model.positionSyncMessage)
       .orientationLock(supportedOrientations)
-      .onAppear {
-        UIApplication.shared.isIdleTimerDisabled = preferences.keepScreenAwakeInPlayer
-        model.onAppear()
-      }
-      .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
-      .onChange(of: preferences.keepScreenAwakeInPlayer) { _, newValue in
-        UIApplication.shared.isIdleTimerDisabled = newValue
-      }
+      .onAppear(perform: model.onAppear)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           Button(

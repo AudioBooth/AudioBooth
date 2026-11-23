@@ -68,6 +68,10 @@ struct EbookReaderPreferencesView: View {
           }
           Toggle("Progress Header", isOn: $preferences.showProgressHeader)
 
+          if #available(iOS 26.0, *) {
+            Toggle("Mini Player", isOn: $preferences.showMiniPlayer)
+          }
+
           Toggle("Tap to Navigate", isOn: $preferences.tapToNavigate)
 
           Toggle("Volume to Navigate", isOn: $preferences.useVolumeButtonsForPageTurn)
