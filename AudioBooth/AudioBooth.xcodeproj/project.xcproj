@@ -8,6 +8,7 @@
     "development": "en",
     "supported": [
       "Base",
+      "cs",
       "da",
       "de",
       "es",

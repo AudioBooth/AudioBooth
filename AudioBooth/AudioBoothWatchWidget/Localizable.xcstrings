@@ -10,6 +10,12 @@
     },
     "No Recent Books" : {
       "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žádné nedávné knihy"
+          }
+        },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
@@ -62,6 +68,12 @@
     },
     "Shows your current audiobook progress" : {
       "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobrazuje průběh vaší aktuální audioknihy"
+          }
+        },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
