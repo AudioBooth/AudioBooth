@@ -1,381 +1,176 @@
+import API
 import Combine
 import Foundation
-import Logging
 import Models
 
 enum CastEvent {
   case sessionStarted
   case sessionEnded
-  case positionUpdated(TimeInterval)
+  case positionUpdated(index: Int, position: TimeInterval)
   case stateChanged(isPlaying: Bool)
-  case trackFinished
+  case finished
   case error
 }
 
 protocol CastClientProtocol: AnyObject {
-  var isConnected: Bool { get }
   var events: PassthroughSubject<CastEvent, Never> { get }
+  var hasMedia: Bool { get }
   func load(
-    streamURL: URL,
+    streams: [(url: URL, contentType: String)],
+    startIndex: Int,
+    startTime: TimeInterval,
     title: String,
     author: String?,
     coverURL: URL?,
-    startTime: TimeInterval,
     playbackRate: Float,
-    contentType: String,
     autoplay: Bool
   )
   func play()
   func pause()
-  func seek(to time: TimeInterval, completion: ((Bool) -> Void)?)
+  func seek(to time: TimeInterval)
   func setRate(_ rate: Float)
-  func disconnect()
 }
 
 final class CastPlaybackController {
-  enum Event {
-    case timeUpdate(TimeInterval)
-    case stateChanged(AudioPlayer.PlaybackState)
-    case seek(TimeInterval)
-    case rateChanged(Float)
-    case finished
-    case error(Error?)
-    case sessionStarted
-    case sessionEnded
-    case sessionUpdated(PlaybackSession)
-    case trackChanged(Int)
-  }
-
-  var onRequireRemoteSession: (() async -> PlaybackSession?)?
-  var onCastSessionEnded: (() -> Void)?
-
-  private(set) var currentTrackIndex: Int = 0
-  private(set) var isPlaying: Bool = false
-  private(set) var isBuffering: Bool = false
-
-  var isPlaybackActive: Bool {
-    isPlaying || isBuffering
-  }
-
-  static var isDefaultSessionActive: Bool {
-    #if canImport(GoogleCast) && !targetEnvironment(macCatalyst) && !os(watchOS)
-    CastManager.isSessionActive
+  static var isConnected: Bool {
+    #if !targetEnvironment(macCatalyst)
+    CastManager.shared.isConnected
     #else
     false
     #endif
   }
 
-  private static func defaultClient() -> CastClientProtocol? {
-    #if canImport(GoogleCast) && !targetEnvironment(macCatalyst) && !os(watchOS)
-    CastManager.shared
-    #else
-    nil
-    #endif
-  }
+  let events = PassthroughSubject<AudioPlayer.Event, Never>()
 
-  var isConnected: Bool {
-    injectedClient?.isConnected ?? Self.isDefaultSessionActive
-  }
+  private(set) var isPlaying = false
+  private(set) var time: TimeInterval?
 
-  let events = PassthroughSubject<Event, Never>()
+  var isPlaybackActive: Bool { isPlaying || wantsPlayback }
 
-  private let injectedClient: CastClientProtocol?
-  private var activeClient: CastClientProtocol? {
-    injectedClient ?? Self.defaultClient()
-  }
-
-  private var pendingSeekTarget: TimeInterval?
-  private var tracks: [Track] = []
+  private let client: CastClientProtocol?
   private var session: PlaybackSession?
-  private var coverURL: URL?
-  private var playbackRate: Float = 1.0
-  private var wantsPlayback: Bool = false
-  private var reportedTime: TimeInterval?
-  private var loadGeneration: UInt64 = 0
-  private var loadTask: Task<Void, Never>?
+  private var tracks: [Track] { session?.tracks ?? [] }
+  private var currentTrackIndex = 0
+  private var rate: Float = 1
+  private var wantsPlayback = false
   private var cancellables = Set<AnyCancellable>()
 
-  init(client: CastClientProtocol? = nil) {
-    self.injectedClient = client
-    activeClient?.events
+  init() {
+    #if !targetEnvironment(macCatalyst)
+    client = CastManager.shared
+    #else
+    client = nil
+    #endif
+
+    client?.events
       .sink { [weak self] event in
-        self?.handleCastEvent(event)
+        self?.handle(event)
       }
       .store(in: &cancellables)
   }
 
-  func updateContext(
-    session: PlaybackSession,
-    tracks: [Track],
-    currentTrackIndex: Int,
-    coverURL: URL?,
-    rate: Float,
-    wantsPlayback: Bool
-  ) {
+  func load(session: PlaybackSession, at time: TimeInterval, rate: Float, autoPlay: Bool) {
     self.session = session
-    self.tracks = tracks
-    self.currentTrackIndex = currentTrackIndex
-    self.coverURL = coverURL
-    self.playbackRate = rate
-    self.wantsPlayback = wantsPlayback
+    self.rate = min(rate, 2)
+
+    let (index, offset) = tracks.trackAndOffset(for: time)
+    loadQueue(from: index, offset: offset, autoPlay: autoPlay)
   }
 
-  func load(
-    session: PlaybackSession,
-    tracks: [Track],
-    trackIndex: Int,
-    offset: TimeInterval,
-    coverURL: URL?,
-    rate: Float,
-    autoPlay: Bool
-  ) {
-    loadGeneration &+= 1
-    let generation = loadGeneration
-    loadTask?.cancel()
-    loadTask = nil
-
-    self.session = session
-    self.tracks = tracks
-    self.currentTrackIndex = trackIndex
-    self.coverURL = coverURL
-    self.playbackRate = rate
-    self.wantsPlayback = autoPlay
-    self.pendingSeekTarget = nil
-
-    guard tracks.indices.contains(trackIndex) else {
-      isBuffering = false
-      events.send(.error(nil))
+  func play(at position: TimeInterval) {
+    guard client?.hasMedia == true else {
+      let (index, offset) = tracks.trackAndOffset(for: position)
+      loadQueue(from: index, offset: offset, autoPlay: true)
       return
     }
-
-    let track = tracks[trackIndex]
-    self.reportedTime = track.startOffset + offset
-
-    if let url = session.remoteURL(for: track) {
-      castLoad(track: track, url: url, offset: offset, autoPlay: autoPlay)
-      return
-    }
-
-    if autoPlay {
-      isBuffering = true
-    }
-
-    loadTask = Task { [weak self] in
-      defer {
-        if self?.loadGeneration == generation {
-          self?.loadTask = nil
-        }
-      }
-      guard let self, !Task.isCancelled, self.loadGeneration == generation else { return }
-
-      let remoteSession = await self.onRequireRemoteSession?()
-      guard !Task.isCancelled, self.loadGeneration == generation else { return }
-
-      guard let remoteSession else {
-        self.isBuffering = false
-        self.events.send(.error(nil))
-        return
-      }
-
-      self.session = remoteSession
-      self.events.send(.sessionUpdated(remoteSession))
-
-      let resolvedTracks = remoteSession.tracks.isEmpty ? self.tracks : remoteSession.tracks
-      self.tracks = resolvedTracks
-
-      guard resolvedTracks.indices.contains(trackIndex),
-            let url = remoteSession.remoteURL(for: resolvedTracks[trackIndex]) else {
-        self.isBuffering = false
-        self.events.send(.error(nil))
-        return
-      }
-
-      self.castLoad(
-        track: resolvedTracks[trackIndex],
-        url: url,
-        offset: offset,
-        autoPlay: self.wantsPlayback
-      )
-    }
-  }
-
-  func play() {
     wantsPlayback = true
-    if loadTask != nil {
-      isBuffering = true
-      events.send(.stateChanged(.buffering))
-      return
-    }
-    isBuffering = !isPlaying
-    activeClient?.play()
+    client?.play()
   }
 
   func pause() {
-    let hadPendingLoad = loadTask != nil || isBuffering
     wantsPlayback = false
-    loadGeneration &+= 1
-    loadTask?.cancel()
-    loadTask = nil
-    isBuffering = false
-    activeClient?.pause()
-    if hadPendingLoad && !isPlaying {
+    client?.pause()
+    if !isPlaying {
       events.send(.stateChanged(.paused))
     }
   }
 
-  func stop() {
-    wantsPlayback = false
-    isPlaying = false
-    isBuffering = false
-    pendingSeekTarget = nil
-    reportedTime = nil
-    loadGeneration &+= 1
-    loadTask?.cancel()
-    loadTask = nil
-    activeClient?.pause()
-  }
-
   func seek(to time: TimeInterval) {
-    let (targetIndex, offset) = tracks.trackAndOffset(for: time)
-    let clampedTime = tracks.indices.contains(targetIndex)
-      ? tracks[targetIndex].startOffset + offset
-      : max(0, time)
-    reportedTime = clampedTime
-    events.send(.seek(clampedTime))
+    let (index, offset) = tracks.trackAndOffset(for: time)
+    events.send(.seek(time))
 
-    if (targetIndex != currentTrackIndex || loadTask != nil), let session {
-      if targetIndex != currentTrackIndex {
-        currentTrackIndex = targetIndex
-        events.send(.trackChanged(targetIndex))
-      }
-      load(
-        session: session,
-        tracks: tracks,
-        trackIndex: targetIndex,
-        offset: offset,
-        coverURL: coverURL,
-        rate: playbackRate,
-        autoPlay: wantsPlayback
-      )
+    guard index == currentTrackIndex else {
+      loadQueue(from: index, offset: offset, autoPlay: wantsPlayback)
       return
     }
 
-    pendingSeekTarget = clampedTime
-    activeClient?.seek(to: offset) { [weak self] _ in
-      guard let self, self.pendingSeekTarget == clampedTime else { return }
-      self.pendingSeekTarget = nil
-    }
+    self.time = time
+    client?.seek(to: offset)
   }
 
   func setRate(_ rate: Float) {
-    playbackRate = rate
-    activeClient?.setRate(rate)
-    events.send(.rateChanged(rate))
-  }
-
-  func currentTime(fallback: TimeInterval) -> TimeInterval {
-    if let pendingSeekTarget {
-      return pendingSeekTarget
-    }
-    return reportedTime ?? fallback
-  }
-
-  func isPositioned(at target: TimeInterval, fallback: TimeInterval) -> Bool {
-    if let pendingSeekTarget {
-      return abs(pendingSeekTarget - target) <= 1
-    }
-    return abs(currentTime(fallback: fallback) - target) <= 1
+    self.rate = min(rate, 2)
+    client?.setRate(self.rate)
   }
 }
 
 private extension CastPlaybackController {
-  func castLoad(track: Track, url: URL, offset: TimeInterval, autoPlay: Bool) {
-    activeClient?.load(
-      streamURL: url,
-      title: session?.displayTitle ?? "Audiobook",
-      author: session?.displayAuthor,
-      coverURL: coverURL,
+  func loadQueue(from index: Int, offset: TimeInterval, autoPlay: Bool) {
+    let urls = tracks.compactMap { session?.remoteURL(for: $0) }
+    guard let session, urls.count == tracks.count, tracks.indices.contains(index) else {
+      events.send(.error(nil))
+      return
+    }
+
+    currentTrackIndex = index
+    wantsPlayback = autoPlay
+    time = tracks[index].startOffset + offset
+
+    client?.load(
+      streams: zip(urls, tracks).map { (url: $0, contentType: $1.mimeType ?? "audio/mpeg") },
+      startIndex: index,
       startTime: offset,
-      playbackRate: playbackRate,
-      contentType: track.mimeType ?? "audio/mpeg",
+      title: session.displayTitle ?? "Audiobook",
+      author: session.displayAuthor,
+      coverURL: Audiobookshelf.shared.authentication.serverURL?
+        .appendingPathComponent("api/items/\(session.libraryItemID)/cover"),
+      playbackRate: rate,
       autoplay: autoPlay
     )
   }
 
-  func handleCastEvent(_ event: CastEvent) {
+  func handle(_ event: CastEvent) {
     switch event {
     case .sessionStarted:
-      AppLogger.player.info("Cast session started")
-      events.send(.sessionStarted)
+      events.send(.castSessionChanged)
 
     case .sessionEnded:
-      AppLogger.player.info("Cast session ended")
-      loadGeneration &+= 1
-      loadTask?.cancel()
-      loadTask = nil
       isPlaying = false
-      isBuffering = false
-      pendingSeekTarget = nil
-      onCastSessionEnded?()
-      events.send(.sessionEnded)
+      wantsPlayback = false
+      time = nil
+      events.send(.stateChanged(.paused))
+      events.send(.castSessionChanged)
 
-    case .positionUpdated(let position):
-      handlePositionUpdated(position)
+    case .positionUpdated(let index, let position):
+      guard tracks.indices.contains(index) else { return }
+      currentTrackIndex = index
+      let track = tracks[index]
+      let time = track.startOffset + min(max(0, position), track.duration)
+      self.time = time
+      events.send(.timeUpdate(time))
 
     case .stateChanged(let isNowPlaying):
       isPlaying = isNowPlaying
-      isBuffering = false
+      wantsPlayback = isNowPlaying
       events.send(.stateChanged(isNowPlaying ? .playing : .paused))
 
-    case .trackFinished:
-      handleTrackFinished()
+    case .finished:
+      isPlaying = false
+      events.send(.finished)
 
     case .error:
       isPlaying = false
-      isBuffering = false
       events.send(.error(nil))
     }
-  }
-
-  func handlePositionUpdated(_ trackPosition: TimeInterval) {
-    let globalTime: TimeInterval
-    if tracks.indices.contains(currentTrackIndex) {
-      let track = tracks[currentTrackIndex]
-      globalTime = track.startOffset + min(max(0, trackPosition), track.duration)
-    } else {
-      globalTime = max(0, trackPosition)
-    }
-
-    if let target = pendingSeekTarget {
-      guard abs(globalTime - target) <= 2 else { return }
-      pendingSeekTarget = nil
-    }
-
-    reportedTime = globalTime
-    events.send(.timeUpdate(globalTime))
-  }
-
-  func handleTrackFinished() {
-    let nextIndex = currentTrackIndex + 1
-    guard tracks.indices.contains(nextIndex), let session else {
-      wantsPlayback = false
-      isPlaying = false
-      isBuffering = false
-      events.send(.stateChanged(.paused))
-      events.send(.finished)
-      return
-    }
-
-    currentTrackIndex = nextIndex
-    events.send(.trackChanged(nextIndex))
-    load(
-      session: session,
-      tracks: tracks,
-      trackIndex: nextIndex,
-      offset: 0,
-      coverURL: coverURL,
-      rate: playbackRate,
-      autoPlay: true
-    )
   }
 }

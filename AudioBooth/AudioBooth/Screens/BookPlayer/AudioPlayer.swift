@@ -25,15 +25,15 @@ final class AudioPlayer {
     case finished
     case stalled
     case error(Error?)
+    case castSessionChanged
   }
 
   private let player = AVQueuePlayer()
   private let eqContext = EQContext()
   private var eqEnabled = false
-  private let cast: CastPlaybackController
+  private let cast = CastPlaybackController()
   private let mediaProgress: MediaProgress
   private var session: PlaybackSession
-  private let coverURL: URL?
   private var tracks: [Track] = []
   private(set) var currentTrackIndex: Int = 0
   private var lastQueuedIndex: Int = -1
@@ -48,22 +48,10 @@ final class AudioPlayer {
 
   let events = PassthroughSubject<Event, Never>()
 
-  var isCasting: Bool { cast.isConnected }
-
-  var onRequireRemoteSession: (() async -> PlaybackSession?)? {
-    get { cast.onRequireRemoteSession }
-    set { cast.onRequireRemoteSession = newValue }
-  }
-
-  var onCastSessionEnded: (() -> Void)? {
-    get { cast.onCastSessionEnded }
-    set { cast.onCastSessionEnded = newValue }
-  }
+  var isCasting: Bool { CastPlaybackController.isConnected }
 
   var time: TimeInterval {
-    if isCasting {
-      return cast.currentTime(fallback: mediaProgress.currentTime)
-    }
+    if isCasting { return cast.time ?? mediaProgress.currentTime }
     let seconds = player.currentSeconds
     guard player.currentItem != nil, seconds >= 0 else { return mediaProgress.currentTime }
     guard !tracks.isEmpty else { return seconds }
@@ -82,9 +70,7 @@ final class AudioPlayer {
   }
 
   func isPositioned(at target: TimeInterval) -> Bool {
-    if isCasting {
-      return cast.isPositioned(at: target, fallback: mediaProgress.currentTime)
-    }
+    if isCasting { return abs(time - target) <= 1 }
     if let pendingSeekTarget {
       return abs(pendingSeekTarget - target) <= 1
     }
@@ -107,33 +93,16 @@ final class AudioPlayer {
       player.defaultRate = newValue
       if isCasting {
         cast.setRate(newValue)
-        return
-      }
-      if player.timeControlStatus == .playing {
+      } else if player.timeControlStatus == .playing {
         player.rate = newValue
       }
-      cast.updateContext(
-        session: session,
-        tracks: tracks,
-        currentTrackIndex: currentTrackIndex,
-        coverURL: coverURL,
-        rate: newValue,
-        wantsPlayback: wantsPlayback
-      )
       events.send(.rateChanged(newValue))
     }
   }
 
-  init(
-    mediaProgress: MediaProgress,
-    session: PlaybackSession,
-    coverURL: URL? = nil,
-    cast: CastPlaybackController = CastPlaybackController()
-  ) {
+  init(mediaProgress: MediaProgress, session: PlaybackSession) {
     self.mediaProgress = mediaProgress
     self.session = session
-    self.coverURL = coverURL
-    self.cast = cast
     player.allowsExternalPlayback = false
     player.automaticallyWaitsToMinimizeStalling = false
     setupObservers()
@@ -149,25 +118,13 @@ final class AudioPlayer {
     pendingSeekTarget = nil
     resetDecodeRetry()
     self.session = session
+    self.tracks = session.tracks.filter { url(for: $0) != nil }
 
     if isCasting {
-      self.tracks = session.tracks
       player.removeAllItems()
-      let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
-      currentTrackIndex = trackIndex
-      cast.load(
-        session: session,
-        tracks: tracks,
-        trackIndex: trackIndex,
-        offset: offset,
-        coverURL: coverURL,
-        rate: rate > 0 ? rate : 1.0,
-        autoPlay: wasPlaying
-      )
+      cast.load(session: session, at: mediaProgress.currentTime, rate: rate, autoPlay: wasPlaying)
       return
     }
-
-    self.tracks = session.tracks.filter { url(for: $0) != nil }
 
     guard !self.tracks.isEmpty else {
       player.removeAllItems()
@@ -180,14 +137,6 @@ final class AudioPlayer {
 
     let (trackIndex, offset) = trackAndOffset(for: mediaProgress.currentTime)
     currentTrackIndex = trackIndex
-    cast.updateContext(
-      session: session,
-      tracks: tracks,
-      currentTrackIndex: currentTrackIndex,
-      coverURL: coverURL,
-      rate: rate > 0 ? rate : 1.0,
-      wantsPlayback: wantsPlayback
-    )
     loadQueue(from: trackIndex, seekTo: offset, autoPlay: wasPlaying)
   }
 
@@ -203,8 +152,7 @@ final class AudioPlayer {
 
   func resume() {
     if isCasting {
-      wantsPlayback = true
-      cast.play()
+      cast.play(at: mediaProgress.currentTime)
       return
     }
 
@@ -221,10 +169,8 @@ final class AudioPlayer {
     resumeTask = Task {
       let activated = await AudioSession.activate()
 
-      guard !Task.isCancelled, wantsPlayback, !isCasting else {
-        if !isCasting {
-          events.send(.stateChanged(isPlaying ? .playing : .paused))
-        }
+      guard !Task.isCancelled, wantsPlayback else {
+        events.send(.stateChanged(isPlaying ? .playing : .paused))
         return
       }
 
@@ -253,13 +199,11 @@ final class AudioPlayer {
     pendingSeekTarget = nil
     removeTimeObserver()
     if isCasting {
-      cast.stop()
+      cast.pause()
     }
     player.pause()
     player.removeAllItems()
-    if !isCasting {
-      AudioSession.deactivate()
-    }
+    AudioSession.deactivate()
     events.send(.stateChanged(.stopped))
   }
 
@@ -436,10 +380,21 @@ private extension AudioPlayer {
 
 private extension AudioPlayer {
   func setupObservers() {
+    cast.events
+      .sink { [weak self] event in
+        guard let self else { return }
+        if case .castSessionChanged = event, isCasting {
+          resumeTask?.cancel()
+          player.pause()
+        }
+        events.send(event)
+      }
+      .store(in: &cancellables)
+
     player.publisher(for: \.timeControlStatus)
       .removeDuplicates()
       .sink { [weak self] status in
-        guard let self else { return }
+        guard let self, !isCasting else { return }
         switch status {
         case .paused:
           self.events.send(.stateChanged(.paused))
@@ -456,60 +411,6 @@ private extension AudioPlayer {
     player.publisher(for: \.currentItem)
       .sink { [weak self] item in
         self?.handleCurrentItemChange(item)
-      }
-      .store(in: &cancellables)
-
-    setupCastObserver()
-  }
-
-  func setupCastObserver() {
-    cast.events
-      .sink { [weak self] event in
-        guard let self else { return }
-        switch event {
-        case .timeUpdate(let t):
-          self.mediaProgress.currentTime = t
-          self.events.send(.timeUpdate(t))
-        case .stateChanged(let state):
-          self.events.send(.stateChanged(state))
-        case .seek(let t):
-          self.events.send(.seek(t))
-        case .rateChanged(let r):
-          self.events.send(.rateChanged(r))
-        case .finished:
-          if self.mediaProgress.duration > 0 {
-            self.mediaProgress.currentTime = self.mediaProgress.duration
-          }
-          self.events.send(.finished)
-        case .error(let err):
-          self.events.send(.error(err))
-        case .sessionStarted:
-          let shouldAutoPlay = self.wantsPlayback || self.player.timeControlStatus == .playing
-          self.resumeTask?.cancel()
-          self.player.pause()
-          self.player.removeAllItems()
-          let (trackIndex, offset) = self.trackAndOffset(for: self.mediaProgress.currentTime)
-          self.currentTrackIndex = trackIndex
-          self.cast.load(
-            session: self.session,
-            tracks: self.tracks,
-            trackIndex: trackIndex,
-            offset: offset,
-            coverURL: self.coverURL,
-            rate: self.rate > 0 ? self.rate : 1.0,
-            autoPlay: shouldAutoPlay
-          )
-        case .sessionEnded:
-          self.events.send(.stateChanged(.paused))
-          if self.onCastSessionEnded == nil {
-            self.setQueue(for: self.session)
-          }
-        case .sessionUpdated(let newSession):
-          self.session = newSession
-          self.tracks = newSession.tracks
-        case .trackChanged(let newIndex):
-          self.currentTrackIndex = newIndex
-        }
       }
       .store(in: &cancellables)
   }

@@ -567,16 +567,16 @@ extension BookPlayerModel {
 }
 
 extension BookPlayerModel {
-  private var isCasting: Bool { player?.isCasting ?? CastPlaybackController.isDefaultSessionActive }
+  private var isCasting: Bool { CastPlaybackController.isConnected }
 
-  private func setupSession(forceTranscode: Bool, forceRemote: Bool = false) async throws {
+  private func setupSession(forceTranscode: Bool) async throws {
     item = try await sessionManager.ensureSession(
       itemID: podcastID ?? id,
       episodeID: episodeID,
       item: item,
       mediaProgress: mediaProgress,
       forceTranscode: forceTranscode,
-      forceRemote: forceRemote || isCasting
+      forceRemote: isCasting
     )
 
     if let pendingSeekTime {
@@ -754,38 +754,8 @@ extension BookPlayerModel {
       throw Audiobookshelf.AudiobookshelfError.networkError("No playable audio files available")
     }
 
-    let player = AudioPlayer(mediaProgress: mediaProgress, session: session, coverURL: coverURL)
+    let player = AudioPlayer(mediaProgress: mediaProgress, session: session)
     self.player = player
-
-    player.onRequireRemoteSession = { [weak self] in
-      guard let self else { return nil }
-      do {
-        self.item = try await self.sessionManager.ensureSession(
-          itemID: self.podcastID ?? self.id,
-          episodeID: self.episodeID,
-          item: self.item,
-          mediaProgress: self.mediaProgress,
-          forceTranscode: false,
-          forceRemote: true
-        )
-        return self.sessionManager.current
-      } catch {
-        AppLogger.player.error("Failed to create remote session for Cast: \(error)")
-        return nil
-      }
-    }
-
-    player.onCastSessionEnded = { [weak self] in
-      guard let self else { return }
-      Task {
-        guard self.playerManager.current === self, self.player != nil else { return }
-        if self.item?.isDownloaded == true {
-          try? await self.setupSession(forceTranscode: false)
-        }
-        guard self.playerManager.current === self, self.player != nil else { return }
-        self.reloadPlayer()
-      }
-    }
 
     lastSyncedTime = mediaProgress.currentTime
 
@@ -1073,7 +1043,26 @@ extension BookPlayerModel {
         case .error(let error):
           AppLogger.player.error("Player error: \(error?.localizedDescription ?? "Unknown")")
           self.isLoading = false
-          self.handleStreamFailure(error: error)
+          if self.isCasting {
+            player.pause()
+            Toast(error: "Couldn't play on the Cast device.").show()
+          } else {
+            self.handleStreamFailure(error: error)
+          }
+
+        case .castSessionChanged:
+          self.pendingPlay = self.isPlaying
+          Task {
+            guard self.playerManager.current === self else { return }
+            do {
+              try await self.setupSession(forceTranscode: false)
+              self.reloadPlayer()
+            } catch {
+              AppLogger.player.error("Failed to switch session for Cast: \(error)")
+              player.pause()
+              Toast(error: "Couldn't play on the Cast device.").show()
+            }
+          }
 
         case .finished:
           self.isLoading = false

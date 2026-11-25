@@ -284,6 +284,10 @@
           "product-name": "RichText",
           "build-phase": { "build-phase": "frameworks" },
         }, {
+          "package": "google-cast-ios-sdk",
+          "product-name": "GoogleCastDynamic",
+          "build-phase": { "build-phase": "frameworks", "platforms": [ "ios" ], "code-sign-on-copy": true },
+        }, {
           "package": "purchases-ios-spm",
           "product-name": "RevenueCat",
           "build-phase": { "build-phase": "frameworks" },
@@ -307,14 +311,6 @@
           "package": "swift-toolkit",
           "product-name": "ReadiumStreamer",
           "build-phase": { "build-phase": "frameworks" },
-        }, {
-          "package": "google-cast-ios-sdk",
-          "product-name": "GoogleCastDynamic",
-          "build-phase": {
-            "build-phase": "frameworks",
-            "code-sign-on-copy": true,
-            "platforms": [ "ios" ],
-          },
         },
       ],
       "build-settings": {
@@ -329,8 +325,6 @@
         "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
         "INFOPLIST_FILE": "AudioBooth/Info.plist",
         "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
-        "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
-        "OTHER_LDFLAGS": "$(inherited) -ObjC",
         "PRODUCT_BUNDLE_IDENTIFIER": "$(ORG_IDENTIFIER).AudioBS",
         "SUPPORTS_MACCATALYST": "YES",
         "SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD": "NO",

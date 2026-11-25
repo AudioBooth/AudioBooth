@@ -1,11 +1,11 @@
-#if canImport(GoogleCast) && !targetEnvironment(macCatalyst) && !os(watchOS)
+#if !targetEnvironment(macCatalyst)
 import GoogleCast
 import SwiftUI
 
 struct CastButton: UIViewRepresentable {
   func makeUIView(context: Context) -> GCKUICastButton {
     _ = CastManager.shared
-    let button = GCKUICastButton(frame: CGRect(x: 0, y: 0, width: 24, height: 24))
+    let button = GCKUICastButton(frame: .zero)
     button.tintColor = .white
     return button
   }
