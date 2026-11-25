@@ -62,6 +62,12 @@
       "version": {
         "version": "2.6.1",
       },
+    }, {
+      "kind": "remote",
+      "repository": "https://github.com/googlecast/google-cast-ios-sdk.git",
+      "version": {
+        "version": "4.8.6",
+      },
     },
   ],
   "files": [
@@ -278,6 +284,10 @@
           "package": "RichText",
           "product-name": "RichText",
           "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "google-cast-ios-sdk",
+          "product-name": "GoogleCastDynamic",
+          "build-phase": { "build-phase": "frameworks", "platforms": [ "ios" ], "code-sign-on-copy": true },
         }, {
           "package": "purchases-ios-spm",
           "product-name": "RevenueCat",

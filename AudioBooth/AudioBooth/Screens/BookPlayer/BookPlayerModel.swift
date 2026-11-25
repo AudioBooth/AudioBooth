@@ -256,7 +256,7 @@ final class BookPlayerModel: BookPlayer.Model {
     lastSyncedTime = mediaProgress.currentTime
     player.resume()
 
-    if userPreferences.pauseAtZeroVolume, audioSession.outputVolume == 0 {
+    if !isCasting, userPreferences.pauseAtZeroVolume, audioSession.outputVolume == 0 {
       raiseVolumeOrPause()
     }
 
@@ -567,13 +567,16 @@ extension BookPlayerModel {
 }
 
 extension BookPlayerModel {
+  private var isCasting: Bool { CastPlaybackController.isConnected }
+
   private func setupSession(forceTranscode: Bool) async throws {
     item = try await sessionManager.ensureSession(
       itemID: podcastID ?? id,
       episodeID: episodeID,
       item: item,
       mediaProgress: mediaProgress,
-      forceTranscode: forceTranscode
+      forceTranscode: forceTranscode,
+      forceRemote: isCasting
     )
 
     if let pendingSeekTime {
@@ -1040,7 +1043,26 @@ extension BookPlayerModel {
         case .error(let error):
           AppLogger.player.error("Player error: \(error?.localizedDescription ?? "Unknown")")
           self.isLoading = false
-          self.handleStreamFailure(error: error)
+          if self.isCasting {
+            player.pause()
+            Toast(error: "Couldn't play on the Cast device.").show()
+          } else {
+            self.handleStreamFailure(error: error)
+          }
+
+        case .castSessionChanged:
+          self.pendingPlay = self.isPlaying
+          Task {
+            guard self.playerManager.current === self else { return }
+            do {
+              try await self.setupSession(forceTranscode: false)
+              self.reloadPlayer()
+            } catch {
+              AppLogger.player.error("Failed to switch session for Cast: \(error)")
+              player.pause()
+              Toast(error: "Couldn't play on the Cast device.").show()
+            }
+          }
 
         case .finished:
           self.isLoading = false
@@ -1155,7 +1177,7 @@ extension BookPlayerModel {
 
     item = updatedItem
 
-    if updatedItem.isDownloaded, isPlayerUsingRemoteURL() {
+    if updatedItem.isDownloaded, !isCasting, isPlayerUsingRemoteURL() {
       AppLogger.player.info("Download completed, refreshing player to use local files")
       try? await setupSession(forceTranscode: false)
       reloadPlayer()
@@ -1180,6 +1202,10 @@ extension BookPlayerModel {
       interruption = isPlaying ? (Date(), reason == .routeDisconnected) : nil
 
     case .ended:
+      guard !isCasting else {
+        interruption = nil
+        return
+      }
       guard sessionManager.current != nil else {
         AppLogger.player.info("Audio interruption ended - not resuming (no active session)")
         interruption = nil
@@ -1209,6 +1235,7 @@ extension BookPlayerModel {
   }
 
   private func handleRouteChange(_ notification: Notification) {
+    guard !isCasting else { return }
     guard let userInfo = notification.userInfo,
       let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
       let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -1252,6 +1279,7 @@ extension BookPlayerModel {
   }
 
   private func handleVolumeChange(from old: Float, to new: Float) {
+    guard !isCasting else { return }
     guard userPreferences.pauseAtZeroVolume, new == 0, old > 0 else { return }
     AppLogger.player.info("Volume dropped to 0 - pausing playback")
     onPauseTapped()

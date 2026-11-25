@@ -25,11 +25,13 @@ final class AudioPlayer {
     case finished
     case stalled
     case error(Error?)
+    case castSessionChanged
   }
 
   private let player = AVQueuePlayer()
   private let eqContext = EQContext()
   private var eqEnabled = false
+  private let cast = CastPlaybackController()
   private let mediaProgress: MediaProgress
   private var session: PlaybackSession
   private var tracks: [Track] = []
@@ -46,7 +48,10 @@ final class AudioPlayer {
 
   let events = PassthroughSubject<Event, Never>()
 
+  var isCasting: Bool { CastPlaybackController.isConnected }
+
   var time: TimeInterval {
+    if isCasting { return cast.time ?? mediaProgress.currentTime }
     let seconds = player.currentSeconds
     guard player.currentItem != nil, seconds >= 0 else { return mediaProgress.currentTime }
     guard !tracks.isEmpty else { return seconds }
@@ -55,14 +60,17 @@ final class AudioPlayer {
   }
 
   var isPlaying: Bool {
-    player.timeControlStatus == .playing
+    if isCasting { return cast.isPlaying }
+    return player.timeControlStatus == .playing
   }
 
   var isPlaybackActive: Bool {
-    player.timeControlStatus != .paused
+    if isCasting { return cast.isPlaybackActive }
+    return player.timeControlStatus != .paused
   }
 
   func isPositioned(at target: TimeInterval) -> Bool {
+    if isCasting { return abs(time - target) <= 1 }
     if let pendingSeekTarget {
       return abs(pendingSeekTarget - target) <= 1
     }
@@ -83,7 +91,9 @@ final class AudioPlayer {
     get { player.defaultRate }
     set {
       player.defaultRate = newValue
-      if player.timeControlStatus == .playing {
+      if isCasting {
+        cast.setRate(newValue)
+      } else if player.timeControlStatus == .playing {
         player.rate = newValue
       }
       events.send(.rateChanged(newValue))
@@ -110,6 +120,12 @@ final class AudioPlayer {
     self.session = session
     self.tracks = session.tracks.filter { url(for: $0) != nil }
 
+    if isCasting {
+      player.removeAllItems()
+      cast.load(session: session, at: mediaProgress.currentTime, rate: rate, autoPlay: wasPlaying)
+      return
+    }
+
     guard !self.tracks.isEmpty else {
       player.removeAllItems()
       return
@@ -127,10 +143,19 @@ final class AudioPlayer {
   func pause() {
     wantsPlayback = false
     resumeTask?.cancel()
+    if isCasting {
+      cast.pause()
+      return
+    }
     player.pause()
   }
 
   func resume() {
+    if isCasting {
+      cast.play(at: mediaProgress.currentTime)
+      return
+    }
+
     guard !tracks.isEmpty else {
       events.send(.error(nil))
       return
@@ -173,6 +198,9 @@ final class AudioPlayer {
     resumeTask?.cancel()
     pendingSeekTarget = nil
     removeTimeObserver()
+    if isCasting {
+      cast.pause()
+    }
     player.pause()
     player.removeAllItems()
     AudioSession.deactivate()
@@ -181,6 +209,10 @@ final class AudioPlayer {
 
   func seek(to time: TimeInterval) {
     mediaProgress.currentTime = time
+    if isCasting {
+      cast.seek(to: time)
+      return
+    }
     pendingSeekTarget = time
 
     guard !tracks.isEmpty else {
@@ -292,19 +324,7 @@ private extension AudioPlayer {
   }
 
   func trackAndOffset(for time: TimeInterval) -> (Int, TimeInterval) {
-    guard !tracks.isEmpty else { return (0, time) }
-
-    let totalDuration = tracks.reduce(0) { $0 + $1.duration }
-    let clampedTime = max(0, min(time, totalDuration))
-
-    for (i, track) in tracks.enumerated() {
-      let trackEnd = track.startOffset + track.duration
-      if clampedTime < trackEnd || i == tracks.count - 1 {
-        return (i, clampedTime - track.startOffset)
-      }
-    }
-
-    return (0, 0)
+    tracks.trackAndOffset(for: time)
   }
 }
 
@@ -360,10 +380,21 @@ private extension AudioPlayer {
 
 private extension AudioPlayer {
   func setupObservers() {
+    cast.events
+      .sink { [weak self] event in
+        guard let self else { return }
+        if case .castSessionChanged = event, isCasting {
+          resumeTask?.cancel()
+          player.pause()
+        }
+        events.send(event)
+      }
+      .store(in: &cancellables)
+
     player.publisher(for: \.timeControlStatus)
       .removeDuplicates()
       .sink { [weak self] status in
-        guard let self else { return }
+        guard let self, !isCasting else { return }
         switch status {
         case .paused:
           self.events.send(.stateChanged(.paused))
@@ -720,5 +751,23 @@ extension AVPlayerItem {
       options["AVURLAssetHTTPHeaderFieldsKey"] = headers
     }
     self.init(asset: AVURLAsset(url: url, options: options))
+  }
+}
+
+extension [Track] {
+  func trackAndOffset(for time: TimeInterval) -> (Int, TimeInterval) {
+    guard !isEmpty else { return (0, time) }
+
+    let totalDuration = reduce(0) { $0 + $1.duration }
+    let clampedTime = Swift.max(0, Swift.min(time, totalDuration))
+
+    for (index, track) in enumerated() {
+      let trackEnd = track.startOffset + track.duration
+      if clampedTime < trackEnd || index == count - 1 {
+        return (index, clampedTime - track.startOffset)
+      }
+    }
+
+    return (0, 0)
   }
 }
